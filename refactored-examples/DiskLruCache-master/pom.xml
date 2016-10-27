@@ -85,6 +85,11 @@
       <version>${fest.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>io.reactivex</groupId>
+      <artifactId>rxjava</artifactId>
+      <version>1.2.1</version>
+    </dependency>
   </dependencies>
 
   <build>

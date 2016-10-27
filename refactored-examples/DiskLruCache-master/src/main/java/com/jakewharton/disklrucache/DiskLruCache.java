@@ -16,6 +16,9 @@
 
 package com.jakewharton.disklrucache;
 
+import rx.Observable;
+import rx.schedulers.Schedulers;
+
 import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.EOFException;
@@ -159,8 +162,15 @@ public final class DiskLruCache implements Closeable {
   private long nextSequenceNumber = 0;
 
   /** This cache uses a single background thread to evict entries. */
-  final ThreadPoolExecutor executorService =
-      new ThreadPoolExecutor(0, 1, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+
+  // RxRefactoring: Main idea, transform Executor to rx.Observables
+  Observable createObservable(Callable callable)
+  {
+    return Observable.fromCallable(callable)
+            .subscribeOn(Schedulers.computation())
+            .observeOn(Schedulers.immediate());
+  }
+
   private final Callable<Void> cleanupCallable = new Callable<Void>() {
     public Void call() throws Exception {
       synchronized (DiskLruCache.this) {
@@ -436,7 +446,7 @@ public final class DiskLruCache implements Closeable {
     redundantOpCount++;
     journalWriter.append(READ + ' ' + key + '\n');
     if (journalRebuildRequired()) {
-      executorService.submit(cleanupCallable);
+      createObservable(cleanupCallable).subscribe(); // RxRefactoring
     }
 
     return new Snapshot(key, entry.sequenceNumber, ins, entry.lengths);
@@ -493,7 +503,7 @@ public final class DiskLruCache implements Closeable {
    */
   public synchronized void setMaxSize(long maxSize) {
     this.maxSize = maxSize;
-    executorService.submit(cleanupCallable);
+    createObservable(cleanupCallable).subscribe(); // RxRefactoring
   }
 
   /**
@@ -556,7 +566,7 @@ public final class DiskLruCache implements Closeable {
     journalWriter.flush();
 
     if (size > maxSize || journalRebuildRequired()) {
-      executorService.submit(cleanupCallable);
+      createObservable(cleanupCallable).subscribe(); // RxRefactoring
     }
   }
 
@@ -598,7 +608,7 @@ public final class DiskLruCache implements Closeable {
     lruEntries.remove(key);
 
     if (journalRebuildRequired()) {
-      executorService.submit(cleanupCallable);
+      createObservable(cleanupCallable).subscribe(); // RxRefactoring
     }
 
     return true;
