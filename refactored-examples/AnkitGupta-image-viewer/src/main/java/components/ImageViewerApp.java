@@ -5,39 +5,15 @@
 
 package components;
 
-import java.awt.BorderLayout;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.RenderingHints;
+import rx.Observable;
+import rx.Subscriber;
+import rx.schedulers.Schedulers;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import javax.swing.AbstractAction;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JToolBar;
-import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
-
-
-import java.awt.Graphics;
-import java.awt.GraphicsEnvironment;
-import java.awt.event.KeyListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 
 
 /**
@@ -134,59 +110,74 @@ public class ImageViewerApp extends JFrame {
         setLocationRelativeTo(null);
         
         // start the image loading SwingWorker in a background thread
-        loadimages.execute();
+
+        // RxRefactoring: Subscriber needed to update the UI
+        Subscriber<ThumbnailAction> publishSubscriber = getThumbnailActionSubscriber();
+
+        Observable.fromCallable(() -> loadImagesSync(publishSubscriber))
+                .subscribeOn(Schedulers.computation())
+                .observeOn(Schedulers.immediate())
+                .subscribe();
+
     }
-     //Create a KeyListener that can listen when someone press Esc key on keyboard
-     //You can change for what key that you want, by change value at:
-     //VK_ESCAPE    
+
+    private Subscriber<ThumbnailAction> getThumbnailActionSubscriber()
+    {
+        return new Subscriber<ThumbnailAction>()
+            {
+                @Override
+                public void onCompleted()
+                {
+
+                }
+
+                @Override
+                public void onError(Throwable throwable)
+                {
+
+                }
+
+                @Override
+                public void onNext(ThumbnailAction thumbnailAction)
+                {
+                    JButton thumbButton = new JButton(thumbnailAction);
+                    buttonBar.add(thumbButton, buttonBar.getComponentCount() - 1);
+                }
+            };
+    }
+
+    // RxRefactoring: publish method is replaced by a subscriber and "onNext"
+    public Void loadImagesSync(Subscriber publishSubscriber)
+    {
+        for (int i = 0; i < imageCaptions.length; i++) {
+            ImageIcon icon;
+            icon = createImageIcon(imagedir + imageFileNames[i], imageCaptions[i]);
+
+            ThumbnailAction thumbAction;
+            if(icon != null){
+
+                ImageIcon thumbnailIcon = new ImageIcon(getScaledImage(icon.getImage(), 64, 64));
+
+                thumbAction = new ThumbnailAction(icon, thumbnailIcon, imageCaptions[i]);
+
+            }else{
+                // the image failed to load for some reason
+                // so load a placeholder instead
+                thumbAction = new ThumbnailAction(placeholderIcon, placeholderIcon, imageCaptions[i]);
+            }
+            publishSubscriber.onNext(thumbAction);
+        }
+        return null;
+    }
+    //Create a KeyListener that can listen when someone press Esc key on keyboard
+    //You can change for what key that you want, by change value at:
+    //VK_ESCAPE
 
     
     /**
      * SwingWorker class that loads the images a background thread and calls publish
      * when a new one is ready to be displayed.
      */
-    
-    private SwingWorker<Void, ThumbnailAction> loadimages = new SwingWorker<Void, ThumbnailAction>() {
-        
-        /**
-         * Creates full size and thumbnail versions of the target image files.
-         */
-        @Override
-        protected Void doInBackground() throws Exception {
-            for (int i = 0; i < imageCaptions.length; i++) {
-                ImageIcon icon;
-                icon = createImageIcon(imagedir + imageFileNames[i], imageCaptions[i]);
-                
-                ThumbnailAction thumbAction;
-                if(icon != null){
-                    
-                    ImageIcon thumbnailIcon = new ImageIcon(getScaledImage(icon.getImage(), 64, 64));
-                    
-                    thumbAction = new ThumbnailAction(icon, thumbnailIcon, imageCaptions[i]);
-                    
-                }else{
-                    // the image failed to load for some reason
-                    // so load a placeholder instead
-                    thumbAction = new ThumbnailAction(placeholderIcon, placeholderIcon, imageCaptions[i]);
-                }
-                publish(thumbAction);
-            }            
-            return null;
-        }
-        
-        /**
-         * Process all loaded images.
-         */
-        @Override
-        protected void process(List<ThumbnailAction> chunks) {
-            for (ThumbnailAction thumbAction : chunks) {
-                JButton thumbButton = new JButton(thumbAction);
-                // add the new button BEFORE the last glue
-                // this centers the buttons in the toolbar
-                buttonBar.add(thumbButton, buttonBar.getComponentCount() - 1);
-            }
-        }
-    };
     
     /**
      * Creates an ImageIcon if the path is valid.
