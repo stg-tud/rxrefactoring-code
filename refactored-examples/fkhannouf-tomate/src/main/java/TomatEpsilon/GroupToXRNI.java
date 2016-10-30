@@ -1,20 +1,23 @@
 package TomatEpsilon;
 
-import java.awt.*;
-import java.awt.event.*;
+import org.jdom.Document;
+import org.jdom.Element;
+import org.jdom.output.XMLOutputter;
+import rx.Observable;
+import rx.exceptions.Exceptions;
+import rx.schedulers.Schedulers;
+
 import javax.swing.*;
-import java.util.Vector;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.*;
-import java.util.AbstractCollection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import org.jdom.*;
-import org.jdom.output.*;
 
 /*
  * GroupToXRNI.java
@@ -224,133 +227,134 @@ public class GroupToXRNI extends JPanel implements ActionListener, ControlContex
 }//GEN-LAST:event_directoryButtonActionPerformed
 
     private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButtonActionPerformed
-        worker = new SwingWorker() {
-            public void batch(){
-
-                // Tableau associatif contenant toutes les familles d'instruments et les notes
-                HashMap instruments = new HashMap();
-                String workingDirAbsolutePath;
-                Vector wavFileNames;
-                Vector allNotesArray;
-                Vector groupNameVector;
-                File[] wavFiles;
-                boolean success;
-
-                workingDirAbsolutePath=directoryField.getText();
-
-                File srcDirectory=new File(workingDirAbsolutePath);
-
-                // Initialisation du tableau des notes
-                allNotesArray=buildAllNotes(0,9);
-
-                appendLog("Scanning: " + workingDirAbsolutePath + "" + newline);
-
-                // Remplissage du vecteur avec les noms des fichiers
-                wavFileNames=new Vector();
-                wavFiles=srcDirectory.listFiles();
-                for( File wavFile : wavFiles){
-                    String waveFileName = wavFile.getName();
-                    wavFileNames.add(waveFileName);
-                    appendLog("Found : "+waveFileName+ newline);
-                }
-
-                // Parcours de tous les noms de fichiers trouvés
-                for ( Object wavFileNameObj : wavFileNames){
-
-                    // Nettoyage et explosion du nom de fichier
-                    String wavFileName = wavFileNameObj.toString();
-
-                    // Suppression de l'extension
-                    wavFileName=wavFileName.substring(0, wavFileName.length()-4);
-
-                    wavFileName=wavFileName.replaceAll("[.]", " ");
-                    wavFileName=wavFileName.replaceAll("[_]", " ");
-                    wavFileName=wavFileName.replaceAll("[ ]+", "/");
-                    String[] nameSplit = wavFileName.split("/");
-
-                    String instrumentName = new String();
-                    int instrumentNoteIndex = -1;
-                    String currentNote = new String();
-                    Vector instrument;
-
-                    // Parcours des parties du nom de fichier
-                    groupNameVector = new Vector();
-                    for (String part : nameSplit){
-                        // Si une note est trouv√©e
-                        currentNote=findNote(part,allNotesArray);
-                        if (!currentNote.equals("none")){
-                            // On stocke son index dans la table des notes
-                            instrumentNoteIndex=allNotesArray.indexOf(currentNote);
-                        }else{
-                            // Sinon c'est qu'on est en pr√©sence d'un morceau du nom de l'instrument
-                            groupNameVector.add(part);
-                        }
+        Observable
+                .defer(() ->
+                {
+                    try
+                    {
+                        batch(); // RxRefactoring: This method was declared inside of the SwingWorker
                     }
-
-                    // Implosion du nom de l'instrument
-                    instrumentName=joinStrings(groupNameVector,"-");
-
-                    // Si le nom du sample contient une note
-                    if (instrumentNoteIndex>-1){
-                        // Si la famille d'instruments existe, on la r√©cup√®re
-                        if (instruments.containsKey(instrumentName)){
-                            instrument = (Vector) instruments.get(instrumentName);
-                            //appendLog("Known Instrument : "+instrumentName+ newline);
-                        }else{
-                        // Sinon, on instancie un vecteur pour regrouper cette nouvelle famille
-                            instrument = new Vector();
-                            appendLog("New Instrument : " + instrumentName+ newline);
-                        }
-
-                        // Creation d'un nouveau couple note-sample
-                        Vector couple = new Vector();
-                        couple.add(instrumentNoteIndex);
-                        couple.add(wavFileNameObj.toString());
-                        instrument.add(couple);
-                        appendLog("Adding : " + wavFileNameObj.toString() + newline);
-                        
-                        // On dépose les informations de l'instrument dans le vecteur qui les regroupe tous
-                        instruments.put(instrumentName, instrument);
+                    catch ( Exception e )
+                    {
+                        Exceptions.propagate(e);
                     }
-                }
-
-
-                // Affichage de chacune des entrées de la HashMap
-                String instrumentName = new String();
-                Set instrumentsFamily = instruments.keySet();
-                Iterator i = instrumentsFamily.iterator();
-                while (i.hasNext()){
-                    instrumentName=i.next().toString();
-                    Vector instrumentCouples = (Vector) instruments.get(instrumentName);
-                    Iterator i2 = instrumentCouples.iterator();
-                    while (i2.hasNext()){
-                        Vector instrumentCouple = (Vector) i2.next();
-                        //appendLog("Note id : "+instrumentCouple.get(0)+", sample : "+instrumentCouple.get(1)+newline);
-                        //System.out.print("Note id : "+instrumentCouple.get(0)+" sample : "+instrumentCouple.get(1)+",");
-                    }
-                    //System.out.println();
-
-                    // Construction et affichage du XML r√©sultant
-                    buildXRNI(instrumentName,instrumentCouples,workingDirAbsolutePath);
-                }
-            }
-
-            public String doInBackground() {
-                try {
-                    batch();
-                }catch (Exception e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }
-
-            @Override
-            public void done() {
-                System.out.println("done");
-            }
-        };
-        worker.execute();
+                    return Observable.empty();
+                })
+                .subscribeOn(Schedulers.computation())
+                .observeOn(Schedulers.immediate())
+                .doOnCompleted(() -> System.out.println("done"))
+                .subscribe();
     }//GEN-LAST:event_startButtonActionPerformed
+
+    public void batch(){
+
+        // Tableau associatif contenant toutes les familles d'instruments et les notes
+        HashMap instruments = new HashMap();
+        String workingDirAbsolutePath;
+        Vector wavFileNames;
+        Vector allNotesArray;
+        Vector groupNameVector;
+        File[] wavFiles;
+        boolean success;
+
+        workingDirAbsolutePath=directoryField.getText();
+
+        File srcDirectory=new File(workingDirAbsolutePath);
+
+        // Initialisation du tableau des notes
+        allNotesArray=buildAllNotes(0,9);
+
+        appendLog("Scanning: " + workingDirAbsolutePath + "" + newline);
+
+        // Remplissage du vecteur avec les noms des fichiers
+        wavFileNames=new Vector();
+        wavFiles=srcDirectory.listFiles();
+        for( File wavFile : wavFiles){
+            String waveFileName = wavFile.getName();
+            wavFileNames.add(waveFileName);
+            appendLog("Found : "+waveFileName+ newline);
+        }
+
+        // Parcours de tous les noms de fichiers trouvés
+        for ( Object wavFileNameObj : wavFileNames){
+
+            // Nettoyage et explosion du nom de fichier
+            String wavFileName = wavFileNameObj.toString();
+
+            // Suppression de l'extension
+            wavFileName=wavFileName.substring(0, wavFileName.length()-4);
+
+            wavFileName=wavFileName.replaceAll("[.]", " ");
+            wavFileName=wavFileName.replaceAll("[_]", " ");
+            wavFileName=wavFileName.replaceAll("[ ]+", "/");
+            String[] nameSplit = wavFileName.split("/");
+
+            String instrumentName = new String();
+            int instrumentNoteIndex = -1;
+            String currentNote = new String();
+            Vector instrument;
+
+            // Parcours des parties du nom de fichier
+            groupNameVector = new Vector();
+            for (String part : nameSplit){
+                // Si une note est trouv√©e
+                currentNote=findNote(part,allNotesArray);
+                if (!currentNote.equals("none")){
+                    // On stocke son index dans la table des notes
+                    instrumentNoteIndex=allNotesArray.indexOf(currentNote);
+                }else{
+                    // Sinon c'est qu'on est en pr√©sence d'un morceau du nom de l'instrument
+                    groupNameVector.add(part);
+                }
+            }
+
+            // Implosion du nom de l'instrument
+            instrumentName=joinStrings(groupNameVector,"-");
+
+            // Si le nom du sample contient une note
+            if (instrumentNoteIndex>-1){
+                // Si la famille d'instruments existe, on la r√©cup√®re
+                if (instruments.containsKey(instrumentName)){
+                    instrument = (Vector) instruments.get(instrumentName);
+                    //appendLog("Known Instrument : "+instrumentName+ newline);
+                }else{
+                    // Sinon, on instancie un vecteur pour regrouper cette nouvelle famille
+                    instrument = new Vector();
+                    appendLog("New Instrument : " + instrumentName+ newline);
+                }
+
+                // Creation d'un nouveau couple note-sample
+                Vector couple = new Vector();
+                couple.add(instrumentNoteIndex);
+                couple.add(wavFileNameObj.toString());
+                instrument.add(couple);
+                appendLog("Adding : " + wavFileNameObj.toString() + newline);
+
+                // On dépose les informations de l'instrument dans le vecteur qui les regroupe tous
+                instruments.put(instrumentName, instrument);
+            }
+        }
+
+
+        // Affichage de chacune des entrées de la HashMap
+        String instrumentName = new String();
+        Set instrumentsFamily = instruments.keySet();
+        Iterator i = instrumentsFamily.iterator();
+        while (i.hasNext()){
+            instrumentName=i.next().toString();
+            Vector instrumentCouples = (Vector) instruments.get(instrumentName);
+            Iterator i2 = instrumentCouples.iterator();
+            while (i2.hasNext()){
+                Vector instrumentCouple = (Vector) i2.next();
+                //appendLog("Note id : "+instrumentCouple.get(0)+", sample : "+instrumentCouple.get(1)+newline);
+                //System.out.print("Note id : "+instrumentCouple.get(0)+" sample : "+instrumentCouple.get(1)+",");
+            }
+            //System.out.println();
+
+            // Construction et affichage du XML r√©sultant
+            buildXRNI(instrumentName,instrumentCouples,workingDirAbsolutePath);
+        }
+    }
 
     private void clearButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearButtonActionPerformed
         logTextArea.setText(null);
