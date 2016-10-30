@@ -5,6 +5,8 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import daviddlowe.polygon.DrawArea.ModeType;
+import rx.Observable;
+import rx.schedulers.Schedulers;
 
 /**
  * The main window of the application.
@@ -82,20 +84,26 @@ public class ApplicationFrame extends JFrame implements ActionListener, DrawArea
 	 * Clear the drawArea.
 	 */
 	private void clear() {
-		SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-			@Override
-			public Void doInBackground() {
-				drawArea.clear();
-				return null;
-			}
-			@Override
-			public void done() {
-				clearButton.setEnabled(false);
-				swapButton.setText("Straighten");
-				drawArea.repaint();
-			}
-		};
-		Application.sequentialExecutorService.submit(worker);
+		Observable.fromCallable(()-> clearSync())
+				.subscribeOn(Schedulers.computation())
+				.observeOn(Schedulers.immediate())
+				.doOnCompleted(() -> updateGui())
+				.subscribe();
+	}
+
+	// RxRefactoring: extract SpringWorker.doInBackground() as Method if number of lines > 1
+	private Void clearSync()
+	{
+		drawArea.clear();
+		return null;
+	}
+
+	// RxRefactoring: extract SpringWorker.done() as Method if number of lines > 1
+	private void updateGui()
+	{
+		clearButton.setEnabled(false);
+		swapButton.setText("Straighten");
+		drawArea.repaint();
 	}
 
 	@Override

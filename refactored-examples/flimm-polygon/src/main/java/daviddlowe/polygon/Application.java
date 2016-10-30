@@ -22,7 +22,8 @@ public class Application {
 	
 	
 	/** Run SwingWorkers sequentially */
-	public static ExecutorService sequentialExecutorService = Executors.newSingleThreadExecutor();
+	// RxRefactoring: executor service no longer needed
+//	public static ExecutorService sequentialExecutorService = Executors.newSingleThreadExecutor();
 	
 	
 	public static void main(String args[]) {

@@ -5,12 +5,13 @@ import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.*;
 
 import javax.swing.*;
 
 import daviddlowe.polygon.geom.*;
 import daviddlowe.polygon.geom.Point;
+import rx.Observable;
+import rx.schedulers.Schedulers;
 
 /**
  * This is the area of the window where all the action happens!
@@ -85,50 +86,56 @@ public class DrawArea extends JPanel implements MouseListener, MouseMotionListen
 	 */
 	public void swap() {
 		assert EventQueue.isDispatchThread();
-		SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-			@Override
-			public Void doInBackground() {
-				if (Application.debug) {
-					System.out.println("Number of polygons: " + getPolygons().length);
-				}
-				if (mode == ModeType.DRAWING) {
-					if (freeLines.size() == 0) {
-						for (DrawAreaListener listener: listeners) {
-							listener.noLinesError();
-							System.out.println("no lines");
-						}
-						return null;
-					}
-					// switch to STRAIGHT
-					polygons = getPolygons();
-					if (polygons.length != getPartialShapes().length) {
-						for (DrawAreaListener listener: listeners) {
-							listener.invalidPolygonError();
-						}
-					} else {
-						mode = ModeType.STRAIGHT;
-					}
-				} else {
-					// switch to DRAWING
-					polygons = null;
-					mode = ModeType.DRAWING;
-				}
-				return null;
-			}
-			@Override
-			public void done() {
-				runningWorkers.decrementAndGet();
-				repaint();
-				for (DrawAreaListener listener: listeners) {
-					listener.swapped();
-				}
-			}
-		};
+		Observable.fromCallable(() -> swapSync())
+				.subscribeOn(Schedulers.computation())
+				.observeOn(Schedulers.immediate())
+				.doOnCompleted(() -> updateGuiAfterSwap())
+				.subscribe();
 		runningWorkers.incrementAndGet();
 		repaint();
-		Application.sequentialExecutorService.submit(worker);
 	}
-	
+
+	// RxRefactoring: extract SpringWorker.doInBackground() as Method if number of lines > 1
+	private Void swapSync()
+	{
+		if ( Application.debug) {
+            System.out.println("Number of polygons: " + getPolygons().length);
+        }
+		if (mode == ModeType.DRAWING) {
+            if (freeLines.size() == 0) {
+                for (DrawAreaListener listener: listeners) {
+                    listener.noLinesError();
+                    System.out.println("no lines");
+                }
+                return null;
+            }
+            // switch to STRAIGHT
+            polygons = getPolygons();
+            if (polygons.length != getPartialShapes().length) {
+                for (DrawAreaListener listener: listeners) {
+                    listener.invalidPolygonError();
+                }
+            } else {
+                mode = ModeType.STRAIGHT;
+            }
+        } else {
+            // switch to DRAWING
+            polygons = null;
+            mode = ModeType.DRAWING;
+        }
+		return null;
+	}
+
+	// RxRefactoring: extract SpringWorker.done() as Method if number of lines > 1
+	private void updateGuiAfterSwap()
+	{
+		runningWorkers.decrementAndGet();
+		repaint();
+		for (DrawAreaListener listener: listeners) {
+			listener.swapped();
+		}
+	}
+
 	/**
 	 * Returns whether all the partial shapes drawn by the user are polygons.
 	 * Warning: this will return true if nothing has been drawn.
@@ -262,21 +269,11 @@ public class DrawArea extends JPanel implements MouseListener, MouseMotionListen
 	public void mousePressed(MouseEvent e) {
 		if (mode == ModeType.DRAWING && e.getButton() == MouseEvent.BUTTON1) {
 			final MouseEvent event = e;
-			SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-				@Override
-				public Void doInBackground() {
-					// start to draw a new FreeLine
-					FreeLine freeLine = new FreeLine();
-					freeLine.addPoint(new Point(event));
-					freeLines.add(freeLine);
-					return null;
-				}
-				@Override
-				public void done() {
-					repaint();
-				}
-			};
-			Application.sequentialExecutorService.submit(worker);
+			Observable.fromCallable(() -> doMousePressedSync(event))
+					.subscribeOn(Schedulers.computation())
+					.observeOn(Schedulers.immediate())
+					.doOnCompleted(() -> repaint())
+					.subscribe();
 			mouseDown = true;
 		}
 		if (e.isPopupTrigger() && mode == ModeType.DRAWING) {
@@ -285,30 +282,23 @@ public class DrawArea extends JPanel implements MouseListener, MouseMotionListen
 		}
 	}
 
+	// RxRefactoring: extract SpringWorker.doInBackground() as Method if number of lines > 1
+	private Void doMousePressedSync(MouseEvent event)
+	{FreeLine freeLine = new FreeLine();
+		freeLine.addPoint(new Point(event));
+		freeLines.add(freeLine);
+		return null;
+	}
+
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		final MouseEvent event = e;
 		if (mode == ModeType.DRAWING && e.getButton() == MouseEvent.BUTTON1) {
-			SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-				@Override
-				public Void doInBackground() {
-					// finish creating a new FreeLine
-					freeLines.lastElement().addPoint(new Point(event));
-					for (DrawAreaListener listener: listeners) {
-						listener.lineAdded();
-					}
-					// if newest FreeLine isn't very long, ignore it by deleting it
-					if (freeLines.lastElement().size() < 3) {
-						freeLines.remove(freeLines.size() - 1);
-					}
-					return null;
-				}
-				@Override
-				public void done() {
-					repaint();
-				}
-			};
-			Application.sequentialExecutorService.submit(worker);
+			Observable.fromCallable(() -> doMouseReleasedSync(event))
+					.subscribeOn(Schedulers.computation())
+					.observeOn(Schedulers.immediate())
+					.doOnCompleted(() -> repaint())
+					.subscribe();
 			mouseDown = false;
 		}
 		if (e.isPopupTrigger() && mode == ModeType.DRAWING) {
@@ -317,26 +307,39 @@ public class DrawArea extends JPanel implements MouseListener, MouseMotionListen
 		}
 	}
 
+	// RxRefactoring: extract SpringWorker.doInBackground() as Method if number of lines > 1
+	private Void doMouseReleasedSync(MouseEvent event)
+	{
+		freeLines.lastElement().addPoint(new Point(event));
+		for (DrawAreaListener listener: listeners) {
+            listener.lineAdded();
+        }
+		// if newest FreeLine isn't very long, ignore it by deleting it
+		if (freeLines.lastElement().size() < 3) {
+            freeLines.remove(freeLines.size() - 1);
+        }
+		return null;
+	}
+
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		if (mouseDown) {
 			final MouseEvent event = e;
-			SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-				@Override
-				public Void doInBackground() {
-					// update new FreeLine
-					freeLines.lastElement().addPoint(new Point(event));
-					return null;
-				}
-				@Override
-				public void done() {
-					repaint();
-				}
-			};
-			Application.sequentialExecutorService.submit(worker);
+			Observable.fromCallable(() -> doMouseDraggedSync(event))
+					.subscribeOn(Schedulers.computation())
+					.observeOn(Schedulers.immediate())
+					.doOnCompleted(() -> repaint())
+					.subscribe();
 		}
 	}
-	
+
+	// RxRefactoring: extract SpringWorker.doInBackground() as Method if number of lines > 1
+	private Void doMouseDraggedSync(MouseEvent event)
+	{
+		freeLines.lastElement().addPoint(new Point(event));
+		return null;
+	}
+
 	/**
 	 * @return A new round rectangle used as decoration.
 	 */
