@@ -15,12 +15,10 @@
  */
 package ru.ifmo.juneiform;
 
-import com.sun.corba.se.impl.orbutil.GetPropertyAction;
 import java.awt.Cursor;
 import java.io.File;
-import java.nio.file.FileSystem;
 import java.util.Random;
-import javax.swing.SwingWorker;
+
 import org.apache.log4j.Logger;
 import ru.ifmo.juneiform.ocr.Cuneiform;
 import ru.ifmo.juneiform.ocr.CuneiformException;
@@ -30,6 +28,8 @@ import ru.ifmo.juneiform.scanner.XSane;
 import ru.ifmo.juneiform.ui.InputPanel;
 import ru.ifmo.juneiform.ui.MouseCoordinatesListener;
 import ru.ifmo.juneiform.ui.View;
+import rx.Observable;
+import rx.schedulers.Schedulers;
 
 /**
  *
@@ -89,34 +89,37 @@ public class Editor implements ViewInteractor {
 
         view.setStatus(L10n.forString("status.ocr"));
         view.changeCursor(new Cursor(Cursor.WAIT_CURSOR));
-        SwingWorker<String, Void> worker = new SwingWorker<String, Void>() {
 
-            @Override
-            protected String doInBackground() {
-                String result = "";
-                try {
-                    result = cuneiform.performOCR(document.getPath(), true);
-                } catch (OCRException ex) {
-                    view.showErrorDialog(L10n.forString("msg.error"), ex.getMessage());
-                } finally {
-                    view.clearStatus(L10n.forString("status.ocr"));
-                    view.changeCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-                    return result;
-                }
-            }
+        // RxRefactoring: SwingWorker refactored to RxJava
+        final String[] result = new String[ 1 ];
+        Observable.fromCallable(() -> doInBackgroundSync())
+                .doOnNext(r -> result[ 0 ] = r)
+                .doOnCompleted(() -> done(result[0]))
+                .subscribeOn(Schedulers.computation())
+                .observeOn(Schedulers.immediate())
+                .subscribe();
+    }
 
-            @Override
-            protected void done() {
-                try {
-                    String result = get();
-                    document.setText(result);
-                    view.fillOutput(result);
-                } catch (Exception ex) {
-                    log.warn("SwingWorker error");
-                }
-            }
-        };
-        worker.execute();
+    // RxRefactoring: the usage of get() requires an exception handling. This is no longer needed when using rx
+    private void done(String resultGet)
+    {
+        String result = resultGet;
+        document.setText(result);
+        view.fillOutput(result);
+    }
+
+    private String doInBackgroundSync()
+    {
+        String result = "";
+        try {
+            result = cuneiform.performOCR(document.getPath(), true);
+        } catch (OCRException ex) {
+            view.showErrorDialog(L10n.forString("msg.error"), ex.getMessage());
+        } finally {
+            view.clearStatus(L10n.forString("status.ocr"));
+            view.changeCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+            return result;
+        }
     }
 
     public File scanImage() {
