@@ -37,6 +37,7 @@ import javax.swing.SwingWorker;
 /**
  * SwingWorker example.
  */
+// RxRefactoring: this class was not refactored because this is dead code
 final class ExampleSwingWorker extends SwingWorker<Object, Object> {
     @Override
     protected Object doInBackground() throws Exception {

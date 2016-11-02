@@ -30,34 +30,74 @@
 
 package de.jugmuenster.swingbasics.swingworker.calculation;
 
-import javax.swing.SwingWorker;
+import rx.Observable;
+import rx.Subscriber;
+import rx.schedulers.Schedulers;
 
 /**
- * Calls the {@link Calculate#runCalculation()} from {@link #doInBackground()}
+ * Calls the {@link Calculate#runCalculation(Subscriber)} from {@link #doInBackground(Subscriber)}
  * method to actually perform the calculation simulation.
  */
-public class CalculationPerformer extends SwingWorker<Object, Object> {
+public class CalculationPerformer {
 
     private final CalculateWithSwingWorker calculateWithSwingWorker;
 
     CalculationPerformer(CalculateWithSwingWorker calculateWithSwingWorker) {
 	this.calculateWithSwingWorker = calculateWithSwingWorker;
-	addPropertyChangeListener(new ProgressFeedbackProvider(
-		this.calculateWithSwingWorker.swingWorkerDemo));
     }
 
-    protected Object doInBackground() throws Exception {
-	this.calculateWithSwingWorker.runCalculation();
+    // RxRefactoring: subscriber added to be able to update the UI
+    private Object doInBackground(Subscriber<Integer> subscriber) throws Exception {
+	this.calculateWithSwingWorker.runCalculation(subscriber);
 	return "OK";
     }
 
-    protected void done() {
+    // RxRefactoring: this method is now private. Result parameter added because "get()" was used.
+    private void done(Object result) {
 	try {
-	    this.calculateWithSwingWorker.swingWorkerDemo.appendStatus(get());
+	    this.calculateWithSwingWorker.swingWorkerDemo.appendStatus(result);
 	} catch (Exception ex) {
 	    ex.printStackTrace();
 	    if (ex instanceof java.lang.InterruptedException)
 		return;
 	}
     }
+
+    // RxRefactoring: creates the observable that is in charge of executin the async task
+	public Observable<Object> createRxObservable()
+	{
+		final Object[] result = new Object[ 1 ];
+		Subscriber<Integer> subscriber = createUpdateSubscriber();
+		return Observable
+				.fromCallable(() -> doInBackground(subscriber))
+				.doOnNext(r -> result[ 0 ] = r)
+				.subscribeOn(Schedulers.computation())
+				.observeOn(Schedulers.immediate())
+				.doOnCompleted(() -> done(result[ 0 ]));
+	}
+
+	// RxRefactoring: defines how the UI should be updated
+	private Subscriber<Integer> createUpdateSubscriber()
+	{
+		return new Subscriber<Integer>()
+            {
+                @Override
+                public void onCompleted()
+                {
+
+                }
+
+                @Override
+                public void onError(Throwable throwable)
+                {
+
+                }
+
+                @Override
+                public void onNext(Integer integer)
+                {
+                    calculateWithSwingWorker.swingWorkerDemo.appendPercentageFinished(integer);
+                }
+            };
+	}
 }

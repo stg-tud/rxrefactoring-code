@@ -30,6 +30,8 @@
 
 package de.jugmuenster.swingbasics.swingworker.calculation;
 
+import rx.Subscriber;
+
 import java.awt.event.ActionEvent;
 
 import javax.swing.Action;
@@ -39,7 +41,7 @@ import javax.swing.SwingWorker;
  * Simulate a calculation without using {@link SwingWorker}.
  * <p>
  * Expected effect is that whenever the calculation is started via
- * {@link #runCalculation()} the gui will freeze and provide no more feedback.
+ * {@link #runCalculation(Subscriber)} the gui will freeze and provide no more feedback.
  * To the user this will seem like the application has frozen, and he will
  * shortly lose temper and kill it.
  */
@@ -59,31 +61,44 @@ public class CalculateWithoutSwingWorker extends Calculate {
     }
 
     /**
-     * This implementation calls {@link #runCalculation()} from <b>within</b>
+     * This implementation calls {@link #runCalculation(Subscriber)} from <b>within</b>
      * the EDT.
      * 
      * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
      */
     @Override
+	// RxRefactoring: subscriber needed to update the ui
     public void actionPerformed(ActionEvent e) {
+		Subscriber<Integer> subscriber = createUpdateSubscriber();
 	try {
-	    runCalculation();
+	    runCalculation(subscriber);
 	} catch (InterruptedException e1) {
 	    e1.printStackTrace();
 	}
     }
 
-    /**
-     * Provide feedback within the event dispatch thread.
-     * <p>
-     * Although this approach seems good, this will not work, all feedback will
-     * be delayed until the calculation has ended, and then it will be made
-     * visible immediately.
-     * 
-     * @see de.jugmuenster.swingbasics.swingworker.calculation.Calculate#update(int)
-     */
-    @Override
-    void update(final int i) {
-	new ProgressMade(this, i).provide();
-    }
+    // RxRefactoring: defines how the ui should be updated
+	private Subscriber<Integer> createUpdateSubscriber()
+	{
+		return new Subscriber<Integer>()
+            {
+                @Override
+                public void onCompleted()
+                {
+
+                }
+
+                @Override
+                public void onError(Throwable throwable)
+                {
+
+                }
+
+                @Override
+                public void onNext(Integer integer)
+                {
+                    swingWorkerDemo.appendPercentageFinished(integer);
+                }
+            };
+	}
 }

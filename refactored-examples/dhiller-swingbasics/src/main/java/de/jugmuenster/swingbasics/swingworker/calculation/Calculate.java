@@ -30,6 +30,8 @@
 
 package de.jugmuenster.swingbasics.swingworker.calculation;
 
+import rx.Subscriber;
+
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 
@@ -55,9 +57,10 @@ public abstract class Calculate extends AbstractAction {
      * 
      * @throws InterruptedException
      */
-    public void runCalculation() throws InterruptedException {
+    // RxRefactoring: subscriber needed to update the UI
+    public void runCalculation(Subscriber<Integer> subscriber) throws InterruptedException {
 	new CalculationStarted(this).provide();
-	calculate();
+	calculate(subscriber);
 	new CalculationFinished(this).provide();
     }
 
@@ -65,14 +68,13 @@ public abstract class Calculate extends AbstractAction {
      * This implementation simulates a long running calculation of about ten
      * seconds with updates during making progress.
      * 
-     * @see #update(int)
-     * 
      * @throws InterruptedException
      */
-    private void calculate() throws InterruptedException {
+    // RxRefactoring: uses subscriber.onNext to update the UI instead of an update method
+    private void calculate(Subscriber<Integer> subscriber) throws InterruptedException {
 	for (int i = 1; i <= 100; i++) {
 	    Thread.sleep(100);
-	    update(i);
+	    subscriber.onNext(i);
 	}
     }
 
@@ -82,6 +84,7 @@ public abstract class Calculate extends AbstractAction {
      * @param i
      *            the progress value as percentage 1 &lt;= i &lt;=100.
      */
-    abstract void update(int i);
+    // RxRefactoring: update method no longer needed
+//    abstract void update(int i);
 
 }

@@ -30,8 +30,9 @@
 
 package de.jugmuenster.swingbasics.swingworker.calculation;
 
+import rx.Subscriber;
+
 import java.awt.event.ActionEvent;
-import java.beans.PropertyChangeEvent;
 
 import javax.swing.Action;
 import javax.swing.SwingWorker;
@@ -40,7 +41,7 @@ import javax.swing.SwingWorker;
  * Simulate a calculation using {@link SwingWorker}.
  * <p>
  * Expected effect is that whenever the calculation is started via
- * {@link #runCalculation()} the gui will provide feedback immediately. To the
+ * {@link #runCalculation(Subscriber)} the gui will provide feedback immediately. To the
  * user this will seem like the application is still responsive even when it is
  * working.
  */
@@ -48,7 +49,8 @@ public class CalculateWithSwingWorker extends Calculate {
 
     private static final long serialVersionUID = 1L;
 
-    private SwingWorker<Object, Object> swingWorker;
+    // RxRefactoring: SwingWorker is no longer needed
+    private CalculationPerformer calculationPerformer;
 
     CalculateWithSwingWorker(SwingWorkerDemo swingWorkerDemo) {
 	super(swingWorkerDemo, "With SwingWorker");
@@ -62,24 +64,14 @@ public class CalculateWithSwingWorker extends Calculate {
 
     /**
      * Creates a {@link SwingWorker} instance that calls
-     * {@link #runCalculation()} from outside the EDT.
+     * {@link #runCalculation(Subscriber)} from outside the EDT.
      * 
      * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
      */
     @Override
+    // RxRefactoring: start execution by subscribing the Observable
     public void actionPerformed(ActionEvent e) {
-	swingWorker = new CalculationPerformer(this);
-	swingWorker.execute();
-    }
-
-    /**
-     * This implementation converts the update message to a
-     * {@link PropertyChangeEvent}.
-     * 
-     * @see de.jugmuenster.swingbasics.swingworker.calculation.Calculate#update(int)
-     */
-    @Override
-    void update(int i) {
-	swingWorker.firePropertyChange(SwingWorkerDemo.PROGRESS, i - 1, i);
+        calculationPerformer = new CalculationPerformer(this);
+        calculationPerformer.createRxObservable().subscribe();
     }
 }
