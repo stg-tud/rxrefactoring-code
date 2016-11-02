@@ -742,25 +742,27 @@ public class DeExifierGUI extends JFrame {
 
 		// progressBar.setMaximum(files.size());
 
-		remover.addPropertyChangeListener(new PropertyChangeListener() {
-
-		    @Override
-		    public void propertyChange(PropertyChangeEvent arg0) {
-			if (arg0.getPropertyName().equals("state")) {
-			    if (arg0.getNewValue().equals(StateValue.STARTED)) {
-				progressBar.setVisible(true);
-			    } else {
-				progressBar.setVisible(false);
-				progressBar.setValue(0);
-			    }
-			}
-			if (arg0.getPropertyName().equals("progress")) {
-			    progressBar.setValue((int) arg0.getNewValue());
-			}
-
-		    }
-		});
-		remover.execute();
+			//RxRefactoring: the PropertyChangeListener cannot longer be used
+//		remover.addPropertyChangeListener(new PropertyChangeListener() {
+//
+//		    @Override
+//		    public void propertyChange(PropertyChangeEvent arg0) {
+//			if (arg0.getPropertyName().equals("state")) {
+//			    if (arg0.getNewValue().equals(StateValue.STARTED)) {
+//				progressBar.setVisible(true);
+//			    } else {
+//				progressBar.setVisible(false);
+//				progressBar.setValue(0);
+//			    }
+//			}
+//			if (arg0.getPropertyName().equals("progress")) {
+//			    progressBar.setValue((int) arg0.getNewValue());
+//			}
+//
+//		    }
+//		});
+			// RxRefactoring: start async task with subscribe instead of execute
+		remover.createRxObservable().subscribe();
 	    }
 
 	    if (clickedButton.equals(btnPrefs)) {

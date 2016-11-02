@@ -63,6 +63,9 @@ import org.apache.sanselan.formats.tiff.write.TiffOutputField;
 import org.apache.sanselan.formats.tiff.write.TiffOutputSet;
 
 import com.sun.org.apache.bcel.internal.classfile.PMGClass;
+import rx.Observable;
+import rx.Subscriber;
+import rx.schedulers.Schedulers;
 
 /**
  * Removes metadata from jpg images by extending Swingworker.<br>
@@ -71,7 +74,7 @@ import com.sun.org.apache.bcel.internal.classfile.PMGClass;
  * 
  * @author Andreas Reichart
  */
-class Remover extends SwingWorker<Void, String> {
+class Remover {
     private ArrayList<File> fileList;
     private File path;
     private final String[] JPG_SUFFIXES = { ".jpg", ".jpeg", ".JPG", ".JPEG" };
@@ -127,8 +130,8 @@ class Remover extends SwingWorker<Void, String> {
 	this.removeIptc = removeIptc;
     }
 
-    @Override
-    protected Void doInBackground() throws ImageReadException, IOException, ImageWriteException {
+    // RxRefactoring: subscriber added for updating
+    private Void doInBackground(Subscriber<String> subscriber) throws ImageReadException, IOException, ImageWriteException {
 	// int counter = 0;
 
 	// iterate over the fileList
@@ -303,30 +306,72 @@ class Remover extends SwingWorker<Void, String> {
 	    // bOutputStreamTemp.close();
 	    // END debug;
 
-	    publish(f.toString());
+		subscriber.onNext(f.toString()); // RxRefactoring: subscribe.onNext instead of publish
 
 	    // counter++;
 	    // setProgress(counter);
 	}
+	subscriber.onCompleted();
 	return null;
     }
 
-    @Override
-    protected void done() {
+    private void done() {
 	fileList = null;
 	listModel.removeAllElements();
 
 	// statusLabel.setText("Done.");
     }
 
-    @Override
-    protected void process(List<String> chunks) {
-	for (String f : chunks) {
-	    listModel.removeElement(f);
-	    fileList.remove(new File(f));
-	    progressBar.setValue(progressCounter++);
+    // RxRefactoring: process is no longer needed
+//    private void process(List<String> chunks) {
+//	for (String f : chunks) {
+//	    listModel.removeElement(f);
+//	    fileList.remove(new File(f));
+//	    progressBar.setValue(progressCounter++);
+//	}
+//    }
+
+	// RxRefactoring: creates the observable that is in charge of executin the async task
+    public Observable<Void> createRxObservable()
+	{
+		Subscriber<String> subscriber = createUpdateSubscriber();
+		return Observable.fromCallable(() -> doInBackground(subscriber))
+				.subscribeOn(Schedulers.computation())
+				.observeOn(Schedulers.immediate())
+				.doOnCompleted(() -> done());
 	}
-    }
+
+	// RxRefactoring: defines how the UI should be updated
+	private Subscriber<String> createUpdateSubscriber()
+	{
+		return new Subscriber<String>()
+		{
+			List<String> chunks = new ArrayList<>();
+			@Override
+			public void onCompleted()
+			{
+				for (String s: chunks)
+				{
+					listModel.removeElement(s);
+					fileList.remove(new File(s));
+				}
+			}
+
+			@Override
+			public void onError(Throwable throwable)
+			{
+
+			}
+
+			@Override
+			public void onNext(String s)
+			{
+				// we have to collect the information first to avoid ConcurrentModificationException in the for loop
+				chunks.add(s);
+				progressBar.setValue(progressCounter++);
+			}
+		};
+	}
 
     /*
      * private static void copyExifData(File sourceFile, File destFile, List<TagInfo>
