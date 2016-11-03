@@ -37,6 +37,8 @@ import org.apache.commons.codec.binary.Base64;
 import org.imgscalr.Scalr;
 import org.json.simple.JSONObject;
 
+import rx.Observable;
+import rx.schedulers.Schedulers;
 import se.majid.RcepieApp.screens.MainScreen.EditRecipeAction;
 import se.majid.RecipeApp.objects.CookBook;
 import se.majid.RecipeApp.objects.Recipe;
@@ -190,7 +192,8 @@ public class AddRecipesScreen extends JDialog {
 			recipe.setDescription(textArea.getText());
 			SaveAction.setEnabled(false);
 
-			new SetImageWorker(recipe).execute();
+			// RxRefactoring: use Observable instead of SwingWorker
+			createSetImageRxObservable(recipe).subscribe();
 		}
 	}
 	public JTextField getpicture() {
@@ -222,52 +225,56 @@ public class AddRecipesScreen extends JDialog {
 	 * @author Majid
 	 *
 	 */
-	private class SetImageWorker extends SwingWorker<String, Void>{
-		private Recipe recipe;
-		public SetImageWorker(Recipe recipe){
-			this.recipe = recipe;
-		}
+	// RxRefactoring: creates rx Observable to save images
+	private Observable<String> createSetImageRxObservable(Recipe recipe)
+	{
+		return Observable.fromCallable(() -> doInBackground())
+				.subscribeOn(Schedulers.computation())
+				.observeOn(Schedulers.immediate())
+				.onErrorResumeNext(Observable.empty()) // RxRefactoring: doInBackground throws an Exception (According to a test, the exception would be ignore by the SwingWorker)
+				.doOnCompleted(() -> done(recipe));
+	}
 
-		@Override
-		protected String doInBackground() throws Exception {
-			BufferedImage bi = ImageIO.read(imageFile);
-			BufferedImage resizedimage = Scalr.resize(bi, 200);
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			ImageIO.write(resizedimage, "jpeg", baos); 
+	private String doInBackground() throws Exception {
+		BufferedImage bi = ImageIO.read(imageFile);
+		BufferedImage resizedimage = Scalr.resize(bi, 200);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ImageIO.write(resizedimage, "jpeg", baos);
 
-			return
-					imageString =	Base64.encodeBase64String(baos.toByteArray());
-		}
-		@Override
-		protected void done() {
-			try {
-				recipe.setImage(imageString);
-				if(imageString == "" && update == true){
-					JOptionPane.showMessageDialog(null, "No image was selected");
-					SaveAction.setEnabled(true);
-					return;	 
-				}
-				else if(update== true){
-					CookBook.getInstance().updateRecipe(recipe, index);
+		return
+				imageString =	Base64.encodeBase64String(baos.toByteArray());
+	}
 
-				}
-				else if(imageString == ""){
-					JOptionPane.showMessageDialog(null, "No image selected");
-					SaveAction.setEnabled(true);
-					return;
-				}
-				else {
-					CookBook.getInstance().addRecipe(recipe);
-				}
-
+	// RxRefactoring: the argument of the constructor was only used in the method "done"
+	private void done(Recipe recipe) {
+		try {
+			recipe.setImage(imageString);
+			if(imageString == "" && update == true){
+				JOptionPane.showMessageDialog(null, "No image was selected");
 				SaveAction.setEnabled(true);
-				AddRecipesScreen.this.setVisible(false);
-				MainScreen.updateList();
-			} catch (Exception e) {
-				e.printStackTrace();
+				return;
 			}
+			else if(update== true){
+				CookBook.getInstance().updateRecipe(recipe, index);
+
+			}
+			else if(imageString == ""){
+				JOptionPane.showMessageDialog(null, "No image selected");
+				SaveAction.setEnabled(true);
+				return;
+			}
+			else {
+				CookBook.getInstance().addRecipe(recipe);
+			}
+
+			SaveAction.setEnabled(true);
+			AddRecipesScreen.this.setVisible(false);
+			MainScreen.updateList();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
+
 /**
  * In this method we browse to choose an existing image file.
  * @author Majid

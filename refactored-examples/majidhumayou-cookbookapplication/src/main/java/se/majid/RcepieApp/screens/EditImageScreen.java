@@ -138,6 +138,7 @@ public class EditImageScreen extends JDialog {
  * @author Majid
  *
  */
+	// RxRefactoring: not refactored, because I couldn't get this piece of code running using the UI
 	public class RotateImagework extends SwingWorker<Icon, Void>{
 
 		private Recipe recipe;
