@@ -89,7 +89,8 @@ public class Payment extends State {
             this.reset = 1;
             dm.setState(new Refund(this));
             dm.payRefund();
-            worker.execute();
+            // RxRefactoring: subscribe instead of execute
+            worker.createRxObservable().subscribe();
         }
     }
 

@@ -4,13 +4,17 @@
  */
 package assignment2drinksmachine;
 
+import rx.Observable;
+import rx.schedulers.Schedulers;
+
 import javax.swing.SwingWorker;
 
 /**
  * A timer class used for delaying certain operations.
  * @author Jeppe Laursen & Manuel Maestrini
  */
-public class SWorker extends SwingWorker {
+// RxRefactoring: it doesn't extend SwingWorker anymore
+public class SWorker {
 
     private DrinksMachine dm;
 
@@ -22,8 +26,18 @@ public class SWorker extends SwingWorker {
         this.dm = dm;
     }
 
-    @Override
-    protected Object doInBackground() throws Exception {
+    // RxRefactoring: create observable using existing methods
+    public Observable<Object> createRxObservable()
+    {
+        return Observable.fromCallable(() -> doInBackground())
+                .subscribeOn(Schedulers.computation())
+                .observeOn(Schedulers.immediate())
+                .onErrorResumeNext(Observable.empty())
+                .doOnCompleted(() -> done());
+    }
+
+    // RxRefactoring: method can be private (Override must be removed)
+    private Object doInBackground() throws Exception {
         try {
             Thread.sleep(2000);
         } catch (Exception e) {
@@ -31,8 +45,8 @@ public class SWorker extends SwingWorker {
         return null;
     }
 
-    @Override
-    protected void done() {
+    // RxRefactoring: method can be private (Override must be removed)
+    private void done() {
         this.dm.selectDrinkMessage(false);
     }
 }

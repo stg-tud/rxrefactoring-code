@@ -49,7 +49,7 @@ public class Ready extends State {
     @Override
     public void selection(int choice, DrinksMachine dm) {
         worker = new SWorker(dm);
-        worker.cancel(true);
+//        worker.cancel(true);
         if (choice > prices.length || choice <= 0) {
             dm.error("The selected drink does not exist.");
             dm.selectDrinkMessage(true);
@@ -84,7 +84,7 @@ public class Ready extends State {
     @Override
     public void inputCoin(int value, DrinksMachine dm) {
         worker = new SWorker(dm);
-        worker.cancel(true);
+//        worker.cancel(true); RxRefactoring: no need to cancel, observable hasn't been subscribed
         if (value == 1 || value == 2 || value == 5 || value == 10 || value == 20) {
             balance += value;
             dm.showCreditMessage(balance);
@@ -117,7 +117,8 @@ public class Ready extends State {
             this.reset = 1;
             dm.setState(new Refund(this));
             dm.payRefund();
-            worker.execute();
+            // RxRefactoring: subscribe instead of execute
+            worker.createRxObservable().subscribe();
         } else {
             dm.selectDrinkMessage(false);
         }
