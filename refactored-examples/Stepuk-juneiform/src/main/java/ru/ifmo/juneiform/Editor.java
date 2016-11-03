@@ -91,10 +91,8 @@ public class Editor implements ViewInteractor {
         view.changeCursor(new Cursor(Cursor.WAIT_CURSOR));
 
         // RxRefactoring: SwingWorker refactored to RxJava
-        final String[] result = new String[ 1 ];
-        Observable.fromCallable(() -> doInBackgroundSync())
-                .doOnNext(r -> result[ 0 ] = r)
-                .doOnCompleted(() -> done(result[0]))
+        Observable.fromCallable(() -> doInBackgroundSync()) // fromCallable will always return one emission
+                .doOnNext(r -> done(r)) // use onNext instead of onCompleted, because the first emission is already the result from doInBackground
                 .subscribeOn(Schedulers.computation())
                 .observeOn(Schedulers.immediate())
                 .subscribe();
