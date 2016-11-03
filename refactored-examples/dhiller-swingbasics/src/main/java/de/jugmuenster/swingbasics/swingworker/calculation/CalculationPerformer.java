@@ -66,14 +66,12 @@ public class CalculationPerformer {
     // RxRefactoring: creates the observable that is in charge of executin the async task
 	public Observable<Object> createRxObservable()
 	{
-		final Object[] result = new Object[ 1 ];
 		Subscriber<Integer> subscriber = createUpdateSubscriber();
 		return Observable
-				.fromCallable(() -> doInBackground(subscriber))
-				.doOnNext(r -> result[ 0 ] = r)
+				.fromCallable(() -> doInBackground(subscriber)) // fromCallable will always return one emission
+				.doOnNext(r -> done(r)) // use onNext instead of onCompleted, because the first emission is already the result from doInBackground
 				.subscribeOn(Schedulers.computation())
-				.observeOn(Schedulers.immediate())
-				.doOnCompleted(() -> done(result[ 0 ]));
+				.observeOn(Schedulers.immediate());
 	}
 
 	// RxRefactoring: defines how the UI should be updated
