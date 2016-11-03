@@ -42,5 +42,16 @@
             <artifactId>pdfbox</artifactId>
             <version>1.1.0</version>
         </dependency>
+        <!--RxRefactoring: for some reason this dependency was needed after refactoring but not before!-->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk16</artifactId>
+            <version>1.45</version>
+        </dependency>
+        <dependency>
+            <groupId>io.reactivex</groupId>
+            <artifactId>rxjava</artifactId>
+            <version>1.2.1</version>
+        </dependency>
     </dependencies>
 </project>

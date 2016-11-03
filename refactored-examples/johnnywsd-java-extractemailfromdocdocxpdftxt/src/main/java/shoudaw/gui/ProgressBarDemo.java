@@ -46,6 +46,7 @@ public class ProgressBarDemo extends JPanel
     private JTextArea taskOutput;
     private Task task;
 
+    // RxRefactoring: not refactored because I couldn't get this code to run from the UI
     class Task extends SwingWorker<Void, Void> {
         /*
          * Main task. Executed in background thread.
