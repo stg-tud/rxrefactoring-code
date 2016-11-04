@@ -64,7 +64,6 @@ public class TimerWorker extends SwingWorker<String, String>
         {
             System.out.println("Execution cancelled");
         }
-        super.done();
     }
 
     @Override
