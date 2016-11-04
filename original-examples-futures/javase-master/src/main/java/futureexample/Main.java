@@ -7,12 +7,12 @@ import java.util.concurrent.Future;
 public class Main {
 
 	public static void main(String[] args) throws Exception {
-		FutureContext futureContext = new FutureContext();
+		FutureContext futureContext = new FutureContext(); // specific implementation
 		
 		ExecutorService executorService = Executors.newCachedThreadPool();
 		for(int i = 0; i <= 9; i++) {
 			Future<Integer> future = executorService.submit(new Worker(i * 10 + 1, i * 10 + 10));
-			futureContext.addFuture(future);
+			futureContext.addFuture(future); // specific implementation (not a general pattern)
 		}
 		executorService.shutdown();
 		

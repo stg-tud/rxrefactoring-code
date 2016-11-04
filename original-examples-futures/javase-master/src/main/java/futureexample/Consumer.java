@@ -15,7 +15,7 @@ public class Consumer implements Runnable {
 			
 			int sum = 0;
 			for(Future<Integer> fu : futureContext.getFutureList()) {
-				sum += fu.get();
+				sum += fu.get(); // A better reduction algorithm could be used
 			}
 			System.out.println("Three seconds later, Consumer finished, sum=" + sum);
 		}catch(Exception e) {
