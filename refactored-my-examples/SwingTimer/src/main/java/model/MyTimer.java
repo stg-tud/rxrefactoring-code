@@ -1,5 +1,8 @@
 package model;
 
+import rx.Observable;
+import rx.Subscription;
+
 import javax.swing.*;
 
 /**
@@ -8,16 +11,24 @@ import javax.swing.*;
  */
 public class MyTimer
 {
-    private TimerWorker timerWorker;
+    // RxRefactoring:
+    // TimeWorker is only used in one method. Therefore it doesn't need to be a class field
+    // The subscription needs to be unsubscribed on cancel. Therefore we need to keep the reference in a private field
+    private Subscription timeWorkerSubscription;
 
     public void cancelTimer()
     {
-        timerWorker.cancel(true);
+        timeWorkerSubscription.unsubscribe();
     }
 
+    // RxRefactoring:
+    // The constructor for TimeWorker doesn't have paremters any more.
+    // The parameters are used to create the Observable
+    // The reference to the subscription must be kept, so we can unsubscribe it
     public void startTimer(JLabel timerLabel, JLabel resultLabel, String validatedTime)
     {
-        timerWorker = new TimerWorker(timerLabel, resultLabel, validatedTime);
-        timerWorker.execute();
+        TimerWorker timerWorker = new TimerWorker();
+        Observable<String> rxTimeWorker = timerWorker.createRxTimeWorker(timerLabel, resultLabel, validatedTime);
+        timeWorkerSubscription = rxTimeWorker.subscribe();
     }
 }

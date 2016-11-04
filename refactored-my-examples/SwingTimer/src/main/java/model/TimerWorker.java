@@ -1,28 +1,66 @@
 package model;
 
+import rx.Observable;
+import rx.Subscriber;
+import rx.schedulers.Schedulers;
+
 import javax.swing.*;
-import java.util.List;
 
 /**
- * Description:
  * Author: Grebiel Jose Ifill Brito
  * Created: 04.11.16 creation date
  */
-public class TimerWorker extends SwingWorker<String, String>
+// RxRefactoring:
+// This class doesn't extend SwingWorker anymore
+public class TimerWorker
 {
     private String totalTime;
     private JLabel timerLabel;
     private JLabel resultLabel;
 
-    public TimerWorker(JLabel timerLabel, JLabel resultLabel, String totalTime)
+    // RxRefactoring:
+    // This method uses the same parameters as the old constructor
+    public Observable<String> createRxTimeWorker(JLabel timerLabel, JLabel resultLabel, String totalTime)
     {
         this.timerLabel = timerLabel;
         this.totalTime = totalTime;
         this.resultLabel = resultLabel;
+
+        // Subscriber needed to update the UI. A parameter needs to be added to doInBackground
+        // The process method to update the UI is no longer needed
+        Subscriber<String> updateSubscriber = getUpdateSubscriber(this.timerLabel);
+        return Observable.fromCallable(() -> doInBackground(updateSubscriber))
+                .doOnNext(r -> done(r)) // done called "get()". Therefore this method needs a new parameter with the result
+                .onErrorResumeNext(Observable.empty())
+                .subscribeOn(Schedulers.computation())
+                .observeOn(Schedulers.immediate());
     }
 
-    @Override
-    protected String doInBackground() throws Exception
+    private Subscriber<String> getUpdateSubscriber(final JLabel timerLabel)
+    {
+        return new Subscriber<String>()
+        {
+            @Override
+            public void onCompleted()
+            {
+
+            }
+
+            @Override
+            public void onError(Throwable throwable)
+            {
+
+            }
+
+            @Override
+            public void onNext(String s)
+            {
+                timerLabel.setText(s);
+            }
+        };
+    }
+
+    private String doInBackground(Subscriber<String> updateSubscriber) throws Exception
     {
         System.out.println("Do in background started");
         String[] split = totalTime.split(":");
@@ -40,39 +78,28 @@ public class TimerWorker extends SwingWorker<String, String>
             {
                 min--;
                 sec = 59;
-            }            else
+            }
+            else
             {
                 sec--;
             }
             String currentTime = getCurrentTime(min, sec);
-            publish(currentTime);
+            updateSubscriber.onNext(currentTime);
         }
 
         return "TIME IS OVER";
     }
 
-    @Override
-    protected void done()
+    private void done(String result)
     {
         try
         {
-            String result = get();
             resultLabel.setText(result);
             System.out.println("SwingWorker finished");
         }
         catch ( Exception e )
         {
             System.out.println("Execution cancelled");
-        }
-        super.done();
-    }
-
-    @Override
-    protected void process(List<String> chunks)
-    {
-        for ( String time : chunks )
-        {
-            timerLabel.setText(time);
         }
     }
 
