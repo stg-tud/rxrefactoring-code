@@ -17,7 +17,7 @@ public class BackToTheFuture {
 		long startMillis = System.currentTimeMillis();
 		for (int i = 0; i < 20; ++i) {
 			Callable callable = new PossibleMission(i);
-			FutureWork futureTask = new FutureWork(callable);
+			FutureWork futureTask = new FutureWork(callable); // This class extends FutureTask!!
 			FutureCallback callback = new FutureCallback(futureTask) {
 				@Override
 				public void call() {
