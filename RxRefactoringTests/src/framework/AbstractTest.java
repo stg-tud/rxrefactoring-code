@@ -18,7 +18,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/13/2016
  */
-public class AbstractTest
+public abstract class AbstractTest
 {
     /**
      * Get the source code as a string given a path

@@ -14,7 +14,7 @@ import org.junit.Before;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/13/2016
  */
-public class AbstractAndroidTest extends AbstractTest
+public abstract class AbstractAndroidTest extends AbstractTest
 {
     private IProject project;
 

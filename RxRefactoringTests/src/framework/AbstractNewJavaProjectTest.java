@@ -19,7 +19,7 @@ import org.junit.Before;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/13/2016
  */
-public class AbstractNewJavaProjectTest extends AbstractTest
+public abstract class AbstractNewJavaProjectTest extends AbstractTest
 {
 	private static final String JAVA_EXTENSION = ".java";
 	private static final String PACKAGE_DECLARATION_START = "package ";
