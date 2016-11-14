@@ -15,6 +15,7 @@ import org.eclipse.jface.text.Document;
 import org.eclipse.text.edits.TextEdit;
 
 import rx.Observable;
+import rxjavarefactoring.RxJavaRefactoringApp;
 
 /**
  * Description: <br>
@@ -23,8 +24,6 @@ import rx.Observable;
  */
 public class RxMultipleChangeWriter
 {
-	private boolean changeOnlyOpenFiles = true;
-
 	private Map<ICompilationUnit, CompilationUnitChange> icuChangesMap;
 	private Map<ICompilationUnit, Set<String>> icuAddedImportsMap;
 	private Map<ICompilationUnit, Set<String>> icuRemovedImportsMap;
@@ -92,7 +91,7 @@ public class RxMultipleChangeWriter
 				buffer.setContents( newSourceCode );
 
 				// save changes
-				if ( !changeOnlyOpenFiles )
+				if ( !RxJavaRefactoringApp.isRunningForTests() )
 				{
 					buffer.save( progressMonitor, true );
 				}

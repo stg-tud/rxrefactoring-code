@@ -30,6 +30,7 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 {
 	private static final String DEPENDENCIES_DIRECTORY = "/all-deps";
 	private Set<String> targetClasses;
+	private static boolean runningForTests = false;
 
 	@Override
 	protected String getDependenciesDirectoryName()
@@ -56,6 +57,12 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 	{
 		targetClasses = new HashSet<>();
 		targetClasses.addAll(Arrays.asList(classNames));
+		runningForTests = true;
+	}
+
+	public static boolean isRunningForTests()
+	{
+		return runningForTests;
 	}
 
 	// ### Private Methods ###
