@@ -37,10 +37,10 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 		IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
 		Observable
 				.from( workspaceRoot.getProjects() )
-				.doOnSubscribe( () -> RxLogger.info( this, "Rx Refactoring Started..." ) )
+				.doOnSubscribe( () -> RxLogger.info( this, "Rx Refactoring Plugin Starting..." ) )
 				.filter( project -> isJavaProjectOpen( project ) )
 				.doOnNext( project -> refactorProject( project ) )
-				.doOnCompleted( () -> RxLogger.info( this, "Refactoring Done!" ) )
+				.doOnCompleted( () -> RxLogger.info( this, "Rx Refactoring Plugin Done!" ) )
 				.subscribe();
 
 		return null;
@@ -68,6 +68,7 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 		IJavaProject javaProject = JavaCore.create( project );
 		try
 		{
+			RxLogger.info( this, "METHOD=refactorProject : PROJECT ----> " + project.getName() );
 			final String location = project.getLocation().toPortableString();
 			updateClassPath( location + getDependenciesDirectoryName(), javaProject );
 			ICompilationUnit[] units = getCompilationUnits( javaProject );

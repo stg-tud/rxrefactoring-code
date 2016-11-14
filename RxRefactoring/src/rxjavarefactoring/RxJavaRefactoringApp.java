@@ -43,10 +43,11 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 	{
 		icuVsNewSourceCodeMap = new HashMap<>();
 		CuCollector asyncTasksCollector = new CuCollector();
+		RxLogger.info( this, "METHOD=refactorCompilationUnits - # units: " + units.length );
 
 		Observable
 				.from( units )
-				.filter( unit -> targetClasses != null && targetClasses.contains(unit.getElementName()))
+				.filter( unit -> !runningForTests || validateUnitName(unit)) // AL-Formula runningForTest -> validateName
 				.doOnNext( unit -> processUnit( unit, asyncTasksCollector ) )
 				.doOnCompleted( () -> refactorAsyncTasks( asyncTasksCollector ) )
 				.doOnError( t -> RxLogger.error( this, "METHOD=refactorCompilationUnits", t ) )
@@ -66,6 +67,8 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 	}
 
 	// ### Private Methods ###
+
+	private boolean validateUnitName(ICompilationUnit unit) {return targetClasses != null && targetClasses.contains(unit.getElementName());}
 
 	private void processUnit( ICompilationUnit iUnit, CuCollector collectors )
 	{
