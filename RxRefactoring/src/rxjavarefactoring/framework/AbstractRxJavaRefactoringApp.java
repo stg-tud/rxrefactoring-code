@@ -3,6 +3,7 @@ package rxjavarefactoring.framework;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -26,12 +27,13 @@ import rx.Observable;
  */
 public abstract class AbstractRxJavaRefactoringApp implements IApplication
 {
+	protected Map<ICompilationUnit, String> icuVsNewSourceCodeMap;
+
 	@Override
 	public Object start( IApplicationContext iApplicationContext ) throws Exception
 	{
 		// TODO: display window showing the preconditions to produce compilable
 		// code: dependencies in classpath or .jar files in "/all-deps"
-
 		IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
 		Observable
 				.from( workspaceRoot.getProjects() )
@@ -50,9 +52,14 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 
 	}
 
-	protected abstract String getDependenciesDirectoryName();
+	public abstract void refactorCompilationUnits(ICompilationUnit[] units);
 
-	protected abstract void refactorCompilationUnits( ICompilationUnit[] units );
+	public Map<ICompilationUnit, String> getIcuVsNewSourceCodeMap()
+	{
+		return icuVsNewSourceCodeMap;
+	}
+
+	protected abstract String getDependenciesDirectoryName();
 
 	// ### Private Methods ###
 

@@ -1,6 +1,7 @@
 package rxjavarefactoring.processors.asynctask;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -9,6 +10,7 @@ import java.util.concurrent.Executors;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
@@ -27,6 +29,7 @@ import rxjavarefactoring.processors.asynctask.workers.AnonymAsyncTaskWorker;
 public class AsyncTaskProcessor extends Refactoring
 {
 	private CuCollector collector;
+	private RxMultipleChangeWriter rxMultipleChangeWriter;
 
 	public AsyncTaskProcessor( CuCollector asyncTaskCollector )
 	{
@@ -55,7 +58,7 @@ public class AsyncTaskProcessor extends Refactoring
 	public Change createChange( IProgressMonitor monitor ) throws CoreException, OperationCanceledException
 	{
 		RxLogger.info( this, "METHOD=createChange - Starting refactoring" );
-		RxMultipleChangeWriter rxMultipleChangeWriter = new RxMultipleChangeWriter();
+		rxMultipleChangeWriter = new RxMultipleChangeWriter();
 
 		// Create Workers
 		AnonymAsyncTaskWorker anonymAsyncTaskWorker = new AnonymAsyncTaskWorker( collector, monitor, rxMultipleChangeWriter );
@@ -88,5 +91,10 @@ public class AsyncTaskProcessor extends Refactoring
 		rxMultipleChangeWriter.executeChanges( monitor );
 		monitor.done();
 		return null;
+	}
+
+	public Map<ICompilationUnit, String> getICompilationUnitVsNewSourceCodeMap()
+	{
+		return rxMultipleChangeWriter.getIcuVsNewSourceCodeMap();
 	}
 }

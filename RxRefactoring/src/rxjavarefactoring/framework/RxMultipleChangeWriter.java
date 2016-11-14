@@ -23,11 +23,12 @@ import rx.Observable;
  */
 public class RxMultipleChangeWriter
 {
-	private static final boolean CHANGE_ONLY_OPEN_FILES = true;
+	private boolean changeOnlyOpenFiles = true;
 
 	private Map<ICompilationUnit, CompilationUnitChange> icuChangesMap;
 	private Map<ICompilationUnit, Set<String>> icuAddedImportsMap;
 	private Map<ICompilationUnit, Set<String>> icuRemovedImportsMap;
+	private Map<ICompilationUnit, String> icuVsNewSourceCodeMap;
 	private ImportRewrite importRewriter;
 
 	public RxMultipleChangeWriter()
@@ -35,6 +36,7 @@ public class RxMultipleChangeWriter
 		icuChangesMap = new HashMap<>();
 		icuAddedImportsMap = new HashMap<>();
 		icuRemovedImportsMap = new HashMap<>();
+		icuVsNewSourceCodeMap = new HashMap<>();
 	}
 
 	public void addChange( String name, ICompilationUnit icu, RxSingleChangeWriter singleChangeWriter )
@@ -85,11 +87,12 @@ public class RxMultipleChangeWriter
 				TextEdit importsEdit = importRewriter.rewriteImports( progressMonitor );
 				importsEdit.apply( document );
 				String newSourceCode = document.get();
+				icuVsNewSourceCodeMap.put( icu, newSourceCode );
 				IBuffer buffer = icu.getBuffer();
 				buffer.setContents( newSourceCode );
 
 				// save changes
-				if ( !CHANGE_ONLY_OPEN_FILES )
+				if ( !changeOnlyOpenFiles )
 				{
 					buffer.save( progressMonitor, true );
 				}
@@ -99,6 +102,11 @@ public class RxMultipleChangeWriter
 				RxLogger.error( this, "METHOD=executeChanges - " + compilationUnitName, e );
 			}
 		}
+	}
+
+	public Map<ICompilationUnit, String> getIcuVsNewSourceCodeMap()
+	{
+		return icuVsNewSourceCodeMap;
 	}
 
 	// ### Private Methods ###

@@ -1,5 +1,7 @@
 package rxjavarefactoring;
 
+import java.util.*;
+
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;
@@ -27,6 +29,7 @@ import rxjavarefactoring.processors.asynctask.AsyncTaskProcessor;
 public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 {
 	private static final String DEPENDENCIES_DIRECTORY = "/all-deps";
+	private Set<String> targetClasses;
 
 	@Override
 	protected String getDependenciesDirectoryName()
@@ -35,15 +38,24 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 	}
 
 	@Override
-	protected void refactorCompilationUnits( ICompilationUnit[] units )
+	public void refactorCompilationUnits( ICompilationUnit[] units )
 	{
+		icuVsNewSourceCodeMap = new HashMap<>();
 		CuCollector asyncTasksCollector = new CuCollector();
 
 		Observable
 				.from( units )
+				.filter( unit -> targetClasses != null && targetClasses.contains(unit.getElementName()))
 				.doOnNext( unit -> processUnit( unit, asyncTasksCollector ) )
 				.doOnCompleted( () -> refactorAsyncTasks( asyncTasksCollector ) )
+				.doOnError( t -> RxLogger.error( this, "METHOD=refactorCompilationUnits", t ) )
 				.subscribe();
+	}
+
+	public void refactorOnly( String... classNames )
+	{
+		targetClasses = new HashSet<>();
+		targetClasses.addAll(Arrays.asList(classNames));
 	}
 
 	// ### Private Methods ###
@@ -94,6 +106,8 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 		{
 			NullProgressMonitor iProgressMonitor = new NullProgressMonitor();
 			asyncTaskProcessor.createChange( iProgressMonitor );
+			Map<ICompilationUnit, String> icuVsNewCodeMap = asyncTaskProcessor.getICompilationUnitVsNewSourceCodeMap();
+			icuVsNewSourceCodeMap.putAll( icuVsNewCodeMap );
 		}
 		catch ( Exception e )
 		{
