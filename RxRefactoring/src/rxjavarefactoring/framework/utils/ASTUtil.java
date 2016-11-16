@@ -153,7 +153,8 @@ public final class ASTUtil
 
 	/**
 	 *
-	 * @param node an ast node
+	 * @param node
+	 *            an ast node
 	 * @return The next parent of type {@link Statement}
 	 */
 	public static Statement getStmtParent( ASTNode node )
@@ -176,13 +177,38 @@ public final class ASTUtil
 	 * @param parameterIndex
 	 *            index
 	 * @return the variable name
-	 * @throws IndexOutOfBoundsException if there is no parameter with the given index
+	 * @throws IndexOutOfBoundsException
+	 *             if there is no parameter with the given index
 	 */
 	public static String getVariableName( MethodDeclaration methodDeclaration, int parameterIndex ) throws IndexOutOfBoundsException
 	{
 		Object parameter = methodDeclaration.parameters().get( parameterIndex );
 		SingleVariableDeclaration variableDecl = (SingleVariableDeclaration) parameter;
 		return variableDecl.getName().toString();
+	}
+
+	/**
+	 * Identifies if a node matches a target method from a class
+	 * 
+	 * @param node
+	 *            input node
+	 * @param methodName
+	 *            target method name
+	 * @param classBinaryName
+	 *            target class of method
+	 * @return true if matches, false otherwise
+	 */
+	public static boolean matchesTargetMethod( MethodInvocation node, String methodName, String classBinaryName )
+	{
+		IMethodBinding binding = node.resolveMethodBinding();
+		if ( binding == null )
+		{
+			return false;
+		}
+		String bindingName = binding.getName();
+		String className = binding.getDeclaringClass().getBinaryName();
+
+		return bindingName.equals( bindingName ) && classBinaryName.equals( className );
 	}
 
 	// ### Private Methods ###

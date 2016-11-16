@@ -68,7 +68,8 @@ public class RxMultipleChangeWriter
 	/**
 	 * Execute all changes added and saves the results.
 	 * 
-	 * @param progressMonitor progress monitor
+	 * @param progressMonitor
+	 *            progress monitor
 	 */
 	public void executeChanges( IProgressMonitor progressMonitor )
 	{

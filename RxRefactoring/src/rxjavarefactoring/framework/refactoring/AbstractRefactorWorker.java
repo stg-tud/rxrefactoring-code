@@ -4,6 +4,7 @@ import java.util.concurrent.Callable;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
+import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.framework.writers.RxMultipleChangeWriter;
 import rxjavarefactoring.processors.WorkerStatus;
 
@@ -32,6 +33,17 @@ public abstract class AbstractRefactorWorker<T extends AbstractCollector> implem
 	@Override
 	public WorkerStatus call() throws Exception
 	{
-		return null;
+		try
+		{
+			RxLogger.info( this, "METHOD=call - Starting worker in thread: " + Thread.currentThread().getName() );
+			return refactor();
+		}
+		catch ( Exception e )
+		{
+			RxLogger.error( this, "METHOD=call", e );
+			return WorkerStatus.ERROR;
+		}
 	}
+
+	protected abstract WorkerStatus refactor();
 }

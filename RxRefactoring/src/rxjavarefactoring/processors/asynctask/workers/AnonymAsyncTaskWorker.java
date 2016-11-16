@@ -39,46 +39,30 @@ public class AnonymAsyncTaskWorker extends AbstractRefactorWorker<CuCollector>
 	}
 
 	@Override
-	public WorkerStatus call() throws Exception
-	{
-		try
-		{
-			RxLogger.info( this, "METHOD=call - Starting worker in thread: " + Thread.currentThread().getName() );
-			return refactorAnonymClasses();
-		}
-		catch ( Exception e )
-		{
-			RxLogger.error( this, "METHOD=refactorAnonymClasses", e );
-			return WorkerStatus.ERROR;
-		}
-	}
-
-	// ### Private Methods ###
-
-	private WorkerStatus refactorAnonymClasses()
+	protected WorkerStatus refactor()
 	{
 		Map<ICompilationUnit, List<AnonymousClassDeclaration>> cuAnonymousClassesMap = collector.getCuAnonymousClassesMap();
 		int numCunits = collector.getNumberOfCompilationUnits();
 		monitor.beginTask( getClass().getSimpleName(), numCunits );
-		RxLogger.info( this, "METHOD=refactorAnonymClasses - Number of compilation units: " + numCunits );
+		RxLogger.info( this, "METHOD=refactor - Number of compilation units: " + numCunits );
 		for ( ICompilationUnit icu : cuAnonymousClassesMap.keySet() )
 		{
 			List<AnonymousClassDeclaration> declarations = cuAnonymousClassesMap.get( icu );
 			for ( AnonymousClassDeclaration asyncTaskDeclaration : declarations )
 			{
 				// TODO: AsyncTaskVisitor is incomplete
-				RxLogger.info( this, "METHOD=refactorAnonymClasses - Extract Information from AsyncTask: " + icu.getElementName() );
+				RxLogger.info( this, "METHOD=refactor - Extract Information from AsyncTask: " + icu.getElementName() );
 				AsyncTaskVisitor asyncTaskVisitor = new AsyncTaskVisitor();
 				asyncTaskDeclaration.accept( asyncTaskVisitor );
 				AST ast = asyncTaskDeclaration.getAST();
 
 				RxSingleChangeWriter singleChangeWriter = new RxSingleChangeWriter( icu, ast, getClass().getSimpleName() );
-				RxLogger.info( this, "METHOD=refactorAnonymClasses - Updating imports: " + icu.getElementName() );
+				RxLogger.info( this, "METHOD=refactor - Updating imports: " + icu.getElementName() );
 				updateImports( singleChangeWriter );
 				createLocalObservable( singleChangeWriter, asyncTaskDeclaration, ast );
 				singleChangeWriter.removeStatement( asyncTaskDeclaration );
 
-				RxLogger.info( this, "METHOD=refactorAnonymClasses - Refactoring class: " + icu.getElementName() );
+				RxLogger.info( this, "METHOD=refactor - Refactoring class: " + icu.getElementName() );
 				rxMultipleChangeWriter.addChange( icu, singleChangeWriter );
 
 			}
@@ -89,9 +73,13 @@ public class AnonymAsyncTaskWorker extends AbstractRefactorWorker<CuCollector>
 
 	private void updateImports( RxSingleChangeWriter rewriter )
 	{
+		// TODO: it might make more sense to add the imports after creating the
+		// observable
 		rewriter.addImport( "rx.Observable" );
 		rewriter.addImport( "rx.schedulers.Schedulers" );
 		rewriter.addImport( "rx.functions.Action1" );
+		// rewriter.addImport( "rx.functions.Action0" ); // Only necessary for
+		// doOnSubscribe
 		rewriter.addImport( "rx.android.schedulers.AndroidSchedulers" );
 		rewriter.addImport( "java.util.concurrent.Callable" );
 		rewriter.removeImport( "android.os.AsyncTask" );

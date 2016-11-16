@@ -1,4 +1,4 @@
-package rxjavarefactoring.processors.asynctask;
+package rxjavarefactoring.processors.swingworker;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -14,17 +14,17 @@ import rxjavarefactoring.framework.refactoring.AbstractProcessor;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.processors.CuCollector;
 import rxjavarefactoring.processors.WorkerStatus;
-import rxjavarefactoring.processors.asynctask.workers.AnonymAsyncTaskWorker;
+import rxjavarefactoring.processors.swingworker.workers.AnonymSwingWorkerWorker;
 
 /**
- * Description: Refactors AsyncTasks by using
+ * Description: Refactors SwingWorkers by using
  * {@link AbstractRefactorWorker}s<br>
  * Author: Grebiel Jose Ifill Brito<br>
- * Created: 11/11/2016
+ * Created: 11/16/2016
  */
-public class AsyncTaskProcessor extends AbstractProcessor<CuCollector>
+public class SwingWorkerProcessor extends AbstractProcessor<CuCollector>
 {
-	public AsyncTaskProcessor( CuCollector collector, String name )
+	public SwingWorkerProcessor( CuCollector collector, String name )
 	{
 		super( collector, name );
 	}
@@ -44,23 +44,10 @@ public class AsyncTaskProcessor extends AbstractProcessor<CuCollector>
 	@Override
 	public Change createChange( IProgressMonitor monitor ) throws CoreException, OperationCanceledException
 	{
-		// Create Workers
-		AnonymAsyncTaskWorker anonymAsyncTaskWorker = new AnonymAsyncTaskWorker( collector, monitor, rxMultipleChangeWriter );
-		// TODO: Create other workers in the package "workers" and use them here
-		// AnonymAsyncTaskWorker anonymAsyncTaskWorker = new
-		// AnonymAsyncTaskWorker( collector, monitor, rxMultipleChangeWriter );
-		// AnonymAsyncTaskWorker anonymAsyncTaskWorker = new
-		// AnonymAsyncTaskWorker( collector, monitor, rxMultipleChangeWriter );
-		// AnonymAsyncTaskWorker anonymAsyncTaskWorker = new
-		// AnonymAsyncTaskWorker( collector, monitor, rxMultipleChangeWriter );
+		AnonymSwingWorkerWorker anonymSwingWorkerWorker = new AnonymSwingWorkerWorker( collector, monitor, rxMultipleChangeWriter );
 
 		Set<Callable<WorkerStatus>> workers = new HashSet<>();
-		workers.add( anonymAsyncTaskWorker );
-		// TODO: Add workers to the set here so that they are invoked
-		// concurrently.
-		// workers.add(anonymAsyncTaskWorker);
-		// workers.add(anonymAsyncTaskWorker);
-		// workers.add(anonymAsyncTaskWorker);
+		workers.add( anonymSwingWorkerWorker );
 
 		startWorkers( workers );
 		executeChanges( monitor );

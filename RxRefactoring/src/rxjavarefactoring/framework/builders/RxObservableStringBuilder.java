@@ -1,6 +1,8 @@
 package rxjavarefactoring.framework.builders;
 
+import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.core.dom.Block;
 
@@ -8,6 +10,7 @@ import rx.Observable;
 import rx.Scheduler;
 import rx.functions.Action0;
 import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 import rxjavarefactoring.framework.constants.SchedulerType;
 import rxjavarefactoring.framework.utils.SourceCodeValidator;
@@ -141,6 +144,44 @@ public class RxObservableStringBuilder
 			rxObservable.append( NEW_LINE );
 			rxObservable.append( doOnNextBlock.toString() );
 			rxObservable.append( "})" );
+		}
+		return this;
+	}
+
+	/**
+	 * Adds the {@link Observable#timeout(long, TimeUnit)} and
+	 * {@link Observable#onErrorReturn(Func1)} calls.
+	 * The onErrorReturn returns null. Developers can modify this method after
+	 * refactoring to return a default value
+	 * 
+	 * @param arguments
+	 *            list of strings of size 2 for the arguments. The first
+	 *            argument corresponds to the time and the second argument to
+	 *            the time unit. For example: 3L, TimeUnit.SECONDS
+	 * @return The builder
+	 */
+	public RxObservableStringBuilder addTimeout( List<String> arguments )
+	{
+		if ( !arguments.isEmpty() && arguments.size() == 2 )
+		{
+			rxObservable.append( NEW_LINE );
+			rxObservable.append( ".timeout(" );
+			rxObservable.append( arguments.get( 0 ) );
+			rxObservable.append( ", " );
+			rxObservable.append( arguments.get( 1 ) );
+			rxObservable.append( ")" );
+			// timeout requires to handle an error
+			rxObservable.append( NEW_LINE );
+			rxObservable.append( ".onErrorReturn( new Func1<Throwable, " );
+			rxObservable.append( type );
+			rxObservable.append( ">() {" );
+			rxObservable.append( NEW_LINE );
+			rxObservable.append( "@Override public " );
+			rxObservable.append( type );
+			rxObservable.append( " call (Throwable throwable ) { return null;}" );
+			rxObservable.append( NEW_LINE );
+			rxObservable.append( "})" );
+
 		}
 		return this;
 	}

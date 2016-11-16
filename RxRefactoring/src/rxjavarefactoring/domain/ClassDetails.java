@@ -29,6 +29,26 @@ public enum ClassDetails
 					put( "getStatus", null );
 					put( "isCancelled", "isUnsubscribed" );
 				}
+			} ),
+
+	SWING_WORKER(
+			"javax.swing.SwingWorker",
+			new HashMap<String, String>()
+			{
+				{
+					put( "addPropertyChangeListener", null );
+					put( "cancel", "unsubscribe" );
+					put( "execute", "subscribe" );
+					put( "firePropertyChange", null );
+					put( "get", null );
+					put( "getProgress", null );
+					put( "getPropertyChangeSupport", null );
+					put( "getState", null );
+					put( "isCancelled", "isUnsubscribed" );
+					put( "isDone", null );
+					put( "removePropertyChangeListener", null );
+					put( "run", "subscribe" );
+				}
 			} );
 
 	private final String binaryName;

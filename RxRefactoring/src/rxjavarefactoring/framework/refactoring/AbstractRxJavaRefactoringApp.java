@@ -136,7 +136,7 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 			if ( root.getKind() == IPackageFragmentRoot.K_SOURCE )
 			{
 				IJavaElement[] rootFragments = root.getChildren();
-				frags.addAll(Arrays.asList(rootFragments));
+				frags.addAll( Arrays.asList( rootFragments ) );
 			}
 		}
 		IPackageFragment[] fragments = new IPackageFragment[ frags.size() ];
@@ -150,7 +150,7 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 		for ( IPackageFragment packageFragment : packages )
 		{
 			ICompilationUnit[] units = packageFragment.getCompilationUnits();
-			frags.addAll(Arrays.asList(units));
+			frags.addAll( Arrays.asList( units ) );
 		}
 		ICompilationUnit[] fragments = new ICompilationUnit[ frags.size() ];
 		frags.toArray( fragments );
