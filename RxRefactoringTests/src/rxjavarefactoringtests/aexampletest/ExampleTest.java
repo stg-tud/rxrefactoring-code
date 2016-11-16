@@ -21,26 +21,28 @@ public class ExampleTest extends AbstractNewJavaProjectTest
 	public void testSourceCodeEquivalence() throws Exception
 	{
 		// This test compares the file from
-		// resources/_example.test/InputFile.java with
-		// resources/_example.test/ExpectedFile.java
-		// These files are semantically the same, but the line breaks are different
+		// resources/_example.test/InputClass.java with
+		// resources/_example.test/ExpectedClass.java
+		// These files are semantically the same, but the line breaks are
+		// different
 		// The test must show that these files are equivalent
 
 		// Define information for input file
 		TestFilesDto inputTestFiles = new TestFilesDto(
 				"_example.test",
 				"testpackage",
-				"InputFile" );
+				"InputClass" );
 
 		// Create compilation unit for input file
 		List<ICompilationUnit> inputICUs = createCompilationUnits( inputTestFiles );
 		ICompilationUnit inputICU = inputICUs.get( 0 );
 
-		// Define information for expected file (assuming that an algorithm did a transformation)
+		// Define information for expected file (assuming that an algorithm did
+		// a transformation)
 		TestFilesDto expectedFiles = new TestFilesDto(
 				"_example.test",
 				"testpackage",
-				"ExpectedFile" );
+				"ExpectedClass" );
 
 		// Create compilation unit for expected file
 		List<ICompilationUnit> expectedICUs = createCompilationUnits( expectedFiles );

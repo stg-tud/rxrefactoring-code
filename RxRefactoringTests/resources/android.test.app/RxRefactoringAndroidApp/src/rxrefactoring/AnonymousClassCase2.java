@@ -1,13 +1,12 @@
-package rx.refactoring.testingapp;
+package rxrefactoring;
 
-import android.graphics.Bitmap;
 import android.os.AsyncTask;
 
-public class AnonymousClassCase3
+public class AnonymousClassCase2
 {
     public void someMethod()
     {
-        // Testing doInBackground only with empty onPostExecute declaration
+        // Testing doInBackground only
         new AsyncTask<Void, Void, Integer>() {
 
             @Override
@@ -16,11 +15,6 @@ public class AnonymousClassCase3
                 int b = 2;
                 int c = a + b;
                 return c;
-            }
-
-            @Override
-            protected void onPostExecute(Integer number) {
-                // empty block
             }
         }.execute();
     }

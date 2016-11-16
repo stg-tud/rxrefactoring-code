@@ -1,4 +1,4 @@
-package rxjavarefactoringtests.asynctasks;
+package rxjavarefactoringtests.swingworkers;
 
 import static org.junit.Assert.assertEquals;
 
@@ -7,48 +7,47 @@ import java.util.Map;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.junit.Test;
 
-import framework.AbstractAndroidTest;
+import framework.AbstractJavaTest;
 import rxjavarefactoring.RxJavaRefactoringApp;
 
 /**
- * Description: Test Refactoring of AsyncTasks that are anonymous and not
- * assigned to a variable<br>
+ * Description: <br>
  * Author: Grebiel Jose Ifill Brito<br>
- * Created: 11/13/2016
+ * Created: 11/16/2016
  */
-public class AsyncTaskAnonymousClassTest extends AbstractAndroidTest
+public class SwingWorkerAnonymousClassTest extends AbstractJavaTest
 {
 	@Test
-	public void testAsyncTaskRefactoringCase1() throws Exception
+	public void testSwingWorkerRefactoringCase1() throws Exception
 	{
 		String targetFile = "AnonymousClassCase1.java";
 
 		String expectedSourceCode = getSourceCode(
-				"asynctask.anonymous.class",
+				"swingworker.anonymous.class",
 				"ExpectedClassCase1.java" );
 
 		executeTest( targetFile, expectedSourceCode );
 	}
 
 	@Test
-	public void testAsyncTaskRefactoringCase2() throws Exception
+	public void testSwingWorkerRefactoringCase2() throws Exception
 	{
 		String targetFile = "AnonymousClassCase2.java";
 
 		String expectedSourceCode = getSourceCode(
-				"asynctask.anonymous.class",
+				"swingworker.anonymous.class",
 				"ExpectedClassCase2.java" );
 
 		executeTest( targetFile, expectedSourceCode );
 	}
 
 	@Test
-	public void testAsyncTaskRefactoringCase3() throws Exception
+	public void testSwingWorkerRefactoringCase3() throws Exception
 	{
 		String targetFile = "AnonymousClassCase3.java";
 
 		String expectedSourceCode = getSourceCode(
-				"asynctask.anonymous.class",
+				"swingworker.anonymous.class",
 				"ExpectedClassCase3.java" );
 
 		executeTest( targetFile, expectedSourceCode );

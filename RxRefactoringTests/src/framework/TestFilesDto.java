@@ -17,12 +17,16 @@ public class TestFilesDto
 	private final String directoryName;
 	private final List<String> classNames;
 
-    /**
-     * Constructor for test files.
-     * @param directoryName directory name in folder "resources"
-     * @param packageName a name for the package
-     * @param fileName the file name (without the extension ".java")
-     */
+	/**
+	 * Constructor for test files.
+	 * 
+	 * @param directoryName
+	 *            directory name in folder "resources"
+	 * @param packageName
+	 *            a name for the package
+	 * @param fileName
+	 *            the file name (without the extension ".java")
+	 */
 	public TestFilesDto( String directoryName, String packageName, String fileName )
 	{
 		this.directoryName = directoryName;
@@ -31,10 +35,12 @@ public class TestFilesDto
 		classNames.add( fileName );
 	}
 
-    /**
-     * Method to add more files to this object
-     * @param fileNames name of the files without the ".java" extension
-     */
+	/**
+	 * Method to add more files to this object
+	 * 
+	 * @param fileNames
+	 *            name of the files without the ".java" extension
+	 */
 	public void addClasses( String... fileNames )
 	{
 		this.classNames.addAll( Arrays.asList( fileNames ) );

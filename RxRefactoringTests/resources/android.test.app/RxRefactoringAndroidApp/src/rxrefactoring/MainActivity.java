@@ -1,4 +1,4 @@
-package rx.refactoring.testingapp;
+package rxrefactoring;
 
 import android.app.Activity;
 import android.graphics.Bitmap;

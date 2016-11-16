@@ -14,28 +14,28 @@ import org.junit.Before;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/13/2016
  */
-public abstract class AbstractAndroidTest extends AbstractTest
+public abstract class AbstractJavaTest extends AbstractTest
 {
 	private IProject project;
 
 	@Before
-	public void openAndroidProject() throws Exception
+	public void openJavaProject() throws Exception
 	{
 		String absolutePath = Paths.get(
 				"resources",
-				"android.test.app",
-				"RxRefactoringAndroidApp",
+				"java.test.app",
+				"RxRefactoringJavaApp",
 				".project" ).toAbsolutePath().toString();
 
 		IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-		project = workspaceRoot.getProject( "RxRefactoringAndroidApp" );
+		project = workspaceRoot.getProject( "RxRefactoringJavaApp" );
 		IProjectDescription description = project.getWorkspace().loadProjectDescription( new org.eclipse.core.runtime.Path( absolutePath ) );
 		project.create( description, null );
 		project.open( null );
 	}
 
 	@After
-	public void closeAndroidProject() throws Exception
+	public void closeJavaProject() throws Exception
 	{
 		project.close( null );
 		project.delete( true, null );

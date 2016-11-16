@@ -1,7 +1,6 @@
-package rx.refactoring.testingapp;
+package rxrefactoring;
 
 import java.util.concurrent.Callable;
-import android.graphics.Bitmap;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
