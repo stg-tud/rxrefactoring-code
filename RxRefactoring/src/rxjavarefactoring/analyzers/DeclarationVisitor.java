@@ -9,7 +9,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
 
 import rxjavarefactoring.domain.ClassDetails;
-import rxjavarefactoring.utils.ASTUtil;
+import rxjavarefactoring.framework.utils.ASTUtil;
 
 /**
  * Description: This visitor collects all class declarations and groups then
@@ -26,10 +26,10 @@ import rxjavarefactoring.utils.ASTUtil;
  */
 public class DeclarationVisitor extends ASTVisitor
 {
-	private ClassDetails targetClass;
-	private List<TypeDeclaration> subclasses;
-	private List<AnonymousClassDeclaration> anonymousClasses;
-	private List<VariableDeclaration> anonymousCachedClasses;
+	private final ClassDetails targetClass;
+	private final List<TypeDeclaration> subclasses;
+	private final List<AnonymousClassDeclaration> anonymousClasses;
+	private final List<VariableDeclaration> anonymousCachedClasses;
 
 	public DeclarationVisitor( ClassDetails targetClass )
 	{

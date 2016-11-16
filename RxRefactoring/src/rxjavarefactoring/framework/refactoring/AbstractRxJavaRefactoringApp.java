@@ -1,7 +1,8 @@
-package rxjavarefactoring.framework;
+package rxjavarefactoring.framework.refactoring;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +16,7 @@ import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.jdt.core.*;
 
 import rx.Observable;
+import rxjavarefactoring.framework.utils.RxLogger;
 
 /**
  * Description: Abstract refactoring application. This class updates the
@@ -27,7 +29,7 @@ import rx.Observable;
  */
 public abstract class AbstractRxJavaRefactoringApp implements IApplication
 {
-	protected Map<ICompilationUnit, String> icuVsNewSourceCodeMap;
+	protected Map<ICompilationUnit, String> originalCompilationUnitVsNewSourceCodeMap;
 
 	@Override
 	public Object start( IApplicationContext iApplicationContext ) throws Exception
@@ -38,8 +40,8 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 		Observable
 				.from( workspaceRoot.getProjects() )
 				.doOnSubscribe( () -> RxLogger.info( this, "Rx Refactoring Plugin Starting..." ) )
-				.filter( project -> isJavaProjectOpen( project ) )
-				.doOnNext( project -> refactorProject( project ) )
+				.filter( this::isJavaProjectOpen )
+				.doOnNext( this::refactorProject )
 				.doOnCompleted( () -> RxLogger.info( this, "Rx Refactoring Plugin Done!" ) )
 				.subscribe();
 
@@ -52,12 +54,16 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 
 	}
 
-	public abstract void refactorCompilationUnits(ICompilationUnit[] units);
-
-	public Map<ICompilationUnit, String> getIcuVsNewSourceCodeMap()
+	/**
+	 * @return Map containing the original compilation units and a string of the
+	 *         new source code after refactoring
+	 */
+	public Map<ICompilationUnit, String> getOriginalCompilationUnitVsNewSourceCodeMap()
 	{
-		return icuVsNewSourceCodeMap;
+		return originalCompilationUnitVsNewSourceCodeMap;
 	}
+
+	protected abstract void refactorCompilationUnits( ICompilationUnit[] units );
 
 	protected abstract String getDependenciesDirectoryName();
 
@@ -83,21 +89,21 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 
 	private void updateClassPath( String location, IJavaProject javaProject ) throws JavaModelException
 	{
-		IClasspathEntry[] oldEntry = javaProject.getRawClasspath();
+		IClasspathEntry[] oldEntries = javaProject.getRawClasspath();
 		File libs = new File( location );
 		if ( libs.isDirectory() && libs.exists() )
 		{
 			String[] allLibs = libs.list();
 			List<IClasspathEntry> cps = new ArrayList<>();
-			for ( int i = 0; i < allLibs.length; i++ )
+			for ( String lib : allLibs )
 			{
-				String ap = libs.getAbsolutePath() + File.separator + allLibs[ i ];
+				String ap = libs.getAbsolutePath() + File.separator + lib;
 				cps.add( JavaCore.newLibraryEntry( Path.fromOSString( ap ), null, null ) );
 			}
-			for ( int i = 0; i < oldEntry.length; i++ )
+			for ( IClasspathEntry oldEntry : oldEntries )
 			{
-				if ( oldEntry[ i ].getEntryKind() != IClasspathEntry.CPE_LIBRARY )
-					cps.add( oldEntry[ i ] );
+				if ( oldEntry.getEntryKind() != IClasspathEntry.CPE_LIBRARY )
+					cps.add( oldEntry );
 			}
 			javaProject.setRawClasspath( cps.toArray( new IClasspathEntry[ 0 ] ), null );
 		}
@@ -122,19 +128,15 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 		}
 	}
 
-	public IPackageFragment[] getPackageFragmentsInRoots( IPackageFragmentRoot[] roots ) throws JavaModelException
+	private IPackageFragment[] getPackageFragmentsInRoots( IPackageFragmentRoot[] roots ) throws JavaModelException
 	{
 		ArrayList<IJavaElement> frags = new ArrayList<>();
-		for ( int i = 0; i < roots.length; i++ )
+		for ( IPackageFragmentRoot root : roots )
 		{
-			if ( roots[ i ].getKind() == IPackageFragmentRoot.K_SOURCE )
+			if ( root.getKind() == IPackageFragmentRoot.K_SOURCE )
 			{
-				IPackageFragmentRoot root = roots[ i ];
 				IJavaElement[] rootFragments = root.getChildren();
-				for ( int j = 0; j < rootFragments.length; j++ )
-				{
-					frags.add( rootFragments[ j ] );
-				}
+				frags.addAll(Arrays.asList(rootFragments));
 			}
 		}
 		IPackageFragment[] fragments = new IPackageFragment[ frags.size() ];
@@ -142,17 +144,13 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 		return fragments;
 	}
 
-	public ICompilationUnit[] getCompilationUnitInPackages( IPackageFragment[] packages ) throws JavaModelException
+	private ICompilationUnit[] getCompilationUnitInPackages( IPackageFragment[] packages ) throws JavaModelException
 	{
 		ArrayList<ICompilationUnit> frags = new ArrayList<>();
-		for ( int i = 0; i < packages.length; i++ )
+		for ( IPackageFragment packageFragment : packages )
 		{
-			IPackageFragment p = packages[ i ];
-			ICompilationUnit[] units = p.getCompilationUnits();
-			for ( int j = 0; j < units.length; j++ )
-			{
-				frags.add( units[ j ] );
-			}
+			ICompilationUnit[] units = packageFragment.getCompilationUnits();
+			frags.addAll(Arrays.asList(units));
 		}
 		ICompilationUnit[] fragments = new ICompilationUnit[ frags.size() ];
 		frags.toArray( fragments );

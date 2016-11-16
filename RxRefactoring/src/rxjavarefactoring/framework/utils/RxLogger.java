@@ -1,4 +1,4 @@
-package rxjavarefactoring.framework;
+package rxjavarefactoring.framework.utils;
 
 /**
  * Description: This class is responsible for managing logging task<br>
@@ -9,13 +9,14 @@ public final class RxLogger
 {
 	private RxLogger()
 	{
-
+		// This class should not be instantiated
 	}
 
 	/**
 	 * Uses System.out.println(...) to log in the console
 	 * 
 	 * @param currentClass
+	 *            class invoking the method
 	 * @param text
 	 *            logging text
 	 */
@@ -28,6 +29,7 @@ public final class RxLogger
 	 * Uses System.err.println(...) to log in the console and prints stack trace
 	 * 
 	 * @param currentClass
+	 *            class invoking the method
 	 * @param text
 	 *            logging text
 	 * @param throwable

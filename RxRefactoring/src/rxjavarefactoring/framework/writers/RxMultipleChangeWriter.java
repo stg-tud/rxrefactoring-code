@@ -1,4 +1,4 @@
-package rxjavarefactoring.framework;
+package rxjavarefactoring.framework.writers;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,18 +16,20 @@ import org.eclipse.text.edits.TextEdit;
 
 import rx.Observable;
 import rxjavarefactoring.RxJavaRefactoringApp;
+import rxjavarefactoring.framework.utils.RxLogger;
 
 /**
- * Description: <br>
+ * Description: This class is in charge of accumulating all changes and applying
+ * them<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/12/2016
  */
 public class RxMultipleChangeWriter
 {
-	private Map<ICompilationUnit, CompilationUnitChange> icuChangesMap;
-	private Map<ICompilationUnit, Set<String>> icuAddedImportsMap;
-	private Map<ICompilationUnit, Set<String>> icuRemovedImportsMap;
-	private Map<ICompilationUnit, String> icuVsNewSourceCodeMap;
+	private final Map<ICompilationUnit, CompilationUnitChange> icuChangesMap;
+	private final Map<ICompilationUnit, Set<String>> icuAddedImportsMap;
+	private final Map<ICompilationUnit, Set<String>> icuRemovedImportsMap;
+	private final Map<ICompilationUnit, String> icuVsNewSourceCodeMap;
 	private ImportRewrite importRewriter;
 
 	public RxMultipleChangeWriter()
@@ -38,8 +40,17 @@ public class RxMultipleChangeWriter
 		icuVsNewSourceCodeMap = new HashMap<>();
 	}
 
-	public void addChange( String name, ICompilationUnit icu, RxSingleChangeWriter singleChangeWriter )
+	/**
+	 * Add change to multiple change write
+	 * 
+	 * @param icu
+	 *            target compilation unit
+	 * @param singleChangeWriter
+	 *            single change writer of the compilation unit
+	 */
+	public void addChange( ICompilationUnit icu, RxSingleChangeWriter singleChangeWriter )
 	{
+		String name = icu.getElementName();
 		try
 		{
 			CompilationUnitChange compilationUnitChange = getCuChange( name, icu );
@@ -54,6 +65,11 @@ public class RxMultipleChangeWriter
 		}
 	}
 
+	/**
+	 * Execute all changes added and saves the results.
+	 * 
+	 * @param progressMonitor progress monitor
+	 */
 	public void executeChanges( IProgressMonitor progressMonitor )
 	{
 		for ( ICompilationUnit icu : icuChangesMap.keySet() )
@@ -93,7 +109,7 @@ public class RxMultipleChangeWriter
 				// save changes
 				if ( !RxJavaRefactoringApp.isRunningForTests() )
 				{
-					buffer.save( progressMonitor, true );
+					buffer.save( progressMonitor, false );
 				}
 			}
 			catch ( Exception e )
@@ -121,19 +137,17 @@ public class RxMultipleChangeWriter
 		return compilationUnitChange;
 	}
 
-	private TextEdit updateSourceCode( CompilationUnitChange compilationUnitChange, TextEdit sourceCodeEdits )
+	private void updateSourceCode( CompilationUnitChange compilationUnitChange, TextEdit sourceCodeEdits )
 	{
 		TextEdit edit = compilationUnitChange.getEdit();
 		if ( edit == null )
 		{
 			compilationUnitChange.setEdit( sourceCodeEdits );
-			edit = sourceCodeEdits;
 		}
 		else
 		{
 			edit.addChild( sourceCodeEdits );
 		}
-		return edit;
 	}
 
 	private void updateImports( ICompilationUnit icu, RxSingleChangeWriter singleChangeWriter )

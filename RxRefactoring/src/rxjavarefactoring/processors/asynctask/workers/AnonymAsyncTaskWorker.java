@@ -10,15 +10,17 @@ import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.Statement;
 
-import rxjavarefactoring.framework.AbstractRefactorWorker;
-import rxjavarefactoring.framework.RxLogger;
-import rxjavarefactoring.framework.RxMultipleChangeWriter;
-import rxjavarefactoring.framework.RxSingleChangeWriter;
+import rxjavarefactoring.framework.builders.RxObservableStringBuilder;
+import rxjavarefactoring.framework.constants.SchedulerType;
+import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
+import rxjavarefactoring.framework.utils.ASTUtil;
+import rxjavarefactoring.framework.utils.CodeFactory;
+import rxjavarefactoring.framework.utils.RxLogger;
+import rxjavarefactoring.framework.writers.RxMultipleChangeWriter;
+import rxjavarefactoring.framework.writers.RxSingleChangeWriter;
 import rxjavarefactoring.processors.CuCollector;
 import rxjavarefactoring.processors.WorkerStatus;
 import rxjavarefactoring.processors.asynctask.visitors.AsyncTaskVisitor;
-import rxjavarefactoring.utils.ASTUtil;
-import rxjavarefactoring.utils.CodeFactory;
 
 /**
  * Description: This worker is in charge of refactoring anonymous AsyncTasks
@@ -28,7 +30,7 @@ import rxjavarefactoring.utils.CodeFactory;
  * Created: 11/12/2016
  */
 // TODO: still in progress. execute(params) not yet considered!
-public class AnonymAsyncTaskWorker extends AbstractRefactorWorker
+public class AnonymAsyncTaskWorker extends AbstractRefactorWorker<CuCollector>
 {
 
 	public AnonymAsyncTaskWorker( CuCollector collector, IProgressMonitor monitor, RxMultipleChangeWriter rxMultipleChangeWriter )
@@ -46,7 +48,7 @@ public class AnonymAsyncTaskWorker extends AbstractRefactorWorker
 		}
 		catch ( Exception e )
 		{
-			RxLogger.error(this, "METHOD=refactorAnonymClasses" , e);
+			RxLogger.error( this, "METHOD=refactorAnonymClasses", e );
 			return WorkerStatus.ERROR;
 		}
 	}
@@ -57,8 +59,8 @@ public class AnonymAsyncTaskWorker extends AbstractRefactorWorker
 	{
 		Map<ICompilationUnit, List<AnonymousClassDeclaration>> cuAnonymousClassesMap = collector.getCuAnonymousClassesMap();
 		int numCunits = collector.getNumberOfCompilationUnits();
-		monitor.beginTask( getClass().getSimpleName(), numCunits);
-		RxLogger.info( this, "METHOD=refactorAnonymClasses - Number of compilation units: " + numCunits);
+		monitor.beginTask( getClass().getSimpleName(), numCunits );
+		RxLogger.info( this, "METHOD=refactorAnonymClasses - Number of compilation units: " + numCunits );
 		for ( ICompilationUnit icu : cuAnonymousClassesMap.keySet() )
 		{
 			List<AnonymousClassDeclaration> declarations = cuAnonymousClassesMap.get( icu );
@@ -77,7 +79,7 @@ public class AnonymAsyncTaskWorker extends AbstractRefactorWorker
 				singleChangeWriter.removeStatement( asyncTaskDeclaration );
 
 				RxLogger.info( this, "METHOD=refactorAnonymClasses - Refactoring class: " + icu.getElementName() );
-				rxMultipleChangeWriter.addChange( icu.getElementName(), icu, singleChangeWriter );
+				rxMultipleChangeWriter.addChange( icu, singleChangeWriter );
 
 			}
 			monitor.worked( 1 );
@@ -95,39 +97,32 @@ public class AnonymAsyncTaskWorker extends AbstractRefactorWorker
 		rewriter.removeImport( "android.os.AsyncTask" );
 	}
 
-	// TODO: Use a helper class to create the observable!
 	private void createLocalObservable( RxSingleChangeWriter rewriter, AnonymousClassDeclaration taskObject, AST ast )
 	{
 		AsyncTaskVisitor asyncTaskVisitor = new AsyncTaskVisitor();
 		taskObject.accept( asyncTaskVisitor );
 
-		String observableCall = createObservable( asyncTaskVisitor );
-		Block observableStatement = CodeFactory.getStatementsBlockFromText( ast, observableCall );
+		String observableStatement = createObservable( asyncTaskVisitor );
+		Block observableBlock = CodeFactory.getStatementsBlockFromText( ast, observableStatement );
 
 		Statement referenceStatement = ASTUtil.getStmtParent( taskObject );
-		Statement newStatement = (Statement) observableStatement.statements().get( 0 );
+		List statements = observableBlock.statements();
+		Statement newStatement = (Statement) statements.get( 0 );
 		rewriter.addStatementBefore( newStatement, referenceStatement );
+
 	}
 
 	private String createObservable( AsyncTaskVisitor asyncTaskVisitor )
 	{
-		String doInBackgroundStatements = asyncTaskVisitor.getDoInBackgroundBlock().toString();
-		String doOnCompletedStatements = asyncTaskVisitor.getOnPostExecuteBlock().toString();
-		String returnedType = asyncTaskVisitor.getReturnedType().toString();
+		Block doInBackgroundBlock = asyncTaskVisitor.getDoInBackgroundBlock();
+		Block doOnCompletedBlock = asyncTaskVisitor.getOnPostExecuteBlock();
+		String type = asyncTaskVisitor.getReturnedType().toString();
 		String resultVariableName = asyncTaskVisitor.getResultVariableName();
 
-		String observable = "Observable.fromCallable(new Callable<" + returnedType + ">() {" +
-				"	@Override" +
-				"	public " + returnedType + " call() throws Exception " + doInBackgroundStatements +
-				"})" +
-				".subscribeOn(Schedulers.computation())" +
-				".observeOn(AndroidSchedulers.mainThread())" +
-				".doOnNext(new Action1<" + returnedType + ">() {" +
-				"	@Override" +
-				"	public void call(" + returnedType + " " + resultVariableName + ") " + doOnCompletedStatements +
-				"})" +
-				".subscribe();";
-
-		return observable;
+		return RxObservableStringBuilder
+				.newObservable( type, doInBackgroundBlock, SchedulerType.ANDROID_MAIN_THREAD )
+				.addDoOnNext( doOnCompletedBlock, resultVariableName )
+				.addSubscribe()
+				.build();
 	}
 }

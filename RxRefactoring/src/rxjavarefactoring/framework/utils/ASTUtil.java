@@ -1,4 +1,4 @@
-package rxjavarefactoring.utils;
+package rxjavarefactoring.framework.utils;
 
 import org.eclipse.jdt.core.dom.*;
 
@@ -153,7 +153,7 @@ public final class ASTUtil
 
 	/**
 	 *
-	 * @param node
+	 * @param node an ast node
 	 * @return The next parent of type {@link Statement}
 	 */
 	public static Statement getStmtParent( ASTNode node )
@@ -176,7 +176,7 @@ public final class ASTUtil
 	 * @param parameterIndex
 	 *            index
 	 * @return the variable name
-	 * @throws IndexOutOfBoundsException
+	 * @throws IndexOutOfBoundsException if there is no parameter with the given index
 	 */
 	public static String getVariableName( MethodDeclaration methodDeclaration, int parameterIndex ) throws IndexOutOfBoundsException
 	{
@@ -189,10 +189,6 @@ public final class ASTUtil
 
 	private static boolean isClassOf( ITypeBinding classType, String target )
 	{
-		if ( classType != null && target.equals( classType.getBinaryName() ) )
-		{
-			return true;
-		}
-		return false;
+		return classType != null && target.equals( classType.getBinaryName() );
 	}
 }

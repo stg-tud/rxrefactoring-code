@@ -11,17 +11,19 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
 
+import rxjavarefactoring.framework.refactoring.AbstractCollector;
+
 /**
  * Description: Collects relevant information for refactoring<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/11/2016
  */
-public class CuCollector
+public class CuCollector extends AbstractCollector
 {
-	private Map<ICompilationUnit, List<TypeDeclaration>> cuSubclassesMap;
-	private Map<ICompilationUnit, List<AnonymousClassDeclaration>> cuAnonymousClassesMap;
-	private Map<ICompilationUnit, List<VariableDeclaration>> cuAnonymousCachedClassesMap;
-	private Map<ICompilationUnit, List<MethodInvocation>> cuRelevantUsagesMap;
+	private final Map<ICompilationUnit, List<TypeDeclaration>> cuSubclassesMap;
+	private final Map<ICompilationUnit, List<AnonymousClassDeclaration>> cuAnonymousClassesMap;
+	private final Map<ICompilationUnit, List<VariableDeclaration>> cuAnonymousCachedClassesMap;
+	private final Map<ICompilationUnit, List<MethodInvocation>> cuRelevantUsagesMap;
 
 	public CuCollector()
 	{
@@ -75,25 +77,5 @@ public class CuCollector
 	{
 		return cuSubclassesMap.size() + cuAnonymousClassesMap.size()
 				+ cuAnonymousCachedClassesMap.size() + cuRelevantUsagesMap.size();
-	}
-
-	// ### Private Methods ###
-
-	private <T> void addToMap( ICompilationUnit cu, List<T> newList, Map<ICompilationUnit, List<T>> map )
-	{
-		if ( newList.isEmpty() )
-		{
-			return;
-		}
-		List<T> currentList = map.get( cu );
-		if ( currentList == null )
-		{
-			map.put( cu, newList );
-		}
-		else
-		{
-			currentList.addAll( newList );
-			map.put( cu, newList );
-		}
 	}
 }

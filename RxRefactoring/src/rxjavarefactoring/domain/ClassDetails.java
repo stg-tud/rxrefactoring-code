@@ -31,8 +31,8 @@ public enum ClassDetails
 				}
 			} );
 
-	private String binaryName;
-	private Map<String, String> publicMethodsMap;
+	private final String binaryName;
+	private final Map<String, String> publicMethodsMap;
 
 	ClassDetails( String binaryName, Map<String, String> publicMethodsMap )
 	{

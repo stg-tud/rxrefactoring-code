@@ -10,7 +10,7 @@ import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
 import rxjavarefactoring.domain.ClassDetails;
-import rxjavarefactoring.utils.ASTUtil;
+import rxjavarefactoring.framework.utils.ASTUtil;
 
 /**
  * Description: Collects usages information for a target class<br>
@@ -21,8 +21,8 @@ import rxjavarefactoring.utils.ASTUtil;
  */
 public class UsagesVisitor extends ASTVisitor
 {
-	private ClassDetails targetClass;
-	private List<MethodInvocation> usages;
+	private final ClassDetails targetClass;
+	private final List<MethodInvocation> usages;
 
 	public UsagesVisitor( ClassDetails targetClass )
 	{

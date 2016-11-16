@@ -1,4 +1,4 @@
-package rxjavarefactoring.framework;
+package rxjavarefactoring.framework.writers;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -14,7 +14,7 @@ import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
 import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.eclipse.text.edits.MultiTextEdit;
 
-import rxjavarefactoring.utils.ASTUtil;
+import rxjavarefactoring.framework.utils.ASTUtil;
 
 /**
  * Description: <br>
@@ -23,10 +23,10 @@ import rxjavarefactoring.utils.ASTUtil;
  */
 public class RxSingleChangeWriter
 {
-	private ASTRewrite astRewriter;
-	private CompilationUnitChange cuChange;
-	private Set<String> addedImports;
-	private Set<String> removedImports;
+	private final ASTRewrite astRewriter;
+	private final CompilationUnitChange cuChange;
+	private final Set<String> addedImports;
+	private final Set<String> removedImports;
 
 	public RxSingleChangeWriter( ICompilationUnit icu, AST ast, String refactoringDescription )
 	{
@@ -39,21 +39,52 @@ public class RxSingleChangeWriter
 		cuChange.setEdit( root );
 	}
 
+	/**
+	 * Add import declaration to the compilation unit. The imports are saved
+	 * into a list that is used by the {@link RxMultipleChangeWriter} where they
+	 * are finally added
+	 * 
+	 * @param importClass
+	 *            name of the class to be imported
+	 */
 	public void addImport( String importClass )
 	{
 		addedImports.add( importClass );
 	}
 
+	/**
+	 * Remove import declaration from the compilation unit. The imports are
+	 * saved int a list that is used by the {@link RxMultipleChangeWriter} where
+	 * they are finally removed
+	 * 
+	 * @param importClass
+	 *            name of the class to be removed
+	 */
 	public void removeImport( String importClass )
 	{
 		removedImports.add( importClass );
 	}
 
-	public void removeStatement( ASTNode elementInTargetStament )
+	/**
+	 * Removes statement from the compilation unit given a node contained in the
+	 * statement
+	 * 
+	 * @param elementInTargetStatement
+	 *            a node inside of a statement
+	 */
+	public void removeStatement( ASTNode elementInTargetStatement )
 	{
-		astRewriter.remove( ASTUtil.getStmtParent( elementInTargetStament ), null );
+		astRewriter.remove( ASTUtil.getStmtParent( elementInTargetStatement ), null );
 	}
 
+	/**
+	 * Adds new statement before a reference statement
+	 * 
+	 * @param newStatement
+	 *            new statement
+	 * @param referenceStatement
+	 *            reference statement
+	 */
 	public void addStatementBefore( Statement newStatement, Statement referenceStatement )
 	{
 		Block parentBlock = (Block) referenceStatement.getParent();
@@ -63,17 +94,32 @@ public class RxSingleChangeWriter
 		statementsBlock.insertAfter( placeHolder, newStatement, null );
 	}
 
-	public ASTRewrite getAstRewriter()
+	/**
+	 * Used by {@link RxMultipleChangeWriter}
+	 * 
+	 * @return writer
+	 */
+	ASTRewrite getAstRewriter()
 	{
 		return astRewriter;
 	}
 
-	public Set<String> getAddedImports()
+	/**
+	 * Used by {@link RxMultipleChangeWriter}
+	 * 
+	 * @return set of added imports
+	 */
+	Set<String> getAddedImports()
 	{
 		return addedImports;
 	}
 
-	public Set<String> getRemovedImports()
+	/**
+	 * Used by {@link RxMultipleChangeWriter}
+	 * 
+	 * @return set of removed imports
+	 */
+	Set<String> getRemovedImports()
 	{
 		return removedImports;
 	}

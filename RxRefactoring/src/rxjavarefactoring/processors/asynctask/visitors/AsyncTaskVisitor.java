@@ -2,7 +2,7 @@ package rxjavarefactoring.processors.asynctask.visitors;
 
 import org.eclipse.jdt.core.dom.*;
 
-import rxjavarefactoring.utils.ASTUtil;
+import rxjavarefactoring.framework.utils.ASTUtil;
 
 /**
  * Description: Visitor to extract relevant information about AsyncTasks<br>

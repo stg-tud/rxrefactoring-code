@@ -12,34 +12,25 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.ltk.core.refactoring.Change;
-import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 
-import rxjavarefactoring.framework.RxLogger;
-import rxjavarefactoring.framework.RxMultipleChangeWriter;
+import rxjavarefactoring.framework.refactoring.AbstractProcessor;
+import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
+import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.processors.CuCollector;
 import rxjavarefactoring.processors.WorkerStatus;
 import rxjavarefactoring.processors.asynctask.workers.AnonymAsyncTaskWorker;
 
 /**
- * Description: Refactors AsyncTasks by using {@link rxjavarefactoring.framework.AbstractRefactorWorker}<br>
+ * Description: Refactors AsyncTasks by using {@link AbstractRefactorWorker}<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/11/2016
  */
-public class AsyncTaskProcessor extends Refactoring
+public class AsyncTaskProcessor extends AbstractProcessor<CuCollector>
 {
-	private CuCollector collector;
-	private RxMultipleChangeWriter rxMultipleChangeWriter;
-
-	public AsyncTaskProcessor( CuCollector asyncTaskCollector )
+	public AsyncTaskProcessor( CuCollector collector, String name )
 	{
-		this.collector = asyncTaskCollector;
-	}
-
-	@Override
-	public String getName()
-	{
-		return "Convert AsyncTasks To RxObservable";
+		super( collector, name );
 	}
 
 	@Override
@@ -58,7 +49,6 @@ public class AsyncTaskProcessor extends Refactoring
 	public Change createChange( IProgressMonitor monitor ) throws CoreException, OperationCanceledException
 	{
 		RxLogger.info( this, "METHOD=createChange - Starting refactoring" );
-		rxMultipleChangeWriter = new RxMultipleChangeWriter();
 
 		// Create Workers
 		AnonymAsyncTaskWorker anonymAsyncTaskWorker = new AnonymAsyncTaskWorker( collector, monitor, rxMultipleChangeWriter );
@@ -72,7 +62,8 @@ public class AsyncTaskProcessor extends Refactoring
 
 		Set<Callable<WorkerStatus>> workers = new HashSet<>();
 		workers.add( anonymAsyncTaskWorker );
-		// TODO: Add workers to the set here so that they are invoked concurrently.
+		// TODO: Add workers to the set here so that they are invoked
+		// concurrently.
 		// workers.add(anonymAsyncTaskWorker);
 		// workers.add(anonymAsyncTaskWorker);
 		// workers.add(anonymAsyncTaskWorker);

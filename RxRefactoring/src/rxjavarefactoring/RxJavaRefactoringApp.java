@@ -12,8 +12,9 @@ import rx.Observable;
 import rxjavarefactoring.analyzers.DeclarationVisitor;
 import rxjavarefactoring.analyzers.UsagesVisitor;
 import rxjavarefactoring.domain.ClassDetails;
-import rxjavarefactoring.framework.AbstractRxJavaRefactoringApp;
-import rxjavarefactoring.framework.RxLogger;
+import rxjavarefactoring.framework.refactoring.AbstractCollector;
+import rxjavarefactoring.framework.refactoring.AbstractRxJavaRefactoringApp;
+import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.processors.CuCollector;
 import rxjavarefactoring.processors.asynctask.AsyncTaskProcessor;
 
@@ -29,6 +30,7 @@ import rxjavarefactoring.processors.asynctask.AsyncTaskProcessor;
 public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 {
 	private static final String DEPENDENCIES_DIRECTORY = "/all-deps";
+	private static final int ASYNCTASK_COLLECTOR_INDEX = 0;
 	private Set<String> targetClasses;
 	private static boolean runningForTests = false;
 
@@ -41,15 +43,18 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 	@Override
 	public void refactorCompilationUnits( ICompilationUnit[] units )
 	{
-		icuVsNewSourceCodeMap = new HashMap<>();
-		CuCollector asyncTasksCollector = new CuCollector();
+		originalCompilationUnitVsNewSourceCodeMap = new HashMap<>();
+
 		RxLogger.info( this, "METHOD=refactorCompilationUnits - # units: " + units.length );
+		List<AbstractCollector> collectors = createCollectors();
 
 		Observable
 				.from( units )
-				.filter( unit -> !runningForTests || validateUnitName(unit)) // AL-Formula runningForTest -> validateName
-				.doOnNext( unit -> processUnit( unit, asyncTasksCollector ) )
-				.doOnCompleted( () -> refactorAsyncTasks( asyncTasksCollector ) )
+				// Filter using the boolean formula "runningForTest ->
+				// validateName"
+				.filter( unit -> !runningForTests || validateUnitName( unit ) )
+				.doOnNext( unit -> processUnit( unit, collectors ) )
+				.doOnCompleted( () -> refactorUnits( collectors ) )
 				.doOnError( t -> RxLogger.error( this, "METHOD=refactorCompilationUnits", t ) )
 				.subscribe();
 	}
@@ -57,7 +62,7 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 	public void refactorOnly( String... classNames )
 	{
 		targetClasses = new HashSet<>();
-		targetClasses.addAll(Arrays.asList(classNames));
+		targetClasses.addAll( Arrays.asList( classNames ) );
 		runningForTests = true;
 	}
 
@@ -68,9 +73,21 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 
 	// ### Private Methods ###
 
-	private boolean validateUnitName(ICompilationUnit unit) {return targetClasses != null && targetClasses.contains(unit.getElementName());}
+	private List<AbstractCollector> createCollectors()
+	{
+		List<AbstractCollector> collectors = new ArrayList<>();
+		AbstractCollector asyncTasksCollector = new CuCollector();
 
-	private void processUnit( ICompilationUnit iUnit, CuCollector collectors )
+		collectors.add( asyncTasksCollector );
+		return collectors;
+	}
+
+	private boolean validateUnitName( ICompilationUnit unit )
+	{
+		return targetClasses != null && targetClasses.contains( unit.getElementName() );
+	}
+
+	private void processUnit( ICompilationUnit iUnit, List<AbstractCollector> collectors )
 	{
 		CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( iUnit, true );
 		// Collect relevant information from compilation units using the
@@ -82,11 +99,15 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 
 		logFindings( cu, declarationVisitor, usagesVisitor );
 
-		// Cache relevant information in an object that contains maps
-		collectors.addSubclasses( iUnit, declarationVisitor.getSubclasses() );
-		collectors.addAnonymClassDecl( iUnit, declarationVisitor.getAnonymousClasses() );
-		collectors.addAnonymCachedClassDecl( iUnit, declarationVisitor.getAnonymousCachedClasses() );
-		collectors.addRelevantUsages( iUnit, usagesVisitor.getUsages() );
+		if ( collectors.get( ASYNCTASK_COLLECTOR_INDEX ) instanceof CuCollector )
+		{
+			CuCollector asyncTaskCollector = (CuCollector) collectors.get( ASYNCTASK_COLLECTOR_INDEX );
+			// Cache relevant information in an object that contains maps
+			asyncTaskCollector.addSubclasses( iUnit, declarationVisitor.getSubclasses() );
+			asyncTaskCollector.addAnonymClassDecl( iUnit, declarationVisitor.getAnonymousClasses() );
+			asyncTaskCollector.addAnonymCachedClassDecl( iUnit, declarationVisitor.getAnonymousCachedClasses() );
+			asyncTaskCollector.addRelevantUsages( iUnit, usagesVisitor.getUsages() );
+		}
 
 	}
 
@@ -108,20 +129,29 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 		}
 	}
 
-	private void refactorAsyncTasks( CuCollector asyncTasksCollector )
+	private void refactorUnits( List<AbstractCollector> collectors )
 	{
-		RxLogger.info( this, "METHOD=refactorAsyncTasks - AsyncTasks Refactoring starting..." );
-		AsyncTaskProcessor asyncTaskProcessor = new AsyncTaskProcessor( asyncTasksCollector );
+		if ( collectors.get( ASYNCTASK_COLLECTOR_INDEX ) instanceof CuCollector )
+		{
+			RxLogger.info( this, "METHOD=refactorUnits - AsyncTasks Refactoring starting..." );
+			CuCollector asyncTaskCollector = (CuCollector) collectors.get( ASYNCTASK_COLLECTOR_INDEX );
+			refactorAsyncTasks( asyncTaskCollector );
+		}
+	}
+
+	private void refactorAsyncTasks( CuCollector asyncTaskCollector )
+	{
+		AsyncTaskProcessor asyncTaskProcessor = new AsyncTaskProcessor( asyncTaskCollector, "Convert AsyncTasks To RxObservable" );
 		try
 		{
 			NullProgressMonitor iProgressMonitor = new NullProgressMonitor();
 			asyncTaskProcessor.createChange( iProgressMonitor );
 			Map<ICompilationUnit, String> icuVsNewCodeMap = asyncTaskProcessor.getICompilationUnitVsNewSourceCodeMap();
-			icuVsNewSourceCodeMap.putAll( icuVsNewCodeMap );
+			originalCompilationUnitVsNewSourceCodeMap.putAll( icuVsNewCodeMap );
 		}
 		catch ( Exception e )
 		{
-			e.printStackTrace();
+			RxLogger.error( this, "METHOD=refactorAsyncTasks - FAILED", e );
 		}
 	}
 }

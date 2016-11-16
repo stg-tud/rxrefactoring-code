@@ -1,4 +1,4 @@
-package rxjavarefactoring.utils;
+package rxjavarefactoring.framework.utils;
 
 import org.eclipse.jdt.core.dom.*;
 
@@ -15,7 +15,7 @@ import org.eclipse.jdt.core.dom.*;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/10/2016
  */
-public class CodeFactory extends ASTVisitor
+public final class CodeFactory extends ASTVisitor
 {
 	private MethodDeclaration methodDeclaration;
 
