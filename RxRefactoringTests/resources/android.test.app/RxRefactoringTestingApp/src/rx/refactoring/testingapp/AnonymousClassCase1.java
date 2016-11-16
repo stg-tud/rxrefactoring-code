@@ -3,10 +3,11 @@ package rx.refactoring.testingapp;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 
-public class AnonymousClassNoAssignment
+public class AnonymousClassCase1
 {
     public void someMethod()
     {
+        // Testing doInBackground and onPostExecute
         new AsyncTask<Void, Void, Integer>() {
 
             @Override

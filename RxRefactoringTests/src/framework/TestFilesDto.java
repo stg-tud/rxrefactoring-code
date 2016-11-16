@@ -13,9 +13,9 @@ import java.util.List;
  */
 public class TestFilesDto
 {
-	private String packageName;
-	private String directoryName;
-	private List<String> classNames;
+	private final String packageName;
+	private final String directoryName;
+	private final List<String> classNames;
 
     /**
      * Constructor for test files.

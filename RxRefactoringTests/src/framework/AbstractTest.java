@@ -30,7 +30,7 @@ public abstract class AbstractTest
      *            following arguments: <br>
      *            "example.directory", "Example.java"
      * @return The source code as a String
-     * @throws IOException
+     * @throws IOException io exception
      */
     protected String getSourceCode( String... path ) throws IOException
     {

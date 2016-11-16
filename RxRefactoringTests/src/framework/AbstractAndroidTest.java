@@ -21,7 +21,7 @@ public abstract class AbstractAndroidTest extends AbstractTest
     @Before
     public void openAndroidProject() throws Exception
     {
-        String absolutPath = Paths.get(
+        String absolutePath = Paths.get(
                 "resources",
                 "android.test.app",
                 "RxRefactoringTestingApp",
@@ -30,7 +30,7 @@ public abstract class AbstractAndroidTest extends AbstractTest
 
         IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
         project = workspaceRoot.getProject("RxRefactoringTestingApp");
-        IProjectDescription description = project.getWorkspace().loadProjectDescription(new org.eclipse.core.runtime.Path(absolutPath));
+        IProjectDescription description = project.getWorkspace().loadProjectDescription(new org.eclipse.core.runtime.Path(absolutePath));
         project.create(description, null);
         project.open(null);
     }
@@ -39,5 +39,6 @@ public abstract class AbstractAndroidTest extends AbstractTest
     public void closeAndroidProject() throws Exception
     {
         project.close(null);
+        project.delete(true, null);
     }
 }

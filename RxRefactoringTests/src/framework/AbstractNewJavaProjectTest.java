@@ -57,7 +57,9 @@ public abstract class AbstractNewJavaProjectTest extends AbstractTest
 	 *            names are not supposed to have the extension ".java"
 	 * @return a list containing {@link ICompilationUnit}s
 	 * @throws CoreException
+	 *             core exception
 	 * @throws IOException
+	 *             io exception
 	 */
 	protected List<ICompilationUnit> createCompilationUnits( TestFilesDto inputTestFiles ) throws CoreException, IOException
 	{
@@ -72,12 +74,14 @@ public abstract class AbstractNewJavaProjectTest extends AbstractTest
 			String className = testClass + JAVA_EXTENSION;
 			String sourceCode = getSourceCode( inputTestFiles.getDirectoryName(), className );
 
-			StringBuffer buffer = new StringBuffer();
-			buffer.append( PACKAGE_DECLARATION_START + pack.getElementName() + PACKAGE_DECLARATION_END );
-			buffer.append( NEW_LINE );
-			buffer.append( sourceCode );
+			StringBuilder sb = new StringBuilder();
+			sb.append( PACKAGE_DECLARATION_START );
+			sb.append( pack.getElementName() );
+			sb.append( PACKAGE_DECLARATION_END );
+			sb.append( NEW_LINE );
+			sb.append( sourceCode );
 
-			ICompilationUnit icu = pack.createCompilationUnit( className, buffer.toString(), true, null );
+			ICompilationUnit icu = pack.createCompilationUnit( className, sb.toString(), true, null );
 			compilationUnits.add( icu );
 		}
 		return compilationUnits;
@@ -114,7 +118,6 @@ public abstract class AbstractNewJavaProjectTest extends AbstractTest
 		{
 			entries.add( JavaCore.newLibraryEntry( element.getSystemLibraryPath(), null, null ) );
 		}
-
 
 		javaProject.setRawClasspath( entries.toArray( new IClasspathEntry[ entries.size() ] ), null );
 		return javaProject;

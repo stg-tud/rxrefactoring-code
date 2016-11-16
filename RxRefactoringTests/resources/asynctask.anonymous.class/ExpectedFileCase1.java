@@ -7,10 +7,11 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
-public class AnonymousClassNoAssignment
+public class AnonymousClassCase1
 {
 	public void someMethod()
 	{
+		// Testing doInBackground and onPostExecute
 		Observable
 				.fromCallable( new Callable<Integer>()
 				{
