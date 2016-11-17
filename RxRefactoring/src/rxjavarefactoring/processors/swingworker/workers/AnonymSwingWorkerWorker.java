@@ -73,7 +73,7 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 		swingWorkerObject.accept( swingWorkerVisitor );
 
 		String observableStatement = createObservable( swingWorkerVisitor );
-		Block observableBlock = CodeFactory.getStatementsBlockFromText( ast, observableStatement );
+		Block observableBlock = CodeFactory.createStatementsBlockFromText( ast, observableStatement );
 
 		Statement referenceStatement = ASTUtil.getStmtParent( swingWorkerObject );
 		List statements = observableBlock.statements();
@@ -92,8 +92,9 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 		if ( swingWorkerVisitor.getDoneBlock() != null )
 		{
 			rewriter.addImport( "rx.functions.Action1" );
-			if ( swingWorkerVisitor.getDoneBlock().toString().contains( "TimeUnit" ) )
+			if ( !swingWorkerVisitor.getTimeoutArguments().isEmpty() )
 			{
+				rewriter.addImport( "rx.functions.Func1" );
 				rewriter.addImport( "java.util.concurrent.TimeUnit" );
 			}
 			rewriter.removeImport( "java.util.concurrent.ExecutionException" );
@@ -114,11 +115,6 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 				.addTimeout( timeOutArguments )
 				.addSubscribe()
 				.build();
-
-		if ( swingWorkerVisitor.isMethodGetPresent() )
-		{
-			observableStatement = observableStatement.replaceFirst( "get\\(.*\\)", resultVariableName );
-		}
 
 		return observableStatement;
 	}

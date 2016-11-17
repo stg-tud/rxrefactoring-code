@@ -29,6 +29,8 @@ public class SwingWorkerVisitor extends ASTVisitor
 	private static final String PUBLISH = "publish";
 	private static final String ASYNC_RESULT = "asyncResult";
 	private static final String GET = "get";
+	public static final String LONG_TYPE = "long";
+	public static final String TYME_UNIT_TYPE = "java.util.concurrent.TimeUnit";
 
 	private boolean methodGetPresent;
 	private List<String> timeoutArguments;
@@ -37,10 +39,12 @@ public class SwingWorkerVisitor extends ASTVisitor
 	private Type resultType;
 	private Type progressUpdateType;
 	private String resultVariableName;
+	private List<MethodInvocation> methodInvocationsGet;
 
 	public SwingWorkerVisitor()
 	{
 		timeoutArguments = new ArrayList<>();
+		methodInvocationsGet = new ArrayList<>();
 	}
 
 	@Override
@@ -70,14 +74,39 @@ public class SwingWorkerVisitor extends ASTVisitor
 	{
 		if ( ASTUtil.matchesTargetMethod( node, GET, ClassDetails.SWING_WORKER.getBinaryName() ) )
 		{
-			methodGetPresent = true;
-			if ( !node.arguments().isEmpty() )
+			// if the get method has no arguments, then the method corresponds
+			// to SwingWorker.get()
+			if ( node.arguments().isEmpty() )
 			{
-				NumberLiteral time = (NumberLiteral) node.arguments().get( 0 );
-				QualifiedName unit = (QualifiedName) node.arguments().get( 1 );
-				timeoutArguments.add( time.getToken() );
-				timeoutArguments.add( unit.getFullyQualifiedName() );
+				methodGetPresent = true;
+				methodInvocationsGet.add(node);
+				return true;
 			}
+			else if ( node.arguments().size() == 2 )
+			{
+				// then we have to make sure that the arguments are long and
+				// java.util.concurrent.TimeUnit
+				Object timeArgument = node.arguments().get( 0 );
+				Object unitArgument = node.arguments().get( 1 );
+				if ( timeArgument instanceof NumberLiteral && unitArgument instanceof QualifiedName )
+				{
+					NumberLiteral time = (NumberLiteral) timeArgument;
+					QualifiedName unit = (QualifiedName) unitArgument;
+					// check the types
+					if ( LONG_TYPE.equals( time.resolveTypeBinding().getName() ) &&
+							TYME_UNIT_TYPE.equals( unit.resolveTypeBinding().getBinaryName() ) )
+					{
+						// here it is sure that the method invocation
+						// corresponds to:
+						// SwingWorker.get(long time, TimeUnit unit)
+						methodGetPresent = true;
+						timeoutArguments.add( time.getToken() );
+						timeoutArguments.add( unit.getFullyQualifiedName() );
+						methodInvocationsGet.add(node);
+					}
+				}
+			}
+
 		}
 		return true;
 	}
@@ -100,6 +129,11 @@ public class SwingWorkerVisitor extends ASTVisitor
 
 	public Block getDoneBlock()
 	{
+		for (MethodInvocation methodInvocation : methodInvocationsGet)
+		{
+				SimpleName variableName = methodInvocation.getAST().newSimpleName(resultVariableName);
+				ASTUtil.replaceInStatement(methodInvocation, variableName);
+		}
 		return doneBlock;
 	}
 

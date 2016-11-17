@@ -74,7 +74,7 @@ public class AnonymAsyncTaskWorker extends AbstractRefactorWorker<CuCollector>
 	private void updateImports( RxSingleChangeWriter rewriter )
 	{
 		// TODO: it might make more sense to add the imports after creating the
-		// observable
+		// observable. See AnonymSwingWorkerWorker
 		rewriter.addImport( "rx.Observable" );
 		rewriter.addImport( "rx.schedulers.Schedulers" );
 		rewriter.addImport( "rx.functions.Action1" );
@@ -91,7 +91,7 @@ public class AnonymAsyncTaskWorker extends AbstractRefactorWorker<CuCollector>
 		taskObject.accept( asyncTaskVisitor );
 
 		String observableStatement = createObservable( asyncTaskVisitor );
-		Block observableBlock = CodeFactory.getStatementsBlockFromText( ast, observableStatement );
+		Block observableBlock = CodeFactory.createStatementsBlockFromText( ast, observableStatement );
 
 		Statement referenceStatement = ASTUtil.getStmtParent( taskObject );
 		List statements = observableBlock.statements();

@@ -46,7 +46,7 @@ public class AsyncTaskVisitor extends ASTVisitor
 				resultVariableName = ASTUtil.getVariableName( methodDeclaration, 0 );
 			}
 		}
-		return super.visit( node );
+		return true;
 	}
 
 	public Block getDoInBackgroundBlock()

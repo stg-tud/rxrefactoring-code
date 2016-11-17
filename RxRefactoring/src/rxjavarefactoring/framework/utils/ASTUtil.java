@@ -18,7 +18,7 @@ public final class ASTUtil
 
 	/**
 	 * Find the parent of a node given the target class
-	 * 
+	 *
 	 * @param node
 	 *            source node
 	 * @param target
@@ -39,7 +39,7 @@ public final class ASTUtil
 
 	/**
 	 * Determines whether a node is subclass of the a given target
-	 * 
+	 *
 	 * @param type
 	 *            current node (The {@link ASTNode} must be from type
 	 *            {@link TypeDeclaration} or {@link AnonymousClassDeclaration})
@@ -65,7 +65,7 @@ public final class ASTUtil
 
 	/**
 	 * Determines whether a node is subclass of the a given target
-	 * 
+	 *
 	 * @param superClass
 	 *            current type
 	 * @param target
@@ -98,7 +98,7 @@ public final class ASTUtil
 	/**
 	 * Checks if the current type is from target type. Superclasses and
 	 * subclasses are not considered
-	 * 
+	 *
 	 * @param type
 	 *            current node (The {@link ASTNode} must be from type
 	 *            {@link TypeDeclaration} or {@link AnonymousClassDeclaration})
@@ -122,7 +122,7 @@ public final class ASTUtil
 
 	/**
 	 * Checks whether the current class is a class or subclass of target
-	 * 
+	 *
 	 * @param type
 	 *            current node (The {@link ASTNode} must be from type
 	 *            {@link TypeDeclaration} or {@link AnonymousClassDeclaration})
@@ -138,7 +138,7 @@ public final class ASTUtil
 
 	/**
 	 * Checks whether the current class is a class or subclass of target
-	 * 
+	 *
 	 * @param type
 	 *            current type
 	 * @param target
@@ -152,7 +152,6 @@ public final class ASTUtil
 	}
 
 	/**
-	 *
 	 * @param node
 	 *            an ast node
 	 * @return The next parent of type {@link Statement}
@@ -171,7 +170,7 @@ public final class ASTUtil
 	/**
 	 * Returns the variable name of a parameter given a
 	 * {@link MethodDeclaration}
-	 * 
+	 *
 	 * @param methodDeclaration
 	 *            method declaration
 	 * @param parameterIndex
@@ -189,7 +188,7 @@ public final class ASTUtil
 
 	/**
 	 * Identifies if a node matches a target method from a class
-	 * 
+	 *
 	 * @param node
 	 *            input node
 	 * @param methodName
@@ -200,15 +199,46 @@ public final class ASTUtil
 	 */
 	public static boolean matchesTargetMethod( MethodInvocation node, String methodName, String classBinaryName )
 	{
-		IMethodBinding binding = node.resolveMethodBinding();
-		if ( binding == null )
+		IMethodBinding methodBinding = node.resolveMethodBinding();
+		if ( methodBinding == null )
 		{
 			return false;
 		}
-		String bindingName = binding.getName();
-		String className = binding.getDeclaringClass().getBinaryName();
+		String bindingName = methodBinding.getName();
+		String className = methodBinding.getDeclaringClass().getBinaryName();
 
-		return bindingName.equals( bindingName ) && classBinaryName.equals( className );
+		return methodName.equals( bindingName ) && classBinaryName.equals( className );
+	}
+
+	/**
+	 * Replaces the original node by a new node in a statement
+	 * 
+	 * @param originalNode
+	 *            original node
+	 * @param newNode
+	 *            new node
+	 * @param <T>
+	 *            original node type
+	 * @param <V>
+	 *            new node type
+	 */
+	public static <T extends ASTNode, V extends ASTNode> void replaceInStatement( T originalNode, V newNode )
+	{
+		Block block = (Block) ASTUtil.findParent( originalNode, Block.class );
+		if ( block != null )
+		{
+			String originalNodeString = originalNode.toString();
+			String newNodeString = newNode.toString();
+
+			ASTNode originalStatement = ASTUtil.findParent( originalNode, Statement.class );
+			String originalStatementString = originalStatement.toString();
+			String newStatementString = originalStatementString.replace( originalNodeString, newNodeString );
+			Statement newStatement = CodeFactory.createSingleStatementFromTest( block.getAST(), newStatementString );
+
+			int position = block.statements().indexOf( originalStatement );
+			originalStatement.delete();
+			block.statements().add( position, newStatement );
+		}
 	}
 
 	// ### Private Methods ###
