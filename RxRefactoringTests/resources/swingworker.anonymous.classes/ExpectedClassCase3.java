@@ -2,6 +2,7 @@ package rxrefactoring;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+
 import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
@@ -27,18 +28,11 @@ public class AnonymousClassCase3
 					@Override
 					public void call( String asyncResult )
 					{
-						try
-						{
-							String result = asyncResult;
-							System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
-						}
-						catch ( Exception e )
-						{
-							e.printStackTrace();
-						}
+						String result = asyncResult;
+						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
 					}
 				} )
-				.timeout(3L, TimeUnit.SECONDS)
+				.timeout( 3L, TimeUnit.SECONDS )
 				.onErrorReturn( new Func1<Throwable, String>()
 				{
 					@Override

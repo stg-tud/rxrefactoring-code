@@ -26,15 +26,8 @@ public class AnonymousClassCase2
 					@Override
 					public void call( String asyncResult )
 					{
-						try
-						{
-							String result = asyncResult;
-							System.out.println("[Thread: " + Thread.currentThread().getName() + "] Result:" + result);
-						}
-						catch ( Exception e )
-						{
-							e.printStackTrace();
-						}
+						String result = asyncResult;
+						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
 					}
 				} )
 				.subscribe();
