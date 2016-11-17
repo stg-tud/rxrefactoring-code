@@ -74,37 +74,23 @@ public class SwingWorkerVisitor extends ASTVisitor
 	{
 		if ( ASTUtil.matchesTargetMethod( node, GET, ClassDetails.SWING_WORKER.getBinaryName() ) )
 		{
-			// if the get method has no arguments, then the method corresponds
-			// to SwingWorker.get()
 			if ( node.arguments().isEmpty() )
 			{
+				// SwingWorker.get()
 				methodGetPresent = true;
-				methodInvocationsGet.add(node);
+				methodInvocationsGet.add( node );
 				return true;
 			}
 			else if ( node.arguments().size() == 2 )
 			{
-				// then we have to make sure that the arguments are long and
-				// java.util.concurrent.TimeUnit
-				Object timeArgument = node.arguments().get( 0 );
-				Object unitArgument = node.arguments().get( 1 );
-				if ( timeArgument instanceof NumberLiteral && unitArgument instanceof QualifiedName )
-				{
-					NumberLiteral time = (NumberLiteral) timeArgument;
-					QualifiedName unit = (QualifiedName) unitArgument;
-					// check the types
-					if ( LONG_TYPE.equals( time.resolveTypeBinding().getName() ) &&
-							TYME_UNIT_TYPE.equals( unit.resolveTypeBinding().getBinaryName() ) )
-					{
-						// here it is sure that the method invocation
-						// corresponds to:
-						// SwingWorker.get(long time, TimeUnit unit)
-						methodGetPresent = true;
-						timeoutArguments.add( time.getToken() );
-						timeoutArguments.add( unit.getFullyQualifiedName() );
-						methodInvocationsGet.add(node);
-					}
-				}
+				// SwingWorker.get(long time, TimeUnit unit)
+				NumberLiteral time = (NumberLiteral) node.arguments().get( 0 );
+				QualifiedName unit = (QualifiedName) node.arguments().get( 1 );
+
+				methodGetPresent = true;
+				timeoutArguments.add( time.getToken() );
+				timeoutArguments.add( unit.getFullyQualifiedName() );
+				methodInvocationsGet.add( node );
 			}
 
 		}
@@ -129,10 +115,11 @@ public class SwingWorkerVisitor extends ASTVisitor
 
 	public Block getDoneBlock()
 	{
-		for (MethodInvocation methodInvocation : methodInvocationsGet)
+		// changes all get() / get(long, TimeUnit) invocation by a variable
+		for ( MethodInvocation methodInvocation : methodInvocationsGet )
 		{
-				SimpleName variableName = methodInvocation.getAST().newSimpleName(resultVariableName);
-				ASTUtil.replaceInStatement(methodInvocation, variableName);
+			SimpleName variableName = methodInvocation.getAST().newSimpleName( resultVariableName );
+			ASTUtil.replaceInStatement( methodInvocation, variableName );
 		}
 		return doneBlock;
 	}

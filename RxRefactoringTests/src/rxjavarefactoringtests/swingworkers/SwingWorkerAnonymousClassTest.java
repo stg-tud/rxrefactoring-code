@@ -23,7 +23,7 @@ public class SwingWorkerAnonymousClassTest extends AbstractJavaTest
 		String targetFile = "AnonymousClassCase1.java";
 
 		String expectedSourceCode = getSourceCode(
-				"swingworker.anonymous.class",
+				"swingworker.anonymous.classes",
 				"ExpectedClassCase1.java" );
 
 		executeTest( targetFile, expectedSourceCode );
@@ -35,7 +35,7 @@ public class SwingWorkerAnonymousClassTest extends AbstractJavaTest
 		String targetFile = "AnonymousClassCase2.java";
 
 		String expectedSourceCode = getSourceCode(
-				"swingworker.anonymous.class",
+				"swingworker.anonymous.classes",
 				"ExpectedClassCase2.java" );
 
 		executeTest( targetFile, expectedSourceCode );
@@ -47,7 +47,7 @@ public class SwingWorkerAnonymousClassTest extends AbstractJavaTest
 		String targetFile = "AnonymousClassCase3.java";
 
 		String expectedSourceCode = getSourceCode(
-				"swingworker.anonymous.class",
+				"swingworker.anonymous.classes",
 				"ExpectedClassCase3.java" );
 
 		executeTest( targetFile, expectedSourceCode );
@@ -59,7 +59,7 @@ public class SwingWorkerAnonymousClassTest extends AbstractJavaTest
 		String targetFile = "AnonymousClassCase4.java";
 
 		String expectedSourceCode = getSourceCode(
-				"swingworker.anonymous.class",
+				"swingworker.anonymous.classes",
 				"ExpectedClassCase4.java" );
 
 		executeTest( targetFile, expectedSourceCode );
@@ -71,7 +71,7 @@ public class SwingWorkerAnonymousClassTest extends AbstractJavaTest
 		String targetFile = "AnonymousClassCase5.java";
 
 		String expectedSourceCode = getSourceCode(
-				"swingworker.anonymous.class",
+				"swingworker.anonymous.classes",
 				"ExpectedClassCase5.java" );
 
 		executeTest( targetFile, expectedSourceCode );
@@ -83,7 +83,7 @@ public class SwingWorkerAnonymousClassTest extends AbstractJavaTest
 		String targetFile = "AnonymousClassCase6.java";
 
 		String expectedSourceCode = getSourceCode(
-				"swingworker.anonymous.class",
+				"swingworker.anonymous.classes",
 				"ExpectedClassCase6.java" );
 
 		executeTest( targetFile, expectedSourceCode );
