@@ -34,9 +34,9 @@ public class RxObservableStringBuilderTest
 		String doOnSubscribeStatements = "System.out.println(\"Subscribing Observable\");";
 
 		AST ast = AST.newAST( AST.JLS8 );
-		doInBackgroundBlock = CodeFactory.getStatementsBlockFromText( ast, doInBackgroundStatements );
-		doOnNextBlock = CodeFactory.getStatementsBlockFromText( ast, doOnNextStatements );
-		doOnSubscribeBlock = CodeFactory.getStatementsBlockFromText( ast, doOnSubscribeStatements );
+		doInBackgroundBlock = CodeFactory.createStatementsBlockFromText( ast, doInBackgroundStatements );
+		doOnNextBlock = CodeFactory.createStatementsBlockFromText( ast, doOnNextStatements );
+		doOnSubscribeBlock = CodeFactory.createStatementsBlockFromText( ast, doOnSubscribeStatements );
 	}
 
 	@Test

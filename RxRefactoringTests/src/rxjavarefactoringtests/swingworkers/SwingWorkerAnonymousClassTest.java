@@ -53,6 +53,42 @@ public class SwingWorkerAnonymousClassTest extends AbstractJavaTest
 		executeTest( targetFile, expectedSourceCode );
 	}
 
+	@Test
+	public void testSwingWorkerRefactoringCase4() throws Exception
+	{
+		String targetFile = "AnonymousClassCase4.java";
+
+		String expectedSourceCode = getSourceCode(
+				"swingworker.anonymous.class",
+				"ExpectedClassCase4.java" );
+
+		executeTest( targetFile, expectedSourceCode );
+	}
+
+	@Test
+	public void testSwingWorkerRefactoringCase5() throws Exception
+	{
+		String targetFile = "AnonymousClassCase5.java";
+
+		String expectedSourceCode = getSourceCode(
+				"swingworker.anonymous.class",
+				"ExpectedClassCase5.java" );
+
+		executeTest( targetFile, expectedSourceCode );
+	}
+
+	@Test
+	public void testSwingWorkerRefactoringCase6() throws Exception
+	{
+		String targetFile = "AnonymousClassCase6.java";
+
+		String expectedSourceCode = getSourceCode(
+				"swingworker.anonymous.class",
+				"ExpectedClassCase6.java" );
+
+		executeTest( targetFile, expectedSourceCode );
+	}
+
 	private void executeTest( String targetFile, String expectedSourceCode ) throws Exception
 	{
 		RxJavaRefactoringApp app = new RxJavaRefactoringApp();
