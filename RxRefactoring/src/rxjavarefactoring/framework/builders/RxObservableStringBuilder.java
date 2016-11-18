@@ -20,7 +20,7 @@ import rxjavarefactoring.framework.utils.SourceCodeValidator;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/16/2016
  */
-public class RxObservableStringBuilder
+public final class RxObservableStringBuilder
 {
 	private static final String NEW_LINE = "\n";
 	private static final String SPACE = " ";

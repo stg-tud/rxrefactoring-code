@@ -1,4 +1,4 @@
-package rxjavarefactoringtests.rxobservablebuilder;
+package rxjavarefactoringtests.builders;
 
 import static org.junit.Assert.assertEquals;
 
