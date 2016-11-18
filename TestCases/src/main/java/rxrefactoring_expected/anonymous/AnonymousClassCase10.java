@@ -28,20 +28,23 @@ public class AnonymousClassCase10
 					@Override
 					public void call( String asyncResult )
 					{
+						// The whole try-catch block was removed
 						String result = null;
 						result = asyncResult;
 						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
 					}
 				} )
 				.timeout( 3L, TimeUnit.SECONDS )
-				.onErrorReturn( new Func1<Throwable, String>()
+				.onErrorResumeNext(new Func1<Throwable, Observable<? extends String>>()
 				{
 					@Override
-					public String call( Throwable throwable )
+					public Observable<? extends String> call(Throwable throwable)
 					{
-						return null;
+						// Code handling for TimeoutException copied here
+						System.err.println("Several Exceptions Possible");
+						return Observable.empty();
 					}
-				} )
+				})
 				.subscribe();
 	}
 

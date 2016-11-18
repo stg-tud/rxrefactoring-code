@@ -36,19 +36,24 @@ public class AnonymousClassCase8
 						}
 						catch ( Exception e )
 						{
-							e.printStackTrace();
+							// Catch-clause not deleted because Thread.sleep(1000L) also throws an Exception
+							// not only get()
+							System.err.println("Exception");
 						}
 					}
 				} )
 				.timeout( 3L, TimeUnit.SECONDS )
-				.onErrorReturn( new Func1<Throwable, String>()
+				.onErrorResumeNext(new Func1<Throwable, Observable<? extends String>>()
 				{
 					@Override
-					public String call( Throwable throwable )
+					public Observable<? extends String> call(Throwable throwable)
 					{
-						return null;
+						// The catch block is repeated here because both exceptions (Timeout and
+						// Interrupted) are handled the same
+						System.err.println("Exception");
+						return Observable.empty();
 					}
-				} )
+				})
 				.subscribe();
 	}
 

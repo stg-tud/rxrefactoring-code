@@ -29,19 +29,21 @@ public class AnonymousClassCase5
 					public void call( String asyncResult )
 					{
 						String result = asyncResult;
+						// The get(String s) method is not supposed to be replaced during refactoring
 						String anotherGet = AnonymousClassCase5.this.get( "another get method invocation" );
 						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
 					}
 				} )
 				.timeout( 3L, TimeUnit.SECONDS )
-				.onErrorReturn( new Func1<Throwable, String>()
+				.onErrorResumeNext(new Func1<Throwable, Observable<? extends String>>()
 				{
 					@Override
-					public String call( Throwable throwable )
+					public Observable<? extends String> call(Throwable throwable)
 					{
-						return null;
+						System.err.println("Exception");
+						return Observable.empty();
 					}
-				} )
+				})
 				.subscribe();
 	}
 

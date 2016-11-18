@@ -16,6 +16,7 @@ public class AnonymousClassCase2
 					@Override
 					public String call() throws Exception
 					{
+						// code to be execute in a background thread
 						longRunningOperation();
 						return "DONE";
 					}
@@ -26,6 +27,10 @@ public class AnonymousClassCase2
 					@Override
 					public void call( String asyncResult )
 					{
+						// the result of fromCallable corresponds o the result of the doInBackgroundBlock
+						// get() was replaced by a variable name (asyncResult)
+						// the catch clause is only needed when the get() method call is present.
+						// since the get() call is gone, the try-catch block must be removed
 						String result = asyncResult;
 						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
 					}

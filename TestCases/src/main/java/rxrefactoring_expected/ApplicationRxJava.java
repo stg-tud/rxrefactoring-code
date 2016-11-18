@@ -1,5 +1,6 @@
 package rxrefactoring_expected;
 
+import rxrefactoring_expected.anonymous.AnonymousClassCase1;
 import rxrefactoring_expected.anonymous.AnonymousClassCase3;
 
 public class ApplicationRxJava

@@ -29,13 +29,12 @@ public class SwingWorkerVisitor extends ASTVisitor
 	private static final String PUBLISH = "publish";
 	private static final String ASYNC_RESULT = "asyncResult";
 	private static final String GET = "get";
-	public static final String LONG_TYPE = "long";
-	public static final String TYME_UNIT_TYPE = "java.util.concurrent.TimeUnit";
 
 	private boolean methodGetPresent;
 	private List<String> timeoutArguments;
 	private Block doInBackgroundBlock;
 	private Block doneBlock;
+	private Block timeoutCatchBlock;
 	private Type resultType;
 	private Type progressUpdateType;
 	private String resultVariableName;
@@ -91,6 +90,8 @@ public class SwingWorkerVisitor extends ASTVisitor
 				timeoutArguments.add( time.getToken() );
 				timeoutArguments.add( unit.getFullyQualifiedName() );
 				methodInvocationsGet.add( node );
+				setTimeoutCatchBlock( node );
+
 			}
 
 		}
@@ -106,6 +107,32 @@ public class SwingWorkerVisitor extends ASTVisitor
 			uniqueName = name + counter;
 		}
 		return uniqueName;
+	}
+
+	private void setTimeoutCatchBlock( MethodInvocation node )
+	{
+		// get block for TimeoutException
+		TryStatement tryStatement = (TryStatement) ASTUtil.findParent( node, TryStatement.class );
+		if ( tryStatement != null )
+		{
+			List catchClauses = tryStatement.catchClauses();
+			for ( Object catchClauseObject : catchClauses )
+			{
+				CatchClause catchClause = (CatchClause) catchClauseObject;
+				SingleVariableDeclaration declaration = catchClause.getException();
+				IMethodBinding methodBinding = node.resolveMethodBinding();
+				ITypeBinding[] exceptionTypes = methodBinding.getExceptionTypes();
+				// 0 java.lang.InterruptedException
+				// 1 java.util.concurrent.ExecutionException
+				// 2 java.util.concurrent.TimeoutException
+				ITypeBinding timeOutException = exceptionTypes[ 2 ];
+				Type type = declaration.getType();
+				if ( ASTUtil.isTypeOf( timeOutException, type.resolveBinding().getBinaryName() ) )
+				{
+					timeoutCatchBlock = catchClause.getBody();
+				}
+			}
+		}
 	}
 
 	public Block getDoInBackgroundBlock()
@@ -146,5 +173,10 @@ public class SwingWorkerVisitor extends ASTVisitor
 	public List<MethodInvocation> getMethodInvocationsGet()
 	{
 		return methodInvocationsGet;
+	}
+
+	public Block getTimeoutCatchBlock()
+	{
+		return timeoutCatchBlock;
 	}
 }

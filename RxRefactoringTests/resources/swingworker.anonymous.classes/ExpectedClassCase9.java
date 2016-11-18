@@ -28,6 +28,7 @@ public class AnonymousClassCase9
 					@Override
 					public void call( String asyncResult )
 					{
+						// Only the first block removed
 						String result = asyncResult;
 						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
 						try
@@ -36,19 +37,21 @@ public class AnonymousClassCase9
 						}
 						catch ( InterruptedException e )
 						{
-							e.printStackTrace();
+							System.err.println("InterruptedException");
 						}
 					}
 				} )
 				.timeout( 3L, TimeUnit.SECONDS )
-				.onErrorReturn( new Func1<Throwable, String>()
+				.onErrorResumeNext(new Func1<Throwable, Observable<? extends String>>()
 				{
 					@Override
-					public String call( Throwable throwable )
+					public Observable<? extends String> call(Throwable throwable)
 					{
-						return null;
+						// The catch-clause block of the removed try-catch block is copied here
+						System.err.println("Exception");
+						return Observable.empty();
 					}
-				} )
+				})
 				.subscribe();
 	}
 

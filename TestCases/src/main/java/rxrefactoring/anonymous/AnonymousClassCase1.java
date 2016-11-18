@@ -6,6 +6,9 @@ public class AnonymousClassCase1
 {
 	public void start()
 	{
+		// Anonymous class declaration of SwingWorker
+		// class is not assigned to a variable
+		// only implementing doInBackground
 		new SwingWorker<String, Integer>()
 		{
 			@Override

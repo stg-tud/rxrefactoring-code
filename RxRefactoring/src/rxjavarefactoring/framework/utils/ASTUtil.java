@@ -330,7 +330,7 @@ public final class ASTUtil
 	 * @param block
 	 *            the block where the try-catch blocks are found
 	 */
-	public static void removeUnnecesaryCatchClauses( Block block )
+	public static void removeUnnecessaryCatchClauses(Block block )
 	{
 		if ( block != null )
 		{

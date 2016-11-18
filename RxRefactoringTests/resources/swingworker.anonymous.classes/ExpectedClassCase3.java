@@ -18,6 +18,7 @@ public class AnonymousClassCase3
 					@Override
 					public String call() throws Exception
 					{
+						// code to be execute in a background thread
 						longRunningOperation();
 						return "DONE";
 					}
@@ -28,19 +29,23 @@ public class AnonymousClassCase3
 					@Override
 					public void call( String asyncResult )
 					{
+						// as in case 2, the try-catch block is no longer needed
 						String result = asyncResult;
 						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
 					}
 				} )
-				.timeout( 3L, TimeUnit.SECONDS )
-				.onErrorReturn( new Func1<Throwable, String>()
+				.timeout( 3L, TimeUnit.SECONDS ) // equivalent to get(3L, TimeUnit.SECONDS) in done()
+				.onErrorResumeNext(new Func1<Throwable, Observable<? extends String>>()
 				{
 					@Override
-					public String call( Throwable throwable )
+					public Observable<? extends String> call(Throwable throwable)
 					{
-						return null;
+						// timeout in rxJava throws an error. Therefore this call must be added
+						// the statements of the catch clause are copied here
+						System.err.println("Exception");
+						return Observable.empty();
 					}
-				} )
+				})
 				.subscribe();
 	}
 

@@ -23,13 +23,14 @@ public class AnonymousClassCase6
 				try
 				{
 					String result = get(3L, TimeUnit.SECONDS);
-					// The following get method should not be replace during refactoring
+					// the following get() method matching the parameter types of SwingWorker#get() should
+					// not be replaced during refactoring
 					String anotherGet = AnonymousClassCase6.this.get();
 					System.out.println("[Thread: " + Thread.currentThread().getName() + "] Result:" + result);
 				}
 				catch ( Exception e )
 				{
-					e.printStackTrace();
+					System.err.println("Exception");
 				}
 			}
 		}.execute();

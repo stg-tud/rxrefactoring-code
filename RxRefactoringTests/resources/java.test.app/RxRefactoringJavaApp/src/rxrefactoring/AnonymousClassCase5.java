@@ -23,13 +23,14 @@ public class AnonymousClassCase5
 				try
 				{
 					String result = get(3L, TimeUnit.SECONDS);
-					// The following get method should not be replace during refactoring
+					// The following get(String s) method should not be replace during refactoring
+					// because it does not belong to the SwingWorker
 					String anotherGet = AnonymousClassCase5.this.get("another get method invocation");
 					System.out.println("[Thread: " + Thread.currentThread().getName() + "] Result:" + result);
 				}
 				catch ( Exception e )
 				{
-					e.printStackTrace();
+					System.err.println("Exception");
 				}
 			}
 		}.execute();

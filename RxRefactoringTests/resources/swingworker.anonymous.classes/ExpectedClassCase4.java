@@ -28,18 +28,20 @@ public class AnonymousClassCase4
 					@Override
 					public void call( String asyncResult )
 					{
+						// get(3L, TimeUnit.SECONDS) should be replaced by asyncResult in place
 						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + asyncResult );
 					}
 				} )
 				.timeout( 3L, TimeUnit.SECONDS )
-				.onErrorReturn( new Func1<Throwable, String>()
+				.onErrorResumeNext(new Func1<Throwable, Observable<? extends String>>()
 				{
 					@Override
-					public String call( Throwable throwable )
+					public Observable<? extends String> call(Throwable throwable)
 					{
-						return null;
+						System.err.println("Exception");
+						return Observable.empty();
 					}
-				} )
+				})
 				.subscribe();
 	}
 

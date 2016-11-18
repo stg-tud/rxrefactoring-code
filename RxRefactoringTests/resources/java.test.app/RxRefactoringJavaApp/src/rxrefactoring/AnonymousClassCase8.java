@@ -22,13 +22,13 @@ public class AnonymousClassCase8
 			{
 				try
 				{
-					String result = get(3L, TimeUnit.SECONDS);
+					String result = get(3L, TimeUnit.SECONDS); // throws Exceptions
 					System.out.println("[Thread: " + Thread.currentThread().getName() + "] Result:" + result);
-					Thread.sleep( 1000L );
+					Thread.sleep( 1000L ); // throw Exception too!
 				}
-				catch ( Exception e )
+				catch ( Exception e ) // catch clause should not be deleted because of Thread.sleep(1000L)
 				{
-					e.printStackTrace();
+					System.err.println("Exception");
 				}
 			}
 		}.execute();

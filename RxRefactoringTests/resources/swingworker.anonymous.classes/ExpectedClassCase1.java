@@ -15,11 +15,12 @@ public class AnonymousClassCase1
                     @Override
                     public String call() throws Exception
                     {
+                        // code to be execute in a background thread
                         longRunningOperation();
                         return "DONE";
                     }
                 } )
-                .subscribeOn( Schedulers.computation() )
+                .subscribeOn( Schedulers.computation() ) // executes asynchronously
                 .observeOn( Schedulers.immediate() )
                 .subscribe();
     }

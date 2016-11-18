@@ -28,9 +28,11 @@ public class AnonymousClassCase11
 					result = get( 3L, TimeUnit.SECONDS );
 					Thread.sleep(3000L);
 				}
+				// declaring UnionTypes for Exceptions
+				// The InterruptedException should remain, due to Thread.sleep(3000L)
 				catch ( InterruptedException | ExecutionException | TimeoutException e )
 				{
-					e.printStackTrace();
+					System.err.println("Several Exceptions Possible");
 				}
 				System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
 			}

@@ -45,7 +45,7 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 			List<AnonymousClassDeclaration> declarations = cuAnonymousClassesMap.get( icu );
 			for ( AnonymousClassDeclaration swingWorkerDeclaration : declarations )
 			{
-				RxLogger.info( this, "METHOD=refactor - Extract Information from SwingWorker: " + icu.getElementName() );
+//				RxLogger.info( this, "METHOD=refactor - Extract Information from SwingWorker: " + icu.getElementName() );
 				SwingWorkerVisitor swingWorkerVisitor = new SwingWorkerVisitor();
 				swingWorkerDeclaration.accept( swingWorkerVisitor );
 				AST ast = swingWorkerDeclaration.getAST();
@@ -106,6 +106,7 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 		String type = swingWorkerVisitor.getResultType().toString();
 		String resultVariableName = swingWorkerVisitor.getResultVariableName();
 		List<String> timeOutArguments = swingWorkerVisitor.getTimeoutArguments();
+		Block timeoutCatchBlock = swingWorkerVisitor.getTimeoutCatchBlock();
 
 		// changes all get() / get(long, TimeUnit) invocation by a variable name
 		removeGetInvocations( swingWorkerVisitor, doOnCompletedBlock );
@@ -113,12 +114,12 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 		// get() and get(long, TimeUnit) throw exceptions.
 		// Since they were just replaced by a variable name, the catch clauses
 		// must be removed
-		ASTUtil.removeUnnecesaryCatchClauses( doOnCompletedBlock );
+		ASTUtil.removeUnnecessaryCatchClauses( doOnCompletedBlock );
 
 		String observableStatement = RxObservableStringBuilder
 				.newObservable( type, doInBackgroundBlock, SchedulerType.JAVA_MAIN_THREAD )
 				.addDoOnNext( doOnCompletedBlock, resultVariableName )
-				.addTimeout( timeOutArguments )
+				.addTimeout( timeOutArguments, timeoutCatchBlock)
 				.addSubscribe()
 				.build();
 

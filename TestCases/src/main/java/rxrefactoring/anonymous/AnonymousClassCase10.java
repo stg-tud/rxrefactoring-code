@@ -27,9 +27,11 @@ public class AnonymousClassCase10
 				{
 					result = get( 3L, TimeUnit.SECONDS );
 				}
+				// declaring UnionTypes for Exceptions
+				// The whole try-catch block should be removed
 				catch ( InterruptedException | ExecutionException | TimeoutException e )
 				{
-					e.printStackTrace();
+					System.err.println("Several Exceptions Possible");
 				}
 				System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
 			}

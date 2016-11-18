@@ -34,22 +34,24 @@ public class AnonymousClassCase11
 							result = asyncResult;
 							Thread.sleep( 3000L );
 						}
-						catch ( InterruptedException e )
+						catch ( InterruptedException e ) // InterruptedException remained here
 						{
-							e.printStackTrace();
+							System.err.println("Several Exceptions Possible");
 						}
 						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
 					}
 				} )
 				.timeout( 3L, TimeUnit.SECONDS )
-				.onErrorReturn( new Func1<Throwable, String>()
+				.onErrorResumeNext(new Func1<Throwable, Observable<? extends String>>()
 				{
 					@Override
-					public String call( Throwable throwable )
+					public Observable<? extends String> call(Throwable throwable)
 					{
-						return null;
+						// Code handling for TimeoutException copied here
+						System.err.println("Several Exceptions Possible");
+						return Observable.empty();
 					}
-				} )
+				})
 				.subscribe();
 	}
 

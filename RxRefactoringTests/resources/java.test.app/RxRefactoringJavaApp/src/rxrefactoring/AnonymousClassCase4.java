@@ -22,11 +22,12 @@ public class AnonymousClassCase4
 			{
 				try
 				{
+					// uses get(3L, TimeUnit.SECONDS) directly as a parameter
 					System.out.println("[Thread: " + Thread.currentThread().getName() + "] Result:" + get(3L, TimeUnit.SECONDS));
 				}
 				catch ( Exception e )
 				{
-					e.printStackTrace();
+					System.err.println("Exception");
 				}
 			}
 		}.execute();

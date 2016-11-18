@@ -158,11 +158,12 @@ public class RxObservableStringBuilder
 	 *            list of strings of size 2 for the arguments. The first
 	 *            argument corresponds to the time and the second argument to
 	 *            the time unit. For example: 3L, TimeUnit.SECONDS
+	 * @param timeoutCatchBlock
 	 * @return The builder
 	 */
-	public RxObservableStringBuilder addTimeout( List<String> arguments )
+	public RxObservableStringBuilder addTimeout( List<String> arguments, Block timeoutCatchBlock )
 	{
-		if ( !arguments.isEmpty() && arguments.size() == 2 )
+		if ( !arguments.isEmpty() && arguments.size() == 2 && timeoutCatchBlock != null )
 		{
 			rxObservable.append( NEW_LINE );
 			rxObservable.append( ".timeout(" );
@@ -172,18 +173,27 @@ public class RxObservableStringBuilder
 			rxObservable.append( ")" );
 			// timeout requires to handle an error
 			rxObservable.append( NEW_LINE );
-			rxObservable.append( ".onErrorReturn( new Func1<Throwable, " );
+			rxObservable.append( ".onErrorResumeNext(new Func1<Throwable, Observable<? extends " );
 			rxObservable.append( type );
-			rxObservable.append( ">() {" );
+			rxObservable.append( ">>() {" );
 			rxObservable.append( NEW_LINE );
-			rxObservable.append( "@Override public " );
+			rxObservable.append( "@Override public Observable<? extends " );
 			rxObservable.append( type );
-			rxObservable.append( " call (Throwable throwable ) { return null;}" );
+			rxObservable.append( "> call (Throwable throwable ) {" );
+			rxObservable.append( NEW_LINE );
+			rxObservable.append( getStatements( timeoutCatchBlock ) );
+			rxObservable.append( NEW_LINE );
+			rxObservable.append( "return Observable.empty();}" );
 			rxObservable.append( NEW_LINE );
 			rxObservable.append( "})" );
 
 		}
 		return this;
+	}
+
+	private String getStatements( Block timeoutCatchBlock )
+	{
+		return timeoutCatchBlock.toString().replace( "{", "" ).replace( "}", "" );
 	}
 
 	/**

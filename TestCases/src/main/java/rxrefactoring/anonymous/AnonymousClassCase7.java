@@ -22,6 +22,7 @@ public class AnonymousClassCase7
 			@Override
 			protected void done()
 			{
+				// Multiple catch blocks originated by get(long, TimeUnit)
 				String result = null;
 				try
 				{
@@ -29,15 +30,15 @@ public class AnonymousClassCase7
 				}
 				catch ( InterruptedException e )
 				{
-					e.printStackTrace();
+					System.err.println("InterruptedException");
 				}
 				catch ( ExecutionException e )
 				{
-					e.printStackTrace();
+					System.err.println("ExecutionException");
 				}
 				catch ( TimeoutException e )
 				{
-					e.printStackTrace();
+					System.err.println("TimeoutException");
 				}
 				System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
 			}

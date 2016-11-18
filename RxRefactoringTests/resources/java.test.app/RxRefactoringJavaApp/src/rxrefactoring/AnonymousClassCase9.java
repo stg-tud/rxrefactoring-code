@@ -20,6 +20,7 @@ public class AnonymousClassCase9
 			@Override
 			protected void done()
 			{
+				// Only the first try-catch block should be removed
 				try
 				{
 					String result = get(3L, TimeUnit.SECONDS);
@@ -27,7 +28,7 @@ public class AnonymousClassCase9
 				}
 				catch ( Exception e )
 				{
-					e.printStackTrace();
+					System.err.println("Exception");
 				}
 				try
 				{
@@ -35,7 +36,7 @@ public class AnonymousClassCase9
 				}
 				catch ( InterruptedException e )
 				{
-					e.printStackTrace();
+					System.err.println("InterruptedException");
 				}
 			}
 		}.execute();
