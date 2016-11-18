@@ -34,10 +34,12 @@ public class SwingWorkerVisitor extends ASTVisitor
 	private List<String> timeoutArguments;
 	private Block doInBackgroundBlock;
 	private Block doneBlock;
+	private Block processBlock;
 	private Block timeoutCatchBlock;
 	private Type resultType;
-	private Type progressUpdateType;
 	private String resultVariableName;
+	private String progressUpdateTypeName;
+	private String progressUpdateVariableName;
 	private List<MethodInvocation> methodInvocationsGet;
 
 	public SwingWorkerVisitor()
@@ -63,6 +65,12 @@ public class SwingWorkerVisitor extends ASTVisitor
 			{
 				doneBlock = node;
 				resultVariableName = createUniqueName( ASYNC_RESULT );
+			}
+			else if ( PROCESS.equals( methodDeclarationName ) )
+			{
+				processBlock = node;
+				progressUpdateTypeName = ASTUtil.getParameterType(methodDeclaration, 0);
+				progressUpdateVariableName = ASTUtil.getVariableName( methodDeclaration, 0 );
 			}
 		}
 		return true;
@@ -150,19 +158,14 @@ public class SwingWorkerVisitor extends ASTVisitor
 		return resultType;
 	}
 
-	public Type getProgressUpdateType()
+	public String getProgressUpdateTypeName()
 	{
-		return progressUpdateType;
+		return progressUpdateTypeName;
 	}
 
 	public String getResultVariableName()
 	{
 		return resultVariableName;
-	}
-
-	public boolean isMethodGetPresent()
-	{
-		return methodGetPresent;
 	}
 
 	public List<String> getTimeoutArguments()

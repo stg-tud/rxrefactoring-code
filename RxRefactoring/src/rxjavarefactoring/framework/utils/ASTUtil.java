@@ -194,6 +194,25 @@ public final class ASTUtil
 	}
 
 	/**
+	 * Returns the parameter type given a {@link MethodDeclaration}
+	 * and the parameter index
+	 * 
+	 * @param methodDeclaration
+	 *            method declaration
+	 * @param parameterIndex
+	 *            index
+	 * @return the parameter type
+	 * @throws IndexOutOfBoundsException
+	 *             if there is no parameter with the given index
+	 */
+	public static String getParameterType( MethodDeclaration methodDeclaration, int parameterIndex ) throws IndexOutOfBoundsException
+	{
+		IMethodBinding methodBinding = methodDeclaration.resolveBinding();
+		ITypeBinding argumentType = methodBinding.getParameterTypes()[ parameterIndex ];
+		return argumentType.getName();
+	}
+
+	/**
 	 * Identifies if a node matches a target method from a class
 	 *
 	 * @param node
@@ -330,7 +349,7 @@ public final class ASTUtil
 	 * @param block
 	 *            the block where the try-catch blocks are found
 	 */
-	public static void removeUnnecessaryCatchClauses(Block block )
+	public static void removeUnnecessaryCatchClauses( Block block )
 	{
 		if ( block != null )
 		{

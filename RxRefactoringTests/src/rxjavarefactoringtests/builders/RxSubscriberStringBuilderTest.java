@@ -9,7 +9,7 @@ import rxjavarefactoring.framework.utils.CodeFactory;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Description: <br>
+ * Description: Tests {@link RxSubscriberStringBuilder}<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/18/2016
  */
