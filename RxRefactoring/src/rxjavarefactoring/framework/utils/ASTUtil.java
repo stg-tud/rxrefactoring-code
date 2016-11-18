@@ -1,6 +1,11 @@
 package rxjavarefactoring.framework.utils;
 
+import java.util.Map;
+import java.util.Set;
+
 import org.eclipse.jdt.core.dom.*;
+
+import rxjavarefactoring.framework.utils.visitors.TryStatementVisitor;
 
 /**
  * Description: Util class for {@link ASTNode}s<br>
@@ -270,13 +275,87 @@ public final class ASTUtil
 	 * If node has a parent, then the add method throws
 	 * {@link IllegalArgumentException}
 	 * 
-	 * @param astNode node object. It must be castable to {@link ASTNode}
+	 * @param astNode
+	 *            node object. It must be castable to {@link ASTNode}
 	 * @return a clone of type {@link ASTNode} withot parent
 	 */
 	public static ASTNode clone( Object astNode )
 	{
+		if ( astNode == null )
+		{
+			return null;
+		}
 		ASTNode node = (ASTNode) astNode;
 		return clone( node );
+	}
+
+	/**
+	 * Replaces a node by a given block. The node must already be contained in a
+	 * block.<br>
+	 * Example: replace a for loop by a block of statements. This method throws
+	 * {@link IllegalArgumentException} if the node is not a child of a
+	 * block<br>
+	 * 
+	 * @param node
+	 *            node to be replaced
+	 * @param block
+	 *            block that replaces the node
+	 * @param <T>
+	 *            type of the node to be replaced
+	 */
+	public static <T extends ASTNode> void replaceByBlock( T node, Block block )
+	{
+		if (node != null && block != null)
+		{
+			Block parentBlock = (Block) ASTUtil.findParent(node, Block.class);
+			if ( parentBlock == null )
+			{
+				throw new IllegalArgumentException("The node " + node.toString() + " must be inside of a AST Block");
+			}
+			int nodePosition = parentBlock.statements().indexOf(node);
+			node.delete();
+			for ( Object statementObject : block.statements() )
+			{
+				parentBlock.statements().add(nodePosition++, ASTUtil.clone(statementObject));
+			}
+		}
+	}
+
+	/**
+	 * Checks what exceptions are thrown inside of try-catch blocks and removes
+	 * unnecessary catch clauses
+	 * 
+	 * @param block
+	 *            the block where the try-catch blocks are found
+	 */
+	public static void removeUnnecesaryCatchClauses(Block block )
+	{
+		if (block != null)
+		{
+			TryStatementVisitor tryStatementVisitor = new TryStatementVisitor();
+			block.accept(tryStatementVisitor);
+
+			// remove unnecessary catch clauses
+			Map<TryStatement, Block> tryBodyMap = tryStatementVisitor.getTryBodyMap();
+			Map<TryStatement, Set<ITypeBinding>> tryNeededExceptionsMap = tryStatementVisitor.getNeededExceptionsTypesMap();
+			Map<TryStatement, Map<ITypeBinding, CatchClause>> tryCaughtClausesMap = tryStatementVisitor.getCaughtExceptionsMap();
+			for ( TryStatement tryStatement : tryBodyMap.keySet() )
+			{
+				Set<ITypeBinding> neededExceptionsTypes = tryNeededExceptionsMap.get(tryStatement);
+				Map<ITypeBinding, CatchClause> caughtExceptionsMap = tryCaughtClausesMap.get(tryStatement);
+
+				if ( catchClausesNeeded(neededExceptionsTypes, caughtExceptionsMap) )
+				{
+					Block tryBody = tryBodyMap.get(tryStatement);
+					ASTUtil.replaceByBlock(tryStatement, tryBody);
+				}
+				else
+				{
+					removeIrrelevantCatchClauses(neededExceptionsTypes, caughtExceptionsMap);
+
+				}
+			}
+		}
 	}
 
 	// ### Private Methods ###
@@ -284,5 +363,32 @@ public final class ASTUtil
 	private static boolean isClassOf( ITypeBinding classType, String target )
 	{
 		return classType != null && target.equals( classType.getBinaryName() );
+	}
+
+	private static boolean catchClausesNeeded( Set<ITypeBinding> neededExceptionsTypes, Map<ITypeBinding, CatchClause> caughtExceptionsMap )
+	{
+		return neededExceptionsTypes.isEmpty() && !caughtExceptionsMap.isEmpty();
+	}
+
+	private static void removeIrrelevantCatchClauses( Set<ITypeBinding> neededExceptionsTypes, Map<ITypeBinding, CatchClause> caughtExceptionsMap )
+	{
+		for ( ITypeBinding caughtExceptionTypeBinding : caughtExceptionsMap.keySet() )
+		{
+			boolean deleteCatchClause = true;
+			for ( ITypeBinding neededExceptionTypeBinding : neededExceptionsTypes )
+			{
+				if ( ASTUtil.isTypeOf( neededExceptionTypeBinding, caughtExceptionTypeBinding.getBinaryName() ) )
+				{
+					deleteCatchClause = false;
+					break;
+				}
+			}
+
+			if ( deleteCatchClause )
+			{
+				CatchClause catchClause = caughtExceptionsMap.get( caughtExceptionTypeBinding );
+				catchClause.delete();
+			}
+		}
 	}
 }

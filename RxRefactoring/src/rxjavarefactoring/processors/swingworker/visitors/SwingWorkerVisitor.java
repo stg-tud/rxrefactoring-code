@@ -2,13 +2,10 @@ package rxjavarefactoring.processors.swingworker.visitors;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.jdt.core.dom.*;
 
 import rxjavarefactoring.domain.ClassDetails;
-import rxjavarefactoring.framework.generalvisitors.TryCatchVisitor;
 import rxjavarefactoring.framework.utils.ASTUtil;
 
 /**
