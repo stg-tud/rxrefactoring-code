@@ -7,7 +7,7 @@ import org.eclipse.jdt.core.dom.*;
 import rxjavarefactoring.framework.utils.ASTUtil;
 
 /**
- * Description: <br>
+ * Description: Analyzes the body of a try catch block<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/17/2016
  */

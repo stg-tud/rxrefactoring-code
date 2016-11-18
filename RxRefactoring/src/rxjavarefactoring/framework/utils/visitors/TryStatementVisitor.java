@@ -1,13 +1,17 @@
 package rxjavarefactoring.framework.utils.visitors;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.jdt.core.dom.*;
 
 import rxjavarefactoring.framework.utils.ASTUtil;
 
 /**
- * Description: <br>
+ * Description: Collects information about try-catch blocks inside of a node. It
+ * uses {@link TryBodyVisitor} to analyze the body of the try catch blocks and
+ * {@link TryCatchClausesVisitor} to analyze the catch clauses<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/17/2016
  */
@@ -25,15 +29,15 @@ public class TryStatementVisitor extends ASTVisitor
 	}
 
 	@Override
-	public boolean visit(TryStatement node)
+	public boolean visit( TryStatement node )
 	{
 		TryBodyVisitor tryBodyVisitor = new TryBodyVisitor();
 		TryCatchClausesVisitor tryCatchClausesVisitor = new TryCatchClausesVisitor();
-		node.accept(tryBodyVisitor);
-		node.accept(tryCatchClausesVisitor);
-		neededExceptionsTypesMap.put(node, tryBodyVisitor.getNeededExceptionsTypes());
-		caughtExceptionsMap.put(node, tryCatchClausesVisitor.getCaughtExceptionsMap());
-		tryBodyMap.put(node, ASTUtil.clone(node.getBody()));
+		node.accept( tryBodyVisitor );
+		node.accept( tryCatchClausesVisitor );
+		neededExceptionsTypesMap.put( node, tryBodyVisitor.getNeededExceptionsTypes() );
+		caughtExceptionsMap.put( node, tryCatchClausesVisitor.getCaughtExceptionsMap() );
+		tryBodyMap.put( node, ASTUtil.clone( node.getBody() ) );
 		return true;
 	}
 

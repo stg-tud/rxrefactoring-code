@@ -5,7 +5,7 @@ import java.util.*;
 import org.eclipse.jdt.core.dom.*;
 
 /**
- * Description: <br>
+ * Description: Analyzes the catch clauses of a try-catch block<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/17/2016
  */
