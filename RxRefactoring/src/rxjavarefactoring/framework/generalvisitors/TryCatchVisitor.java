@@ -43,7 +43,7 @@ public class TryCatchVisitor extends ASTVisitor
 	public boolean visit(TryStatement node)
 	{
 		tryStatement = node;
-		tryBody = (Block) ASTNode.copySubtree(node.getAST(), node.getBody());
+		tryBody = ASTUtil.clone(node.getBody());
 		return true;
 	}
 

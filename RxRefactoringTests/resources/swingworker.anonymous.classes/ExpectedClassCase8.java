@@ -1,12 +1,14 @@
-package rxrefactoring_expected.anonymous;
+package rxrefactoring;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
 import rx.functions.Action1;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
-public class AnonymousClassCase2
+public class AnonymousClassCase8
 {
 	public void start()
 	{
@@ -26,8 +28,25 @@ public class AnonymousClassCase2
 					@Override
 					public void call( String asyncResult )
 					{
-						String result = asyncResult;
-						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
+						try
+						{
+							String result = asyncResult;
+							System.out.println("[Thread: " + Thread.currentThread().getName() + "] Result:" + result);
+							Thread.sleep( 1000L );
+						}
+						catch ( Exception e )
+						{
+							e.printStackTrace();
+						}
+					}
+				} )
+				.timeout( 3L, TimeUnit.SECONDS )
+				.onErrorReturn( new Func1<Throwable, String>()
+				{
+					@Override
+					public String call( Throwable throwable )
+					{
+						return null;
 					}
 				} )
 				.subscribe();
@@ -35,7 +54,7 @@ public class AnonymousClassCase2
 
 	private void longRunningOperation() throws InterruptedException
 	{
-		Thread.sleep( 2000L );
+		Thread.sleep( 4000L );
 		System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Long running operation completed." );
 	}
 }

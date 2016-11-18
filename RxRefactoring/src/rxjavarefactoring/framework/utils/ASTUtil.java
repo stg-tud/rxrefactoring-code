@@ -241,6 +241,44 @@ public final class ASTUtil
 		}
 	}
 
+	/**
+	 * Clones node remove the original parent, so the node can be added to
+	 * another one.<br>
+	 * Example: block.statements().add( position, node );<br>
+	 * If node has a parent, then the add method throws
+	 * {@link IllegalArgumentException}
+	 * 
+	 * @param node
+	 *            node to be cloned
+	 * @param <T>
+	 *            type of the node inferred by the argument
+	 * @return a clone of type T without parent
+	 */
+	public static <T extends ASTNode> T clone( T node )
+	{
+		if ( node == null )
+		{
+			return null;
+		}
+		return (T) ASTNode.copySubtree( node.getAST(), node );
+	}
+
+	/**
+	 * Clones node remove the original parent, so the node can be added to
+	 * another one.<br>
+	 * Example: block.statements().add( position, node );<br>
+	 * If node has a parent, then the add method throws
+	 * {@link IllegalArgumentException}
+	 * 
+	 * @param astNode node object. It must be castable to {@link ASTNode}
+	 * @return a clone of type {@link ASTNode} withot parent
+	 */
+	public static ASTNode clone( Object astNode )
+	{
+		ASTNode node = (ASTNode) astNode;
+		return clone( node );
+	}
+
 	// ### Private Methods ###
 
 	private static boolean isClassOf( ITypeBinding classType, String target )

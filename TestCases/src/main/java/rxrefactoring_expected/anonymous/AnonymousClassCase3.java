@@ -28,15 +28,8 @@ public class AnonymousClassCase3
 					@Override
 					public void call( String asyncResult )
 					{
-						try
-						{
-							String result = asyncResult;
-							System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
-						}
-						catch ( Exception e )
-						{
-							e.printStackTrace();
-						}
+						String result = asyncResult;
+						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
 					}
 				} )
 				.timeout( 3L, TimeUnit.SECONDS )
@@ -53,7 +46,7 @@ public class AnonymousClassCase3
 
 	private void longRunningOperation() throws InterruptedException
 	{
-		Thread.sleep( 4000 );
+		Thread.sleep( 4000L );
 		System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Long running operation completed." );
 	}
 }

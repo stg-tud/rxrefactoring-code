@@ -28,16 +28,9 @@ public class AnonymousClassCase6
 					@Override
 					public void call( String asyncResult )
 					{
-						try
-						{
-							String result = asyncResult;
-							String anotherGet = AnonymousClassCase6.this.get();
-							System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result);
-						}
-						catch ( Exception e )
-						{
-							e.printStackTrace();
-						}
+						String result = asyncResult;
+						String anotherGet = AnonymousClassCase6.this.get();
+						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
 					}
 				} )
 				.timeout( 3L, TimeUnit.SECONDS )

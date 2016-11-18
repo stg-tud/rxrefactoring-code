@@ -20,77 +20,65 @@ public class SwingWorkerAnonymousClassTest extends AbstractJavaTest
 	@Test
 	public void testSwingWorkerRefactoringCase1() throws Exception
 	{
-		String targetFile = "AnonymousClassCase1.java";
-
-		String expectedSourceCode = getSourceCode(
-				"swingworker.anonymous.classes",
-				"ExpectedClassCase1.java" );
-
-		executeTest( targetFile, expectedSourceCode );
+		executeTest( "1" );
 	}
 
 	@Test
 	public void testSwingWorkerRefactoringCase2() throws Exception
 	{
-		String targetFile = "AnonymousClassCase2.java";
-
-		String expectedSourceCode = getSourceCode(
-				"swingworker.anonymous.classes",
-				"ExpectedClassCase2.java" );
-
-		executeTest( targetFile, expectedSourceCode );
+		executeTest( "2" );
 	}
 
 	@Test
 	public void testSwingWorkerRefactoringCase3() throws Exception
 	{
-		String targetFile = "AnonymousClassCase3.java";
-
-		String expectedSourceCode = getSourceCode(
-				"swingworker.anonymous.classes",
-				"ExpectedClassCase3.java" );
-
-		executeTest( targetFile, expectedSourceCode );
+		executeTest( "3" );
 	}
 
 	@Test
 	public void testSwingWorkerRefactoringCase4() throws Exception
 	{
-		String targetFile = "AnonymousClassCase4.java";
-
-		String expectedSourceCode = getSourceCode(
-				"swingworker.anonymous.classes",
-				"ExpectedClassCase4.java" );
-
-		executeTest( targetFile, expectedSourceCode );
+		executeTest( "4" );
 	}
 
 	@Test
 	public void testSwingWorkerRefactoringCase5() throws Exception
 	{
-		String targetFile = "AnonymousClassCase5.java";
-
-		String expectedSourceCode = getSourceCode(
-				"swingworker.anonymous.classes",
-				"ExpectedClassCase5.java" );
-
-		executeTest( targetFile, expectedSourceCode );
+		executeTest( "5" );
 	}
 
 	@Test
 	public void testSwingWorkerRefactoringCase6() throws Exception
 	{
-		String targetFile = "AnonymousClassCase6.java";
+		executeTest( "6" );
+	}
+
+	@Test
+	public void testSwingWorkerRefactoringCase7() throws Exception
+	{
+		executeTest( "7" );
+	}
+
+	@Test
+	public void testSwingWorkerRefactoringCase8() throws Exception
+	{
+		executeTest( "8" );
+	}
+
+	@Test
+	public void testSwingWorkerRefactoringCase9() throws Exception
+	{
+		executeTest( "9" );
+	}
+
+	private void executeTest( String caseNumber ) throws Exception
+	{
+		String targetFile = "AnonymousClassCase" + caseNumber + ".java";
 
 		String expectedSourceCode = getSourceCode(
 				"swingworker.anonymous.classes",
-				"ExpectedClassCase6.java" );
+				"ExpectedClassCase" + caseNumber + ".java" );
 
-		executeTest( targetFile, expectedSourceCode );
-	}
-
-	private void executeTest( String targetFile, String expectedSourceCode ) throws Exception
-	{
 		RxJavaRefactoringApp app = new RxJavaRefactoringApp();
 
 		app.refactorOnly( targetFile );

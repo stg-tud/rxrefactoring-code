@@ -28,14 +28,7 @@ public class AnonymousClassCase4
 					@Override
 					public void call( String asyncResult )
 					{
-						try
-						{
-							System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + asyncResult );
-						}
-						catch ( Exception e )
-						{
-							e.printStackTrace();
-						}
+						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + asyncResult );
 					}
 				} )
 				.timeout( 3L, TimeUnit.SECONDS )

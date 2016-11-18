@@ -118,60 +118,6 @@ public class SwingWorkerVisitor extends ASTVisitor
 
 	public Block getDoneBlock()
 	{
-		// changes all get() / get(long, TimeUnit) invocation by a variable
-		for ( MethodInvocation methodInvocation : methodInvocationsGet )
-		{
-			SimpleName variableName = methodInvocation.getAST().newSimpleName( resultVariableName );
-			ASTUtil.replaceInStatement( methodInvocation, variableName );
-		}
-
-		// check catch clauses after removing get() or get(long, TimeUnit)
-		if ( doneBlock != null )
-		{
-			TryCatchVisitor tryCatchVisitor = new TryCatchVisitor();
-			doneBlock.accept( tryCatchVisitor );
-			// remove unnecessary catch clauses
-			Set<ITypeBinding> neededExceptionsTypes = tryCatchVisitor.getNeededExceptionsTypes();
-			Map<ITypeBinding, CatchClause> caughtExceptionsMap = tryCatchVisitor.getCaughtExceptionsMap();
-
-			// remove try block if no clauses exist
-			if ( neededExceptionsTypes.isEmpty() && !caughtExceptionsMap.isEmpty() )
-			{
-				TryStatement tryStatement = tryCatchVisitor.getTryStatement();
-				Block parentBlock = (Block) ASTUtil.findParent( tryStatement, Block.class );
-				int tryStatementPosition = parentBlock.statements().indexOf( tryStatement );
-				tryStatement.delete();
-				Block tryBody = tryCatchVisitor.getTryBody();
-				for ( Object statement : tryBody.statements() )
-				{
-					ASTNode statementCopy = ASTNode.copySubtree( tryBody.getAST(), (ASTNode) statement );
-					parentBlock.statements().add( tryStatementPosition++, statementCopy );
-				}
-			}
-			else
-			{
-				for ( ITypeBinding caughtExceptionTypeBinding : caughtExceptionsMap.keySet() )
-				{
-					boolean deleteCatchClause = true;
-					for ( ITypeBinding neededExceptionTypeBinding : neededExceptionsTypes )
-					{
-						if ( ASTUtil.isTypeOf( neededExceptionTypeBinding, caughtExceptionTypeBinding.getBinaryName() ) )
-						{
-							deleteCatchClause = false;
-							break;
-						}
-					}
-
-					if ( deleteCatchClause )
-					{
-						CatchClause catchClause = caughtExceptionsMap.get( caughtExceptionTypeBinding );
-						catchClause.delete();
-					}
-				}
-			}
-
-		}
-
 		return doneBlock;
 	}
 
@@ -198,5 +144,10 @@ public class SwingWorkerVisitor extends ASTVisitor
 	public List<String> getTimeoutArguments()
 	{
 		return timeoutArguments;
+	}
+
+	public List<MethodInvocation> getMethodInvocationsGet()
+	{
+		return methodInvocationsGet;
 	}
 }

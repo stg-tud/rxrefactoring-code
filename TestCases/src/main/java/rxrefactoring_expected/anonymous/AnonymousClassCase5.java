@@ -28,16 +28,9 @@ public class AnonymousClassCase5
 					@Override
 					public void call( String asyncResult )
 					{
-						try
-						{
-							String result = asyncResult;
-							String anotherGet = AnonymousClassCase5.this.get("another get method invocation");
-							System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result);
-						}
-						catch ( Exception e )
-						{
-							e.printStackTrace();
-						}
+						String result = asyncResult;
+						String anotherGet = AnonymousClassCase5.this.get( "another get method invocation" );
+						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
 					}
 				} )
 				.timeout( 3L, TimeUnit.SECONDS )
@@ -52,7 +45,7 @@ public class AnonymousClassCase5
 				.subscribe();
 	}
 
-	private String get(String string)
+	private String get( String string )
 	{
 		return string.toUpperCase();
 	}

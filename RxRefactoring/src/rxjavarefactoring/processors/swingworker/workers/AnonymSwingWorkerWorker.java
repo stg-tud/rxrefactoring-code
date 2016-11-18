@@ -2,16 +2,15 @@ package rxjavarefactoring.processors.swingworker.workers;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
-import org.eclipse.jdt.core.dom.Block;
-import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.*;
 
 import rxjavarefactoring.framework.builders.RxObservableStringBuilder;
 import rxjavarefactoring.framework.constants.SchedulerType;
+import rxjavarefactoring.framework.generalvisitors.TryCatchVisitor;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.CodeFactory;
@@ -98,6 +97,7 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 				rewriter.addImport( "java.util.concurrent.TimeUnit" );
 			}
 			rewriter.removeImport( "java.util.concurrent.ExecutionException" );
+			rewriter.removeImport( "java.util.concurrent.TimeoutException" );
 		}
 	}
 
@@ -109,6 +109,8 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 		String resultVariableName = swingWorkerVisitor.getResultVariableName();
 		List<String> timeOutArguments = swingWorkerVisitor.getTimeoutArguments();
 
+		updateTryCatchBlock( swingWorkerVisitor, doOnCompletedBlock );
+
 		String observableStatement = RxObservableStringBuilder
 				.newObservable( type, doInBackgroundBlock, SchedulerType.JAVA_MAIN_THREAD )
 				.addDoOnNext( doOnCompletedBlock, resultVariableName )
@@ -117,5 +119,69 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 				.build();
 
 		return observableStatement;
+	}
+
+	private void updateTryCatchBlock( SwingWorkerVisitor swingWorkerVisitor, Block doOnCompletedBlock )
+	{
+		if ( doOnCompletedBlock == null )
+		{
+			return;
+		}
+
+		// changes all get() / get(long, TimeUnit) invocation by a variable name
+		for ( MethodInvocation methodInvocation : swingWorkerVisitor.getMethodInvocationsGet() )
+		{
+			String resultVariableName = swingWorkerVisitor.getResultVariableName();
+			SimpleName variableName = methodInvocation.getAST().newSimpleName( resultVariableName );
+			ASTUtil.replaceInStatement( methodInvocation, variableName );
+		}
+		// get() and get(long, TimeUnit) throw exceptions.
+		// Since they were just replaced by a variable name, the catch clauses
+		// must be removed
+
+		// check catch clauses after removing get() or get(long, TimeUnit)
+		TryCatchVisitor tryCatchVisitor = new TryCatchVisitor();
+		doOnCompletedBlock.accept( tryCatchVisitor );
+
+		// remove unnecessary catch clauses
+		Set<ITypeBinding> neededExceptionsTypes = tryCatchVisitor.getNeededExceptionsTypes();
+		Map<ITypeBinding, CatchClause> caughtExceptionsMap = tryCatchVisitor.getCaughtExceptionsMap();
+
+		// remove try block if no clauses exist
+		if ( neededExceptionsTypes.isEmpty() && !caughtExceptionsMap.isEmpty() )
+		{
+			TryStatement tryStatement = tryCatchVisitor.getTryStatement();
+			Block parentBlock = (Block) ASTUtil.findParent( tryStatement, Block.class );
+			int tryStatementPosition = parentBlock.statements().indexOf( tryStatement );
+			tryStatement.delete();
+			Block tryBody = tryCatchVisitor.getTryBody();
+			for ( Object statementObject : tryBody.statements() )
+			{
+				parentBlock.statements().add( tryStatementPosition++, ASTUtil.clone(statementObject) );
+			}
+		}
+		else
+		{
+			// remove unnecessary catch clauses
+			for ( ITypeBinding caughtExceptionTypeBinding : caughtExceptionsMap.keySet() )
+			{
+				boolean deleteCatchClause = true;
+				for ( ITypeBinding neededExceptionTypeBinding : neededExceptionsTypes )
+				{
+					if ( ASTUtil.isTypeOf( neededExceptionTypeBinding, caughtExceptionTypeBinding.getBinaryName() ) )
+					{
+						deleteCatchClause = false;
+						break;
+					}
+				}
+
+				if ( deleteCatchClause )
+				{
+					CatchClause catchClause = caughtExceptionsMap.get( caughtExceptionTypeBinding );
+					catchClause.delete();
+				}
+			}
+
+		}
 	}
 }
