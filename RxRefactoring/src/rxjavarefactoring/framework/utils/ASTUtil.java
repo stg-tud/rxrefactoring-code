@@ -1,5 +1,7 @@
 package rxjavarefactoring.framework.utils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -305,18 +307,18 @@ public final class ASTUtil
 	 */
 	public static <T extends ASTNode> void replaceByBlock( T node, Block block )
 	{
-		if (node != null && block != null)
+		if ( node != null && block != null )
 		{
-			Block parentBlock = (Block) ASTUtil.findParent(node, Block.class);
+			Block parentBlock = (Block) ASTUtil.findParent( node, Block.class );
 			if ( parentBlock == null )
 			{
-				throw new IllegalArgumentException("The node " + node.toString() + " must be inside of a AST Block");
+				throw new IllegalArgumentException( "The node " + node.toString() + " must be inside of a AST Block" );
 			}
-			int nodePosition = parentBlock.statements().indexOf(node);
+			int nodePosition = parentBlock.statements().indexOf( node );
 			node.delete();
 			for ( Object statementObject : block.statements() )
 			{
-				parentBlock.statements().add(nodePosition++, ASTUtil.clone(statementObject));
+				parentBlock.statements().add( nodePosition++, ASTUtil.clone( statementObject ) );
 			}
 		}
 	}
@@ -328,12 +330,12 @@ public final class ASTUtil
 	 * @param block
 	 *            the block where the try-catch blocks are found
 	 */
-	public static void removeUnnecesaryCatchClauses(Block block )
+	public static void removeUnnecesaryCatchClauses( Block block )
 	{
-		if (block != null)
+		if ( block != null )
 		{
 			TryStatementVisitor tryStatementVisitor = new TryStatementVisitor();
-			block.accept(tryStatementVisitor);
+			block.accept( tryStatementVisitor );
 
 			// remove unnecessary catch clauses
 			Map<TryStatement, Block> tryBodyMap = tryStatementVisitor.getTryBodyMap();
@@ -341,17 +343,17 @@ public final class ASTUtil
 			Map<TryStatement, Map<ITypeBinding, CatchClause>> tryCaughtClausesMap = tryStatementVisitor.getCaughtExceptionsMap();
 			for ( TryStatement tryStatement : tryBodyMap.keySet() )
 			{
-				Set<ITypeBinding> neededExceptionsTypes = tryNeededExceptionsMap.get(tryStatement);
-				Map<ITypeBinding, CatchClause> caughtExceptionsMap = tryCaughtClausesMap.get(tryStatement);
+				Set<ITypeBinding> neededExceptionsTypes = tryNeededExceptionsMap.get( tryStatement );
+				Map<ITypeBinding, CatchClause> caughtExceptionsMap = tryCaughtClausesMap.get( tryStatement );
 
-				if ( catchClausesNeeded(neededExceptionsTypes, caughtExceptionsMap) )
+				if ( catchClausesNeeded( neededExceptionsTypes, caughtExceptionsMap ) )
 				{
-					Block tryBody = tryBodyMap.get(tryStatement);
-					ASTUtil.replaceByBlock(tryStatement, tryBody);
+					Block tryBody = tryBodyMap.get( tryStatement );
+					ASTUtil.replaceByBlock( tryStatement, tryBody );
 				}
 				else
 				{
-					removeIrrelevantCatchClauses(neededExceptionsTypes, caughtExceptionsMap);
+					removeIrrelevantCatchClauses( neededExceptionsTypes, caughtExceptionsMap );
 
 				}
 			}
@@ -374,21 +376,63 @@ public final class ASTUtil
 	{
 		for ( ITypeBinding caughtExceptionTypeBinding : caughtExceptionsMap.keySet() )
 		{
-			boolean deleteCatchClause = true;
+			CatchClause catchClause = caughtExceptionsMap.get( caughtExceptionTypeBinding );
+			SingleVariableDeclaration declaration = catchClause.getException();
+			Type type = declaration.getType();
+			if ( type instanceof UnionType )
+			{
+				// UnionType: i.e: catch (ExecutionException | TimeoutException e)
+				cleanUnionTypes( neededExceptionsTypes, catchClause, (UnionType) type );
+
+			}
+			else // SimpleType: i.e: catch (Exception e)
+			{
+				cleanSimpleTypes( neededExceptionsTypes, caughtExceptionTypeBinding, catchClause );
+			}
+		}
+	}
+
+	private static void cleanUnionTypes( Set<ITypeBinding> neededExceptionsTypes, CatchClause catchClause, UnionType unionType )
+	{
+		List simpleTypes = unionType.types();
+		List removedTypes = new ArrayList();
+		for ( Object singleType : simpleTypes )
+		{
+			SimpleType simpleType = (SimpleType) singleType;
+			ITypeBinding simpleTypeBinding = simpleType.resolveBinding();
 			for ( ITypeBinding neededExceptionTypeBinding : neededExceptionsTypes )
 			{
-				if ( ASTUtil.isTypeOf( neededExceptionTypeBinding, caughtExceptionTypeBinding.getBinaryName() ) )
+				if ( !ASTUtil.isTypeOf( neededExceptionTypeBinding, simpleTypeBinding.getBinaryName() ) )
 				{
-					deleteCatchClause = false;
-					break;
+					removedTypes.add( singleType );
 				}
 			}
+		}
+		if ( removedTypes.size() == simpleTypes.size() )
+		{
+			catchClause.delete();
+		}
+		else
+		{
+			simpleTypes.removeAll( removedTypes );
+		}
+	}
 
-			if ( deleteCatchClause )
+	private static void cleanSimpleTypes( Set<ITypeBinding> neededExceptionsTypes, ITypeBinding caughtExceptionTypeBinding, CatchClause catchClause )
+	{
+		boolean deleteCatchClause = true;
+		for ( ITypeBinding neededExceptionTypeBinding : neededExceptionsTypes )
+		{
+			if ( ASTUtil.isTypeOf( neededExceptionTypeBinding, caughtExceptionTypeBinding.getBinaryName() ) )
 			{
-				CatchClause catchClause = caughtExceptionsMap.get( caughtExceptionTypeBinding );
-				catchClause.delete();
+				deleteCatchClause = false;
+				break;
 			}
+		}
+
+		if ( deleteCatchClause )
+		{
+			catchClause.delete();
 		}
 	}
 }
