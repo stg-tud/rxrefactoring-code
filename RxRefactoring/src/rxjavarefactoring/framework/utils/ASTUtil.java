@@ -34,14 +34,14 @@ public final class ASTUtil
 	 *            Inferred from second parameter
 	 * @return parent node based on the target
 	 */
-	public static <T> ASTNode findParent( ASTNode node, Class<?> target )
+	public static <T extends ASTNode> T findParent( ASTNode node, Class<T> target )
 	{
 		ASTNode parent = node.getParent();
 		while ( parent != null && !target.isInstance( parent ) )
 		{
 			parent = parent.getParent();
 		}
-		return parent;
+		return (T) parent;
 	}
 
 	/**
@@ -159,22 +159,6 @@ public final class ASTUtil
 	}
 
 	/**
-	 * @param node
-	 *            an ast node
-	 * @return The next parent of type {@link Statement}
-	 */
-	public static Statement getStmtParent( ASTNode node )
-	{
-		while ( node != null )
-		{
-			if ( node instanceof Statement )
-				return (Statement) node;
-			node = node.getParent();
-		}
-		return null;
-	}
-
-	/**
 	 * Returns the variable name of a parameter given a
 	 * {@link MethodDeclaration}
 	 *
@@ -250,7 +234,7 @@ public final class ASTUtil
 	 */
 	public static <T extends ASTNode, V extends ASTNode> void replaceInStatement( T originalNode, V newNode )
 	{
-		Block block = (Block) ASTUtil.findParent( originalNode, Block.class );
+		Block block = ASTUtil.findParent( originalNode, Block.class );
 		if ( block != null )
 		{
 			String originalNodeString = originalNode.toString();
@@ -328,7 +312,7 @@ public final class ASTUtil
 	{
 		if ( node != null && block != null )
 		{
-			Block parentBlock = (Block) ASTUtil.findParent( node, Block.class );
+			Block parentBlock = ASTUtil.findParent( node, Block.class );
 			if ( parentBlock == null )
 			{
 				throw new IllegalArgumentException( "The node " + node.toString() + " must be inside of a AST Block" );

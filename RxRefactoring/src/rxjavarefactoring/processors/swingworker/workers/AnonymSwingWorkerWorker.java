@@ -8,6 +8,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
 
 import rxjavarefactoring.framework.builders.RxObservableStringBuilder;
+import rxjavarefactoring.framework.builders.RxSubscriberStringBuilder;
 import rxjavarefactoring.framework.constants.SchedulerType;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.ASTUtil;
@@ -28,6 +29,11 @@ import rxjavarefactoring.processors.swingworker.visitors.SwingWorkerVisitor;
  */
 public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 {
+
+	private static final String RIGHT_REC_BRACE = "]";
+	private static final String LEFT_REC_BRACE = "[";
+	private static final String EMPTY = "";
+
 	public AnonymSwingWorkerWorker( CuCollector collector, IProgressMonitor monitor, RxMultipleChangeWriter rxMultipleChangeWriter )
 	{
 		super( collector, monitor, rxMultipleChangeWriter );
@@ -45,14 +51,23 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 			List<AnonymousClassDeclaration> declarations = cuAnonymousClassesMap.get( icu );
 			for ( AnonymousClassDeclaration swingWorkerDeclaration : declarations )
 			{
-//				RxLogger.info( this, "METHOD=refactor - Extract Information from SwingWorker: " + icu.getElementName() );
+				RxLogger.info( this, "METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName() );
 				SwingWorkerVisitor swingWorkerVisitor = new SwingWorkerVisitor();
 				swingWorkerDeclaration.accept( swingWorkerVisitor );
 				AST ast = swingWorkerDeclaration.getAST();
 
 				RxSingleChangeWriter singleChangeWriter = new RxSingleChangeWriter( icu, ast, getClass().getSimpleName() );
-				RxLogger.info( this, "METHOD=refactor - Updating imports: " + icu.getElementName() );
+				RxLogger.info( this, "METHOD=refactor - Creating rx.Observable object: " + icu.getElementName() );
 				createLocalObservable( singleChangeWriter, swingWorkerDeclaration, ast );
+
+				if ( swingWorkerVisitor.getProcessBlock() != null )
+				{
+					RxLogger.info( this, "METHOD=refactor - Creating getRxUpdateSubscriber method: " + icu.getElementName() );
+					String newMethodString = createNewMethod(swingWorkerVisitor);
+					MethodDeclaration newMethod = CodeFactory.createMethodFromText( ast, newMethodString );
+					singleChangeWriter.addMethodAfter( newMethod, swingWorkerDeclaration );
+				}
+
 				singleChangeWriter.removeStatement( swingWorkerDeclaration );
 
 				RxLogger.info( this, "METHOD=refactor - Refactoring class: " + icu.getElementName() );
@@ -64,20 +79,46 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 		return WorkerStatus.OK;
 	}
 
+	private String createNewMethod(SwingWorkerVisitor swingWorkerVisitor)
+	{
+		String newSubscriber = RxSubscriberStringBuilder.newSubscriber(
+                swingWorkerVisitor.getProgressUpdateTypeName(),
+                swingWorkerVisitor.getProcessBlock(),
+                swingWorkerVisitor.getProgressUpdateVariableName() );
+
+		// TODO getRxUpdateSubscriber should be numbered in case that there is already one, gif 2016-11-19
+		return "private Subscriber<" +
+                swingWorkerVisitor.getProgressUpdateTypeName() +
+                "> getRxUpdateSubscriber() { return "
+                + newSubscriber + "}";
+	}
+
 	private void createLocalObservable( RxSingleChangeWriter rewriter, AnonymousClassDeclaration swingWorkerObject, AST ast )
 	{
 		SwingWorkerVisitor swingWorkerVisitor = new SwingWorkerVisitor();
 		swingWorkerObject.accept( swingWorkerVisitor );
 
 		String observableStatement = createObservable( swingWorkerVisitor );
-		Block observableBlock = CodeFactory.createStatementsBlockFromText( ast, observableStatement );
+		Statement newStatement = CodeFactory.createSingleStatementFromTest( ast, observableStatement );
 
-		Statement referenceStatement = ASTUtil.getStmtParent( swingWorkerObject );
-		List statements = observableBlock.statements();
-		Statement newStatement = (Statement) statements.get( 0 );
+		Statement referenceStatement = ASTUtil.findParent( swingWorkerObject, Statement.class );
+
+		if ( swingWorkerVisitor.getProcessBlock() != null )
+		{
+			Statement getSubscriberStatement = createUpdateSubscriberInstance( swingWorkerVisitor, newStatement );
+			rewriter.addStatementBefore( getSubscriberStatement, referenceStatement );
+		}
 		rewriter.addStatementBefore( newStatement, referenceStatement );
 
 		updateImports( rewriter, swingWorkerVisitor );
+	}
+
+	private Statement createUpdateSubscriberInstance( SwingWorkerVisitor swingWorkerVisitor, Statement newStatement )
+	{
+		// TODO rxUpdateSubscriber and getRxUpdateSubscriber should be numbered in case that there is already one, gif 2016-11-19
+		String type = swingWorkerVisitor.getProgressUpdateTypeName();
+		String subscriberDecl = "final Subscriber<" + type + "> rxUpdateSubscriber = getRxUpdateSubscriber()";
+		return CodeFactory.createSingleStatementFromTest( newStatement.getAST(), subscriberDecl );
 	}
 
 	private void updateImports( RxSingleChangeWriter rewriter, SwingWorkerVisitor swingWorkerVisitor )
@@ -108,8 +149,11 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 		List<String> timeOutArguments = swingWorkerVisitor.getTimeoutArguments();
 		Block timeoutCatchBlock = swingWorkerVisitor.getTimeoutCatchBlock();
 
+		// replaces publish(x, y, ...) by rxUpdateSubscriber.onNext(Arrays.asList(x, y, ...))
+		replacePublishInvocations( swingWorkerVisitor );
+
 		// changes all get() / get(long, TimeUnit) invocation by a variable name
-		removeGetInvocations( swingWorkerVisitor, doOnCompletedBlock );
+		removeGetInvocations( swingWorkerVisitor );
 
 		// get() and get(long, TimeUnit) throw exceptions.
 		// Since they were just replaced by a variable name, the catch clauses
@@ -119,16 +163,32 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 		String observableStatement = RxObservableStringBuilder
 				.newObservable( type, doInBackgroundBlock, SchedulerType.JAVA_MAIN_THREAD )
 				.addDoOnNext( doOnCompletedBlock, resultVariableName )
-				.addTimeout( timeOutArguments, timeoutCatchBlock)
+				.addTimeout( timeOutArguments, timeoutCatchBlock )
 				.addSubscribe()
 				.build();
 
 		return observableStatement;
 	}
 
-	private void removeGetInvocations( SwingWorkerVisitor swingWorkerVisitor, Block doOnCompletedBlock )
+	private void replacePublishInvocations( SwingWorkerVisitor swingWorkerVisitor )
 	{
-		if ( doOnCompletedBlock != null )
+		if ( !swingWorkerVisitor.getPublishInvocations().isEmpty() )
+		{
+			for ( MethodInvocation publishInvocation : swingWorkerVisitor.getPublishInvocations() )
+			{
+				List argumentList = publishInvocation.arguments();
+				String argumentsString = argumentList.toString().replace( RIGHT_REC_BRACE, EMPTY ).replace( LEFT_REC_BRACE, EMPTY );
+				// TODO rxUpdateSubscriber should be numbered in case that there is already one, gif 2016-11-19
+				String newInvocation = "rxUpdateSubscriber.onNext(Arrays.asList(" + argumentsString + "))";
+				Statement newStatement = CodeFactory.createSingleStatementFromTest( publishInvocation.getAST(), newInvocation );
+				ASTUtil.replaceInStatement( publishInvocation, newStatement );
+			}
+		}
+	}
+
+	private void removeGetInvocations( SwingWorkerVisitor swingWorkerVisitor )
+	{
+		if ( swingWorkerVisitor.getDoneBlock() != null )
 		{
 			for ( MethodInvocation methodInvocation : swingWorkerVisitor.getMethodInvocationsGet() )
 			{

@@ -9,7 +9,7 @@ public class AnonymousClassCase12
 	{
 		// Anonymous class declaration of SwingWorker
 		// class is not assigned to a variable
-		// implementing doInBackground, done and
+		// implementing doInBackground, done and process
 		new SwingWorker<String, Integer>()
 		{
 			@Override
@@ -18,7 +18,7 @@ public class AnonymousClassCase12
 				for (int i = 0; i < 10; i++)
 				{
 					longRunningOperation();
-					publish(i);
+					publish(i * 10); // can be used to update the progress
 				}
 				return "DONE";
 			}
@@ -28,9 +28,8 @@ public class AnonymousClassCase12
 			{
 				for (Integer i : chunks)
 				{
-					System.out.println(i);
+					System.out.println("Progress = " + i + "%");
 				}
-				super.process(chunks);
 			}
 
 			@Override

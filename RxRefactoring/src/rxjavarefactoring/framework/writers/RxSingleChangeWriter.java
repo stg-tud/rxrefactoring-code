@@ -4,10 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.Block;
-import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
@@ -74,7 +71,7 @@ public class RxSingleChangeWriter
 	 */
 	public void removeStatement( ASTNode elementInTargetStatement )
 	{
-		astRewriter.remove( ASTUtil.getStmtParent( elementInTargetStatement ), null );
+		astRewriter.remove( ASTUtil.findParent( elementInTargetStatement, Statement.class ), null );
 	}
 
 	/**
@@ -92,6 +89,22 @@ public class RxSingleChangeWriter
 		Statement placeHolder = (Statement) astRewriter.createStringPlaceholder( "", ASTNode.EMPTY_STATEMENT );
 		statementsBlock.insertBefore( newStatement, referenceStatement, null );
 		statementsBlock.insertAfter( placeHolder, newStatement, null );
+	}
+
+	/**
+	 * Adds a new method after a reference node. If the reference node is not
+	 * a {@link MethodDeclaration}, then its parent {@link MethodDeclaration} is
+	 * searched and taken as a reference. In this case, the new method will be
+	 * inserted after the parent found.
+	 * @param methodDeclaration new method to be inserted after the reference node
+	 * @param referenceNode reference node
+	 */
+	public void addMethodAfter(MethodDeclaration methodDeclaration, ASTNode referenceNode)
+	{
+		MethodDeclaration referenceMethod = ASTUtil.findParent(referenceNode, MethodDeclaration.class);
+		ASTNode currentClass = referenceMethod.getParent();
+		ListRewrite classBlock = astRewriter.getListRewrite(currentClass, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
+		classBlock.insertAfter(methodDeclaration, referenceMethod, null);
 	}
 
 	/**

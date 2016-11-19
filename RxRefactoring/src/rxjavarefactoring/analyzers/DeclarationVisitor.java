@@ -54,7 +54,7 @@ public class DeclarationVisitor extends ASTVisitor
 	{
 		if ( ASTUtil.isTypeOf( node, targetClass.getBinaryName() ) )
 		{
-			VariableDeclaration parent = (VariableDeclaration) ASTUtil.findParent( node, VariableDeclaration.class );
+			VariableDeclaration parent = ASTUtil.findParent( node, VariableDeclaration.class );
 			if ( parent == null )
 			{
 				anonymousClasses.add( node );

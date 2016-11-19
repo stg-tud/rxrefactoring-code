@@ -93,7 +93,7 @@ public class AnonymAsyncTaskWorker extends AbstractRefactorWorker<CuCollector>
 		String observableStatement = createObservable( asyncTaskVisitor );
 		Block observableBlock = CodeFactory.createStatementsBlockFromText( ast, observableStatement );
 
-		Statement referenceStatement = ASTUtil.getStmtParent( taskObject );
+		Statement referenceStatement = ASTUtil.findParent( taskObject, Statement.class );
 		List statements = observableBlock.statements();
 		Statement newStatement = (Statement) statements.get( 0 );
 		rewriter.addStatementBefore( newStatement, referenceStatement );

@@ -1,18 +1,17 @@
 package rxrefactoring;
 
-import rx.Observable;
-import rx.Subscriber;
-import rx.functions.Action1;
-import rx.schedulers.Schedulers;
-
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
+import rx.Observable;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 public class AnonymousClassCase12
 {
 	public void start()
 	{
+		// Subscriber needed to send progress during the execution.
+		// See MethodDeclaration getRxUpdateSubscriber()
 		final Subscriber<List<Integer>> rxUpdateSubscriber = getRxUpdateSubscriber();
 		Observable
 				.fromCallable( new Callable<String>()
@@ -23,7 +22,10 @@ public class AnonymousClassCase12
 						for (int i = 0; i < 10; i++)
 						{
 							longRunningOperation();
-							rxUpdateSubscriber.onNext(Arrays.asList(i));
+							// The call on next is in charge of sending the progress
+							// Arrays.asList(x, y, ... ) is used because the original signarute
+							// works chunks (List data type)
+							rxUpdateSubscriber.onNext(Arrays.asList(i*10));
 						}
 						return "DONE";
 					}
@@ -41,6 +43,7 @@ public class AnonymousClassCase12
 				.subscribe();
 	}
 
+	// Implements the action that action that was performed after SwingWorker#publish(x, y ...)
 	private Subscriber<List<Integer>> getRxUpdateSubscriber()
 	{
 		return new Subscriber<List<Integer>>()
@@ -60,9 +63,10 @@ public class AnonymousClassCase12
 			@Override
 			public void onNext(List<Integer> chunks)
 			{
+				// Same code as in SwingWorker#process(List<Integer> chunks)
 				for (Integer i : chunks)
 				{
-					System.out.println(i);
+					System.out.println("Progress = " + i + "%");
 				}
 			}
 		};

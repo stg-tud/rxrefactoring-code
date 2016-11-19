@@ -30,7 +30,6 @@ public class SwingWorkerVisitor extends ASTVisitor
 	private static final String ASYNC_RESULT = "asyncResult";
 	private static final String GET = "get";
 
-	private boolean methodGetPresent;
 	private List<String> timeoutArguments;
 	private Block doInBackgroundBlock;
 	private Block doneBlock;
@@ -41,11 +40,13 @@ public class SwingWorkerVisitor extends ASTVisitor
 	private String progressUpdateTypeName;
 	private String progressUpdateVariableName;
 	private List<MethodInvocation> methodInvocationsGet;
+	private List<MethodInvocation> publishInvocations;
 
 	public SwingWorkerVisitor()
 	{
 		timeoutArguments = new ArrayList<>();
 		methodInvocationsGet = new ArrayList<>();
+		publishInvocations = new ArrayList<>();
 	}
 
 	@Override
@@ -69,7 +70,7 @@ public class SwingWorkerVisitor extends ASTVisitor
 			else if ( PROCESS.equals( methodDeclarationName ) )
 			{
 				processBlock = node;
-				progressUpdateTypeName = ASTUtil.getParameterType(methodDeclaration, 0);
+				progressUpdateTypeName = ASTUtil.getParameterType( methodDeclaration, 0 );
 				progressUpdateVariableName = ASTUtil.getVariableName( methodDeclaration, 0 );
 			}
 		}
@@ -84,7 +85,6 @@ public class SwingWorkerVisitor extends ASTVisitor
 			if ( node.arguments().isEmpty() )
 			{
 				// SwingWorker.get()
-				methodGetPresent = true;
 				methodInvocationsGet.add( node );
 				return true;
 			}
@@ -94,13 +94,16 @@ public class SwingWorkerVisitor extends ASTVisitor
 				NumberLiteral time = (NumberLiteral) node.arguments().get( 0 );
 				QualifiedName unit = (QualifiedName) node.arguments().get( 1 );
 
-				methodGetPresent = true;
 				timeoutArguments.add( time.getToken() );
 				timeoutArguments.add( unit.getFullyQualifiedName() );
 				methodInvocationsGet.add( node );
 				setTimeoutCatchBlock( node );
-
 			}
+
+		}
+		else if ( ASTUtil.matchesTargetMethod( node, PUBLISH, ClassDetails.SWING_WORKER.getBinaryName() ) )
+		{
+			publishInvocations.add(node);
 
 		}
 		return true;
@@ -120,7 +123,7 @@ public class SwingWorkerVisitor extends ASTVisitor
 	private void setTimeoutCatchBlock( MethodInvocation node )
 	{
 		// get block for TimeoutException
-		TryStatement tryStatement = (TryStatement) ASTUtil.findParent( node, TryStatement.class );
+		TryStatement tryStatement = ASTUtil.findParent( node, TryStatement.class );
 		if ( tryStatement != null )
 		{
 			List catchClauses = tryStatement.catchClauses();
@@ -181,5 +184,20 @@ public class SwingWorkerVisitor extends ASTVisitor
 	public Block getTimeoutCatchBlock()
 	{
 		return timeoutCatchBlock;
+	}
+
+	public Block getProcessBlock()
+	{
+		return processBlock;
+	}
+
+	public String getProgressUpdateVariableName()
+	{
+		return progressUpdateVariableName;
+	}
+
+	public List<MethodInvocation> getPublishInvocations()
+	{
+		return publishInvocations;
 	}
 }

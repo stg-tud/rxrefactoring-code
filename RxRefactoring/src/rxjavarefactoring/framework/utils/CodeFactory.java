@@ -45,13 +45,9 @@ public final class CodeFactory extends ASTVisitor
 	 */
 	public static Statement createSingleStatementFromTest( AST targetAST, String statement )
 	{
-		if ( statement.replace( ";", "" ).length() < statement.length() - 1 )
-		{
-			throw new RxInvalidSyntaxException( "String contains \";\". Single statement expected", statement );
-		}
 		String auxMethodStart = "public void auxMethod() {";
 		String auxMethodEnd = "}";
-		String auxMethod = auxMethodStart + statement + auxMethodEnd;
+		String auxMethod = auxMethodStart + statement + ";" + auxMethodEnd;
 		MethodDeclaration methodFromText1 = createMethodFromText( targetAST, auxMethod );
 		return (Statement) ASTNode.copySubtree( targetAST, (ASTNode) methodFromText1.getBody().statements().get( 0 ) );
 	}
