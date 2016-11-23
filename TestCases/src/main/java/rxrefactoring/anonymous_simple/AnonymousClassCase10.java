@@ -1,4 +1,4 @@
-package rxrefactoring.anonymous;
+package rxrefactoring.anonymous_simple;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -6,7 +6,7 @@ import java.util.concurrent.TimeoutException;
 
 import javax.swing.SwingWorker;
 
-public class AnonymousClassCase11
+public class AnonymousClassCase10
 {
 	public void start()
 	{
@@ -26,10 +26,9 @@ public class AnonymousClassCase11
 				try
 				{
 					result = get( 3L, TimeUnit.SECONDS );
-					Thread.sleep(3000L);
 				}
 				// declaring UnionTypes for Exceptions
-				// The InterruptedException should remain, due to Thread.sleep(3000L)
+				// The whole try-catch block should be removed
 				catch ( InterruptedException | ExecutionException | TimeoutException e )
 				{
 					System.err.println("Several Exceptions Possible");

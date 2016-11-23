@@ -1,22 +1,27 @@
-package rxrefactoring.anonymous;
+package rxrefactoring.anonymous_complex;
+
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.SwingWorker;
-import java.util.List;
 
-public class AnonymousClassCase12
+public class AnonymousComplexCase1
 {
+
 	public void start()
 	{
-		// Anonymous class declaration of SwingWorker
-		// class is not assigned to a variable
-		// implementing doInBackground, done and process
 		new SwingWorker<String, Integer>()
 		{
+			private static final long SLEEP_TIME = 1000L;
+			private AtomicInteger iterationCounter;
+
 			@Override
 			protected String doInBackground() throws Exception
 			{
+				iterationCounter = new AtomicInteger(0);
 				for (int i = 0; i < 10; i++)
 				{
+					iterationCounter.set(i);
 					longRunningOperation();
 					publish(i * 10); // can be used to update the progress
 				}
@@ -28,7 +33,7 @@ public class AnonymousClassCase12
 			{
 				for (Integer i : chunks)
 				{
-					System.out.println("Progress = " + i + "%");
+					System.out.println("Iteration = " + iterationCounter.get() + "; Progress = " + i + "%");
 				}
 			}
 
@@ -45,12 +50,12 @@ public class AnonymousClassCase12
 					System.err.println("Exception");
 				}
 			}
-		}.execute();
-	}
 
-	private void longRunningOperation() throws InterruptedException
-	{
-		Thread.sleep( 1000L );
-		System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Long running operation completed." );
+			private void longRunningOperation() throws InterruptedException
+			{
+				Thread.sleep(SLEEP_TIME);
+				System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Long running operation completed." );
+			}
+		}.execute();
 	}
 }

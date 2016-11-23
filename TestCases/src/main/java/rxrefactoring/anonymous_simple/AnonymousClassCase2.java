@@ -1,13 +1,14 @@
-package rxrefactoring.anonymous;
-
-import java.util.concurrent.TimeUnit;
+package rxrefactoring.anonymous_simple;
 
 import javax.swing.SwingWorker;
 
-public class AnonymousClassCase8
+public class AnonymousClassCase2
 {
 	public void start()
 	{
+		// Anonymous class declaration of SwingWorker
+		// class is not assigned to a variable
+		// implementing doInBackground and done
 		new SwingWorker<String, Integer>()
 		{
 			@Override
@@ -20,14 +21,17 @@ public class AnonymousClassCase8
 			@Override
 			protected void done()
 			{
+				// Internally done is in charge of invoking doInBackground
+				// after do in background is completed, then this code block is executed
+				// try-catch block should be no longer there after refactoring
 				try
 				{
-					String result = get(3L, TimeUnit.SECONDS); // throws Exceptions
+					String result = get(); // get() gets result from doInBackground
 					System.out.println("[Thread: " + Thread.currentThread().getName() + "] Result:" + result);
-					Thread.sleep( 1000L ); // throw Exception too!
 				}
-				catch ( Exception e ) // catch clause should not be deleted because of Thread.sleep(1000L)
+				catch ( Exception e )
 				{
+					// get() can throw an Exception
 					System.err.println("Exception");
 				}
 			}
@@ -36,7 +40,7 @@ public class AnonymousClassCase8
 
 	private void longRunningOperation() throws InterruptedException
 	{
-		Thread.sleep( 4000L );
+		Thread.sleep( 2000L );
 		System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Long running operation completed." );
 	}
 }

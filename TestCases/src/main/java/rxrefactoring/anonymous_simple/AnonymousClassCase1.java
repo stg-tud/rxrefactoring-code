@@ -1,4 +1,4 @@
-package rxrefactoring.anonymous;
+package rxrefactoring.anonymous_simple;
 
 import javax.swing.SwingWorker;
 

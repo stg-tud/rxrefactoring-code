@@ -1,4 +1,4 @@
-package rxrefactoring.anonymous;
+package rxrefactoring.anonymous_simple;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -6,7 +6,7 @@ import java.util.concurrent.TimeoutException;
 
 import javax.swing.SwingWorker;
 
-public class AnonymousClassCase7
+public class AnonymousClassCase11
 {
 	public void start()
 	{
@@ -22,23 +22,17 @@ public class AnonymousClassCase7
 			@Override
 			protected void done()
 			{
-				// Multiple catch blocks originated by get(long, TimeUnit)
 				String result = null;
 				try
 				{
 					result = get( 3L, TimeUnit.SECONDS );
+					Thread.sleep(3000L);
 				}
-				catch ( InterruptedException e )
+				// declaring UnionTypes for Exceptions
+				// The InterruptedException should remain, due to Thread.sleep(3000L)
+				catch ( InterruptedException | ExecutionException | TimeoutException e )
 				{
-					System.err.println("InterruptedException");
-				}
-				catch ( ExecutionException e )
-				{
-					System.err.println("ExecutionException");
-				}
-				catch ( TimeoutException e )
-				{
-					System.err.println("TimeoutException");
+					System.err.println("Several Exceptions Possible");
 				}
 				System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
 			}

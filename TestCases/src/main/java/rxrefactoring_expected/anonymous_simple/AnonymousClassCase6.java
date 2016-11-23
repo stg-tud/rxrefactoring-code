@@ -1,4 +1,4 @@
-package rxrefactoring_expected.anonymous;
+package rxrefactoring_expected.anonymous_simple;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -8,7 +8,7 @@ import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
-public class AnonymousClassCase5
+public class AnonymousClassCase6
 {
 	public void start()
 	{
@@ -29,8 +29,8 @@ public class AnonymousClassCase5
 					public void call( String asyncResult )
 					{
 						String result = asyncResult;
-						// The get(String s) method is not supposed to be replaced during refactoring
-						String anotherGet = AnonymousClassCase5.this.get( "another get method invocation" );
+						// The get() method is not supposed to be replaced during refactoring
+						String anotherGet = AnonymousClassCase6.this.get();
 						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
 					}
 				} )
@@ -47,9 +47,9 @@ public class AnonymousClassCase5
 				.subscribe();
 	}
 
-	private String get( String string )
+	private String get()
 	{
-		return string.toUpperCase();
+		return "some string";
 	}
 
 	private void longRunningOperation() throws InterruptedException

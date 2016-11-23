@@ -1,4 +1,4 @@
-package rxrefactoring_expected.anonymous;
+package rxrefactoring_expected.anonymous_simple;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
