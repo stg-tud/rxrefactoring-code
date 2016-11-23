@@ -7,7 +7,7 @@ import java.util.Set;
 
 import org.eclipse.jdt.core.dom.*;
 
-import rxjavarefactoring.framework.utils.visitors.TryStatementVisitor;
+import rxjavarefactoring.framework.codegenerators.visitors.TryStatementVisitor;
 
 /**
  * Description: Util class for {@link ASTNode}s<br>

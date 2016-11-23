@@ -1,4 +1,4 @@
-package rxjavarefactoring.framework.builders;
+package rxjavarefactoring.framework.codegenerators;
 
 import java.util.List;
 
@@ -15,20 +15,16 @@ public final class ComplexRxObservableBuilder
 	private static final String NEW_LINE = "\n";
 	private static final String EMPTY = "";
 
-	private static StringBuilder rxComplexObservableBuilder;
-	private static int counter = -1;
+	private StringBuilder rxComplexObservableBuilder;
+	private String idNumber;
 
-	private ComplexRxObservableBuilder()
+	private ComplexRxObservableBuilder( String icuName )
 	{
-
-	}
-
-	/**
-	 * Resets the counter used to create unique subscriber names
-	 */
-	public static void resetCounter()
-	{
-		counter = -1;
+		idNumber = IdsManager.getNextComplexObsId( icuName );
+		rxComplexObservableBuilder = new StringBuilder();
+		rxComplexObservableBuilder.append( "private class ComplexRxObservable" );
+		rxComplexObservableBuilder.append( getNumber() );
+		rxComplexObservableBuilder.append( "{" );
 	}
 
 	/**
@@ -37,15 +33,12 @@ public final class ComplexRxObservableBuilder
 	 * enumerated. i.e: ComplexRxObservable1
 	 * 
 	 * @return the builder
+	 * @param icuName
 	 */
-	public static ComplexRxObservableBuilder newComplexRxObservable()
+	public static ComplexRxObservableBuilder newComplexRxObservable( String icuName )
 	{
-		counter++;
-		rxComplexObservableBuilder = new StringBuilder();
-		rxComplexObservableBuilder.append( "private class ComplexRxObservable" );
-		rxComplexObservableBuilder.append( getNumber() );
-		rxComplexObservableBuilder.append( "{" );
-		return new ComplexRxObservableBuilder();
+		;
+		return new ComplexRxObservableBuilder( icuName );
 	}
 
 	/**
@@ -134,14 +127,9 @@ public final class ComplexRxObservableBuilder
 
 	// ### Private Methods ###
 
-	private static String getNumber()
+	private String getNumber()
 	{
-		String number = String.valueOf( counter );
-		if ( counter == 0 )
-		{
-			number = EMPTY;
-		}
-		return number;
+		return idNumber;
 	}
 
 }

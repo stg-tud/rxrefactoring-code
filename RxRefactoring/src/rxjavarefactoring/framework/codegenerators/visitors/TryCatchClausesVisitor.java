@@ -1,6 +1,7 @@
-package rxjavarefactoring.framework.utils.visitors;
+package rxjavarefactoring.framework.codegenerators.visitors;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.jdt.core.dom.*;
 

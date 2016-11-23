@@ -6,7 +6,7 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.Block;
 import org.junit.Test;
 
-import rxjavarefactoring.framework.holders.RxSubscriberHolder;
+import rxjavarefactoring.framework.codegenerators.RxSubscriberHolder;
 import rxjavarefactoring.framework.utils.CodeFactory;
 
 /**
@@ -26,9 +26,10 @@ public class RxSubscriberHolderTest
         Block doOnNextBlock = CodeFactory.createStatementsBlockFromText(ast, doOnNextBlockString);
         String type = "List<Integer>";
         String variableName = "chunks";
+		String className = "icuName";
 
         // build subscriber
-		RxSubscriberHolder subscriberHolder = new RxSubscriberHolder( type, doOnNextBlock, variableName );
+		RxSubscriberHolder subscriberHolder = new RxSubscriberHolder( className, type, doOnNextBlock, variableName );
 
 		String expectedGetSubscriberMethod = "private Subscriber<List<Integer>> getRxUpdateSubscriber() { return new Subscriber<List<Integer>>() {\n" +
                 "@Override public void onCompleted() {}\n" +

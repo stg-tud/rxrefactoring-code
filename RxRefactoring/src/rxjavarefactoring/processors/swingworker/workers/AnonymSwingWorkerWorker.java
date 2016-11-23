@@ -7,10 +7,10 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
 
-import rxjavarefactoring.framework.builders.ComplexRxObservableBuilder;
-import rxjavarefactoring.framework.builders.RxObservableStringBuilder;
+import rxjavarefactoring.framework.codegenerators.ComplexRxObservableBuilder;
+import rxjavarefactoring.framework.codegenerators.RxObservableStringBuilder;
+import rxjavarefactoring.framework.codegenerators.RxSubscriberHolder;
 import rxjavarefactoring.framework.constants.SchedulerType;
-import rxjavarefactoring.framework.holders.RxSubscriberHolder;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.CodeFactory;
@@ -46,10 +46,6 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 		RxLogger.info( this, "METHOD=refactor - Number of compilation units: " + numCunits );
 		for ( ICompilationUnit icu : cuAnonymousClassesMap.keySet() )
 		{
-			// The subscriber counter is only needed in case of having more than one SwingWorker that
-			// implements the method process in a class
-			RxSubscriberHolder.resetCounter();
-			ComplexRxObservableBuilder.resetCounter();
 			List<AnonymousClassDeclaration> declarations = cuAnonymousClassesMap.get( icu );
 			for ( AnonymousClassDeclaration swingWorkerDeclaration : declarations )
 			{
@@ -64,7 +60,7 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 				// Create rx.Observable using the Subscriber if necessary
 				RxLogger.info( this, "METHOD=refactor - Creating rx.Observable object: " + icu.getElementName() );
 				Statement referenceStatement = ASTUtil.findParent( swingWorkerDeclaration, Statement.class );
-				addRxObservable( singleChangeWriter, referenceStatement, swingWorkerVisitor, swingWorkerDeclaration );
+				addRxObservable( icu, singleChangeWriter, referenceStatement, swingWorkerVisitor, swingWorkerDeclaration );
 
 				// remove existing SwingWorker
 				singleChangeWriter.removeStatement( swingWorkerDeclaration );
@@ -80,6 +76,7 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 	}
 
 	private void addRxObservable(
+			ICompilationUnit icu,
 			RxSingleChangeWriter rewriter,
 			Statement referenceStatement,
 			SwingWorkerVisitor swingWorkerVisitor,
@@ -92,6 +89,7 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 		if ( processBlockExists )
 		{
 			subscriberHolder = new RxSubscriberHolder(
+					icu.getElementName(),
 					swingWorkerVisitor.getProgressUpdateTypeName(),
 					swingWorkerVisitor.getProcessBlock(),
 					swingWorkerVisitor.getProgressUpdateVariableName() );
@@ -131,7 +129,7 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 					.buildReturnStatement();
 			String observableType = swingWorkerVisitor.getResultType().toString();
 
-			String complexRxObservableClass = ComplexRxObservableBuilder.newComplexRxObservable()
+			String complexRxObservableClass = ComplexRxObservableBuilder.newComplexRxObservable( icu.getElementName() )
 					.withFields( fieldDeclarations )
 					.withGetAsyncObservable( observableType, subscriberDecl, observableStatement )
 					.withMethod( subscriberGetRxUpdateMethod )

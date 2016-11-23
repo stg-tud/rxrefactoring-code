@@ -1,4 +1,4 @@
-package rxjavarefactoring.framework.utils.visitors;
+package rxjavarefactoring.framework.codegenerators.visitors;
 
 import java.util.HashMap;
 import java.util.Map;

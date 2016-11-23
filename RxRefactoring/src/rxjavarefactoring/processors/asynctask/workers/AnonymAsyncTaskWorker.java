@@ -10,7 +10,7 @@ import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.Statement;
 
-import rxjavarefactoring.framework.builders.RxObservableStringBuilder;
+import rxjavarefactoring.framework.codegenerators.RxObservableStringBuilder;
 import rxjavarefactoring.framework.constants.SchedulerType;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.ASTUtil;

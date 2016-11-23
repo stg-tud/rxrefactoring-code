@@ -1,4 +1,4 @@
-package rxjavarefactoring.framework.builders;
+package rxjavarefactoring.framework.codegenerators;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -24,14 +24,31 @@ public final class RxObservableStringBuilder
 {
 	private static final String NEW_LINE = "\n";
 	private static final String SPACE = " ";
-	private static StringBuilder rxObservable;
-	private static String type;
+
+	private StringBuilder rxObservable;
+	private String type;
 	private final boolean willBeCached;
 	private boolean willBeSubscribed;
 
-	private RxObservableStringBuilder( boolean willBeCached )
+	private RxObservableStringBuilder( String type, Block doInBackground, SchedulerType observeOnScheduler )
 	{
-		this.willBeCached = willBeCached;
+		validateDoInBackgroundBlock( doInBackground );
+		rxObservable = new StringBuilder();
+		addFromCallable( type, doInBackground, observeOnScheduler );
+		this.willBeCached = false;
+	}
+
+	private RxObservableStringBuilder( String variableName, String type, Block doInBackground, SchedulerType observeOnScheduler )
+	{
+		validateDoInBackgroundBlock( doInBackground );
+		rxObservable = new StringBuilder();
+		rxObservable.append( "Observable<" );
+		rxObservable.append( type );
+		rxObservable.append( "> " );
+		rxObservable.append( variableName );
+		rxObservable.append( " = " );
+		addFromCallable( type, doInBackground, observeOnScheduler );
+		this.willBeCached = true;
 	}
 
 	/**
@@ -52,10 +69,7 @@ public final class RxObservableStringBuilder
 	 */
 	public static RxObservableStringBuilder newObservable( String type, Block doInBackground, SchedulerType observeOnScheduler )
 	{
-		validateDoInBackgroundBlock( doInBackground );
-		rxObservable = new StringBuilder();
-		addFromCallable( type, doInBackground, observeOnScheduler );
-		return new RxObservableStringBuilder( false );
+		return new RxObservableStringBuilder( type, doInBackground, observeOnScheduler );
 	}
 
 	/**
@@ -77,15 +91,7 @@ public final class RxObservableStringBuilder
 	 */
 	public static RxObservableStringBuilder newObservable( String variableName, String type, Block doInBackground, SchedulerType observeOnScheduler )
 	{
-		validateDoInBackgroundBlock( doInBackground );
-		rxObservable = new StringBuilder();
-		rxObservable.append( "Observable<" );
-		rxObservable.append( type );
-		rxObservable.append( "> " );
-		rxObservable.append( variableName );
-		rxObservable.append( " = " );
-		addFromCallable( type, doInBackground, observeOnScheduler );
-		return new RxObservableStringBuilder( true );
+		return new RxObservableStringBuilder( variableName, type, doInBackground, observeOnScheduler );
 	}
 
 	/**
@@ -250,9 +256,9 @@ public final class RxObservableStringBuilder
 		}
 	}
 
-	private static void addFromCallable( String type, Block doInBackground, SchedulerType observeOnScheduler )
+	private void addFromCallable( String type, Block doInBackground, SchedulerType observeOnScheduler )
 	{
-		RxObservableStringBuilder.type = type;
+		this.type = type;
 		rxObservable.append( "Observable.fromCallable(new Callable<" );
 		rxObservable.append( type );
 		rxObservable.append( ">() {" );

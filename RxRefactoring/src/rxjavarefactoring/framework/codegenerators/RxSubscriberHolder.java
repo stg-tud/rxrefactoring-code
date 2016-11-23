@@ -1,4 +1,4 @@
-package rxjavarefactoring.framework.holders;
+package rxjavarefactoring.framework.codegenerators;
 
 import java.util.List;
 
@@ -19,16 +19,17 @@ public class RxSubscriberHolder
 	private static final String LEFT_REC_BRACE = "[";
 	private static final String EMPTY = "";
 
-	private static int counter = -1;
-
 	private String classInstantiation;
 	private String type;
+	private String idNumber;
 
 	/**
 	 * Initializes a {@link rx.Subscriber} with the action {@link rx.Subscriber#onNext(Object)}.
 	 * The methods {@link Subscriber#onCompleted()} and {@link Subscriber#onError(Throwable)}
 	 * are empty.
 	 *
+	 *
+	 * @param icuName
 	 * @param type
 	 *            subscriber type
 	 * @param onNext
@@ -37,8 +38,9 @@ public class RxSubscriberHolder
 	 *            name of the variable used in the block onNext
 	 * @return a string corresponding to the subscriber. "new Subscriber<...>(){ ... };"
 	 */
-	public RxSubscriberHolder( String type, Block onNext, String onNextVariableName )
+	public RxSubscriberHolder( String icuName, String type, Block onNext, String onNextVariableName )
 	{
+		this.type = type;
 		StringBuilder rxSubscriber = new StringBuilder();
 		rxSubscriber.append( "new Subscriber<" );
 		rxSubscriber.append( type );
@@ -57,16 +59,7 @@ public class RxSubscriberHolder
 		rxSubscriber.append( onNext.toString() );
 		rxSubscriber.append( "};" );
 		classInstantiation = rxSubscriber.toString();
-		this.type = type;
-		counter++;
-	}
-
-	/**
-	 * Resets the counter used to create unique subscriber names
-	 */
-	public static void resetCounter()
-	{
-		counter = -1;
+		idNumber = IdsManager.getNextSubscriberId( icuName );
 	}
 
 	/**
@@ -112,12 +105,7 @@ public class RxSubscriberHolder
 
 	private String getNumber()
 	{
-		String number = String.valueOf( counter );
-		if ( counter == 0 )
-		{
-			number = EMPTY;
-		}
-		return number;
+		return idNumber;
 	}
 
 }
