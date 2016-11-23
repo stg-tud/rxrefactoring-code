@@ -1,10 +1,10 @@
-package rxrefactoring;
+package rxrefactoring.anonymous.simple;
 
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.SwingWorker;
 
-public class AnonymousClassCase6
+public class AnonymousClassCase5
 {
 	public void start()
 	{
@@ -23,9 +23,9 @@ public class AnonymousClassCase6
 				try
 				{
 					String result = get(3L, TimeUnit.SECONDS);
-					// the following get() method matching the parameter types of SwingWorker#get() should
-					// not be replaced during refactoring
-					String anotherGet = AnonymousClassCase6.this.get();
+					// The following get(String s) method should not be replace during refactoring
+					// because it does not belong to the SwingWorker
+					String anotherGet = AnonymousClassCase5.this.get("another get method invocation");
 					System.out.println("[Thread: " + Thread.currentThread().getName() + "] Result:" + result);
 				}
 				catch ( Exception e )
@@ -36,9 +36,9 @@ public class AnonymousClassCase6
 		}.execute();
 	}
 
-	private String get()
+	private String get(String string)
 	{
-		return "some string";
+		return string.toUpperCase();
 	}
 
 	private void longRunningOperation() throws InterruptedException

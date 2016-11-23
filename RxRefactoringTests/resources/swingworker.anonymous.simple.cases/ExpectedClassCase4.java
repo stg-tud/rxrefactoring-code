@@ -1,4 +1,4 @@
-package rxrefactoring;
+package rxrefactoring.anonymous.simple;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -8,7 +8,7 @@ import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
-public class AnonymousClassCase7
+public class AnonymousClassCase4
 {
 	public void start()
 	{
@@ -28,10 +28,8 @@ public class AnonymousClassCase7
 					@Override
 					public void call( String asyncResult )
 					{
-						// try-catch blocks are removed
-						String result = null;
-						result = asyncResult;
-						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
+						// get(3L, TimeUnit.SECONDS) should be replaced by asyncResult in place
+						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + asyncResult );
 					}
 				} )
 				.timeout( 3L, TimeUnit.SECONDS )
@@ -40,9 +38,7 @@ public class AnonymousClassCase7
 					@Override
 					public Observable<? extends String> call(Throwable throwable)
 					{
-						// Only the TimeoutException catch-clause body is copied into this method
-						// This will be after the timeout is over
-						System.err.println("TimeoutException");
+						System.err.println("Exception");
 						return Observable.empty();
 					}
 				})

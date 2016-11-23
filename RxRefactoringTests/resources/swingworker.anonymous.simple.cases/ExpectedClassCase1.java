@@ -1,4 +1,4 @@
-package rxrefactoring;
+package rxrefactoring.anonymous.simple;
 
 import java.util.concurrent.Callable;
 

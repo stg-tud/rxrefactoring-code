@@ -11,11 +11,13 @@ import framework.AbstractJavaTest;
 import rxjavarefactoring.RxJavaRefactoringApp;
 
 /**
- * Description: <br>
+ * Description: Test simple anonymous SwingWorker. Simple means that
+ * the classes are not assigned to a variable. The class is stateless and
+ * it doesn't contain any additional methods rather than the declared in SwingWorker<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/16/2016
  */
-public class SwingWorkerAnonymousClassTest extends AbstractJavaTest
+public class SwingWorkerAnonymousSimpleCasesTest extends AbstractJavaTest
 {
 	@Test
 	public void testSwingWorkerRefactoringCase1() throws Exception
@@ -100,7 +102,7 @@ public class SwingWorkerAnonymousClassTest extends AbstractJavaTest
 		String targetFile = "AnonymousClassCase" + caseNumber + ".java";
 
 		String expectedSourceCode = getSourceCode(
-				"swingworker.anonymous.classes",
+				"swingworker.anonymous.simple.cases",
 				"ExpectedClassCase" + caseNumber + ".java" );
 
 		RxJavaRefactoringApp app = new RxJavaRefactoringApp();

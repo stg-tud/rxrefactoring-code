@@ -1,4 +1,4 @@
-package rxrefactoring;
+package rxrefactoring.anonymous.simple;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -8,7 +8,7 @@ import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
-public class AnonymousClassCase11
+public class AnonymousClassCase8
 {
 	public void start()
 	{
@@ -28,17 +28,18 @@ public class AnonymousClassCase11
 					@Override
 					public void call( String asyncResult )
 					{
-						String result = null;
 						try
 						{
-							result = asyncResult;
-							Thread.sleep( 3000L );
+							String result = asyncResult;
+							System.out.println("[Thread: " + Thread.currentThread().getName() + "] Result:" + result);
+							Thread.sleep( 1000L );
 						}
-						catch ( InterruptedException e ) // InterruptedException remained here
+						catch ( Exception e )
 						{
-							System.err.println("Several Exceptions Possible");
+							// Catch-clause not deleted because Thread.sleep(1000L) also throws an Exception
+							// not only get()
+							System.err.println("Exception");
 						}
-						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
 					}
 				} )
 				.timeout( 3L, TimeUnit.SECONDS )
@@ -47,8 +48,9 @@ public class AnonymousClassCase11
 					@Override
 					public Observable<? extends String> call(Throwable throwable)
 					{
-						// Code handling for TimeoutException copied here
-						System.err.println("Several Exceptions Possible");
+						// The catch block is repeated here because both exceptions (Timeout and
+						// Interrupted) are handled the same
+						System.err.println("Exception");
 						return Observable.empty();
 					}
 				})

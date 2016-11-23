@@ -1,13 +1,15 @@
-package rxrefactoring;
-
-import java.util.concurrent.TimeUnit;
+package rxrefactoring.anonymous.simple;
 
 import javax.swing.SwingWorker;
+import java.util.concurrent.TimeUnit;
 
-public class AnonymousClassCase5
+public class AnonymousClassCase3
 {
 	public void start()
 	{
+		// Anonymous class declaration of SwingWorker
+		// class is not assigned to a variable
+		// implementing doInBackground and done
 		new SwingWorker<String, Integer>()
 		{
 			@Override
@@ -20,12 +22,11 @@ public class AnonymousClassCase5
 			@Override
 			protected void done()
 			{
+				// try-catch block should be gone after refactoring
 				try
 				{
+					// In contrast to case 2, here a get with timeout is used
 					String result = get(3L, TimeUnit.SECONDS);
-					// The following get(String s) method should not be replace during refactoring
-					// because it does not belong to the SwingWorker
-					String anotherGet = AnonymousClassCase5.this.get("another get method invocation");
 					System.out.println("[Thread: " + Thread.currentThread().getName() + "] Result:" + result);
 				}
 				catch ( Exception e )
@@ -36,14 +37,9 @@ public class AnonymousClassCase5
 		}.execute();
 	}
 
-	private String get(String string)
-	{
-		return string.toUpperCase();
-	}
-
 	private void longRunningOperation() throws InterruptedException
 	{
-		Thread.sleep( 4000L );
+		Thread.sleep( 2000L );
 		System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Long running operation completed." );
 	}
 }

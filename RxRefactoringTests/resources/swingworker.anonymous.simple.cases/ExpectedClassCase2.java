@@ -1,14 +1,12 @@
-package rxrefactoring;
+package rxrefactoring.anonymous.simple;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
 import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
-public class AnonymousClassCase4
+public class AnonymousClassCase2
 {
 	public void start()
 	{
@@ -18,6 +16,7 @@ public class AnonymousClassCase4
 					@Override
 					public String call() throws Exception
 					{
+						// code to be execute in a background thread
 						longRunningOperation();
 						return "DONE";
 					}
@@ -28,26 +27,20 @@ public class AnonymousClassCase4
 					@Override
 					public void call( String asyncResult )
 					{
-						// get(3L, TimeUnit.SECONDS) should be replaced by asyncResult in place
-						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + asyncResult );
+						// the result of fromCallable corresponds o the result of the doInBackgroundBlock
+						// get() was replaced by a variable name (asyncResult)
+						// the catch clause is only needed when the get() method call is present.
+						// since the get() call is gone, the try-catch block must be removed
+						String result = asyncResult;
+						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
 					}
 				} )
-				.timeout( 3L, TimeUnit.SECONDS )
-				.onErrorResumeNext(new Func1<Throwable, Observable<? extends String>>()
-				{
-					@Override
-					public Observable<? extends String> call(Throwable throwable)
-					{
-						System.err.println("Exception");
-						return Observable.empty();
-					}
-				})
 				.subscribe();
 	}
 
 	private void longRunningOperation() throws InterruptedException
 	{
-		Thread.sleep( 4000L );
+		Thread.sleep( 2000L );
 		System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Long running operation completed." );
 	}
 }

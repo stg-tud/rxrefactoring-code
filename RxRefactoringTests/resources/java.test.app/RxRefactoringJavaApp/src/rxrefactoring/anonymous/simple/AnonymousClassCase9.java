@@ -1,12 +1,10 @@
-package rxrefactoring;
+package rxrefactoring.anonymous.simple;
 
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.swing.SwingWorker;
 
-public class AnonymousClassCase10
+public class AnonymousClassCase9
 {
 	public void start()
 	{
@@ -22,18 +20,24 @@ public class AnonymousClassCase10
 			@Override
 			protected void done()
 			{
-				String result = null;
+				// Only the first try-catch block should be removed
 				try
 				{
-					result = get( 3L, TimeUnit.SECONDS );
+					String result = get(3L, TimeUnit.SECONDS);
+					System.out.println("[Thread: " + Thread.currentThread().getName() + "] Result:" + result);
 				}
-				// declaring UnionTypes for Exceptions
-				// The whole try-catch block should be removed
-				catch ( InterruptedException | ExecutionException | TimeoutException e )
+				catch ( Exception e )
 				{
-					System.err.println("Several Exceptions Possible");
+					System.err.println("Exception");
 				}
-				System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
+				try
+				{
+					Thread.sleep( 1000L );
+				}
+				catch ( InterruptedException e )
+				{
+					System.err.println("InterruptedException");
+				}
 			}
 		}.execute();
 	}

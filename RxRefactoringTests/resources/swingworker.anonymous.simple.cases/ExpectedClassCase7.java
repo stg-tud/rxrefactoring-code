@@ -1,4 +1,4 @@
-package rxrefactoring;
+package rxrefactoring.anonymous.simple;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -8,7 +8,7 @@ import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
-public class AnonymousClassCase6
+public class AnonymousClassCase7
 {
 	public void start()
 	{
@@ -28,9 +28,9 @@ public class AnonymousClassCase6
 					@Override
 					public void call( String asyncResult )
 					{
-						String result = asyncResult;
-						// The get() method is not supposed to be replaced during refactoring
-						String anotherGet = AnonymousClassCase6.this.get();
+						// try-catch blocks are removed
+						String result = null;
+						result = asyncResult;
 						System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Result:" + result );
 					}
 				} )
@@ -40,16 +40,13 @@ public class AnonymousClassCase6
 					@Override
 					public Observable<? extends String> call(Throwable throwable)
 					{
-						System.err.println("Exception");
+						// Only the TimeoutException catch-clause body is copied into this method
+						// This will be after the timeout is over
+						System.err.println("TimeoutException");
 						return Observable.empty();
 					}
 				})
 				.subscribe();
-	}
-
-	private String get()
-	{
-		return "some string";
 	}
 
 	private void longRunningOperation() throws InterruptedException

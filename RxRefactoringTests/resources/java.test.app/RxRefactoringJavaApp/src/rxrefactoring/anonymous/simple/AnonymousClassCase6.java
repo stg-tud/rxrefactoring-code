@@ -1,10 +1,10 @@
-package rxrefactoring;
+package rxrefactoring.anonymous.simple;
 
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.SwingWorker;
 
-public class AnonymousClassCase8
+public class AnonymousClassCase6
 {
 	public void start()
 	{
@@ -22,16 +22,23 @@ public class AnonymousClassCase8
 			{
 				try
 				{
-					String result = get(3L, TimeUnit.SECONDS); // throws Exceptions
+					String result = get(3L, TimeUnit.SECONDS);
+					// the following get() method matching the parameter types of SwingWorker#get() should
+					// not be replaced during refactoring
+					String anotherGet = AnonymousClassCase6.this.get();
 					System.out.println("[Thread: " + Thread.currentThread().getName() + "] Result:" + result);
-					Thread.sleep( 1000L ); // throw Exception too!
 				}
-				catch ( Exception e ) // catch clause should not be deleted because of Thread.sleep(1000L)
+				catch ( Exception e )
 				{
 					System.err.println("Exception");
 				}
 			}
 		}.execute();
+	}
+
+	private String get()
+	{
+		return "some string";
 	}
 
 	private void longRunningOperation() throws InterruptedException
