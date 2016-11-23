@@ -8,12 +8,11 @@ import rx.Subscriber;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
-public class AnonymousClassCase12
+public class AnonymousClassCase13
 {
 	public void start()
 	{
-		// Subscriber needed to send progress during the execution.
-		// See MethodDeclaration getRxUpdateSubscriber()
+		// Same as case 12
 		final Subscriber<List<Integer>> rxUpdateSubscriber = getRxUpdateSubscriber();
 		Observable
 				.fromCallable(new Callable<String>()
@@ -24,12 +23,37 @@ public class AnonymousClassCase12
 						for ( int i = 0; i < 10; i++ )
 						{
 							longRunningOperation();
-							// The call on next is in charge of sending the progress
-							// Arrays.asList(x, y, ... ) is used because the original signarute
-							// works chunks (List data type)
 							rxUpdateSubscriber.onNext(Arrays.asList(i * 10));
 						}
-						return "DONE";
+						return "DONE 1";
+					}
+				}).subscribeOn(Schedulers.computation())
+				.observeOn(Schedulers.immediate())
+				.doOnNext(new Action1<String>()
+				{
+					@Override
+					public void call(String asyncResult)
+					{
+						String result = asyncResult;
+						System.out.println("[Thread: " + Thread.currentThread().getName() + "] Result:" + result);
+					}
+				})
+				.subscribe();
+
+		// Here the variable and method name was made unique using a number
+		final Subscriber<List<Integer>> rxUpdateSubscriber1 = getRxUpdateSubscriber1();
+		Observable
+				.fromCallable(new Callable<String>()
+				{
+					@Override
+					public String call() throws Exception
+					{
+						for ( int i = 0; i < 10; i++ )
+						{
+							longRunningOperation();
+							rxUpdateSubscriber1.onNext(Arrays.asList(i * 10));
+						}
+						return "DONE 2";
 					}
 				}).subscribeOn(Schedulers.computation())
 				.observeOn(Schedulers.immediate())
@@ -68,7 +92,35 @@ public class AnonymousClassCase12
 				// Same code as in SwingWorker#process(List<Integer> chunks)
 				for ( Integer i : chunks )
 				{
-					System.out.println("Progress = " + i + "%");
+					System.out.println("Progress 1 = " + i + "%");
+				}
+			}
+		};
+	}
+
+	private Subscriber<List<Integer>> getRxUpdateSubscriber1()
+	{
+		return new Subscriber<List<Integer>>()
+		{
+			@Override
+			public void onCompleted()
+			{
+
+			}
+
+			@Override
+			public void onError(Throwable throwable)
+			{
+
+			}
+
+			@Override
+			public void onNext(List<Integer> chunks)
+			{
+				// Same code as in SwingWorker#process(List<Integer> chunks)
+				for ( Integer i : chunks )
+				{
+					System.out.println("Progress 2 = " + i + "%");
 				}
 			}
 		};

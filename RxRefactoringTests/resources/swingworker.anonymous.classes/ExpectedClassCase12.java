@@ -1,8 +1,10 @@
 package rxrefactoring;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import rx.Observable;
+import rx.Subscriber;
 import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 

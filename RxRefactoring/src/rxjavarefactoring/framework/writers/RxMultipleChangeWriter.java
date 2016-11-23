@@ -19,8 +19,8 @@ import rxjavarefactoring.RxJavaRefactoringApp;
 import rxjavarefactoring.framework.utils.RxLogger;
 
 /**
- * Description: This class is in charge of accumulating all changes and applying
- * them<br>
+ * Description: This class is in charge of accumulating the changes
+ * of all compilation units and applying them<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/12/2016
  */

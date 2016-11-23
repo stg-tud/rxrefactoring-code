@@ -1,22 +1,23 @@
 package rxjavarefactoringtests.builders;
 
+import static org.junit.Assert.assertEquals;
+
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.Block;
 import org.junit.Test;
-import rxjavarefactoring.framework.builders.RxSubscriberStringBuilder;
+
+import rxjavarefactoring.framework.holders.RxSubscriberHolder;
 import rxjavarefactoring.framework.utils.CodeFactory;
 
-import static org.junit.Assert.assertEquals;
-
 /**
- * Description: Tests {@link RxSubscriberStringBuilder}<br>
+ * Description: Tests {@link RxSubscriberHolder}<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/18/2016
  */
-public class RxSubscriberStringBuilderTest
+public class RxSubscriberHolderTest
 {
     @Test
-    public  void testSubscriberBuilder()
+	public void testSubscriberHolder()
     {
         // setup
         String doOnNextBlockString = "for (Integer i : chunks) { System.out.println(i); }";
@@ -27,9 +28,9 @@ public class RxSubscriberStringBuilderTest
         String variableName = "chunks";
 
         // build subscriber
-        String actualSubscriber = RxSubscriberStringBuilder.newSubscriber(type, doOnNextBlock, variableName);
+		RxSubscriberHolder subscriberHolder = new RxSubscriberHolder( type, doOnNextBlock, variableName );
 
-        String expectedSubscriber = "new Subscriber<List<Integer>>() {\n" +
+		String expectedGetSubscriberMethod = "private Subscriber<List<Integer>> getRxUpdateSubscriber() { return new Subscriber<List<Integer>>() {\n" +
                 "@Override public void onCompleted() {}\n" +
                 "@Override public void onError(Throwable throwable) {}\n" +
                 "@Override public void onNext(List<Integer> chunks)\n" +
@@ -38,9 +39,9 @@ public class RxSubscriberStringBuilderTest
                 "    System.out.println(i);\n" +
                 "  }\n" +
                 "}\n" +
-                "};";
+				"};}";
 
-        assertEquals(expectedSubscriber, actualSubscriber);
+		assertEquals( expectedGetSubscriberMethod, subscriberHolder.getGetMethodDeclaration() );
 
     }
 }

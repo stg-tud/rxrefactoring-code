@@ -14,7 +14,7 @@ import org.eclipse.text.edits.MultiTextEdit;
 import rxjavarefactoring.framework.utils.ASTUtil;
 
 /**
- * Description: <br>
+ * Description: This class is responsible for managing the changes in one compilation unit<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/12/2016
  */
