@@ -7,6 +7,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
 
+import rxjavarefactoring.framework.builders.ComplexRxObservableBuilder;
 import rxjavarefactoring.framework.builders.RxObservableStringBuilder;
 import rxjavarefactoring.framework.constants.SchedulerType;
 import rxjavarefactoring.framework.holders.RxSubscriberHolder;
@@ -29,6 +30,8 @@ import rxjavarefactoring.processors.swingworker.visitors.SwingWorkerVisitor;
  */
 public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 {
+	private static final String EMPTY = "";
+
 	public AnonymSwingWorkerWorker( CuCollector collector, IProgressMonitor monitor, RxMultipleChangeWriter rxMultipleChangeWriter )
 	{
 		super( collector, monitor, rxMultipleChangeWriter );
@@ -46,6 +49,7 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 			// The subscriber counter is only needed in case of having more than one SwingWorker that
 			// implements the method process in a class
 			RxSubscriberHolder.resetCounter();
+			ComplexRxObservableBuilder.resetCounter();
 			List<AnonymousClassDeclaration> declarations = cuAnonymousClassesMap.get( icu );
 			for ( AnonymousClassDeclaration swingWorkerDeclaration : declarations )
 			{
@@ -57,25 +61,10 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 
 				RxSingleChangeWriter singleChangeWriter = new RxSingleChangeWriter( icu, ast, getClass().getSimpleName() );
 
-				// Prepare Subscriber if the process method has been implemented
-				RxSubscriberHolder subscriberHolder = null;
-				if ( swingWorkerVisitor.getProcessBlock() != null )
-				{
-					RxLogger.info( this, "METHOD=refactor - Creating getRxUpdateSubscriber method: " + icu.getElementName() );
-					subscriberHolder = new RxSubscriberHolder(
-							swingWorkerVisitor.getProgressUpdateTypeName(),
-							swingWorkerVisitor.getProcessBlock(),
-							swingWorkerVisitor.getProgressUpdateVariableName() );
-
-					String newMethodString = subscriberHolder.getGetMethodDeclaration();
-					MethodDeclaration newMethod = CodeFactory.createMethodFromText( ast, newMethodString );
-					singleChangeWriter.addMethodAfter( newMethod, swingWorkerDeclaration );
-				}
-
 				// Create rx.Observable using the Subscriber if necessary
 				RxLogger.info( this, "METHOD=refactor - Creating rx.Observable object: " + icu.getElementName() );
 				Statement referenceStatement = ASTUtil.findParent( swingWorkerDeclaration, Statement.class );
-				addLocalObservable( singleChangeWriter, referenceStatement, swingWorkerVisitor, subscriberHolder );
+				addRxObservable( singleChangeWriter, referenceStatement, swingWorkerVisitor, swingWorkerDeclaration );
 
 				// remove existing SwingWorker
 				singleChangeWriter.removeStatement( swingWorkerDeclaration );
@@ -90,19 +79,72 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 		return WorkerStatus.OK;
 	}
 
-	private void addLocalObservable( RxSingleChangeWriter rewriter, Statement referenceStatement, SwingWorkerVisitor swingWorkerVisitor, RxSubscriberHolder subscriberHolder )
+	private void addRxObservable(
+			RxSingleChangeWriter rewriter,
+			Statement referenceStatement,
+			SwingWorkerVisitor swingWorkerVisitor,
+			AnonymousClassDeclaration swingWorkerDeclaration )
 	{
+		boolean complexRxObservableClassNeeded = swingWorkerVisitor.hasAdditionalFieldsOrMethods();
+		boolean processBlockExists = swingWorkerVisitor.getProcessBlock() != null;
 
-		String observableStatement = createObservable( swingWorkerVisitor, subscriberHolder );
-		Statement newStatement = CodeFactory.createSingleStatementFromTest( referenceStatement.getAST(), observableStatement );
-
-		if ( subscriberHolder != null )
+		RxSubscriberHolder subscriberHolder = null;
+		if ( processBlockExists )
 		{
-			String subscriberDecl = subscriberHolder.getSubscriberDeclaration();
-			Statement getSubscriberStatement = CodeFactory.createSingleStatementFromTest( newStatement.getAST(), subscriberDecl );
-			rewriter.addStatementBefore( getSubscriberStatement, referenceStatement );
+			subscriberHolder = new RxSubscriberHolder(
+					swingWorkerVisitor.getProgressUpdateTypeName(),
+					swingWorkerVisitor.getProcessBlock(),
+					swingWorkerVisitor.getProgressUpdateVariableName() );
 		}
-		rewriter.addStatementBefore( newStatement, referenceStatement );
+
+		AST ast = referenceStatement.getAST();
+		if ( !complexRxObservableClassNeeded )
+		{
+			String subscribedObservable = createObservable( swingWorkerVisitor, subscriberHolder )
+					.addSubscribe()
+					.build();
+			if ( processBlockExists )
+			{
+				String newMethodString = subscriberHolder.getGetMethodDeclaration();
+				MethodDeclaration newMethod = CodeFactory.createMethodFromText( ast, newMethodString );
+				rewriter.addMethodAfter( newMethod, swingWorkerDeclaration );
+
+				String subscriberDecl = subscriberHolder.getSubscriberDeclaration();
+				Statement getSubscriberStatement = CodeFactory.createSingleStatementFromTest( ast, subscriberDecl );
+				rewriter.addStatementBefore( getSubscriberStatement, referenceStatement );
+			}
+			Statement newStatement = CodeFactory.createSingleStatementFromTest( ast, subscribedObservable );
+			rewriter.addStatementBefore( newStatement, referenceStatement );
+		}
+		else
+		{
+			List<FieldDeclaration> fieldDeclarations = swingWorkerVisitor.getFieldDeclarations();
+			String subscriberDecl = EMPTY;
+			String subscriberGetRxUpdateMethod = EMPTY;
+			if ( processBlockExists )
+			{
+				subscriberDecl = subscriberHolder.getSubscriberDeclaration();
+				subscriberGetRxUpdateMethod = subscriberHolder.getGetMethodDeclaration();
+			}
+
+			String observableStatement = createObservable( swingWorkerVisitor, subscriberHolder )
+					.buildReturnStatement();
+			String observableType = swingWorkerVisitor.getResultType().toString();
+
+			String complexRxObservableClass = ComplexRxObservableBuilder.newComplexRxObservable()
+					.withFields( fieldDeclarations )
+					.withGetAsyncObservable( observableType, subscriberDecl, observableStatement )
+					.withMethod( subscriberGetRxUpdateMethod )
+					.withMethods( swingWorkerVisitor.getAdditionalMethodDeclarations() ).build();
+
+			TypeDeclaration complexRxObservableDecl = CodeFactory.createTypeDeclarationFromText( ast, complexRxObservableClass );
+			rewriter.addInnerClassAfter( complexRxObservableDecl, referenceStatement );
+
+			String newStatementString = "new ComplexRxObservable().getAsyncObservable().subscribe();";
+			Statement newSatement = CodeFactory.createSingleStatementFromTest( ast, newStatementString );
+			rewriter.addStatementBefore( newSatement, referenceStatement );
+
+		}
 
 		updateImports( rewriter, swingWorkerVisitor );
 	}
@@ -131,7 +173,7 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 		}
 	}
 
-	private String createObservable( SwingWorkerVisitor swingWorkerVisitor, RxSubscriberHolder subscriberHolder )
+	private RxObservableStringBuilder createObservable( SwingWorkerVisitor swingWorkerVisitor, RxSubscriberHolder subscriberHolder )
 	{
 		Block doInBackgroundBlock = swingWorkerVisitor.getDoInBackgroundBlock();
 		Block doOnCompletedBlock = swingWorkerVisitor.getDoneBlock();
@@ -151,14 +193,10 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 		// must be removed
 		ASTUtil.removeUnnecessaryCatchClauses( doOnCompletedBlock );
 
-		String observableStatement = RxObservableStringBuilder
+		return RxObservableStringBuilder
 				.newObservable( type, doInBackgroundBlock, SchedulerType.JAVA_MAIN_THREAD )
 				.addDoOnNext( doOnCompletedBlock, resultVariableName )
-				.addTimeout( timeOutArguments, timeoutCatchBlock )
-				.addSubscribe()
-				.build();
-
-		return observableStatement;
+				.addTimeout( timeOutArguments, timeoutCatchBlock );
 	}
 
 	private void replacePublishInvocations( SwingWorkerVisitor swingWorkerVisitor, RxSubscriberHolder subscriberHolder )

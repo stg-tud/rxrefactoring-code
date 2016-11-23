@@ -11,7 +11,7 @@ import rx.Subscriber;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/18/2016
  */
-public final class RxSubscriberHolder
+public class RxSubscriberHolder
 {
 	private static final String NEW_LINE = "\n";
 	private static final String SPACE = " ";
@@ -94,7 +94,7 @@ public final class RxSubscriberHolder
 	public String getOnNextInvocation( List arguments )
 	{
 		String argumentsString = arguments.toString().replace( RIGHT_REC_BRACE, EMPTY ).replace( LEFT_REC_BRACE, EMPTY );
-		return "rxUpdateSubscriber" + getNumber() + " .onNext(Arrays.asList(" + argumentsString + "))";
+		return "rxUpdateSubscriber" + getNumber() + " .onNext(Arrays.asList(" + argumentsString + "));";
 	}
 
 	/**
@@ -105,8 +105,10 @@ public final class RxSubscriberHolder
 	public String getSubscriberDeclaration()
 	{
 		return "final Subscriber<" + type + "> rxUpdateSubscriber" + getNumber() +
-				" = getRxUpdateSubscriber" + getNumber() + "()";
+				" = getRxUpdateSubscriber" + getNumber() + "();";
 	}
+
+	// ### Private Methods ###
 
 	private String getNumber()
 	{

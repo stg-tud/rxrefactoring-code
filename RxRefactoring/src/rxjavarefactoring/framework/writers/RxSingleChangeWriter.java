@@ -96,15 +96,24 @@ public class RxSingleChangeWriter
 	 * a {@link MethodDeclaration}, then its parent {@link MethodDeclaration} is
 	 * searched and taken as a reference. In this case, the new method will be
 	 * inserted after the parent found.
-	 * @param methodDeclaration new method to be inserted after the reference node
-	 * @param referenceNode reference node
+	 * 
+	 * @param methodDeclaration
+	 *            new method to be inserted after the reference node
+	 * @param referenceNode
+	 *            reference node
 	 */
-	public void addMethodAfter(MethodDeclaration methodDeclaration, ASTNode referenceNode)
+	public void addMethodAfter( MethodDeclaration methodDeclaration, ASTNode referenceNode )
 	{
-		MethodDeclaration referenceMethod = ASTUtil.findParent(referenceNode, MethodDeclaration.class);
-		ASTNode currentClass = referenceMethod.getParent();
-		ListRewrite classBlock = astRewriter.getListRewrite(currentClass, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
-		classBlock.insertAfter(methodDeclaration, referenceMethod, null);
+		MethodDeclaration referenceMethod = ASTUtil.findParent( referenceNode, MethodDeclaration.class );
+		ListRewrite classBlock = getClassBlock( referenceMethod );
+		classBlock.insertAfter( methodDeclaration, referenceMethod, null );
+	}
+
+	public void addInnerClassAfter( TypeDeclaration typeDeclaration, ASTNode referenceNode )
+	{
+		MethodDeclaration referenceMethod = ASTUtil.findParent( referenceNode, MethodDeclaration.class );
+		ListRewrite classBlock = getClassBlock( referenceMethod );
+		classBlock.insertAfter( typeDeclaration, referenceMethod, null );
 	}
 
 	/**
@@ -135,5 +144,13 @@ public class RxSingleChangeWriter
 	Set<String> getRemovedImports()
 	{
 		return removedImports;
+	}
+
+	// ### Private Methods ###
+
+	private ListRewrite getClassBlock( MethodDeclaration referenceMethod )
+	{
+		ASTNode currentClass = referenceMethod.getParent();
+		return astRewriter.getListRewrite( currentClass, TypeDeclaration.BODY_DECLARATIONS_PROPERTY );
 	}
 }

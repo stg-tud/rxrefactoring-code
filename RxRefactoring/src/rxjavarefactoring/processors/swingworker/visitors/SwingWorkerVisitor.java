@@ -42,11 +42,17 @@ public class SwingWorkerVisitor extends ASTVisitor
 	private List<MethodInvocation> methodInvocationsGet;
 	private List<MethodInvocation> publishInvocations;
 
+	// for "stateful" classes
+	private List<FieldDeclaration> fieldDeclarations;
+	private List<MethodDeclaration> additionalMethodDeclarations;
+
 	public SwingWorkerVisitor()
 	{
 		timeoutArguments = new ArrayList<>();
 		methodInvocationsGet = new ArrayList<>();
 		publishInvocations = new ArrayList<>();
+		fieldDeclarations = new ArrayList<>();
+		additionalMethodDeclarations = new ArrayList<>();
 	}
 
 	@Override
@@ -109,41 +115,24 @@ public class SwingWorkerVisitor extends ASTVisitor
 		return true;
 	}
 
-	private String createUniqueName( final String name )
+	@Override
+	public boolean visit( FieldDeclaration node )
 	{
-		int counter = 0;
-		String uniqueName = name;
-		while ( doneBlock.toString().contains( name ) )
-		{
-			uniqueName = name + counter;
-		}
-		return uniqueName;
+		fieldDeclarations.add( node );
+		return true;
 	}
 
-	private void setTimeoutCatchBlock( MethodInvocation node )
+	@Override
+	public boolean visit( MethodDeclaration node )
 	{
-		// get block for TimeoutException
-		TryStatement tryStatement = ASTUtil.findParent( node, TryStatement.class );
-		if ( tryStatement != null )
+		String methodDeclarationName = node.getName().toString();
+		if ( !DO_IN_BACKGROUND.equals( methodDeclarationName ) &&
+				!DONE.equals( methodDeclarationName ) &&
+				!PROCESS.equals( methodDeclarationName ) )
 		{
-			List catchClauses = tryStatement.catchClauses();
-			for ( Object catchClauseObject : catchClauses )
-			{
-				CatchClause catchClause = (CatchClause) catchClauseObject;
-				SingleVariableDeclaration declaration = catchClause.getException();
-				IMethodBinding methodBinding = node.resolveMethodBinding();
-				ITypeBinding[] exceptionTypes = methodBinding.getExceptionTypes();
-				// 0 java.lang.InterruptedException
-				// 1 java.util.concurrent.ExecutionException
-				// 2 java.util.concurrent.TimeoutException
-				ITypeBinding timeOutException = exceptionTypes[ 2 ];
-				Type type = declaration.getType();
-				if ( ASTUtil.isTypeOf( timeOutException, type.resolveBinding().getBinaryName() ) )
-				{
-					timeoutCatchBlock = catchClause.getBody();
-				}
-			}
+			additionalMethodDeclarations.add( node );
 		}
+		return true;
 	}
 
 	public Block getDoInBackgroundBlock()
@@ -199,5 +188,59 @@ public class SwingWorkerVisitor extends ASTVisitor
 	public List<MethodInvocation> getPublishInvocations()
 	{
 		return publishInvocations;
+	}
+
+	public List<FieldDeclaration> getFieldDeclarations()
+	{
+		return fieldDeclarations;
+	}
+
+	public List<MethodDeclaration> getAdditionalMethodDeclarations()
+	{
+		return additionalMethodDeclarations;
+	}
+
+	public boolean hasAdditionalFieldsOrMethods()
+	{
+		return !fieldDeclarations.isEmpty() || !additionalMethodDeclarations.isEmpty();
+	}
+
+	// ### Private Methods ###
+
+	private String createUniqueName( final String name )
+	{
+		int counter = 0;
+		String uniqueName = name;
+		while ( doneBlock.toString().contains( name ) )
+		{
+			uniqueName = name + counter;
+		}
+		return uniqueName;
+	}
+
+	private void setTimeoutCatchBlock( MethodInvocation node )
+	{
+		// get block for TimeoutException
+		TryStatement tryStatement = ASTUtil.findParent( node, TryStatement.class );
+		if ( tryStatement != null )
+		{
+			List catchClauses = tryStatement.catchClauses();
+			for ( Object catchClauseObject : catchClauses )
+			{
+				CatchClause catchClause = (CatchClause) catchClauseObject;
+				SingleVariableDeclaration declaration = catchClause.getException();
+				IMethodBinding methodBinding = node.resolveMethodBinding();
+				ITypeBinding[] exceptionTypes = methodBinding.getExceptionTypes();
+				// 0 java.lang.InterruptedException
+				// 1 java.util.concurrent.ExecutionException
+				// 2 java.util.concurrent.TimeoutException
+				ITypeBinding timeOutException = exceptionTypes[ 2 ];
+				Type type = declaration.getType();
+				if ( ASTUtil.isTypeOf( timeOutException, type.resolveBinding().getBinaryName() ) )
+				{
+					timeoutCatchBlock = catchClause.getBody();
+				}
+			}
+		}
 	}
 }

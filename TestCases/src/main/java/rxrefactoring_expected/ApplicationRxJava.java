@@ -1,12 +1,12 @@
 package rxrefactoring_expected;
 
-import rxrefactoring_expected.anonymous_complex.AnoymousComplexCase1;
+import rxrefactoring_expected.anonymous_complex.AnonymousComplexCase2;
 
 public class ApplicationRxJava
 {
     public static void main (String [] args) throws InterruptedException
     {
-        new AnoymousComplexCase1().start();
+        new AnonymousComplexCase2().start();
 
         Thread.sleep(11000L);
     }

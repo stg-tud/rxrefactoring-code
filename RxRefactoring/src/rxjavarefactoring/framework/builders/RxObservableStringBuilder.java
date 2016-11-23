@@ -16,7 +16,7 @@ import rxjavarefactoring.framework.constants.SchedulerType;
 import rxjavarefactoring.framework.utils.SourceCodeValidator;
 
 /**
- * Description: Builder to create Observables or Subscriptions as text<br>
+ * Description: Builder to create Observables or Subscriptions as string<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/16/2016
  */
@@ -191,11 +191,6 @@ public final class RxObservableStringBuilder
 		return this;
 	}
 
-	private String getStatements( Block timeoutCatchBlock )
-	{
-		return timeoutCatchBlock.toString().replace( "{", "" ).replace( "}", "" );
-	}
-
 	/**
 	 * Adds the {@link Observable#subscribe()}
 	 * 
@@ -211,7 +206,7 @@ public final class RxObservableStringBuilder
 
 	/**
 	 * Builds the observable string based on the information collected until
-	 * this moment.
+	 * this method was invoked.
 	 * 
 	 * @return A String representing a statement.
 	 */
@@ -229,7 +224,23 @@ public final class RxObservableStringBuilder
 		return statement;
 	}
 
+	/**
+	 * Builds the observable as a result statement based on
+	 * the information collected until this method was invoked.
+	 * 
+	 * @return A String representing the return statement
+	 */
+	public String buildReturnStatement()
+	{
+		return "return " + build();
+	}
+
 	// ### Private Methods ###
+
+	private String getStatements( Block timeoutCatchBlock )
+	{
+		return timeoutCatchBlock.toString().replace( "{", "" ).replace( "}", "" );
+	}
 
 	private static void validateDoInBackgroundBlock( Block doInBackground )
 	{

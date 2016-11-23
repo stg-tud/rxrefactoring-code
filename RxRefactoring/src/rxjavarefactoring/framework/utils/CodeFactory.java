@@ -2,8 +2,6 @@ package rxjavarefactoring.framework.utils;
 
 import org.eclipse.jdt.core.dom.*;
 
-import rxjavarefactoring.framework.exceptions.RxInvalidSyntaxException;
-
 /**
  * Description: Helper class to create {@link ASTNode} objects from text.<br>
  * General Steps:<br>
@@ -20,6 +18,7 @@ import rxjavarefactoring.framework.exceptions.RxInvalidSyntaxException;
 public final class CodeFactory extends ASTVisitor
 {
 	private MethodDeclaration methodDeclaration;
+	private TypeDeclaration typeDeclaration;
 
 	private CodeFactory()
 	{
@@ -31,6 +30,13 @@ public final class CodeFactory extends ASTVisitor
 	{
 		methodDeclaration = node;
 		return false;
+	}
+
+	@Override
+	public boolean visit( TypeDeclaration node )
+	{
+		typeDeclaration = node;
+		return true;
 	}
 
 	/**
@@ -92,5 +98,25 @@ public final class CodeFactory extends ASTVisitor
 		compilationUnit.accept( visitor );
 		MethodDeclaration methodDeclaration = visitor.methodDeclaration;
 		return (MethodDeclaration) ASTNode.copySubtree( targetAST, methodDeclaration );
+	}
+
+	/**
+	 * Creates a {@link TypeDeclaration} given its source code
+	 * 
+	 * @param targetAST
+	 *            target ast of level {@link AST#JLS8}
+	 * @param typeDeclaration
+	 *            class (Type) source code. It must have a valid syntax
+	 * @return a {@link TypeDeclaration} based on the source code
+	 */
+	public static TypeDeclaration createTypeDeclarationFromText( AST targetAST, String typeDeclaration )
+	{
+		ASTParser javaParser = ASTParser.newParser( AST.JLS8 );
+		javaParser.setSource( typeDeclaration.toCharArray() );
+		CompilationUnit compilationUnit = (CompilationUnit) javaParser.createAST( null );
+		CodeFactory visitor = new CodeFactory();
+		compilationUnit.accept( visitor );
+		TypeDeclaration typeDecl = visitor.typeDeclaration;
+		return (TypeDeclaration) ASTNode.copySubtree( targetAST, typeDecl );
 	}
 }

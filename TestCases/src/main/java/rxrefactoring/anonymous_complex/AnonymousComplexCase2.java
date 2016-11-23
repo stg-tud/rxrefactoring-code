@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.SwingWorker;
 
-public class AnonymousComplexCase1
+public class AnonymousComplexCase2
 {
 
 	public void start()

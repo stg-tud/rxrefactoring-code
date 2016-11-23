@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AnoymousComplexCase1
+public class AnonymousComplexCase2
 {
 
 	public void start()
@@ -18,7 +18,7 @@ public class AnoymousComplexCase1
 		new ComplexRxObservable().getAsyncObservable().subscribe();
 	}
 
-	class ComplexRxObservable
+	private class ComplexRxObservable
 	{
 		private static final long SLEEP_TIME = 1000L;
 		private AtomicInteger iterationCounter;
@@ -39,7 +39,7 @@ public class AnoymousComplexCase1
 								longRunningOperation();
 								rxUpdateSubscriber.onNext(Arrays.asList(i * 10));
 							}
-							return "DONE 1";
+							return "DONE";
 						}
 					}).subscribeOn(Schedulers.computation())
 					.observeOn(Schedulers.immediate())
