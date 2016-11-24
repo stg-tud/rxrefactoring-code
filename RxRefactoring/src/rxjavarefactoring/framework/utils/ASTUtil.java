@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.eclipse.jdt.core.dom.*;
 
+import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.codegenerators.visitors.TryStatementVisitor;
 
 /**
@@ -243,7 +244,7 @@ public final class ASTUtil
 			ASTNode originalStatement = ASTUtil.findParent( originalNode, Statement.class );
 			String originalStatementString = originalStatement.toString();
 			String newStatementString = originalStatementString.replace( originalNodeString, newNodeString );
-			Statement newStatement = CodeFactory.createSingleStatementFromTest( block.getAST(), newStatementString );
+			Statement newStatement = ASTNodeFactory.createSingleStatementFromTest( block.getAST(), newStatementString );
 
 			int position = block.statements().indexOf( originalStatement );
 			originalStatement.delete();

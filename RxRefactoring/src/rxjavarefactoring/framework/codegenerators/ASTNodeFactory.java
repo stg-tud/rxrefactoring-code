@@ -1,4 +1,4 @@
-package rxjavarefactoring.framework.utils;
+package rxjavarefactoring.framework.codegenerators;
 
 import org.eclipse.jdt.core.dom.*;
 
@@ -15,12 +15,12 @@ import org.eclipse.jdt.core.dom.*;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/10/2016
  */
-public final class CodeFactory extends ASTVisitor
+public final class ASTNodeFactory extends ASTVisitor
 {
 	private MethodDeclaration methodDeclaration;
 	private TypeDeclaration typeDeclaration;
 
-	private CodeFactory()
+	private ASTNodeFactory()
 	{
 		// This class should not be instantiated
 	}
@@ -94,7 +94,7 @@ public final class CodeFactory extends ASTVisitor
 		ASTParser javaParser = ASTParser.newParser( AST.JLS8 );
 		javaParser.setSource( auxClass.toCharArray() );
 		CompilationUnit compilationUnit = (CompilationUnit) javaParser.createAST( null );
-		CodeFactory visitor = new CodeFactory();
+		ASTNodeFactory visitor = new ASTNodeFactory();
 		compilationUnit.accept( visitor );
 		MethodDeclaration methodDeclaration = visitor.methodDeclaration;
 		return (MethodDeclaration) ASTNode.copySubtree( targetAST, methodDeclaration );
@@ -114,7 +114,7 @@ public final class CodeFactory extends ASTVisitor
 		ASTParser javaParser = ASTParser.newParser( AST.JLS8 );
 		javaParser.setSource( typeDeclaration.toCharArray() );
 		CompilationUnit compilationUnit = (CompilationUnit) javaParser.createAST( null );
-		CodeFactory visitor = new CodeFactory();
+		ASTNodeFactory visitor = new ASTNodeFactory();
 		compilationUnit.accept( visitor );
 		TypeDeclaration typeDecl = visitor.typeDeclaration;
 		return (TypeDeclaration) ASTNode.copySubtree( targetAST, typeDecl );

@@ -7,13 +7,13 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
 
+import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.codegenerators.ComplexRxObservableBuilder;
 import rxjavarefactoring.framework.codegenerators.RxObservableStringBuilder;
 import rxjavarefactoring.framework.codegenerators.RxSubscriberHolder;
 import rxjavarefactoring.framework.constants.SchedulerType;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.ASTUtil;
-import rxjavarefactoring.framework.utils.CodeFactory;
 import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.framework.writers.RxMultipleChangeWriter;
 import rxjavarefactoring.framework.writers.RxSingleChangeWriter;
@@ -104,14 +104,14 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 			if ( processBlockExists )
 			{
 				String newMethodString = subscriberHolder.getGetMethodDeclaration();
-				MethodDeclaration newMethod = CodeFactory.createMethodFromText( ast, newMethodString );
+				MethodDeclaration newMethod = ASTNodeFactory.createMethodFromText( ast, newMethodString );
 				rewriter.addMethodAfter( newMethod, swingWorkerDeclaration );
 
 				String subscriberDecl = subscriberHolder.getSubscriberDeclaration();
-				Statement getSubscriberStatement = CodeFactory.createSingleStatementFromTest( ast, subscriberDecl );
+				Statement getSubscriberStatement = ASTNodeFactory.createSingleStatementFromTest( ast, subscriberDecl );
 				rewriter.addStatementBefore( getSubscriberStatement, referenceStatement );
 			}
-			Statement newStatement = CodeFactory.createSingleStatementFromTest( ast, subscribedObservable );
+			Statement newStatement = ASTNodeFactory.createSingleStatementFromTest( ast, subscribedObservable );
 			rewriter.addStatementBefore( newStatement, referenceStatement );
 		}
 		else
@@ -135,11 +135,11 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 					.withMethod( subscriberGetRxUpdateMethod )
 					.withMethods( swingWorkerVisitor.getAdditionalMethodDeclarations() ).build();
 
-			TypeDeclaration complexRxObservableDecl = CodeFactory.createTypeDeclarationFromText( ast, complexRxObservableClass );
+			TypeDeclaration complexRxObservableDecl = ASTNodeFactory.createTypeDeclarationFromText( ast, complexRxObservableClass );
 			rewriter.addInnerClassAfter( complexRxObservableDecl, referenceStatement );
 
 			String newStatementString = "new ComplexRxObservable().getAsyncObservable().subscribe();";
-			Statement newSatement = CodeFactory.createSingleStatementFromTest( ast, newStatementString );
+			Statement newSatement = ASTNodeFactory.createSingleStatementFromTest( ast, newStatementString );
 			rewriter.addStatementBefore( newSatement, referenceStatement );
 
 		}
@@ -205,7 +205,7 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 			{
 				List argumentList = publishInvocation.arguments();
 				String newInvocation = subscriberHolder.getOnNextInvocation( argumentList );
-				Statement newStatement = CodeFactory.createSingleStatementFromTest( publishInvocation.getAST(), newInvocation );
+				Statement newStatement = ASTNodeFactory.createSingleStatementFromTest( publishInvocation.getAST(), newInvocation );
 				ASTUtil.replaceInStatement( publishInvocation, newStatement );
 			}
 		}

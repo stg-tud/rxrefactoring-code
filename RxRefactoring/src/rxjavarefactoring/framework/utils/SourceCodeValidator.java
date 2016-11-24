@@ -3,6 +3,7 @@ package rxjavarefactoring.framework.utils;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.Block;
 
+import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.exceptions.RxInvalidSyntaxException;
 
 /**
@@ -27,7 +28,7 @@ public final class SourceCodeValidator
 	 */
 	public static void validateStatement( String statement ) throws RxInvalidSyntaxException
 	{
-		Block singleStatementBlock = CodeFactory.createStatementsBlockFromText( AST.newAST( AST.JLS8 ), statement );
+		Block singleStatementBlock = ASTNodeFactory.createStatementsBlockFromText( AST.newAST( AST.JLS8 ), statement );
 		if ( singleStatementBlock.statements().isEmpty() )
 		{
 			throw new RxInvalidSyntaxException( "Invalid Syntax for Statement", statement );

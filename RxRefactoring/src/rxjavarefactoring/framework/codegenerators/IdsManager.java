@@ -12,6 +12,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class IdsManager
 {
+	private static final String EMPTY = "";
+	private static final int INITIAL_ID = 0;
+
 	private static Map<String, Integer> subscriberCounter = new ConcurrentHashMap<>();
 	private static Map<String, Integer> complexObservableCounter = new ConcurrentHashMap<>();
 
@@ -46,9 +49,9 @@ public final class IdsManager
 	private static String getNextId( String icuName, Map<String, Integer> map )
 	{
 		Integer integer = map.get( icuName );
-		if ( integer == null || integer == 0 )
+		if ( integer == null || integer == INITIAL_ID )
 		{
-			return "";
+			return EMPTY;
 		}
 		else
 		{
@@ -61,7 +64,7 @@ public final class IdsManager
 		Integer integer = map.get( icuName );
 		if ( integer == null )
 		{
-			map.put( icuName, 0 );
+			map.put( icuName, INITIAL_ID );
 		}
 		else
 		{

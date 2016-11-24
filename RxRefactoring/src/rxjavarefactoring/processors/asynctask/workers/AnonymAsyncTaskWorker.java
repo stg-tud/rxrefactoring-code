@@ -10,11 +10,11 @@ import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.Statement;
 
+import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.codegenerators.RxObservableStringBuilder;
 import rxjavarefactoring.framework.constants.SchedulerType;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.ASTUtil;
-import rxjavarefactoring.framework.utils.CodeFactory;
 import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.framework.writers.RxMultipleChangeWriter;
 import rxjavarefactoring.framework.writers.RxSingleChangeWriter;
@@ -91,7 +91,7 @@ public class AnonymAsyncTaskWorker extends AbstractRefactorWorker<CuCollector>
 		taskObject.accept( asyncTaskVisitor );
 
 		String observableStatement = createObservable( asyncTaskVisitor );
-		Block observableBlock = CodeFactory.createStatementsBlockFromText( ast, observableStatement );
+		Block observableBlock = ASTNodeFactory.createStatementsBlockFromText( ast, observableStatement );
 
 		Statement referenceStatement = ASTUtil.findParent( taskObject, Statement.class );
 		List statements = observableBlock.statements();
