@@ -109,6 +109,12 @@ public class SwingWorkerAnonymousSimpleCasesTest extends AbstractJavaTest
 		executeTest( "15" );
 	}
 
+	@Test
+	public void testSwingWorkerRefactoringCase16() throws Exception
+	{
+		executeTest( "16" );
+	}
+
 	private void executeTest( String caseNumber ) throws Exception
 	{
 		String targetFile = "AnonymousClassCase" + caseNumber + ".java";

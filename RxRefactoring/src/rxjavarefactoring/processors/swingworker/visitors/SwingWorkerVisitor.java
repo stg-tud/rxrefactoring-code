@@ -40,9 +40,10 @@ public class SwingWorkerVisitor extends ASTVisitor
 	private String progressUpdateTypeName;
 	private String progressUpdateVariableName;
 	private List<MethodInvocation> methodInvocationsGet;
-	private List<MethodInvocation> publishInvocations;
-	private List<SuperMethodInvocation> superMethodInvocations;
+	private List<MethodInvocation> methodInvocationsPublish;
+	private List<SuperMethodInvocation> superMethodInvocationsPublish;
 	private List<SuperMethodInvocation> superMethodInvocationsGet;
+	private List<SuperMethodInvocation> superMethodInvocationsToRemove;
 
 	// for "stateful" classes
 	private List<FieldDeclaration> fieldDeclarations;
@@ -52,11 +53,12 @@ public class SwingWorkerVisitor extends ASTVisitor
 	{
 		timeoutArguments = new ArrayList<>();
 		methodInvocationsGet = new ArrayList<>();
-		publishInvocations = new ArrayList<>();
+		methodInvocationsPublish = new ArrayList<>();
 		fieldDeclarations = new ArrayList<>();
 		additionalMethodDeclarations = new ArrayList<>();
-		superMethodInvocations = new ArrayList<>();
+		superMethodInvocationsPublish = new ArrayList<>();
 		superMethodInvocationsGet = new ArrayList<>();
+		superMethodInvocationsToRemove = new ArrayList<>();
 	}
 
 	@Override
@@ -113,7 +115,7 @@ public class SwingWorkerVisitor extends ASTVisitor
 		}
 		else if ( ASTUtil.matchesTargetMethod( node, PUBLISH, ClassDetails.SWING_WORKER.getBinaryName() ) )
 		{
-			publishInvocations.add( node );
+			methodInvocationsPublish.add( node );
 
 		}
 		return true;
@@ -146,9 +148,14 @@ public class SwingWorkerVisitor extends ASTVisitor
 		{
 			superMethodInvocationsGet.add( node );
 		}
-		else
+		else if ( ASTUtil.matchesTargetMethod( node, PUBLISH, ClassDetails.SWING_WORKER.getBinaryName() ) )
 		{
-			superMethodInvocations.add( node );
+			superMethodInvocationsPublish.add( node );
+		}
+		else if ( ASTUtil.matchesTargetMethod( node, DONE, ClassDetails.SWING_WORKER.getBinaryName() ) ||
+				ASTUtil.matchesTargetMethod( node, PROCESS, ClassDetails.SWING_WORKER.getBinaryName() ) )
+		{
+			superMethodInvocationsToRemove.add( node );
 		}
 		return true;
 	}
@@ -203,9 +210,9 @@ public class SwingWorkerVisitor extends ASTVisitor
 		return progressUpdateVariableName;
 	}
 
-	public List<MethodInvocation> getPublishInvocations()
+	public List<MethodInvocation> getMethodInvocationsPublish()
 	{
-		return publishInvocations;
+		return methodInvocationsPublish;
 	}
 
 	public List<FieldDeclaration> getFieldDeclarations()
@@ -218,14 +225,19 @@ public class SwingWorkerVisitor extends ASTVisitor
 		return additionalMethodDeclarations;
 	}
 
-	public List<SuperMethodInvocation> getSuperMethodInvocations()
+	public List<SuperMethodInvocation> getSuperMethodInvocationsPublish()
 	{
-		return superMethodInvocations;
+		return superMethodInvocationsPublish;
 	}
 
 	public List<SuperMethodInvocation> getSuperMethodInvocationsGet()
 	{
 		return superMethodInvocationsGet;
+	}
+
+	public List<SuperMethodInvocation> getSuperMethodInvocationsToRemove()
+	{
+		return superMethodInvocationsToRemove;
 	}
 
 	public boolean hasAdditionalFieldsOrMethods()

@@ -19,8 +19,8 @@ public final class IdsManager
 	private static Map<String, Integer> complexObservableCounter = new ConcurrentHashMap<>();
 
 	/**
-	 * retrieves the next id for a generated subscriber considering
-	 * the compilation unit
+	 * retrieves the next id for a generated subscriber for the given
+	 * compilation unit
 	 * 
 	 * @param icuName
 	 *            name of the compilation unit
@@ -29,12 +29,12 @@ public final class IdsManager
 	public static String getNextSubscriberId( String icuName )
 	{
 		incAndGetCounter( icuName, IdsManager.subscriberCounter );
-		return getNextId( icuName, IdsManager.subscriberCounter );
+		return getId( icuName, IdsManager.subscriberCounter );
 	}
 
 	/**
-	 * retrieves the next id for a generated complex rx observable considering
-	 * the compilation unit
+	 * retrieves the next id for a generated complex rx observable for the given
+	 * compilation unit
 	 * 
 	 * @param icuName
 	 *            name of the compilation unit
@@ -43,10 +43,10 @@ public final class IdsManager
 	public static String getNextComplexObsId( String icuName )
 	{
 		incAndGetCounter( icuName, IdsManager.complexObservableCounter );
-		return getNextId( icuName, IdsManager.complexObservableCounter );
+		return getId( icuName, IdsManager.complexObservableCounter );
 	}
 
-	private static String getNextId( String icuName, Map<String, Integer> map )
+	private static String getId( String icuName, Map<String, Integer> map )
 	{
 		Integer integer = map.get( icuName );
 		if ( integer == null || integer == INITIAL_ID )

@@ -1,8 +1,10 @@
-package rxrefactoring.anonymous.simple;
+package rxrefactoring.anonymous_simple;
 
-import javax.swing.SwingWorker;
+import java.util.List;
 
-public class AnonymousClassCase14
+import javax.swing.*;
+
+public class AnonymousClassCase16
 {
 	public void start()
 	{
@@ -11,8 +13,22 @@ public class AnonymousClassCase14
 			@Override
 			protected String doInBackground() throws Exception
 			{
-				longRunningOperation();
+				for (int i = 0; i < 10; i++)
+				{
+					longRunningOperation();
+					super.publish(i * 10);
+				}
 				return "DONE";
+			}
+
+			@Override
+			protected void process(List<Integer> chunks)
+			{
+				for (Integer i : chunks)
+				{
+					System.out.println("Progress = " + i + "%");
+				}
+				super.process(chunks); // this line will be removed
 			}
 
 			@Override
@@ -20,8 +36,7 @@ public class AnonymousClassCase14
 			{
 				try
 				{
-					// using super.get() instead of get(); the keyword "super" must be removed
-					String result = super.get();
+					String result = super.get(); // "super.get()" will be replaced by "asyncResult"
 					System.out.println("[Thread: " + Thread.currentThread().getName() + "] Result:" + result);
 				}
 				catch ( Exception e )
@@ -35,7 +50,7 @@ public class AnonymousClassCase14
 
 	private void longRunningOperation() throws InterruptedException
 	{
-		Thread.sleep( 2000L );
+		Thread.sleep( 1000L );
 		System.out.println( "[Thread: " + Thread.currentThread().getName() + "] Long running operation completed." );
 	}
 }
