@@ -15,9 +15,12 @@ public class AnonymousComplexCase2
 
     public void start()
     {
+        // helper class created ComplexRxObservable
         new ComplexRxObservable().getAsyncObservable().subscribe();
     }
 
+    // This class contatins the fields and methods of the original SwingWorker
+    // The class returns an observable that can be subscribed
     private class ComplexRxObservable
     {
         private static final long SLEEP_TIME = 1000L;

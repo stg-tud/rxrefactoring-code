@@ -9,6 +9,8 @@ public class AnonymousComplexCase1
 
 	public void start()
 	{
+		// SwingWorker has a private field and a private method
+		// A helper class is needed to refactor this case
 		new SwingWorker<String, Integer>()
 		{
 			private static final long SLEEP_TIME = 1000L;
@@ -16,7 +18,6 @@ public class AnonymousComplexCase1
 			@Override
 			protected String doInBackground() throws Exception
 			{
-				iterationCounter = new AtomicInteger(0);
 				for (int i = 0; i < 10; i++)
 				{
 					longRunningOperation();

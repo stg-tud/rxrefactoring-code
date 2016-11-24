@@ -41,6 +41,8 @@ public class SwingWorkerVisitor extends ASTVisitor
 	private String progressUpdateVariableName;
 	private List<MethodInvocation> methodInvocationsGet;
 	private List<MethodInvocation> publishInvocations;
+	private List<SuperMethodInvocation> superMethodInvocations;
+	private List<SuperMethodInvocation> superMethodInvocationsGet;
 
 	// for "stateful" classes
 	private List<FieldDeclaration> fieldDeclarations;
@@ -53,6 +55,8 @@ public class SwingWorkerVisitor extends ASTVisitor
 		publishInvocations = new ArrayList<>();
 		fieldDeclarations = new ArrayList<>();
 		additionalMethodDeclarations = new ArrayList<>();
+		superMethodInvocations = new ArrayList<>();
+		superMethodInvocationsGet = new ArrayList<>();
 	}
 
 	@Override
@@ -109,7 +113,7 @@ public class SwingWorkerVisitor extends ASTVisitor
 		}
 		else if ( ASTUtil.matchesTargetMethod( node, PUBLISH, ClassDetails.SWING_WORKER.getBinaryName() ) )
 		{
-			publishInvocations.add(node);
+			publishInvocations.add( node );
 
 		}
 		return true;
@@ -131,6 +135,20 @@ public class SwingWorkerVisitor extends ASTVisitor
 				!PROCESS.equals( methodDeclarationName ) )
 		{
 			additionalMethodDeclarations.add( node );
+		}
+		return true;
+	}
+
+	@Override
+	public boolean visit( SuperMethodInvocation node )
+	{
+		if ( ASTUtil.matchesTargetMethod( node, GET, ClassDetails.SWING_WORKER.getBinaryName() ) )
+		{
+			superMethodInvocationsGet.add( node );
+		}
+		else
+		{
+			superMethodInvocations.add( node );
 		}
 		return true;
 	}
@@ -198,6 +216,16 @@ public class SwingWorkerVisitor extends ASTVisitor
 	public List<MethodDeclaration> getAdditionalMethodDeclarations()
 	{
 		return additionalMethodDeclarations;
+	}
+
+	public List<SuperMethodInvocation> getSuperMethodInvocations()
+	{
+		return superMethodInvocations;
+	}
+
+	public List<SuperMethodInvocation> getSuperMethodInvocationsGet()
+	{
+		return superMethodInvocationsGet;
 	}
 
 	public boolean hasAdditionalFieldsOrMethods()

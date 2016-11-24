@@ -31,6 +31,7 @@ import rxjavarefactoring.processors.swingworker.visitors.SwingWorkerVisitor;
 public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 {
 	private static final String EMPTY = "";
+	public static final String VOID = "void";
 
 	public AnonymSwingWorkerWorker( CuCollector collector, IProgressMonitor monitor, RxMultipleChangeWriter rxMultipleChangeWriter )
 	{
@@ -75,6 +76,8 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 		return WorkerStatus.OK;
 	}
 
+	// ### Private Methods ###
+
 	private void addRxObservable(
 			ICompilationUnit icu,
 			RxSingleChangeWriter rewriter,
@@ -108,10 +111,10 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 				rewriter.addMethodAfter( newMethod, swingWorkerDeclaration );
 
 				String subscriberDecl = subscriberHolder.getSubscriberDeclaration();
-				Statement getSubscriberStatement = ASTNodeFactory.createSingleStatementFromTest( ast, subscriberDecl );
+				Statement getSubscriberStatement = ASTNodeFactory.createSingleStatementFromText( ast, subscriberDecl );
 				rewriter.addStatementBefore( getSubscriberStatement, referenceStatement );
 			}
-			Statement newStatement = ASTNodeFactory.createSingleStatementFromTest( ast, subscribedObservable );
+			Statement newStatement = ASTNodeFactory.createSingleStatementFromText( ast, subscribedObservable );
 			rewriter.addStatementBefore( newStatement, referenceStatement );
 		}
 		else
@@ -139,7 +142,7 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 			rewriter.addInnerClassAfter( complexRxObservableDecl, referenceStatement );
 
 			String newStatementString = "new ComplexRxObservable().getAsyncObservable().subscribe();";
-			Statement newSatement = ASTNodeFactory.createSingleStatementFromTest( ast, newStatementString );
+			Statement newSatement = ASTNodeFactory.createSingleStatementFromText( ast, newStatementString );
 			rewriter.addStatementBefore( newSatement, referenceStatement );
 
 		}
@@ -186,6 +189,9 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 		// changes all get() / get(long, TimeUnit) invocation by a variable name
 		removeGetInvocations( swingWorkerVisitor );
 
+		// remove statements containing "super" that return void
+		removeSuperInvocations( swingWorkerVisitor );
+
 		// get() and get(long, TimeUnit) throw exceptions.
 		// Since they were just replaced by a variable name, the catch clauses
 		// must be removed
@@ -205,7 +211,7 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 			{
 				List argumentList = publishInvocation.arguments();
 				String newInvocation = subscriberHolder.getOnNextInvocation( argumentList );
-				Statement newStatement = ASTNodeFactory.createSingleStatementFromTest( publishInvocation.getAST(), newInvocation );
+				Statement newStatement = ASTNodeFactory.createSingleStatementFromText( publishInvocation.getAST(), newInvocation );
 				ASTUtil.replaceInStatement( publishInvocation, newStatement );
 			}
 		}
@@ -217,9 +223,32 @@ public class AnonymSwingWorkerWorker extends AbstractRefactorWorker<CuCollector>
 		{
 			for ( MethodInvocation methodInvocation : swingWorkerVisitor.getMethodInvocationsGet() )
 			{
-				String resultVariableName = swingWorkerVisitor.getResultVariableName();
-				SimpleName variableName = methodInvocation.getAST().newSimpleName( resultVariableName );
-				ASTUtil.replaceInStatement( methodInvocation, variableName );
+				replaceGetMethod( swingWorkerVisitor, methodInvocation );
+			}
+			for ( SuperMethodInvocation methodInvocation : swingWorkerVisitor.getSuperMethodInvocationsGet() )
+			{
+				replaceGetMethod( swingWorkerVisitor, methodInvocation );
+				ASTUtil.removeSuperKeywordInStatement( methodInvocation );
+			}
+		}
+	}
+
+	private <T extends ASTNode> void replaceGetMethod( SwingWorkerVisitor swingWorkerVisitor, T methodInvocation )
+	{
+		String resultVariableName = swingWorkerVisitor.getResultVariableName();
+		SimpleName variableName = methodInvocation.getAST().newSimpleName( resultVariableName );
+		ASTUtil.replaceInStatement( methodInvocation, variableName );
+	}
+
+	private void removeSuperInvocations( SwingWorkerVisitor swingWorkerVisitor )
+	{
+		for ( SuperMethodInvocation methodInvocation : swingWorkerVisitor.getSuperMethodInvocations() )
+		{
+			String returnType = methodInvocation.resolveMethodBinding().getReturnType().getName();
+			if ( VOID.equals( returnType ) )
+			{
+				Statement statement = ASTUtil.findParent( methodInvocation, Statement.class );
+				statement.delete();
 			}
 		}
 	}

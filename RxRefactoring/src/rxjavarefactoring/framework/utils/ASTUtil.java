@@ -211,14 +211,24 @@ public final class ASTUtil
 	public static boolean matchesTargetMethod( MethodInvocation node, String methodName, String classBinaryName )
 	{
 		IMethodBinding methodBinding = node.resolveMethodBinding();
-		if ( methodBinding == null )
-		{
-			return false;
-		}
-		String bindingName = methodBinding.getName();
-		String className = methodBinding.getDeclaringClass().getBinaryName();
+		return matchesTargetMethod( methodName, classBinaryName, methodBinding );
+	}
 
-		return methodName.equals( bindingName ) && classBinaryName.equals( className );
+	/**
+	 * Identifies if a node matches a target method from a class
+	 *
+	 * @param node
+	 *            input node
+	 * @param methodName
+	 *            target method name
+	 * @param classBinaryName
+	 *            target class of method
+	 * @return true if matches, false otherwise
+	 */
+	public static boolean matchesTargetMethod( SuperMethodInvocation node, String methodName, String classBinaryName )
+	{
+		IMethodBinding methodBinding = node.resolveMethodBinding();
+		return matchesTargetMethod( methodName, classBinaryName, methodBinding );
 	}
 
 	/**
@@ -241,15 +251,36 @@ public final class ASTUtil
 			String originalNodeString = originalNode.toString();
 			String newNodeString = newNode.toString();
 
-			ASTNode originalStatement = ASTUtil.findParent( originalNode, Statement.class );
+			ASTNode originalStatement = originalNode;
+			if ( !( originalNode instanceof Statement ) )
+			{
+				originalStatement = ASTUtil.findParent( originalNode, Statement.class );
+			}
 			String originalStatementString = originalStatement.toString();
 			String newStatementString = originalStatementString.replace( originalNodeString, newNodeString );
-			Statement newStatement = ASTNodeFactory.createSingleStatementFromTest( block.getAST(), newStatementString );
+			Statement newStatement = ASTNodeFactory.createSingleStatementFromText( block.getAST(), newStatementString );
 
 			int position = block.statements().indexOf( originalStatement );
 			originalStatement.delete();
 			block.statements().add( position, newStatement );
 		}
+	}
+
+	/**
+	 * Removes all "super." char sequences from a given node. The node
+	 * must be part of a statement
+	 * 
+	 * @param node
+	 *            source node
+	 * @param <T>
+	 *            type of the node
+	 */
+	public static <T extends ASTNode> void removeSuperKeywordInStatement( T node )
+	{
+		Statement statement = ASTUtil.findParent( node, Statement.class );
+		String newStatementString = statement.toString().replace( "super.", "" );
+		Statement newStatement = ASTNodeFactory.createSingleStatementFromText( node.getAST(), newStatementString );
+		replaceInStatement( statement, newStatement );
 	}
 
 	/**
@@ -438,5 +469,17 @@ public final class ASTUtil
 		{
 			catchClause.delete();
 		}
+	}
+
+	private static boolean matchesTargetMethod( String methodName, String classBinaryName, IMethodBinding methodBinding )
+	{
+		if ( methodBinding == null )
+		{
+			return false;
+		}
+		String bindingName = methodBinding.getName();
+		String className = methodBinding.getDeclaringClass().getBinaryName();
+
+		return methodName.equals( bindingName ) && classBinaryName.equals( className );
 	}
 }

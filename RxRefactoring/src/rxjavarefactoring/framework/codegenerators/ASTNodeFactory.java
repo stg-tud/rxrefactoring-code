@@ -49,7 +49,7 @@ public final class ASTNodeFactory extends ASTVisitor
 	 *            contain a ";".
 	 * @return a {@link Statement} based on the source code
 	 */
-	public static Statement createSingleStatementFromTest( AST targetAST, String statement )
+	public static Statement createSingleStatementFromText( AST targetAST, String statement )
 	{
 		String auxMethodStart = "public void auxMethod() {";
 		String auxMethodEnd = "}";
