@@ -6,8 +6,8 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.Block;
 import org.junit.Test;
 
+import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.codegenerators.RxSubscriberHolder;
-import rxjavarefactoring.framework.utils.CodeFactory;
 
 /**
  * Description: Tests {@link RxSubscriberHolder}<br>
@@ -23,7 +23,7 @@ public class RxSubscriberHolderTest
         String doOnNextBlockString = "for (Integer i : chunks) { System.out.println(i); }";
 
         AST ast = AST.newAST(AST.JLS8);
-        Block doOnNextBlock = CodeFactory.createStatementsBlockFromText(ast, doOnNextBlockString);
+		Block doOnNextBlock = ASTNodeFactory.createStatementsBlockFromText( ast, doOnNextBlockString );
         String type = "List<Integer>";
         String variableName = "chunks";
 		String className = "icuName";

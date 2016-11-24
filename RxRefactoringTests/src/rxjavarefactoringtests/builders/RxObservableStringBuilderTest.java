@@ -1,15 +1,14 @@
 package rxjavarefactoringtests.builders;
 
-import static org.junit.Assert.assertEquals;
-
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.Block;
 import org.junit.Before;
 import org.junit.Test;
-
+import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.codegenerators.RxObservableStringBuilder;
 import rxjavarefactoring.framework.constants.SchedulerType;
-import rxjavarefactoring.framework.utils.CodeFactory;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Description: Tests {@link RxObservableStringBuilder}<br>
@@ -34,9 +33,9 @@ public class RxObservableStringBuilderTest
 		String doOnSubscribeStatements = "System.out.println(\"Subscribing Observable\");";
 
 		AST ast = AST.newAST( AST.JLS8 );
-		doInBackgroundBlock = CodeFactory.createStatementsBlockFromText( ast, doInBackgroundStatements );
-		doOnNextBlock = CodeFactory.createStatementsBlockFromText( ast, doOnNextStatements );
-		doOnSubscribeBlock = CodeFactory.createStatementsBlockFromText( ast, doOnSubscribeStatements );
+		doInBackgroundBlock = ASTNodeFactory.createStatementsBlockFromText( ast, doInBackgroundStatements );
+		doOnNextBlock = ASTNodeFactory.createStatementsBlockFromText( ast, doOnNextStatements );
+		doOnSubscribeBlock = ASTNodeFactory.createStatementsBlockFromText( ast, doOnSubscribeStatements );
 	}
 
 	@Test
