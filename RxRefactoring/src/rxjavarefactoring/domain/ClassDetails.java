@@ -40,11 +40,11 @@ public enum ClassDetails
 					put( "cancel", "unsubscribe" );
 					put( "execute", "subscribe" );
 					put( "firePropertyChange", null );
-					put( "get", null );
+					put( "get", "toBlocking().single()" );
 					put( "getProgress", null );
 					put( "getPropertyChangeSupport", null );
 					put( "getState", null );
-					put( "isCancelled", "isUnsubscribed" );
+					put( "isCancelled", null );
 					put( "isDone", null );
 					put( "removePropertyChangeListener", null );
 					put( "run", "subscribe" );

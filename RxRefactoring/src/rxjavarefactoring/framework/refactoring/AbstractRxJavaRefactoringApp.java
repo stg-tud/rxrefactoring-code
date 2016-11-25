@@ -30,12 +30,13 @@ import rxjavarefactoring.framework.utils.RxLogger;
 public abstract class AbstractRxJavaRefactoringApp implements IApplication
 {
 	protected Map<ICompilationUnit, String> originalCompilationUnitVsNewSourceCodeMap;
+	ICompilationUnit[] units;
 
 	@Override
 	public Object start( IApplicationContext iApplicationContext ) throws Exception
 	{
-		// TODO: display window showing the preconditions to produce compilable
-		// code: dependencies in classpath or .jar files in "/all-deps"
+		// TODO: display window showing the preconditions to produce compilable code:
+		// dependencies in classpath or .jar files in "/all-deps"
 		IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
 		Observable
 				.from( workspaceRoot.getProjects() )
@@ -67,6 +68,11 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 
 	protected abstract String getDependenciesDirectoryName();
 
+	public ICompilationUnit[] getUnits()
+	{
+		return units;
+	}
+
 	// ### Private Methods ###
 
 	private void refactorProject( IProject project )
@@ -78,6 +84,7 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 			final String location = project.getLocation().toPortableString();
 			updateClassPath( location + getDependenciesDirectoryName(), javaProject );
 			ICompilationUnit[] units = getCompilationUnits( javaProject );
+			this.units = units;
 			refactorCompilationUnits( units );
 
 		}

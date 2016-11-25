@@ -225,6 +225,23 @@ public final class ASTUtil
 	 *            target class of method
 	 * @return true if matches, false otherwise
 	 */
+	public static boolean matchesTargetMethod( MethodDeclaration node, String methodName, String classBinaryName )
+	{
+		IMethodBinding methodBinding = node.resolveBinding();
+		return matchesTargetMethod( methodName, classBinaryName, methodBinding );
+	}
+
+	/**
+	 * Identifies if a node matches a target method from a class
+	 *
+	 * @param node
+	 *            input node
+	 * @param methodName
+	 *            target method name
+	 * @param classBinaryName
+	 *            target class of method
+	 * @return true if matches, false otherwise
+	 */
 	public static boolean matchesTargetMethod( SuperMethodInvocation node, String methodName, String classBinaryName )
 	{
 		IMethodBinding methodBinding = node.resolveMethodBinding();
