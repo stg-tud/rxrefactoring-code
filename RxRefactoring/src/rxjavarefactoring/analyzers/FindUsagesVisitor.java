@@ -21,20 +21,22 @@ public class FindUsagesVisitor extends ASTVisitor
 	public FindUsagesVisitor( List<ICompilationUnit> compilationUnits )
 	{
 		this.compilationUnits = compilationUnits;
-		this.treeRoot = new UsagesTreeNode<>( null, null );
+		this.treeRoot = new UsagesTreeNode<>( null );
 	}
+
+	// TODO: TypeDeclaration
 
 	@Override
 	public boolean visit( ClassInstanceCreation classInstanceCreation )
 	{
 		TypeDeclaration parentTypeDecl = ASTUtil.findParent( classInstanceCreation, TypeDeclaration.class );
 		// Create link Root -> TypeDeclaration
-		UsagesTreeNode<ASTNode, TypeDeclaration> rootToTypeDecl = new UsagesTreeNode<>( null, parentTypeDecl );
+		UsagesTreeNode<TypeDeclaration> rootToTypeDecl = new UsagesTreeNode<>( parentTypeDecl );
 		this.treeRoot.addChild( rootToTypeDecl );
 
 		// Create Link TypeDeclaration -> ClassInstanceCreation
 		// Result: Root -> TypeDeclaration -> ClassInstanceCreation
-		UsagesTreeNode<TypeDeclaration, ClassInstanceCreation> typeDeclToInstance = new UsagesTreeNode( parentTypeDecl, classInstanceCreation );
+		UsagesTreeNode<ClassInstanceCreation> typeDeclToInstance = new UsagesTreeNode( classInstanceCreation );
 		rootToTypeDecl.addChild( typeDeclToInstance );
 
 		VariableDeclaration varDecl = ASTUtil.findParent( classInstanceCreation, VariableDeclaration.class );
@@ -44,7 +46,7 @@ public class FindUsagesVisitor extends ASTVisitor
 
 			// Create Link ClassInstanceCreation -> VariableDeclaration
 			// Result: Root -> TypeDeclaration -> ClassInstanceCreation -> VariableDeclaration
-			UsagesTreeNode<ClassInstanceCreation, VariableDeclaration> instanceToVarDecl = new UsagesTreeNode<>( classInstanceCreation, varDecl );
+			UsagesTreeNode<VariableDeclaration> instanceToVarDecl = new UsagesTreeNode<>( varDecl );
 			typeDeclToInstance.addChild( instanceToVarDecl );
 
 			// Find usages of the class instance creation based on the name "variableName"
@@ -65,7 +67,7 @@ public class FindUsagesVisitor extends ASTVisitor
 					{
 						// Create Link ClassInstaceCreation -> MethodInvocation
 						// Result: Root -> TypeDeclaration -> ClassInstanceCreation -> MethodInvocation
-						UsagesTreeNode<ClassInstanceCreation, MethodInvocation> instanceToMethodInv = new UsagesTreeNode<>( classInstanceCreation, methodInvocation );
+						UsagesTreeNode<MethodInvocation> instanceToMethodInv = new UsagesTreeNode<>( methodInvocation );
 						typeDeclToInstance.addChild( instanceToMethodInv );
 					}
 					return true;
@@ -100,7 +102,7 @@ public class FindUsagesVisitor extends ASTVisitor
 				{
 					// Create Link VariableDeclaration -> MethodInvocation
 					// Result: Root -> TypeDeclaration -> ClassInstanceCreation -> VariableDeclaration -> MethodInvocation
-					UsagesTreeNode<VariableDeclaration, MethodInvocation> varDeclToMethodInv = new UsagesTreeNode<>( varDecl, methodInvocation );
+					UsagesTreeNode<MethodInvocation> varDeclToMethodInv = new UsagesTreeNode<>( methodInvocation );
 					nodeToVarDecl.addChild( varDeclToMethodInv );
 				}
 				else
@@ -126,7 +128,7 @@ public class FindUsagesVisitor extends ASTVisitor
 							for ( ICompilationUnit icu : compilationUnits )
 							{
 								CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( icu, true );
-								cu.accept( getTypeDeclVisitor( nodeToVarDecl, declaringClass, cu, methodInvocation, varDecl, argumentIndex ) );
+								cu.accept( getTypeDeclVisitor( nodeToVarDecl, declaringClass, cu, methodInvocation, argumentIndex ) );
 							}
 						}
 					}
@@ -137,6 +139,7 @@ public class FindUsagesVisitor extends ASTVisitor
 			@Override
 			public boolean visit( Assignment node )
 			{
+				// TODO:
 				// Case 3: variable name is assign to another object
 				return true;
 			}
@@ -148,7 +151,6 @@ public class FindUsagesVisitor extends ASTVisitor
 			final ITypeBinding declaringClass,
 			final CompilationUnit cu,
 			final MethodInvocation methodInvocation,
-			final VariableDeclaration varDecl,
 			final int argumentIndex )
 	{
 		return new ASTVisitor()
@@ -163,7 +165,7 @@ public class FindUsagesVisitor extends ASTVisitor
 					String methodName = methodInvocation.getName().toString();
 
 					// Searching the target method declaration
-					cu.accept( getMethodDeclVisitor( nodeToVarDecl, varDecl, className, methodName, argumentIndex ) );
+					cu.accept( getMethodDeclVisitor( nodeToVarDecl, className, methodName, argumentIndex ) );
 				}
 				return true;
 			}
@@ -172,7 +174,6 @@ public class FindUsagesVisitor extends ASTVisitor
 
 	private ASTVisitor getMethodDeclVisitor(
 			final UsagesTreeNode nodeToVarDecl,
-			final VariableDeclaration varDecl,
 			final String className,
 			final String methodName,
 			final int argumentIndex )
@@ -189,7 +190,7 @@ public class FindUsagesVisitor extends ASTVisitor
 
 					// Create Link: VariableName -> MethodDeclaration
 					// Result: Root -> TypeDeclaration -> ClassInstanceCreation -> VariableDeclaration -> MethodDeclaration
-					UsagesTreeNode<VariableDeclaration, MethodDeclaration> varDeclToMethodDecl = new UsagesTreeNode<>( varDecl, methodDeclaration );
+					UsagesTreeNode<MethodDeclaration> varDeclToMethodDecl = new UsagesTreeNode<>( methodDeclaration );
 					nodeToVarDecl.addChild( varDeclToMethodDecl );
 
 					// Determine new variable name and repeat recursively
@@ -202,7 +203,7 @@ public class FindUsagesVisitor extends ASTVisitor
 	}
 
 	private ASTVisitor getSingleVarDeclVisitor(
-			final UsagesTreeNode<VariableDeclaration, MethodDeclaration> varDeclToMethodDecl,
+			final UsagesTreeNode<MethodDeclaration> varDeclToMethodDecl,
 			final MethodDeclaration methodDeclaration,
 			final String newVariableName )
 	{
@@ -215,7 +216,7 @@ public class FindUsagesVisitor extends ASTVisitor
 				{
 					// Create Link: MethodDeclaration -> SingleVariableDeclaration
 					// Result: Root -> TypeDeclaration -> ClassInstanceCreation -> VariableDeclaration -> MethodDeclaration -> SingleVariableDeclaration
-					UsagesTreeNode<MethodDeclaration, SingleVariableDeclaration> methodDeclToVarDel = new UsagesTreeNode<>( methodDeclaration, singleVar );
+					UsagesTreeNode<SingleVariableDeclaration> methodDeclToVarDel = new UsagesTreeNode<>( singleVar );
 					varDeclToMethodDecl.addChild( methodDeclToVarDel );
 
 					// VariableName found: run algorithm again

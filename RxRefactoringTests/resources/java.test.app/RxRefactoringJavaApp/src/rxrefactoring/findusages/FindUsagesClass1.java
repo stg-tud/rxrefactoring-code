@@ -14,10 +14,23 @@ public class FindUsagesClass1
 			protected String doInBackground() throws Exception
 			{
 				longRunningOperation();
+				publish(10);
 				return "TEST";
 			}
 
 		};
+
+		new SwingWorker<String, Integer>()
+		{
+			@Override
+			protected String doInBackground() throws Exception
+			{
+				longRunningOperation();
+				publish(10);
+				return "TEST";
+			}
+
+		}.execute();
 
 		doSomething(swingWorker);
 	}

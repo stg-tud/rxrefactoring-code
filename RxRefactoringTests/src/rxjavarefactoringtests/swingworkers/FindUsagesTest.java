@@ -19,7 +19,7 @@ import rxjavarefactoring.analyzers.FindUsagesVisitor;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/16/2016
  */
-public class FindUSagesTest extends AbstractJavaTest
+public class FindUsagesTest extends AbstractJavaTest
 {
 	@Test
 	public void testSwingWorkerRefactoringCase1() throws Exception
@@ -46,7 +46,19 @@ public class FindUSagesTest extends AbstractJavaTest
 		FindUsagesVisitor visitor = new FindUsagesVisitor( Arrays.asList( unit ) );
 		cu.accept( visitor );
 
-		String expectedTree = "root -> [FindUsagesClass1 -> [SwingWorker<String,Integer> -> [swingWorker -> [doSomething -> [sameSwingWorker -> [execute, cancel]]]]]]";
+		String expectedTree = "Project\n" +
+				" \n" +
+				" Type: FindUsagesClass1\n" +
+				"  Instance creation: SwingWorker<String,Integer>\n" +
+				"   Variable: swingWorker\n" +
+				"    Method declaration: FindUsagesClass1#doSomething\n" +
+				"     Variable: sameSwingWorker\n" +
+				"      Method invocation: execute\n" +
+				"      Method invocation: cancel\n" +
+				" \n" +
+				" Type: FindUsagesClass1\n" +
+				"  Instance creation: SwingWorker<String,Integer>\n" +
+				"   Method invocation: execute";
 		assertEquals( expectedTree, visitor.getTreeRoot().toString() );
 
 	}
