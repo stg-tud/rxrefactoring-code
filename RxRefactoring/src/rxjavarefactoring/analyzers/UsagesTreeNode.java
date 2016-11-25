@@ -12,12 +12,14 @@ import org.eclipse.jdt.core.dom.*;
  */
 public class UsagesTreeNode<Predecessor extends ASTNode, CurrentNode extends ASTNode>
 {
+	private int level;
 	private Predecessor predecessor;
 	private CurrentNode node;
 	private List<UsagesTreeNode<CurrentNode, ? extends ASTNode>> children;
 
 	public UsagesTreeNode( Predecessor predecessor, CurrentNode node )
 	{
+		this.level = 0;
 		this.predecessor = predecessor;
 		this.node = node;
 		children = new ArrayList<>();
@@ -25,6 +27,7 @@ public class UsagesTreeNode<Predecessor extends ASTNode, CurrentNode extends AST
 
 	public void addChild( UsagesTreeNode<CurrentNode, ? extends ASTNode> child )
 	{
+
 		children.add( child );
 	}
 
