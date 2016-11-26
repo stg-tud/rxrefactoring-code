@@ -54,15 +54,17 @@ public class UsagesTreeNode<CurrentNode extends ASTNode>
 
 	private String toString( UsagesTreeNode<CurrentNode> node )
 	{
-		String level = new String( new char[ node.level ] ).replace( '\0', ' ' );
+		String level = new String( new char[ node.level ] ).replace( '\0', '-' );
+		level = node.level + "" + level;
 		if ( node.children.isEmpty() )
 		{
-			return level + getString( node );
+			return level + "> " + getString( node );
 		}
 		else
 		{
 			StringBuilder sb = new StringBuilder();
 			sb.append( level );
+			sb.append( "> " );
 			sb.append( getString( node ) );
 			sb.append( "\n" );
 			int counter = 0;
@@ -94,7 +96,7 @@ public class UsagesTreeNode<CurrentNode extends ASTNode>
 		if ( node.node instanceof TypeDeclaration )
 		{
 			String typeDeclaration = ( (TypeDeclaration) node.node ).getName().toString();
-			return "\n Type: " + typeDeclaration;
+			return "Type: " + typeDeclaration;
 		}
 
 		if ( node.node instanceof VariableDeclaration )

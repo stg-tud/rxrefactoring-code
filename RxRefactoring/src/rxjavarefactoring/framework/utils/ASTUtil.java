@@ -50,7 +50,8 @@ public final class ASTUtil
 	 *
 	 * @param type
 	 *            current node (The {@link ASTNode} must be from type
-	 *            {@link TypeDeclaration} or {@link AnonymousClassDeclaration})
+	 *            {@link TypeDeclaration}, {@link AnonymousClassDeclaration})
+	 *            or {@link ClassInstanceCreation}
 	 * @param target
 	 *            query
 	 * @param isDirectChild
@@ -67,6 +68,10 @@ public final class ASTUtil
 		else if ( type instanceof AnonymousClassDeclaration )
 		{
 			superClass = ( (AnonymousClassDeclaration) type ).resolveBinding().getSuperclass();
+		}
+		else if ( type instanceof ClassInstanceCreation )
+		{
+			superClass = ( (ClassInstanceCreation) type ).resolveTypeBinding().getSuperclass();
 		}
 		return isSubclassOf( superClass, target, isDirectChild );
 	}
@@ -109,7 +114,8 @@ public final class ASTUtil
 	 *
 	 * @param type
 	 *            current node (The {@link ASTNode} must be from type
-	 *            {@link TypeDeclaration} or {@link AnonymousClassDeclaration})
+	 *            {@link TypeDeclaration}, {@link AnonymousClassDeclaration})
+	 *            or {@link ClassInstanceCreation}
 	 * @param target
 	 *            target type
 	 * @return true if they match
@@ -125,6 +131,10 @@ public final class ASTUtil
 		{
 			classType = ( (AnonymousClassDeclaration) type ).resolveBinding();
 		}
+		else if ( type instanceof ClassInstanceCreation )
+		{
+			classType = ( (ClassInstanceCreation) type ).resolveTypeBinding();
+		}
 		return isClassOf( classType, target );
 	}
 
@@ -133,7 +143,8 @@ public final class ASTUtil
 	 *
 	 * @param type
 	 *            current node (The {@link ASTNode} must be from type
-	 *            {@link TypeDeclaration} or {@link AnonymousClassDeclaration})
+	 *            {@link TypeDeclaration}, {@link AnonymousClassDeclaration})
+	 *            or {@link ClassInstanceCreation}
 	 * @param target
 	 *            target type
 	 * @return true if the current class is of type target or a subclass of
@@ -157,6 +168,19 @@ public final class ASTUtil
 	public static boolean isTypeOf( ITypeBinding type, String target )
 	{
 		return isSubclassOf( type, target, false ) || isClassOf( type, target );
+	}
+
+	public static boolean isTypeOf( ASTNode type, List<String> targetClasses )
+	{
+		for ( String target : targetClasses )
+		{
+			boolean matchesType = isSubclassOf( type, target, false ) || isClassOf( type, target );
+			if ( matchesType )
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -229,6 +253,51 @@ public final class ASTUtil
 	{
 		IMethodBinding methodBinding = node.resolveBinding();
 		return matchesTargetMethod( methodName, classBinaryName, methodBinding );
+	}
+
+	/**
+	 * Verifies if a {@link MethodDeclaration} and a {@link MethodInvocation} match
+	 * 
+	 * @param methodDeclaration
+	 *            method declaration
+	 * @param methodInvocation
+	 *            method invocation
+	 * @return true if they match, false otherwise
+	 */
+	public static boolean matchesSignature( MethodDeclaration methodDeclaration, MethodInvocation methodInvocation )
+	{
+		IMethodBinding declBinding = methodDeclaration.resolveBinding();
+		IMethodBinding invBinding = methodInvocation.resolveMethodBinding();
+
+		// Check declaring class
+		if ( !declBinding.getDeclaringClass().isEqualTo( invBinding.getDeclaringClass() ) )
+		{
+			return false;
+		}
+
+		// Check method name
+		if ( !declBinding.getName().equals( invBinding.getName() ) )
+		{
+			return false;
+		}
+
+		// Check arguments
+		ITypeBinding[] typeArguments1 = declBinding.getTypeArguments();
+		ITypeBinding[] typeArguments2 = invBinding.getTypeArguments();
+
+		if ( typeArguments1.length != typeArguments2.length )
+		{
+			return false;
+		}
+
+		for ( int i = 0; i < typeArguments1.length; i++ )
+		{
+			if ( typeArguments1[ i ].isEqualTo( typeArguments2[ i ] ) )
+			{
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**

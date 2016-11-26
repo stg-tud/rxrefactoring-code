@@ -9,14 +9,32 @@ import org.eclipse.jdt.internal.corext.refactoring.util.RefactoringASTParser;
 import rxjavarefactoring.framework.utils.ASTUtil;
 
 /**
- * Description: <br>
+ * Description: This class construcs a tree containing the links
+ * between {@link MethodInvocation} and the object ({@link ClassInstanceCreation})
+ * where the invocation is done.<br>
+ *
+ * Limitations: <br>
+ * It only keeps track of method invoked in a {@link SimpleName}.
+ * i.e: <br>
+ * Foo foo = new Foo();<br>
+ * foo.doSomething(...);<br>
+ * a link between foo and doSomething will be generated<br>
+ *
+ * This class can't manage builders<br>
+ * i.e: <br>
+ * StringBuilder sb = new StringBuilder();<br>
+ * sb.append("Foo").append("Bar");<br>
+ * only a link between sb and append("Foo") will be generated.
+ * append("Bar") will be ignored.
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/25/2016
  */
 public class FindUsagesVisitor extends ASTVisitor
 {
+
 	private UsagesTreeNode treeRoot;
 	private List<ICompilationUnit> compilationUnits;
+	private List<String> targetBinaryNames;
 
 	public FindUsagesVisitor( List<ICompilationUnit> compilationUnits )
 	{
@@ -24,13 +42,23 @@ public class FindUsagesVisitor extends ASTVisitor
 		this.treeRoot = new UsagesTreeNode<>( null );
 	}
 
+	public void setTargetBinaryNames( List<String> targetBinaryNames )
+	{
+		this.targetBinaryNames = targetBinaryNames;
+	}
+
 	// TODO: TypeDeclaration
 
 	@Override
 	public boolean visit( ClassInstanceCreation classInstanceCreation )
 	{
+		if ( targetBinaryNames != null && !ASTUtil.isTypeOf( classInstanceCreation, targetBinaryNames ) )
+		{
+			// ignore this class instance creation
+			return true;
+		}
 		TypeDeclaration parentTypeDecl = ASTUtil.findParent( classInstanceCreation, TypeDeclaration.class );
-		// Create link Root -> TypeDeclaration
+		// Create Link Root -> TypeDeclaration
 		UsagesTreeNode<TypeDeclaration> rootToTypeDecl = new UsagesTreeNode<>( parentTypeDecl );
 		this.treeRoot.addChild( rootToTypeDecl );
 
@@ -63,7 +91,9 @@ public class FindUsagesVisitor extends ASTVisitor
 				{
 					// Add all method invocations that are not inside of the ClassInstanceCreation
 					ClassInstanceCreation instanceCreationParent = ASTUtil.findParent( methodInvocation, ClassInstanceCreation.class );
-					if ( instanceCreationParent == null || instanceCreationParent != classInstanceCreation )
+					Expression expression = methodInvocation.getExpression();
+					if ( ( instanceCreationParent == null || instanceCreationParent != classInstanceCreation ) &&
+							!( expression instanceof SimpleName ) )
 					{
 						// Create Link ClassInstaceCreation -> MethodInvocation
 						// Result: Root -> TypeDeclaration -> ClassInstanceCreation -> MethodInvocation
@@ -137,9 +167,22 @@ public class FindUsagesVisitor extends ASTVisitor
 			}
 
 			@Override
-			public boolean visit( Assignment node )
+			public boolean visit( VariableDeclarationFragment varDeclFrag )
 			{
-				// TODO:
+				Expression initializer = varDeclFrag.getInitializer();
+				if ( initializer instanceof SimpleName )
+				{
+					if ( variableName.equals( ( (SimpleName) initializer ).getIdentifier() ) )
+					{
+						// Create Link VariableDeclaration -> VariableDeclarationFragment
+						// Result: Root -> TypeDeclaration -> ClassInstanceCreation -> VariableDeclaration -> VariableDeclarationFragment
+						UsagesTreeNode<VariableDeclarationFragment> varDeclToVarDeclFrag = new UsagesTreeNode<>( varDeclFrag );
+						nodeToVarDecl.getPredecessor().addChild( varDeclToVarDeclFrag );
+						Block parentBlock = ASTUtil.findParent( varDeclFrag, Block.class );
+						parentBlock.accept( getVariableVisitor( varDeclToVarDeclFrag, varDeclFrag ) );
+					}
+				}
+
 				// Case 3: variable name is assign to another object
 				return true;
 			}
@@ -160,12 +203,8 @@ public class FindUsagesVisitor extends ASTVisitor
 			{
 				if ( typeDeclaration.resolveBinding().getBinaryName().equals( declaringClass.getBinaryName() ) )
 				{
-					// Declaring class found
-					String className = declaringClass.getBinaryName();
-					String methodName = methodInvocation.getName().toString();
-
 					// Searching the target method declaration
-					cu.accept( getMethodDeclVisitor( nodeToVarDecl, className, methodName, argumentIndex ) );
+					cu.accept( getMethodDeclVisitor( nodeToVarDecl, methodInvocation, argumentIndex ) );
 				}
 				return true;
 			}
@@ -174,8 +213,7 @@ public class FindUsagesVisitor extends ASTVisitor
 
 	private ASTVisitor getMethodDeclVisitor(
 			final UsagesTreeNode nodeToVarDecl,
-			final String className,
-			final String methodName,
+			MethodInvocation methodInvocation,
 			final int argumentIndex )
 	{
 		return new ASTVisitor()
@@ -183,7 +221,7 @@ public class FindUsagesVisitor extends ASTVisitor
 			@Override
 			public boolean visit( MethodDeclaration methodDeclaration )
 			{
-				boolean targetMethod = ASTUtil.matchesTargetMethod( methodDeclaration, methodName, className );
+				boolean targetMethod = ASTUtil.matchesSignature( methodDeclaration, methodInvocation );
 				if ( targetMethod )
 				{
 					// Target method declaration found
@@ -221,6 +259,7 @@ public class FindUsagesVisitor extends ASTVisitor
 
 					// VariableName found: run algorithm again
 					methodDeclaration.accept( getVariableVisitor( methodDeclToVarDel, singleVar ) ); // recursive call
+					return false; // the variable name is unique. No need to keep checking
 				}
 				return true;
 			}

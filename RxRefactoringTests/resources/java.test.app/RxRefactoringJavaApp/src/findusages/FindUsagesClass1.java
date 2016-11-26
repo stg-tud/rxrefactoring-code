@@ -1,4 +1,4 @@
-package rxrefactoring.findusages;
+package findusages;
 
 import java.util.List;
 
