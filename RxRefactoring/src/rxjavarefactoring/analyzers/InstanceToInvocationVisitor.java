@@ -34,6 +34,8 @@ import rxjavarefactoring.framework.utils.ASTUtil;
 public class InstanceToInvocationVisitor extends ASTVisitor
 {
 
+	public static final String EMPTY = "";
+	public static final String KEYWORD_THIS = "this.";
 	private UsagesTreeNode treeRoot;
 	private Map<String, ICompilationUnit> compilationUnits;
 	private List<String> targetBinaryNames;
@@ -60,6 +62,11 @@ public class InstanceToInvocationVisitor extends ASTVisitor
 		this.targetBinaryNames = Arrays.asList( targetBinaryNames );
 	}
 
+	public UsagesTreeNode getTreeRoot()
+	{
+		return treeRoot;
+	}
+
 	@Override
 	public boolean visit( ClassInstanceCreation classInstanceCreation )
 	{
@@ -79,19 +86,40 @@ public class InstanceToInvocationVisitor extends ASTVisitor
 		rootToTypeDecl.addChild( typeDeclToInstance );
 
 		VariableDeclaration varDecl = ASTUtil.findParent( classInstanceCreation, VariableDeclaration.class );
-		boolean instanceCached = varDecl != null;
-		if ( instanceCached ) // Foo foo = new Foo();
+		Assignment assignment = ASTUtil.findParent( classInstanceCreation, Assignment.class );
+		Block parentBlock = ASTUtil.findParent( classInstanceCreation, Block.class );
+		if ( varDecl != null ) // Foo foo = new Foo();
 		{
-
 			// Create Link ClassInstanceCreation -> VariableDeclaration
 			// Result: Root -> TypeDeclaration -> ClassInstanceCreation -> VariableDeclaration
 			UsagesTreeNode<VariableDeclaration> instanceToVarDecl = new UsagesTreeNode<>( varDecl );
 			typeDeclToInstance.addChild( instanceToVarDecl );
 
 			// Find usages of the class instance creation based on the name "variableName"
-			Block parentBlock = ASTUtil.findParent( classInstanceCreation, Block.class );
 			String variableName = varDecl.resolveBinding().getName();
-			parentBlock.accept( getVariableVisitor( instanceToVarDecl, variableName ) );
+			parentBlock.accept( getVariableVisitor( instanceToVarDecl, variableName, VariableType.SIMPLE_NAME ) );
+		}
+		else if ( assignment != null )
+		{
+			// Create Link ClassInstanceCreation -> Assignment
+			// Result: Root -> TypeDeclaration -> ClassInstanceCreation -> Assignment
+			UsagesTreeNode<Assignment> instanceToAssignment = new UsagesTreeNode<>( assignment );
+			typeDeclToInstance.addChild( instanceToAssignment );
+
+			Expression leftHandSide = assignment.getLeftHandSide();
+			if ( leftHandSide instanceof SimpleName )
+			{
+				// Find usages of the class instance creation based on "variableName"
+				String variableName = ( (SimpleName) leftHandSide ).getIdentifier();
+				parentBlock.accept( getVariableVisitor( instanceToAssignment, variableName, VariableType.SIMPLE_NAME ) );
+			}
+			else if ( leftHandSide instanceof FieldAccess )
+			{
+				// Find usages of the class instance creation based on "variableName"
+				String fieldName = ( (FieldAccess) leftHandSide ).getName().toString();
+				parentBlock.accept( getVariableVisitor( instanceToAssignment, fieldName, VariableType.FIELD_ACCESS ) );
+			}
+
 		}
 		else // new Foo();
 		{
@@ -127,9 +155,10 @@ public class InstanceToInvocationVisitor extends ASTVisitor
 	 *            node where the children found will be added
 	 * @param variableName
 	 *            name of the analyzed variable
+	 * @param variableType
 	 * @return a visitor that updates the {@link this#treeRoot}
 	 */
-	private ASTVisitor getVariableVisitor( final UsagesTreeNode nodeToVarDecl, final String variableName )
+	private ASTVisitor getVariableVisitor( final UsagesTreeNode nodeToVarDecl, final String variableName, VariableType variableType )
 	{
 		return new ASTVisitor()
 		{
@@ -138,8 +167,9 @@ public class InstanceToInvocationVisitor extends ASTVisitor
 			{
 				// If the caller's name equals variableName
 				// then the method invocation should be added to the tree
-				Expression callerName = methodInvocation.getExpression();
-				if ( callerName != null && variableName.equals( callerName.toString() ) )
+				Expression callerExpression = methodInvocation.getExpression();
+				String callerName = callerExpression.toString().replace( KEYWORD_THIS, EMPTY );
+				if ( callerExpression != null && variableName.equals( callerName ) )
 				{
 					// Create Link VariableDeclaration -> MethodInvocation
 					// Result: Root -> TypeDeclaration -> ClassInstanceCreation -> VariableDeclaration -> MethodInvocation
@@ -159,7 +189,8 @@ public class InstanceToInvocationVisitor extends ASTVisitor
 					for ( Object argument : methodInvocation.arguments() )
 					{
 						counter++;
-						if ( variableName.equals( argument.toString() ) )
+						String argumentName = argument.toString().replace( KEYWORD_THIS, EMPTY );
+						if ( variableName.equals( argumentName ) )
 						{
 							// Matching argument was found
 							final int argumentIndex = counter;
@@ -183,7 +214,9 @@ public class InstanceToInvocationVisitor extends ASTVisitor
 				Expression initializer = varDeclFrag.getInitializer();
 				if ( initializer instanceof SimpleName )
 				{
-					if ( variableName.equals( ( (SimpleName) initializer ).getIdentifier() ) )
+					if ( variableName.equals( ( (SimpleName) initializer ).getIdentifier() )
+							&& !variableType.equals( VariableType.FIELD_ACCESS )
+							&& !variableType.equals( VariableType.QUALIFIED_NAME ) )
 					{
 						// Create Link VariableDeclaration -> VariableDeclarationFragment
 						// Result: Root -> TypeDeclaration -> ClassInstanceCreation -> VariableDeclaration -> VariableDeclarationFragment
@@ -191,7 +224,7 @@ public class InstanceToInvocationVisitor extends ASTVisitor
 						nodeToVarDecl.getPredecessor().addChild( varDeclToVarDeclFrag );
 						Block parentBlock = ASTUtil.findParent( varDeclFrag, Block.class );
 						String newVariableName = varDeclFrag.resolveBinding().getName();
-						parentBlock.accept( getVariableVisitor( varDeclToVarDeclFrag, newVariableName ) );
+						parentBlock.accept( getVariableVisitor( varDeclToVarDeclFrag, newVariableName, VariableType.SIMPLE_NAME ) );
 					}
 				}
 				return true;
@@ -210,11 +243,30 @@ public class InstanceToInvocationVisitor extends ASTVisitor
 						UsagesTreeNode<Assignment> varDeclToAssigment = new UsagesTreeNode<>( assignment );
 						nodeToVarDecl.getPredecessor().addChild( varDeclToAssigment );
 						Expression leftHandSide = assignment.getLeftHandSide();
+						Block parentBlock = ASTUtil.findParent( assignment, Block.class );
 						if ( leftHandSide instanceof SimpleName )
 						{
-							Block parentBlock = ASTUtil.findParent( assignment, Block.class );
 							String newVariableName = ( (SimpleName) leftHandSide ).getIdentifier();
-							parentBlock.accept( getVariableVisitor( varDeclToAssigment, newVariableName ) );
+							if ( !variableName.equals( newVariableName ) )
+							{
+								parentBlock.accept( getVariableVisitor( varDeclToAssigment, newVariableName, VariableType.SIMPLE_NAME ) );
+							}
+						}
+						if ( leftHandSide instanceof FieldAccess )
+						{
+							String fieldName = ( (FieldAccess) leftHandSide ).getName().toString();
+							if ( !variableName.equals( fieldName ) || !variableType.equals( VariableType.FIELD_ACCESS ) )
+							{
+								parentBlock.accept( getVariableVisitor( varDeclToAssigment, fieldName, VariableType.FIELD_ACCESS ) );
+							}
+						}
+						if ( leftHandSide instanceof QualifiedName )
+						{
+							String qualifiedName = ( (QualifiedName) leftHandSide ).getName().toString();
+							if ( !variableName.equals( qualifiedName ) || !variableType.equals( VariableType.QUALIFIED_NAME ) )
+							{
+								parentBlock.accept( getVariableVisitor( varDeclToAssigment, qualifiedName, VariableType.QUALIFIED_NAME ) );
+							}
 						}
 					}
 				}
@@ -292,7 +344,7 @@ public class InstanceToInvocationVisitor extends ASTVisitor
 					varDeclToMethodDecl.addChild( methodDeclToVarDel );
 
 					// VariableName found: run algorithm again
-					methodDeclaration.accept( getVariableVisitor( methodDeclToVarDel, newVariableName ) ); // recursive call
+					methodDeclaration.accept( getVariableVisitor( methodDeclToVarDel, newVariableName, VariableType.SIMPLE_NAME ) ); // recursive call
 					return false; // the variable name is unique. No need to keep checking
 				}
 				return true;
@@ -300,8 +352,20 @@ public class InstanceToInvocationVisitor extends ASTVisitor
 		};
 	}
 
-	public UsagesTreeNode getTreeRoot()
+	private enum VariableType
 	{
-		return treeRoot;
+		SIMPLE_NAME( SimpleName.class ), FIELD_ACCESS( FieldAccess.class ), QUALIFIED_NAME( QualifiedName.class );
+
+		Class type;
+
+		VariableType( Class type )
+		{
+			this.type = type;
+		}
+
+		public Class getType()
+		{
+			return type;
+		}
 	}
 }

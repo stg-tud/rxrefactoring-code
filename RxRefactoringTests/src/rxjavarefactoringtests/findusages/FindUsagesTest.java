@@ -59,7 +59,8 @@ public class FindUsagesTest extends AbstractJavaTest
 				"5-----> Variable: person2\n" +
 				"6------> Method declaration: Person#setPartner\n" +
 				"7-------> Variable: partner\n" +
-				"7-------> Variable: partner\n" +
+				"7-------> Field: this.partner\n" +
+				"7-------> Field: this.partner\n" +
 				"3---> Variable: referenceToB\n" +
 				"4----> Method declaration: Events#addChild\n" +
 				"5-----> Variable: person1\n" +
@@ -119,7 +120,8 @@ public class FindUsagesTest extends AbstractJavaTest
 				"5-----> Variable: person2\n" +
 				"6------> Method declaration: Person#setPartner\n" +
 				"7-------> Variable: partner\n" +
-				"7-------> Variable: partner\n" +
+				"7-------> Field: this.partner\n" +
+				"7-------> Field: this.partner\n" +
 				"3---> Variable: referenceToB\n" +
 				"4----> Method declaration: Events#addChild\n" +
 				"5-----> Variable: person1\n" +
@@ -159,7 +161,100 @@ public class FindUsagesTest extends AbstractJavaTest
 				"2--> Instance creation: Employee\n" +
 				"3---> Variable: employeeA\n" +
 				"4----> Method declaration: HumanResources#hireEmployee\n" +
-				"5-----> Variable: employeeA\n" +
+				"5-----> Variable: employee\n" +
+				"6------> Method invocation: setFirstDay\n" +
+				"6------> Method invocation: setDepartment\n" +
+				"4----> Method invocation: getBirthday";
+		assertEquals( expectedTree, visitor.getTreeRoot().toString() );
+
+	}
+
+	@Test
+	public void testFindUsages4() throws Exception
+	{
+		RxJavaRefactoringApp app = new RxJavaRefactoringApp();
+		app.refactorOnly( "Nothing!" );
+		app.start( null );
+
+		Map<String, ICompilationUnit> unitsMap = app.getCompilationUnitsMap();
+		Map<String, ICompilationUnit> filteredMap = getFilteredMap( unitsMap,
+				"findusages.EmployeeAppWithField1",
+				"findusages.Employee",
+				"findusages.Person" );
+
+		ICompilationUnit targetUnit = unitsMap.get( "findusages.EmployeeAppWithField1" );
+		CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( targetUnit, true );
+		InstanceToInvocationVisitor visitor = new InstanceToInvocationVisitor( filteredMap, "findusages.Person" );
+		cu.accept( visitor );
+
+		String expectedTree = "0> Project\n" +
+				"1-> Type: EmployeeAppWithField1\n" +
+				"2--> Instance creation: Employee\n" +
+				"3---> Variable: employeeA\n" +
+				"4----> Method declaration: HumanResources#hireEmployee\n" +
+				"5-----> Variable: employee\n" +
+				"6------> Method invocation: setFirstDay\n" +
+				"6------> Method invocation: setDepartment\n" +
+				"4----> Method invocation: getBirthday";
+		assertEquals( expectedTree, visitor.getTreeRoot().toString() );
+
+	}
+
+	@Test
+	public void testFindUsages5() throws Exception
+	{
+		RxJavaRefactoringApp app = new RxJavaRefactoringApp();
+		app.refactorOnly( "Nothing!" );
+		app.start( null );
+
+		Map<String, ICompilationUnit> unitsMap = app.getCompilationUnitsMap();
+		Map<String, ICompilationUnit> filteredMap = getFilteredMap( unitsMap,
+				"findusages.EmployeeAppWithField2",
+				"findusages.Employee",
+				"findusages.Person" );
+
+		ICompilationUnit targetUnit = unitsMap.get( "findusages.EmployeeAppWithField2" );
+		CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( targetUnit, true );
+		InstanceToInvocationVisitor visitor = new InstanceToInvocationVisitor( filteredMap, "findusages.Person" );
+		cu.accept( visitor );
+
+		String expectedTree = "0> Project\n" +
+				"1-> Type: EmployeeAppWithField2\n" +
+				"2--> Instance creation: Employee\n" +
+				"3---> Field: this.employeeA\n" +
+				"4----> Method declaration: HumanResources#hireEmployee\n" +
+				"5-----> Variable: employee\n" +
+				"6------> Method invocation: setFirstDay\n" +
+				"6------> Method invocation: setDepartment\n" +
+				"4----> Method invocation: getBirthday";
+		assertEquals( expectedTree, visitor.getTreeRoot().toString() );
+
+	}
+
+	@Test
+	public void testFindUsages6() throws Exception
+	{
+		RxJavaRefactoringApp app = new RxJavaRefactoringApp();
+		app.refactorOnly( "Nothing!" );
+		app.start( null );
+
+		Map<String, ICompilationUnit> unitsMap = app.getCompilationUnitsMap();
+		Map<String, ICompilationUnit> filteredMap = getFilteredMap( unitsMap,
+				"findusages.EmployeeAppWithField3",
+				"findusages.Employee",
+				"findusages.Person" );
+
+		ICompilationUnit targetUnit = unitsMap.get( "findusages.EmployeeAppWithField3" );
+		CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( targetUnit, true );
+		InstanceToInvocationVisitor visitor = new InstanceToInvocationVisitor( filteredMap, "findusages.Person" );
+		cu.accept( visitor );
+
+		String expectedTree = "0> Project\n" +
+				"1-> Type: EmployeeAppWithField3\n" +
+				"2--> Instance creation: Employee\n" +
+				"3---> Field: this.employeeA\n" +
+				"4----> Method declaration: HumanResources#hireEmployee\n" +
+				"5-----> Variable: employee\n" +
 				"6------> Method invocation: setFirstDay\n" +
 				"6------> Method invocation: setDepartment\n" +
 				"4----> Method invocation: getBirthday";

@@ -112,17 +112,19 @@ public class UsagesTreeNode<CurrentNode extends ASTNode>
 			if ( leftHandSide instanceof SimpleName )
 			{
 				varName = ( (SimpleName) leftHandSide ).getIdentifier();
+				return "Variable: " + varName;
 			}
 			else if ( leftHandSide instanceof FieldAccess )
 			{
-				varName = ( (FieldAccess) leftHandSide ).getName().toString();
+				varName = "this." + ( (FieldAccess) leftHandSide ).getName().toString();
+				return "Field: " + varName;
 			}
-			else
+			else if ( leftHandSide instanceof QualifiedName )
 			{
-				varName = ( (QualifiedName) leftHandSide ).getName().toString();
+				varName = ( (QualifiedName) leftHandSide ).getQualifier().toString();
+				varName += "." + ( (QualifiedName) leftHandSide ).getName().toString();
+				return "Qualified Name: " + varName;
 			}
-
-			return "Variable: " + varName;
 		}
 
 		if ( node.node instanceof MethodDeclaration )

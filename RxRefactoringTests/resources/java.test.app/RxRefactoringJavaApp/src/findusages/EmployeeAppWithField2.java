@@ -7,11 +7,13 @@ import java.util.Date;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/26/2016
  */
-public class EmployeeApp
+public class EmployeeAppWithField2
 {
+	private Employee employeeA;
+	
 	public void main()
 	{
-		Employee employeeA = new Employee( "EmployeeA" );
+		this.employeeA = new Employee( "EmployeeA" );
 		HumanResources humanResources = new HumanResources();
 		humanResources.hireEmployee( employeeA, "Administration" );
 
