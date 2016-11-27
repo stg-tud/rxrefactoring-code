@@ -2,9 +2,10 @@ package rxjavarefactoringtests.findusages;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;
@@ -14,10 +15,10 @@ import org.junit.Test;
 
 import framework.AbstractJavaTest;
 import rxjavarefactoring.RxJavaRefactoringApp;
-import rxjavarefactoring.analyzers.FindUsagesVisitor;
+import rxjavarefactoring.analyzers.InstanceToInvocationVisitor;
 
 /**
- * Description:<br>
+ * Description: Tests {@link InstanceToInvocationVisitor}.<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/16/2016
  */
@@ -26,21 +27,18 @@ public class FindUsagesTest extends AbstractJavaTest
 	@Test
 	public void testFindUsages1() throws Exception
 	{
-		String targetFile = "PersonApp.java";
-		List<String> targetFiles = Arrays.asList(
-				"PersonApp.java",
-				"Person.java" );
-
 		RxJavaRefactoringApp app = new RxJavaRefactoringApp();
 		app.refactorOnly( "Nothing!" );
 		app.start( null );
 
-		ICompilationUnit[] allUnits = app.getUnits();
-		List<ICompilationUnit> relevantUnits = getRelevantUnits( allUnits, targetFiles );
-		ICompilationUnit unit = getTargetUnit( targetFile, relevantUnits );
+		Map<String, ICompilationUnit> unitsMap = app.getCompilationUnitsMap();
+		Map<String, ICompilationUnit> filteredMap = getFilteredMap( unitsMap,
+				"findusages.PersonApp",
+				"findusages.Person" );
 
-		CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( unit, true );
-		FindUsagesVisitor visitor = new FindUsagesVisitor( relevantUnits );
+		ICompilationUnit targetUnit = unitsMap.get( "findusages.PersonApp" );
+		CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( targetUnit, true );
+		InstanceToInvocationVisitor visitor = new InstanceToInvocationVisitor( filteredMap );
 		cu.accept( visitor );
 
 		String expectedTree = "0> Project\n" +
@@ -60,6 +58,7 @@ public class FindUsagesTest extends AbstractJavaTest
 				"4----> Method declaration: Events#marryCouple\n" +
 				"5-----> Variable: person2\n" +
 				"6------> Method declaration: Person#setPartner\n" +
+				"7-------> Variable: partner\n" +
 				"7-------> Variable: partner\n" +
 				"3---> Variable: referenceToB\n" +
 				"4----> Method declaration: Events#addChild\n" +
@@ -88,22 +87,18 @@ public class FindUsagesTest extends AbstractJavaTest
 	@Test
 	public void testFindUsages2() throws Exception
 	{
-		String targetFile = "PersonApp.java";
-		List<String> targetFiles = Arrays.asList(
-				"PersonApp.java",
-				"Person.java" );
-
 		RxJavaRefactoringApp app = new RxJavaRefactoringApp();
 		app.refactorOnly( "Nothing!" );
 		app.start( null );
 
-		ICompilationUnit[] allUnits = app.getUnits();
-		List<ICompilationUnit> relevantUnits = getRelevantUnits( allUnits, targetFiles );
-		ICompilationUnit unit = getTargetUnit( targetFile, relevantUnits );
+		Map<String, ICompilationUnit> unitsMap = app.getCompilationUnitsMap();
+		Map<String, ICompilationUnit> filteredMap = getFilteredMap( unitsMap,
+				"findusages.PersonApp",
+				"findusages.Person" );
 
-		CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( unit, true );
-		FindUsagesVisitor visitor = new FindUsagesVisitor( relevantUnits );
-		visitor.setTargetBinaryNames( Arrays.asList( "findusages.Person" ) );
+		ICompilationUnit targetUnit = unitsMap.get( "findusages.PersonApp" );
+		CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( targetUnit, true );
+		InstanceToInvocationVisitor visitor = new InstanceToInvocationVisitor( filteredMap, "findusages.Person" );
 		cu.accept( visitor );
 
 		String expectedTree = "0> Project\n" +
@@ -124,6 +119,7 @@ public class FindUsagesTest extends AbstractJavaTest
 				"5-----> Variable: person2\n" +
 				"6------> Method declaration: Person#setPartner\n" +
 				"7-------> Variable: partner\n" +
+				"7-------> Variable: partner\n" +
 				"3---> Variable: referenceToB\n" +
 				"4----> Method declaration: Events#addChild\n" +
 				"5-----> Variable: person1\n" +
@@ -143,23 +139,19 @@ public class FindUsagesTest extends AbstractJavaTest
 	@Test
 	public void testFindUsages3() throws Exception
 	{
-		String targetFile = "EmployeeApp.java";
-		List<String> targetFiles = Arrays.asList(
-				"EmployeeApp.java",
-				"Employee.java",
-				"Person.java" );
-
 		RxJavaRefactoringApp app = new RxJavaRefactoringApp();
 		app.refactorOnly( "Nothing!" );
 		app.start( null );
 
-		ICompilationUnit[] allUnits = app.getUnits();
-		List<ICompilationUnit> relevantUnits = getRelevantUnits( allUnits, targetFiles );
-		ICompilationUnit unit = getTargetUnit( targetFile, relevantUnits );
+		Map<String, ICompilationUnit> unitsMap = app.getCompilationUnitsMap();
+		Map<String, ICompilationUnit> filteredMap = getFilteredMap( unitsMap,
+				"findusages.EmployeeApp",
+				"findusages.Employee",
+				"findusages.Person" );
 
-		CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( unit, true );
-		FindUsagesVisitor visitor = new FindUsagesVisitor( relevantUnits );
-		visitor.setTargetBinaryNames( Arrays.asList( "findusages.Person" ) );
+		ICompilationUnit targetUnit = unitsMap.get( "findusages.EmployeeApp" );
+		CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( targetUnit, true );
+		InstanceToInvocationVisitor visitor = new InstanceToInvocationVisitor( filteredMap, "findusages.Person" );
 		cu.accept( visitor );
 
 		String expectedTree = "0> Project\n" +
@@ -175,30 +167,18 @@ public class FindUsagesTest extends AbstractJavaTest
 
 	}
 
-	private ICompilationUnit getTargetUnit( String targetFile, List<ICompilationUnit> relevantUnits )
+	private Map<String, ICompilationUnit> getFilteredMap( Map<String, ICompilationUnit> unitMap, String... targetUnits )
 	{
-		for ( ICompilationUnit unit : relevantUnits )
+		Map<String, ICompilationUnit> resultMap = new HashMap<>();
+		List<String> targetList = Arrays.asList( targetUnits );
+		for ( String unitName : unitMap.keySet() )
 		{
-			if ( unit.getElementName().equals( targetFile ) )
+			if ( targetList.contains( unitName ) )
 			{
-				return unit;
+				resultMap.put( unitName, unitMap.get( unitName ) );
 			}
 		}
-		return null;
-	}
-
-	private List<ICompilationUnit> getRelevantUnits( ICompilationUnit[] allUnits, List<String> targetFiles )
-	{
-		List<ICompilationUnit> relevantUnits;
-		relevantUnits = new ArrayList<>();
-		for ( ICompilationUnit unit : allUnits )
-		{
-			if ( targetFiles.contains( unit.getElementName() ) )
-			{
-				relevantUnits.add( unit );
-			}
-		}
-		return relevantUnits;
+		return resultMap;
 	}
 
 }

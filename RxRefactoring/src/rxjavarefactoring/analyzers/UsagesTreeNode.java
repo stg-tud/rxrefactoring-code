@@ -105,6 +105,26 @@ public class UsagesTreeNode<CurrentNode extends ASTNode>
 			return "Variable: " + varDecl;
 		}
 
+		if ( node.node instanceof Assignment )
+		{
+			Expression leftHandSide = ( (Assignment) node.node ).getLeftHandSide();
+			String varName;
+			if ( leftHandSide instanceof SimpleName )
+			{
+				varName = ( (SimpleName) leftHandSide ).getIdentifier();
+			}
+			else if ( leftHandSide instanceof FieldAccess )
+			{
+				varName = ( (FieldAccess) leftHandSide ).getName().toString();
+			}
+			else
+			{
+				varName = ( (QualifiedName) leftHandSide ).getName().toString();
+			}
+
+			return "Variable: " + varName;
+		}
+
 		if ( node.node instanceof MethodDeclaration )
 		{
 			MethodDeclaration methodDeclaration = (MethodDeclaration) node.node;

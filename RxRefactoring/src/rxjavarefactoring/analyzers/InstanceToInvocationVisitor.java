@@ -1,6 +1,8 @@
 package rxjavarefactoring.analyzers;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
@@ -9,7 +11,7 @@ import org.eclipse.jdt.internal.corext.refactoring.util.RefactoringASTParser;
 import rxjavarefactoring.framework.utils.ASTUtil;
 
 /**
- * Description: This class construcs a tree containing the links
+ * Description: This class builds a tree containing the links
  * between {@link MethodInvocation} and the object ({@link ClassInstanceCreation})
  * where the invocation is done.<br>
  *
@@ -29,25 +31,34 @@ import rxjavarefactoring.framework.utils.ASTUtil;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/25/2016
  */
-public class FindUsagesVisitor extends ASTVisitor
+public class InstanceToInvocationVisitor extends ASTVisitor
 {
 
 	private UsagesTreeNode treeRoot;
-	private List<ICompilationUnit> compilationUnits;
+	private Map<String, ICompilationUnit> compilationUnits;
 	private List<String> targetBinaryNames;
 
-	public FindUsagesVisitor( List<ICompilationUnit> compilationUnits )
+	public InstanceToInvocationVisitor( Map<String, ICompilationUnit> compilationUnits )
+	{
+		setupVisitor( compilationUnits );
+	}
+
+	public InstanceToInvocationVisitor( Map<String, ICompilationUnit> compilationUnits, String... targetBinaryNames )
+	{
+		setupVisitor( compilationUnits );
+		setTargetBinaryNames( targetBinaryNames );
+	}
+
+	private void setupVisitor( Map<String, ICompilationUnit> compilationUnits )
 	{
 		this.compilationUnits = compilationUnits;
 		this.treeRoot = new UsagesTreeNode<>( null );
 	}
 
-	public void setTargetBinaryNames( List<String> targetBinaryNames )
+	public void setTargetBinaryNames( String... targetBinaryNames )
 	{
-		this.targetBinaryNames = targetBinaryNames;
+		this.targetBinaryNames = Arrays.asList( targetBinaryNames );
 	}
-
-	// TODO: TypeDeclaration
 
 	@Override
 	public boolean visit( ClassInstanceCreation classInstanceCreation )
@@ -79,7 +90,8 @@ public class FindUsagesVisitor extends ASTVisitor
 
 			// Find usages of the class instance creation based on the name "variableName"
 			Block parentBlock = ASTUtil.findParent( classInstanceCreation, Block.class );
-			parentBlock.accept( getVariableVisitor( instanceToVarDecl, varDecl ) );
+			String variableName = varDecl.resolveBinding().getName();
+			parentBlock.accept( getVariableVisitor( instanceToVarDecl, variableName ) );
 		}
 		else // new Foo();
 		{
@@ -113,13 +125,12 @@ public class FindUsagesVisitor extends ASTVisitor
 	 * 
 	 * @param nodeToVarDecl
 	 *            node where the children found will be added
-	 * @param varDecl
-	 *            variable declaration of the target object
+	 * @param variableName
+	 *            name of the analyzed variable
 	 * @return a visitor that updates the {@link this#treeRoot}
 	 */
-	private ASTVisitor getVariableVisitor( final UsagesTreeNode nodeToVarDecl, final VariableDeclaration varDecl )
+	private ASTVisitor getVariableVisitor( final UsagesTreeNode nodeToVarDecl, final String variableName )
 	{
-		final String variableName = varDecl.resolveBinding().getName();
 		return new ASTVisitor()
 		{
 			@Override
@@ -155,7 +166,7 @@ public class FindUsagesVisitor extends ASTVisitor
 							ITypeBinding declaringClass = methodInvocation.resolveMethodBinding().getDeclaringClass();
 
 							// Searching the declaring class
-							for ( ICompilationUnit icu : compilationUnits )
+							for ( ICompilationUnit icu : compilationUnits.values() )
 							{
 								CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( icu, true );
 								cu.accept( getTypeDeclVisitor( nodeToVarDecl, declaringClass, cu, methodInvocation, argumentIndex ) );
@@ -179,11 +190,34 @@ public class FindUsagesVisitor extends ASTVisitor
 						UsagesTreeNode<VariableDeclarationFragment> varDeclToVarDeclFrag = new UsagesTreeNode<>( varDeclFrag );
 						nodeToVarDecl.getPredecessor().addChild( varDeclToVarDeclFrag );
 						Block parentBlock = ASTUtil.findParent( varDeclFrag, Block.class );
-						parentBlock.accept( getVariableVisitor( varDeclToVarDeclFrag, varDeclFrag ) );
+						String newVariableName = varDeclFrag.resolveBinding().getName();
+						parentBlock.accept( getVariableVisitor( varDeclToVarDeclFrag, newVariableName ) );
 					}
 				}
+				return true;
+			}
 
-				// Case 3: variable name is assign to another object
+			@Override
+			public boolean visit( Assignment assignment )
+			{
+				Expression rightHandSide = assignment.getRightHandSide();
+				if ( rightHandSide instanceof SimpleName )
+				{
+					if ( variableName.equals( ( (SimpleName) rightHandSide ).getIdentifier() ) )
+					{
+						// Create Link VariableDeclaration -> VariableDeclarationFragment
+						// Result: Root -> TypeDeclaration -> ClassInstanceCreation -> VariableDeclaration -> Assignment
+						UsagesTreeNode<Assignment> varDeclToAssigment = new UsagesTreeNode<>( assignment );
+						nodeToVarDecl.getPredecessor().addChild( varDeclToAssigment );
+						Expression leftHandSide = assignment.getLeftHandSide();
+						if ( leftHandSide instanceof SimpleName )
+						{
+							Block parentBlock = ASTUtil.findParent( assignment, Block.class );
+							String newVariableName = ( (SimpleName) leftHandSide ).getIdentifier();
+							parentBlock.accept( getVariableVisitor( varDeclToAssigment, newVariableName ) );
+						}
+					}
+				}
 				return true;
 			}
 		};
@@ -258,7 +292,7 @@ public class FindUsagesVisitor extends ASTVisitor
 					varDeclToMethodDecl.addChild( methodDeclToVarDel );
 
 					// VariableName found: run algorithm again
-					methodDeclaration.accept( getVariableVisitor( methodDeclToVarDel, singleVar ) ); // recursive call
+					methodDeclaration.accept( getVariableVisitor( methodDeclToVarDel, newVariableName ) ); // recursive call
 					return false; // the variable name is unique. No need to keep checking
 				}
 				return true;

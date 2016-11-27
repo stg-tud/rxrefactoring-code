@@ -44,17 +44,14 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 	}
 
 	@Override
-	public void refactorCompilationUnits( ICompilationUnit[] units )
+	public void refactorCompilationUnits( Map<String, ICompilationUnit> units )
 	{
-		originalCompilationUnitVsNewSourceCodeMap = new HashMap<>();
-
-		RxLogger.info( this, "METHOD=refactorCompilationUnits - # units: " + units.length );
+		RxLogger.info( this, "METHOD=refactorCompilationUnits - # units: " + units.size() );
 		List<AbstractCollector> collectors = createCollectors();
 
 		Observable
-				.from( units )
-				// Filter using the boolean formula "runningForTest ->
-				// validateName"
+				.from( units.values() )
+				// Filter using the boolean formula "runningForTest -> validateName"
 				.filter( unit -> !runningForTests || validateUnitName( unit ) )
 				.doOnNext( unit -> processUnit( unit, collectors ) )
 				.doOnCompleted( () -> refactorUnits( collectors ) )

@@ -1,10 +1,7 @@
 package rxjavarefactoring.framework.refactoring;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -29,8 +26,15 @@ import rxjavarefactoring.framework.utils.RxLogger;
  */
 public abstract class AbstractRxJavaRefactoringApp implements IApplication
 {
+	private static final String PACKAGE_SEPARATOR = ".";
 	protected Map<ICompilationUnit, String> originalCompilationUnitVsNewSourceCodeMap;
-	ICompilationUnit[] units;
+	protected Map<String, ICompilationUnit> compilationUnitsMap;
+
+	public AbstractRxJavaRefactoringApp()
+	{
+		originalCompilationUnitVsNewSourceCodeMap = new HashMap<>();
+		compilationUnitsMap = new HashMap<>();
+	}
 
 	@Override
 	public Object start( IApplicationContext iApplicationContext ) throws Exception
@@ -64,14 +68,18 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 		return originalCompilationUnitVsNewSourceCodeMap;
 	}
 
-	protected abstract void refactorCompilationUnits( ICompilationUnit[] units );
+	/**
+	 * @return Map containing the binary name of a compilation unit and the
+	 *         compilation unit object.
+	 */
+	public Map<String, ICompilationUnit> getCompilationUnitsMap()
+	{
+		return compilationUnitsMap;
+	}
+
+	protected abstract void refactorCompilationUnits( Map<String, ICompilationUnit> units );
 
 	protected abstract String getDependenciesDirectoryName();
-
-	public ICompilationUnit[] getUnits()
-	{
-		return units;
-	}
 
 	// ### Private Methods ###
 
@@ -83,10 +91,8 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 			RxLogger.info( this, "METHOD=refactorProject : PROJECT ----> " + project.getName() );
 			final String location = project.getLocation().toPortableString();
 			updateClassPath( location + getDependenciesDirectoryName(), javaProject );
-			ICompilationUnit[] units = getCompilationUnits( javaProject );
-			this.units = units;
-			refactorCompilationUnits( units );
-
+			compilationUnitsMap = getCompilationUnits( javaProject );
+			refactorCompilationUnits( compilationUnitsMap );
 		}
 		catch ( JavaModelException e )
 		{
@@ -116,7 +122,7 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 		}
 	}
 
-	private ICompilationUnit[] getCompilationUnits( IJavaProject javaProject ) throws JavaModelException
+	private Map<String, ICompilationUnit> getCompilationUnits( IJavaProject javaProject ) throws JavaModelException
 	{
 		IPackageFragmentRoot[] roots = javaProject.getAllPackageFragmentRoots();
 		IPackageFragment[] packages = getPackageFragmentsInRoots( roots );
@@ -151,16 +157,19 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 		return fragments;
 	}
 
-	private ICompilationUnit[] getCompilationUnitInPackages( IPackageFragment[] packages ) throws JavaModelException
+	private Map<String, ICompilationUnit> getCompilationUnitInPackages( IPackageFragment[] packages ) throws JavaModelException
 	{
-		ArrayList<ICompilationUnit> frags = new ArrayList<>();
+		Map<String, ICompilationUnit> cUnitsMap = new HashMap<>();
 		for ( IPackageFragment packageFragment : packages )
 		{
 			ICompilationUnit[] units = packageFragment.getCompilationUnits();
-			frags.addAll( Arrays.asList( units ) );
+			for ( ICompilationUnit unit : units )
+			{
+				String binaryName = packageFragment.getElementName() + PACKAGE_SEPARATOR + unit.getElementName();
+				binaryName = binaryName.substring( 0, binaryName.lastIndexOf( ".java" ) );
+				cUnitsMap.put( binaryName, unit );
+			}
 		}
-		ICompilationUnit[] fragments = new ICompilationUnit[ frags.size() ];
-		frags.toArray( fragments );
-		return fragments;
+		return cUnitsMap;
 	}
 }

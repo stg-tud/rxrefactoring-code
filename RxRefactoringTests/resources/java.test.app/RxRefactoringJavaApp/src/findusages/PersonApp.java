@@ -14,7 +14,8 @@ public class PersonApp
 		Person personA = new Person("A");
 		Person personB = new Person("B");
 
-		Person referenceToB = personB;
+		Person referenceToB;
+		referenceToB = personB;
 
 		Events events = new Events();
 
