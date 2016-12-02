@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import complete_swingworker.RxSwingWorkerExample;
-import complete_swingworker.wrapper_class.SwingWorkerSubscriber;
+import complete_swingworker.helper_classes.SwingWorkerSubscriber;
 import org.junit.Test;
 
 /**
@@ -78,7 +78,7 @@ public class RxSwingWorkerExampleTest
 
 	}
 
-	@Test( expected = RuntimeException.class )
+	@Test( expected = TimeoutException.class )
 	public void testGetWithTimeoutFromSwingWorker() throws InterruptedException, ExecutionException, TimeoutException
 	{
 		printTestName("testGetWithTimeoutFromSwingWorker");
@@ -171,7 +171,7 @@ public class RxSwingWorkerExampleTest
 			{
 				if ( "state".equals( evt.getPropertyName() ) )
 				{
-					if ( SwingWorkerSubscriber.STATE_STARTED == (int) evt.getNewValue()  )
+					if ( SwingWorkerSubscriber.State.STARTED == evt.getNewValue()  )
 					{
 						printMessage( "Show progress bar" );
 					}

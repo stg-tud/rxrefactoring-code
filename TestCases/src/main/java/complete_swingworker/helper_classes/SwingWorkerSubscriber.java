@@ -1,11 +1,13 @@
-package complete_swingworker.wrapper_class;
+package complete_swingworker.helper_classes;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import rx.Observable;
 import rx.Subscriber;
 
 /**
@@ -15,30 +17,35 @@ import rx.Subscriber;
  */
 public abstract class SwingWorkerSubscriber<ResultType, ProcessType> extends Subscriber<SwingWorkerSubscriberDto<ResultType, ProcessType>>
 {
-	public static final int STATE_PENDING = 0;
-	public static final int STATE_STARTED = 1;
-	public static final int STATE_DONE = 2;
+	public enum State
+	{
+		PENDING, STARTED, DONE
+	}
 
 	private PropertyChangeSupport propertyChangeSupport;
 	private AtomicInteger progress;
 	private AtomicBoolean cancelled;
 	private AtomicBoolean done;
-	private AtomicInteger currentState;
+	private State currentState;
 	private ResultType asyncResult;
 
 	public SwingWorkerSubscriber()
 	{
 		this.propertyChangeSupport = new PropertyChangeSupport( this );
 		this.progress = new AtomicInteger( 0 );
-		this.cancelled = new AtomicBoolean();
+		this.cancelled = new AtomicBoolean( false );
 		this.done = new AtomicBoolean();
-		this.currentState = new AtomicInteger( STATE_PENDING );
+		this.currentState = State.PENDING;
 	}
+
+	protected abstract void done( ResultType asyncResult );
+
+	protected abstract void process( List<ProcessType> dto );
 
 	@Override
 	public void onStart()
 	{
-		setState( STATE_STARTED );
+		setState( State.STARTED );
 	}
 
 	@Override
@@ -54,16 +61,24 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType> extends Sub
 	public void onCompleted()
 	{
 		done( asyncResult );
-		setState( STATE_DONE );
+		setState( State.DONE );
 	}
 
-	protected abstract void done( ResultType asyncResult );
-
-	protected abstract void process( List<ProcessType> dto );
-
-	public int getState()
+	public ResultType getResult(Observable<SwingWorkerSubscriberDto<ResultType, ProcessType>> observable)
 	{
-		return this.currentState.get();
+		observable.toBlocking().subscribe(this);
+		return asyncResult;
+	}
+
+	public ResultType getResult(Observable<SwingWorkerSubscriberDto<ResultType, ProcessType>> observable, long timeout, TimeUnit unit)
+	{
+		observable.timeout( timeout, unit ).toBlocking().subscribe(this);
+		return asyncResult;
+	}
+
+	public State getState()
+	{
+		return this.currentState;
 	}
 
 	public boolean isDone()
@@ -81,9 +96,9 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType> extends Sub
 		return this.cancelled.get();
 	}
 
-	public void setCancelled( boolean cancelled )
+	public void cancel()
 	{
-		this.cancelled.set( cancelled );
+		this.cancelled.set( true );
 	}
 
 	public int getProgress()
@@ -138,13 +153,13 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType> extends Sub
 		}
 	}
 
-	public void setState( int state )
+	public void setState( State state )
 	{
 		synchronized ( this )
 		{
-			int oldState = this.currentState.get();
+			State oldState = this.currentState;
 			propertyChangeSupport.firePropertyChange( "state", oldState, state );
-			this.currentState.set( state );
+			this.currentState = state;
 		}
 	}
 }

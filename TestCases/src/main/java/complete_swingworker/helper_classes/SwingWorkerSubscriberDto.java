@@ -1,4 +1,4 @@
-package complete_swingworker.wrapper_class;
+package complete_swingworker.helper_classes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,10 +31,6 @@ public class SwingWorkerSubscriberDto<ReturnType, ProcessType>
 
     public SwingWorkerSubscriberDto<ReturnType, ProcessType>  setResult(ReturnType asyncResult )
     {
-//        synchronized ( this )
-//        {
-//            this.chunks.clear();
-//        }
         this.asyncResult = asyncResult;
         return this;
     }
