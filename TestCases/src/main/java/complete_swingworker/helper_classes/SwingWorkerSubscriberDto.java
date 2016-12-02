@@ -14,13 +14,13 @@ public class SwingWorkerSubscriberDto<ReturnType, ProcessType>
     private ReturnType asyncResult;
     private List<ProcessType> chunks;
 
-    public SwingWorkerSubscriberDto()
+    SwingWorkerSubscriberDto()
     {
         this.chunks = new ArrayList<ProcessType>();
         asyncResult = null;
     }
 
-    public SwingWorkerSubscriberDto<ReturnType, ProcessType> send(ProcessType... chunks )
+    SwingWorkerSubscriberDto<ReturnType, ProcessType> send(ProcessType... chunks )
     {
         synchronized ( this )
         {
@@ -29,13 +29,13 @@ public class SwingWorkerSubscriberDto<ReturnType, ProcessType>
         return this;
     }
 
-    public SwingWorkerSubscriberDto<ReturnType, ProcessType>  setResult(ReturnType asyncResult )
+    SwingWorkerSubscriberDto<ReturnType, ProcessType>  setResult(ReturnType asyncResult )
     {
         this.asyncResult = asyncResult;
         return this;
     }
 
-    public List<ProcessType> getChunks()
+    List<ProcessType> getChunks()
     {
         synchronized ( this )
         {
@@ -45,7 +45,7 @@ public class SwingWorkerSubscriberDto<ReturnType, ProcessType>
         }
     }
 
-    public void removeChunks(List<ProcessType> chunks)
+    void removeChunks(List<ProcessType> chunks)
     {
         synchronized ( this )
         {
@@ -53,7 +53,7 @@ public class SwingWorkerSubscriberDto<ReturnType, ProcessType>
         }
     }
 
-    public ReturnType getResult()
+    ReturnType getResult()
     {
         synchronized ( this )
         {

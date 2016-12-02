@@ -78,7 +78,7 @@ public class RxSwingWorkerExampleTest
 
 	}
 
-	@Test( expected = TimeoutException.class )
+	@Test
 	public void testGetWithTimeoutFromSwingWorker() throws InterruptedException, ExecutionException, TimeoutException
 	{
 		printTestName("testGetWithTimeoutFromSwingWorker");
@@ -156,6 +156,7 @@ public class RxSwingWorkerExampleTest
 		helperClass.executeSwingWorker();
 		Thread.sleep( 4000L );
 		helperClass.removePropertyChangeListerFromSwingWorker( propertyChangeListener );
+		System.out.println("Progress Property removed");
 
 		Thread.sleep( AMOUT_OF_WORK * 2000L + 500L );
 	}

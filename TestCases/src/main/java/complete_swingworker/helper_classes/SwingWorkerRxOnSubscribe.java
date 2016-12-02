@@ -8,7 +8,7 @@ import rx.Subscriber;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/02/2016
  */
-public abstract class SwingWorkerRxObservable<ReturnType, ProcessType> implements Observable.OnSubscribe<SwingWorkerSubscriberDto<ReturnType, ProcessType>>
+public abstract class SwingWorkerRxOnSubscribe<ReturnType, ProcessType> implements Observable.OnSubscribe<SwingWorkerSubscriberDto<ReturnType, ProcessType>>
 {
     private Subscriber<? super SwingWorkerSubscriberDto<ReturnType, ProcessType>> observer;
     private SwingWorkerSubscriberDto<ReturnType, ProcessType> dto;

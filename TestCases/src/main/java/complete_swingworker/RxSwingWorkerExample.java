@@ -7,13 +7,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import complete_swingworker.helper_classes.SwingWorkerRxObservable;
+import complete_swingworker.helper_classes.SwingWorkerRxOnSubscribe;
 import complete_swingworker.helper_classes.SwingWorkerSubscriber;
 import complete_swingworker.helper_classes.SwingWorkerSubscriberDto;
 import rx.Observable;
-import rx.Subscription;
-import rx.schedulers.Schedulers;
-import rx.schedulers.SwingScheduler;
+import rx.exceptions.Exceptions;
 
 /**
  * Description: <br>
@@ -23,14 +21,29 @@ import rx.schedulers.SwingScheduler;
 public class RxSwingWorkerExample
 {
 	private SwingWorkerSubscriber<String, Integer> observer;
-	private Observable<SwingWorkerSubscriberDto<String, Integer>> observable;
-	private Subscription subscription;
 
 	public RxSwingWorkerExample( long timeout, int amountOfWork )
 	{
-		observer = new SwingWorkerSubscriber<String, Integer>()
+		Observable<SwingWorkerSubscriberDto<String, Integer>> observable = Observable.create( new SwingWorkerRxOnSubscribe<String, Integer>()
 		{
 			@Override
+			protected String doInBackground() throws Exception
+			{
+				printMessage( "Entering doInBackground() method" );
+				for ( int i = 0; i < amountOfWork * 2; i = i + 2 )
+				{
+					Thread.sleep( 2000L );
+					publish( i, i + 1 );
+				}
+				printMessage( "doInBackground() finished successfully" );
+				return "Async Result";
+			}
+
+		} );
+
+		observer = new SwingWorkerSubscriber<String, Integer>( observable )
+		{
+            @Override
 			protected void process( List<Integer> chunks )
 			{
 				for ( Integer number : chunks )
@@ -48,32 +61,15 @@ public class RxSwingWorkerExample
 				printMessage( "doInBackground() result = " + result );
 			}
 
-			@Override
-			public void onError( Throwable throwable )
-			{
-				throwable.printStackTrace();
-			}
-		};
-
-		observable = Observable.create( new SwingWorkerRxObservable<String, Integer>()
-		{
-			@Override
-			protected String doInBackground() throws Exception
-			{
-				printMessage( "Entering doInBackground() method" );
-				for ( int i = 0; i < amountOfWork * 2; i = i + 2 )
-				{
-					Thread.sleep( 2000L );
-					publish( i, i + 1 );
-				}
-				printMessage( "doInBackground() finished successfully" );
-				return "Async Result";
-			}
-
-		} ).observeOn( SwingScheduler.getInstance() );
+            @Override
+            public void onError(Throwable throwable)
+            {
+                throwable.printStackTrace();
+            }
+        };
 	}
 
-	private static void printMessage( String message )
+	private void printMessage( String message )
 	{
 		System.out.println( "[" + Thread.currentThread().getName() + "]" + " - " + message );
 	}
@@ -102,26 +98,17 @@ public class RxSwingWorkerExample
 	// WORKFLOW
 	public boolean cancelSwingWorker( boolean mayInterruptIfRunning )
 	{
-		if ( this.subscription != null && mayInterruptIfRunning )
-		{
-			this.subscription.unsubscribe();
-			observer.cancel();
-			return true;
-		}
-		else
-		{
-			return false;
-		}
+		return observer.cancel( mayInterruptIfRunning );
 	}
 
-	public void executeSwingWorker()
-	{
-		subscription = observable.subscribeOn( Schedulers.computation() ).subscribe( observer );
+	public void executeSwingWorker() throws InterruptedException
+    {
+		this.observer.execute();
 	}
 
 	public void runSwingWorker()
 	{
-		subscription = observable.subscribeOn( Schedulers.immediate() ).subscribe( observer );
+		this.observer.run();
 	}
 
 	public int getSwingWorkerProgress()
@@ -147,11 +134,11 @@ public class RxSwingWorkerExample
 	// GET RESULT
 	public String getBlockingFromSwingWorker() throws ExecutionException, InterruptedException
 	{
-		return observer.getResult( observable );
+		return observer.get( );
 	}
 
 	public String getBlockingFromSwingWorker( long timeout, TimeUnit unit ) throws InterruptedException, ExecutionException, TimeoutException
 	{
-		return observer.getResult( observable, timeout, unit );
+		return observer.get(timeout, unit );
 	}
 }
