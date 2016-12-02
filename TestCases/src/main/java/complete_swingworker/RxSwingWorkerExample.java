@@ -11,7 +11,6 @@ import complete_swingworker.helper_classes.SwingWorkerRxOnSubscribe;
 import complete_swingworker.helper_classes.SwingWorkerSubscriber;
 import complete_swingworker.helper_classes.SwingWorkerSubscriberDto;
 import rx.Observable;
-import rx.exceptions.Exceptions;
 
 /**
  * Description: <br>

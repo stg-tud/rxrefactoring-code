@@ -17,7 +17,6 @@ import rx.Subscription;
 import rx.exceptions.Exceptions;
 import rx.functions.Action1;
 import rx.functions.Func1;
-import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 import rx.schedulers.SwingScheduler;
 import rx.subjects.BehaviorSubject;
