@@ -1,25 +1,25 @@
 package rxswingworker;
 
+import javax.swing.*;
+
 import rx.Observable;
 import rx.Subscriber;
-
-import javax.swing.*;
 
 /**
  * Description: This class should be use to create an observable.
  * The class interacts with {@link SwingWorkerSubscriber} by using a
- * thread safe data transfer object {@link SwingWorkerSubscriberDto}<br>
+ * thread safe data transfer object {@link SwingWorkerDto}<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/02/2016
  */
-public abstract class SwingWorkerRxOnSubscribe<ReturnType, ProcessType> implements Observable.OnSubscribe<SwingWorkerSubscriberDto<ReturnType, ProcessType>>
+public abstract class SwingWorkerRxOnSubscribe<ReturnType, ProcessType> implements Observable.OnSubscribe<SwingWorkerDto<ReturnType, ProcessType>>
 {
-	private Subscriber<? super SwingWorkerSubscriberDto<ReturnType, ProcessType>> observer;
-	private SwingWorkerSubscriberDto<ReturnType, ProcessType> dto;
+	private Subscriber<? super SwingWorkerDto<ReturnType, ProcessType>> observer;
+	private SwingWorkerDto<ReturnType, ProcessType> dto;
 
 	/**
 	 * Manages the workflow of a SwingWorker by setting up the data
-	 * transfer object {@link SwingWorkerSubscriberDto<ReturnType, ProcessType>}
+	 * transfer object {@link SwingWorkerDto <ReturnType, ProcessType>}
 	 * that is used for sending progress, chunks of data and finally the async result
 	 * to the observer. This class should not be overridden by subclasses. Therefore
 	 * is is marked as {@link Deprecated}
@@ -29,17 +29,17 @@ public abstract class SwingWorkerRxOnSubscribe<ReturnType, ProcessType> implemen
 	 */
 	@Override
 	@Deprecated
-	public void call( Subscriber<? super SwingWorkerSubscriberDto<ReturnType, ProcessType>> observer )
+	public void call( Subscriber<? super SwingWorkerDto<ReturnType, ProcessType>> observer )
 	{
 		this.observer = observer;
 		try
 		{
 			if ( !this.observer.isUnsubscribed() )
 			{
-				this.dto = new SwingWorkerSubscriberDto<ReturnType, ProcessType>();
+				this.dto = new SwingWorkerDto<ReturnType, ProcessType>();
 				this.observer.onStart();
 				ReturnType asyncResult = doInBackground();
-				this.observer.onNext( dto.setResult( asyncResult ) );
+				this.observer.onNext( this.dto.setResult( asyncResult ) );
 				this.observer.onCompleted();
 			}
 		}

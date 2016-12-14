@@ -1,13 +1,13 @@
 package swingworker_rx;
 
-import rx.Observable;
-import rxswingworker.SwingWorkerRxOnSubscribe;
-import rxswingworker.SwingWorkerSubscriber;
-import rxswingworker.SwingWorkerSubscriberDto;
-import utils.PrintUtils;
-
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+
+import rx.Observable;
+import rxswingworker.SwingWorkerDto;
+import rxswingworker.SwingWorkerRxOnSubscribe;
+import rxswingworker.SwingWorkerSubscriber;
+import utils.PrintUtils;
 
 /**
  * Description: <br>
@@ -20,7 +20,7 @@ public class RxSwingWorkerFactory
 
 	public static SwingWorkerSubscriber<String, Integer> createObserver( final int amountOfWork )
 	{
-		Observable<SwingWorkerSubscriberDto<String, Integer>> observable = Observable.create( new SwingWorkerRxOnSubscribe<String, Integer>()
+		Observable<SwingWorkerDto<String, Integer>> observable = Observable.create( new SwingWorkerRxOnSubscribe<String, Integer>()
 		{
 			@Override
 			protected String doInBackground() throws Exception
