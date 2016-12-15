@@ -88,6 +88,8 @@ public abstract class SwingWorkerRxOnSubscribe<ReturnType, ProcessType> implemen
 	 */
 	protected void publish( ProcessType... chunks )
 	{
+		// To make sure that the last emission is always the one that sets
+		// the result of the asyn operation
 		if ( requestCount > 1 )
 		{
 			requestCount--;
@@ -103,6 +105,8 @@ public abstract class SwingWorkerRxOnSubscribe<ReturnType, ProcessType> implemen
 	 */
 	protected void setProgress( int progress )
 	{
+		// To make sure that the last emission is always the one that sets
+		// the result of the asyn operation
 		if ( requestCount > 1 )
 		{
 			requestCount--;
