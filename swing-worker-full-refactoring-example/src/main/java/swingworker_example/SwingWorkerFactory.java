@@ -1,10 +1,11 @@
 package swingworker_example;
 
-import utils.PrintUtils;
-
-import javax.swing.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+
+import javax.swing.*;
+
+import utils.PrintUtils;
 
 /**
  * Description: <br>
@@ -25,8 +26,8 @@ public class SwingWorkerFactory
 				PrintUtils.printMessage( "Entering doInBackground() method" );
 				for ( int i = 0; i < amountOfWork * 2; i = i + 2 )
 				{
-					Thread.sleep( TIME_FOR_WORK_UNIT );
 					publish( i, i + 1 );
+					Thread.sleep( TIME_FOR_WORK_UNIT );
 				}
 				PrintUtils.printMessage( "doInBackground() finished successfully" );
 				return "Async Result";

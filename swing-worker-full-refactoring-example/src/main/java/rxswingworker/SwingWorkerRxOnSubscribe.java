@@ -3,6 +3,7 @@ package rxswingworker;
 import javax.swing.*;
 
 import rx.Observable;
+import rx.Producer;
 import rx.Subscriber;
 
 /**
@@ -12,10 +13,11 @@ import rx.Subscriber;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/02/2016
  */
-public abstract class SwingWorkerRxOnSubscribe<ReturnType, ProcessType> implements Observable.OnSubscribe<SwingWorkerDto<ReturnType, ProcessType>>
+public abstract class SwingWorkerRxOnSubscribe<ReturnType, ProcessType> implements Observable.OnSubscribe<SwingWorkerDto<ReturnType, ProcessType>>, Producer
 {
 	private Subscriber<? super SwingWorkerDto<ReturnType, ProcessType>> observer;
 	private SwingWorkerDto<ReturnType, ProcessType> dto;
+	private long requestCount;
 
 	/**
 	 * Manages the workflow of a SwingWorker by setting up the data
@@ -36,6 +38,7 @@ public abstract class SwingWorkerRxOnSubscribe<ReturnType, ProcessType> implemen
 		{
 			if ( !this.observer.isUnsubscribed() )
 			{
+				observer.setProducer( this );
 				this.dto = new SwingWorkerDto<ReturnType, ProcessType>();
 				this.observer.onStart();
 				ReturnType asyncResult = doInBackground();
@@ -47,6 +50,24 @@ public abstract class SwingWorkerRxOnSubscribe<ReturnType, ProcessType> implemen
 		{
 			observer.onError( throwable );
 		}
+	}
+
+	/**
+	 * The maximum number of items that are produced can be for example influenced by
+	 * calling the method {@link Observable#take(int)} on the observable.
+	 * {@link this#requestCount} is being used to store the number of items being requested
+	 * so that only the methods {@link this#publish(Object[])} and {@link this#setProgress(int)}
+	 * are ignore in case that n is smaller than the number total number of items.<br>
+	 * {@link this#requestCount} is used to guarantee that the
+	 * final {@link SwingWorkerSubscriber#onNext(SwingWorkerDto)} is always called
+	 * 
+	 * @param n
+	 *            maximum number of items
+	 */
+	@Override
+	public void request( long n )
+	{
+		requestCount = n;
 	}
 
 	/**
@@ -67,7 +88,11 @@ public abstract class SwingWorkerRxOnSubscribe<ReturnType, ProcessType> implemen
 	 */
 	protected void publish( ProcessType... chunks )
 	{
-		this.observer.onNext( this.dto.send( chunks ) );
+		if ( requestCount > 1 )
+		{
+			requestCount--;
+			this.observer.onNext( this.dto.send( chunks ) );
+		}
 	}
 
 	/**
@@ -78,6 +103,10 @@ public abstract class SwingWorkerRxOnSubscribe<ReturnType, ProcessType> implemen
 	 */
 	protected void setProgress( int progress )
 	{
-		this.observer.onNext( this.dto.setProgress( progress ) );
+		if ( requestCount > 1 )
+		{
+			requestCount--;
+			this.observer.onNext( this.dto.setProgress( progress ) );
+		}
 	}
 }

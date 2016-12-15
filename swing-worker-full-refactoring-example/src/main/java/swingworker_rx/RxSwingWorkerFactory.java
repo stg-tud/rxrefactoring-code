@@ -28,8 +28,8 @@ public class RxSwingWorkerFactory
 				PrintUtils.printMessage( "Entering doInBackground() method" );
 				for ( int i = 0; i < amountOfWork * 2; i = i + 2 )
 				{
-					Thread.sleep( TIME_FOR_WORK_UNIT );
 					publish( i, i + 1 );
+					Thread.sleep( TIME_FOR_WORK_UNIT );
 				}
 				PrintUtils.printMessage( "doInBackground() finished successfully" );
 				return "Async Result";

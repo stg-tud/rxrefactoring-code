@@ -382,6 +382,7 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	private void subscribeObservable( Scheduler scheduler )
 	{
 		this.subscription = this.observable
+				.onBackpressureBuffer()
 				.observeOn( SwingScheduler.getInstance() )
 				.subscribeOn( scheduler )
 				.subscribe( this );

@@ -145,4 +145,14 @@ public class SwingWorkerDto<ReturnType, ProcessType>
 		this.progress.set( DEFAULT_PROGRESS ); // reset progress after each get
 		return progress;
 	}
+
+	@Override
+	public String toString()
+	{
+		return "SwingWorkerDto{" +
+				"asyncResult=" + asyncResult +
+				", chunks=" + chunks.toString() +
+				", progress=" + progress.get() +
+				'}';
+	}
 }
