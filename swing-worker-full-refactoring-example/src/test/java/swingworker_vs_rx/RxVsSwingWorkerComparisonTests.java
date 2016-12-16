@@ -1,23 +1,23 @@
 package swingworker_vs_rx;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import rxswingworker.RxSwingWorkerAPI;
-import rxswingworker.SwingWorkerSubscriber;
-import swingworker_example.SwingWorkerFactory;
-import swingworker_rx.RxSwingWorkerFactory;
-import swingworker_vs_rx.test_helpers.RxSwingWorkerWrapper;
-import swingworker_vs_rx.test_helpers.SwingWorkerWrapper;
+import static org.junit.Assert.assertTrue;
 
-import javax.swing.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.junit.Assert.assertTrue;
+import javax.swing.*;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import rxswingworker.RxSwingWorkerAPI;
+import rxswingworker.SwingWorkerSubscriber;
+import swingworker_rx.RxSwingWorkerFactoryWithEmitter;
+import swingworker_vs_rx.test_helpers.RxSwingWorkerWrapper;
 
 /**
  * Description: Helper "Test" class to analyze the output
@@ -43,7 +43,8 @@ public class RxVsSwingWorkerComparisonTests
 	public void initializeApiWrapper()
 	{
 //		swingWorkerApiWrapper = new SwingWorkerWrapper<String, Integer>( SwingWorkerFactory.createSwingWorker( DEFAULT_AMOUNT_OF_WORK ) );
-		 swingWorkerApiWrapper = new RxSwingWorkerWrapper<String, Integer>(RxSwingWorkerFactory.createObserver(DEFAULT_AMOUNT_OF_WORK));
+		// swingWorkerApiWrapper = new RxSwingWorkerWrapper<String, Integer>(RxSwingWorkerFactoryWithOnSubscribe.createObserver(DEFAULT_AMOUNT_OF_WORK));
+		swingWorkerApiWrapper = new RxSwingWorkerWrapper<String, Integer>( RxSwingWorkerFactoryWithEmitter.createObserver( DEFAULT_AMOUNT_OF_WORK ) );
 	}
 
 	@After
@@ -57,6 +58,7 @@ public class RxVsSwingWorkerComparisonTests
 	{
 		printTestName( "testExecute" );
 
+		swingWorkerApiWrapper.execute();
 		swingWorkerApiWrapper.execute();
 	}
 
