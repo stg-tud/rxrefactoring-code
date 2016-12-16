@@ -8,20 +8,20 @@ import rx.Subscriber;
 
 /**
  * Description: This class should be use to create an observable.
- * The class interacts with {@link SwingWorkerSubscriber} by using a
- * thread safe data transfer object {@link SwingWorkerDto}<br>
+ * The class interacts with {@link SWSubscriber} by using a
+ * thread safe data transfer object {@link SWDto}<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/02/2016
  */
-public abstract class OnSubscribeFromSwingWorker<ReturnType, ProcessType> implements Observable.OnSubscribe<SwingWorkerDto<ReturnType, ProcessType>>, Producer
+public abstract class OnSubscribeFromSwingWorker<ReturnType, ProcessType> implements Observable.OnSubscribe<SWDto<ReturnType, ProcessType>>, Producer
 {
-	private Subscriber<? super SwingWorkerDto<ReturnType, ProcessType>> observer;
-	private SwingWorkerDto<ReturnType, ProcessType> dto;
+	private Subscriber<? super SWDto<ReturnType, ProcessType>> observer;
+	private SWDto<ReturnType, ProcessType> dto;
 	private long requestCount;
 
 	/**
 	 * Manages the workflow of a SwingWorker by setting up the data
-	 * transfer object {@link SwingWorkerDto <ReturnType, ProcessType>}
+	 * transfer object {@link SWDto <ReturnType, ProcessType>}
 	 * that is used for sending progress, chunks of data and finally the async result
 	 * to the observer.
 	 * 
@@ -29,7 +29,7 @@ public abstract class OnSubscribeFromSwingWorker<ReturnType, ProcessType> implem
 	 *            observer
 	 */
 	@Override
-	public final void call( Subscriber<? super SwingWorkerDto<ReturnType, ProcessType>> observer )
+	public final void call( Subscriber<? super SWDto<ReturnType, ProcessType>> observer )
 	{
 		this.observer = observer;
 		try
@@ -37,7 +37,7 @@ public abstract class OnSubscribeFromSwingWorker<ReturnType, ProcessType> implem
 			if ( !this.observer.isUnsubscribed() )
 			{
 				observer.setProducer( this );
-				this.dto = new SwingWorkerDto<ReturnType, ProcessType>();
+				this.dto = new SWDto<ReturnType, ProcessType>();
 				this.observer.onStart();
 				ReturnType asyncResult = doInBackground();
 				this.observer.onNext( this.dto.setResult( asyncResult ) );
@@ -57,7 +57,7 @@ public abstract class OnSubscribeFromSwingWorker<ReturnType, ProcessType> implem
 	 * so that only the methods {@link this#publish(Object[])} and {@link this#setProgress(int)}
 	 * are ignore in case that n is smaller than the number total number of items.<br>
 	 * {@link this#requestCount} is used to guarantee that the
-	 * final {@link SwingWorkerSubscriber#onNext(SwingWorkerDto)} is always called
+	 * final {@link SWSubscriber#onNext(SWDto)} is always called
 	 * 
 	 * @param n
 	 *            maximum number of items
@@ -79,7 +79,7 @@ public abstract class OnSubscribeFromSwingWorker<ReturnType, ProcessType> implem
 	protected abstract ReturnType doInBackground() throws Exception;
 
 	/**
-	 * Sends chunks of data to the observer ({@link SwingWorkerSubscriber}).
+	 * Sends chunks of data to the observer ({@link SWSubscriber}).
 	 * 
 	 * @param chunks
 	 *            the data to be send
@@ -96,7 +96,7 @@ public abstract class OnSubscribeFromSwingWorker<ReturnType, ProcessType> implem
 	}
 
 	/**
-	 * Sends the progress to the observer ({@link SwingWorkerSubscriber}.
+	 * Sends the progress to the observer ({@link SWSubscriber}.
 	 * 
 	 * @param progress
 	 *            progress to be sent

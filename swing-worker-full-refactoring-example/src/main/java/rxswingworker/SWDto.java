@@ -9,21 +9,21 @@ import rx.Subscriber;
 
 /**
  * Description: Data transfer object to allow the interaction
- * between {@link OnSubscribeFromSwingWorker} and {@link SwingWorkerSubscriber}
+ * between {@link OnSubscribeFromSwingWorker} and {@link SWSubscriber}
  * This class is public so that it can be used when declaring observables.
  * However all methods are only package visible because the are only supposed
- * to be used by {@link OnSubscribeFromSwingWorker} and {@link SwingWorkerSubscriber}<br>
+ * to be used by {@link OnSubscribeFromSwingWorker} and {@link SWSubscriber}<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/01/2016
  */
-public final class SwingWorkerDto<ReturnType, ProcessType>
+public final class SWDto<ReturnType, ProcessType>
 {
 	private static final int DEFAULT_PROGRESS = -1;
 	private ReturnType asyncResult;
 	private List<ProcessType> chunks;
 	private AtomicInteger progress;
 
-	SwingWorkerDto()
+	SWDto()
 	{
 		this.progress = new AtomicInteger( DEFAULT_PROGRESS );
 		this.chunks = new ArrayList<ProcessType>();
@@ -37,7 +37,7 @@ public final class SwingWorkerDto<ReturnType, ProcessType>
 	 *            chunks of data to be added
 	 * @return
 	 */
-	SwingWorkerDto<ReturnType, ProcessType> send( ProcessType... chunks )
+	SWDto<ReturnType, ProcessType> send( ProcessType... chunks )
 	{
 		synchronized ( this.chunks )
 		{
@@ -55,7 +55,7 @@ public final class SwingWorkerDto<ReturnType, ProcessType>
 	 *         See {@link OnSubscribeFromSwingWorker#call(Subscriber)}, {@link OnSubscribeFromSwingWorker#setProgress(int)}
 	 *         and {@link OnSubscribeFromSwingWorker#publish(Object[])}
 	 */
-	SwingWorkerDto<ReturnType, ProcessType> setResult( ReturnType asyncResult )
+	SWDto<ReturnType, ProcessType> setResult( ReturnType asyncResult )
 	{
 		synchronized ( this )
 		{
@@ -65,7 +65,7 @@ public final class SwingWorkerDto<ReturnType, ProcessType>
 	}
 
 	/**
-	 * Getter to retrieve the chunks in {@link SwingWorkerSubscriber#onNext(SwingWorkerDto)}
+	 * Getter to retrieve the chunks in {@link SWSubscriber#onNext(SWDto)}
 	 * 
 	 * @return the chunks as list
 	 */
@@ -81,7 +81,7 @@ public final class SwingWorkerDto<ReturnType, ProcessType>
 
 	/**
 	 * To remove chunks after they have been processed.
-	 * See {@link SwingWorkerSubscriber#onNext(SwingWorkerDto)}
+	 * See {@link SWSubscriber#onNext(SWDto)}
 	 * 
 	 * @param chunks
 	 */
@@ -95,7 +95,7 @@ public final class SwingWorkerDto<ReturnType, ProcessType>
 
 	/**
 	 * Retrieves the async result cached in this Dto.
-	 * See {@link SwingWorkerSubscriber#onNext(SwingWorkerDto)}
+	 * See {@link SWSubscriber#onNext(SWDto)}
 	 * 
 	 * @return
 	 */
@@ -109,13 +109,13 @@ public final class SwingWorkerDto<ReturnType, ProcessType>
 
 	/**
 	 * To send the progress from {@link OnSubscribeFromSwingWorker} to
-	 * {@link SwingWorkerSubscriber}.
+	 * {@link SWSubscriber}.
 	 * See {@link OnSubscribeFromSwingWorker#setProgress(int)}
 	 * 
 	 * @param progress
 	 * @return
 	 */
-	SwingWorkerDto<ReturnType, ProcessType> setProgress( int progress )
+	SWDto<ReturnType, ProcessType> setProgress( int progress )
 	{
 		this.progress.set( progress );
 		return this;
@@ -123,7 +123,7 @@ public final class SwingWorkerDto<ReturnType, ProcessType>
 
 	/**
 	 * To identify whether a progress value was sent and processed.
-	 * See {@link SwingWorkerSubscriber#onNext(SwingWorkerDto)}
+	 * See {@link SWSubscriber#onNext(SWDto)}
 	 * 
 	 * @return
 	 */
@@ -135,7 +135,7 @@ public final class SwingWorkerDto<ReturnType, ProcessType>
 	/**
 	 * To get the progress for processing and reset its value so it is
 	 * not processed multiple times.
-	 * See {@link SwingWorkerSubscriber#onNext(SwingWorkerDto)}
+	 * See {@link SWSubscriber#onNext(SWDto)}
 	 * 
 	 * @return
 	 */

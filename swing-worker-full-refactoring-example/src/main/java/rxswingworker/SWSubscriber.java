@@ -26,12 +26,12 @@ import rx.schedulers.SwingScheduler;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/01/2016
  */
-public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
-		extends Subscriber<SwingWorkerDto<ResultType, ProcessType>>
+public abstract class SWSubscriber<ResultType, ProcessType>
+		extends Subscriber<SWDto<ResultType, ProcessType>>
 		implements RxSwingWorkerAPI<ResultType>
 {
 
-	private Observable<SwingWorkerDto<ResultType, ProcessType>> observable;
+	private Observable<SWDto<ResultType, ProcessType>> observable;
 	private Subscription subscription;
 	private ResultType asyncResult;
 	private PropertyChangeSupport propertyChangeSupport;
@@ -45,7 +45,7 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	 *
 	 * @param observable
 	 */
-	public SwingWorkerSubscriber( Observable<SwingWorkerDto<ResultType, ProcessType>> observable )
+	public SWSubscriber( Observable<SWDto<ResultType, ProcessType>> observable )
 	{
 		this.observable = observable;
 		this.propertyChangeSupport = new PropertyChangeSupport( this );
@@ -85,7 +85,7 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	 *            Data transfer object for chunks and asyncResult
 	 */
 	@Override
-	public final void onNext( SwingWorkerDto<ResultType, ProcessType> dto )
+	public final void onNext( SWDto<ResultType, ProcessType> dto )
 	{
 		asyncResult = dto.getResult();
 		if ( dto.isProgressValueAvailable() )

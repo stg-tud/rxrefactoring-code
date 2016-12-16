@@ -1,13 +1,13 @@
 package swingworker_vs_rx.test_helpers;
 
-import rxswingworker.RxSwingWorkerAPI;
-import rxswingworker.SwingWorkerSubscriber;
-
-import javax.swing.*;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+
+import javax.swing.*;
+
+import rxswingworker.RxSwingWorkerAPI;
+import rxswingworker.SWSubscriber;
 
 /**
  * Description: <br>
@@ -16,9 +16,9 @@ import java.util.concurrent.TimeoutException;
  */
 public class RxSwingWorkerWrapper<ReturnType, ProcessType> implements RxSwingWorkerAPI<ReturnType>
 {
-	SwingWorkerSubscriber<ReturnType, ProcessType> observer;
+	SWSubscriber<ReturnType, ProcessType> observer;
 
-	public RxSwingWorkerWrapper( SwingWorkerSubscriber<ReturnType, ProcessType> observer )
+	public RxSwingWorkerWrapper( SWSubscriber<ReturnType, ProcessType> observer )
 	{
 		this.observer = observer;
 	}

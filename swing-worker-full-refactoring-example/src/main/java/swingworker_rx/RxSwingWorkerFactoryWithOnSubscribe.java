@@ -5,8 +5,8 @@ import java.util.concurrent.ExecutionException;
 
 import rx.Observable;
 import rxswingworker.OnSubscribeFromSwingWorker;
-import rxswingworker.SwingWorkerDto;
-import rxswingworker.SwingWorkerSubscriber;
+import rxswingworker.SWDto;
+import rxswingworker.SWSubscriber;
 import utils.PrintUtils;
 
 /**
@@ -18,9 +18,9 @@ public class RxSwingWorkerFactoryWithOnSubscribe
 {
 	private static final long TIME_FOR_WORK_UNIT = 1L;
 
-	public static SwingWorkerSubscriber<String, Integer> createObserver( final int amountOfWork )
+	public static SWSubscriber<String, Integer> createObserver( final int amountOfWork )
 	{
-		Observable<SwingWorkerDto<String, Integer>> observable = Observable.create( new OnSubscribeFromSwingWorker<String, Integer>()
+		Observable<SWDto<String, Integer>> observable = Observable.create( new OnSubscribeFromSwingWorker<String, Integer>()
 		{
 			@Override
 			protected String doInBackground() throws Exception
@@ -37,7 +37,7 @@ public class RxSwingWorkerFactoryWithOnSubscribe
 
 		} );
 
-		return new SwingWorkerSubscriber<String, Integer>( observable )
+		return new SWSubscriber<String, Integer>( observable )
 		{
 			@Override
 			protected void process( List<Integer> chunks )

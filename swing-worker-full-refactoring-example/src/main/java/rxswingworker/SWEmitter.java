@@ -9,20 +9,20 @@ import rx.functions.Action1;
 
 /**
  * Description: This class should be use to create an observable.
- * The class interacts with {@link SwingWorkerSubscriber} by using a
- * thread safe data transfer object {@link SwingWorkerDto}<br>
+ * The class interacts with {@link SWSubscriber} by using a
+ * thread safe data transfer object {@link SWDto}<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/02/2016
  */
-public abstract class SwingWorkerEmitter<ReturnType, ProcessType> implements Action1<Emitter<SwingWorkerDto<ReturnType, ProcessType>>>
+public abstract class SWEmitter<ReturnType, ProcessType> implements Action1<Emitter<SWDto<ReturnType, ProcessType>>>
 {
-	private Emitter<? super SwingWorkerDto<ReturnType, ProcessType>> emitter;
-	private SwingWorkerDto<ReturnType, ProcessType> dto;
+	private Emitter<? super SWDto<ReturnType, ProcessType>> emitter;
+	private SWDto<ReturnType, ProcessType> dto;
 	private AtomicBoolean running = new AtomicBoolean( false );
 
 	/**
 	 * Manages the workflow of a SwingWorker by setting up the data
-	 * transfer object {@link SwingWorkerDto <ReturnType, ProcessType>}
+	 * transfer object {@link SWDto <ReturnType, ProcessType>}
 	 * that is used for sending progress, chunks of data and finally the async result
 	 * to the emitter.
 	 * 
@@ -30,7 +30,7 @@ public abstract class SwingWorkerEmitter<ReturnType, ProcessType> implements Act
 	 *            emitter
 	 */
 	@Override
-	public final void call( Emitter<SwingWorkerDto<ReturnType, ProcessType>> emitter )
+	public final void call( Emitter<SWDto<ReturnType, ProcessType>> emitter )
 	{
 
 		if ( running.get() )
@@ -42,7 +42,7 @@ public abstract class SwingWorkerEmitter<ReturnType, ProcessType> implements Act
 		this.emitter = emitter;
 		try
 		{
-			this.dto = new SwingWorkerDto<ReturnType, ProcessType>();
+			this.dto = new SWDto<ReturnType, ProcessType>();
 			ReturnType asyncResult = doInBackground();
 			this.emitter.onNext( this.dto.setResult( asyncResult ) );
 			this.emitter.onCompleted();
@@ -68,7 +68,7 @@ public abstract class SwingWorkerEmitter<ReturnType, ProcessType> implements Act
 	protected abstract ReturnType doInBackground() throws Exception;
 
 	/**
-	 * Sends chunks of data to the emitter ({@link SwingWorkerSubscriber}).
+	 * Sends chunks of data to the emitter ({@link SWSubscriber}).
 	 * 
 	 * @param chunks
 	 *            the data to be send
@@ -79,7 +79,7 @@ public abstract class SwingWorkerEmitter<ReturnType, ProcessType> implements Act
 	}
 
 	/**
-	 * Sends the progress to the emitter ({@link SwingWorkerSubscriber}.
+	 * Sends the progress to the emitter ({@link SWSubscriber}.
 	 * 
 	 * @param progress
 	 *            progress to be sent

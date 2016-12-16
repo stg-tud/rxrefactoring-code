@@ -16,7 +16,7 @@ import org.junit.Test;
 
 import rxswingworker.OnSubscribeFromSwingWorker;
 import rxswingworker.RxSwingWorkerAPI;
-import rxswingworker.SwingWorkerSubscriber;
+import rxswingworker.SWSubscriber;
 import swingworker_rx.RxSwingWorkerFactoryFromEmitter;
 import swingworker_vs_rx.test_helpers.RxSwingWorkerWrapper;
 
@@ -37,7 +37,7 @@ public class RxVsSwingWorkerComparisonTests
 	 * Enable one of the statements below to define whether the tests
 	 * should be run using the regular {@link SwingWorker} or
 	 * the RxSwingWorker.<br>
-	 * RxSwingWorker uses {@link SwingWorkerSubscriber} and
+	 * RxSwingWorker uses {@link SWSubscriber} and
 	 * {@link OnSubscribeFromSwingWorker}
 	 */
 	@Before
