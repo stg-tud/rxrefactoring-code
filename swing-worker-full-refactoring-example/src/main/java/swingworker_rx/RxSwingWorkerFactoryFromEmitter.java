@@ -15,9 +15,9 @@ import utils.PrintUtils;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/02/2016
  */
-public class RxSwingWorkerFactoryWithEmitter
+public class RxSwingWorkerFactoryFromEmitter
 {
-	private static final long TIME_FOR_WORK_UNIT = 2000L;
+	private static final long TIME_FOR_WORK_UNIT = 1L;
 
 	public static SwingWorkerSubscriber<String, Integer> createObserver( final int amountOfWork )
 	{

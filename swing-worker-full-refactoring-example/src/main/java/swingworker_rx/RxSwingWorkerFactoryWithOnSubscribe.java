@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import rx.Observable;
+import rxswingworker.OnSubscribeFromSwingWorker;
 import rxswingworker.SwingWorkerDto;
-import rxswingworker.SwingWorkerRxOnSubscribe;
 import rxswingworker.SwingWorkerSubscriber;
 import utils.PrintUtils;
 
@@ -16,11 +16,11 @@ import utils.PrintUtils;
  */
 public class RxSwingWorkerFactoryWithOnSubscribe
 {
-	private static final long TIME_FOR_WORK_UNIT = 2000L;
+	private static final long TIME_FOR_WORK_UNIT = 1L;
 
 	public static SwingWorkerSubscriber<String, Integer> createObserver( final int amountOfWork )
 	{
-		Observable<SwingWorkerDto<String, Integer>> observable = Observable.create( new SwingWorkerRxOnSubscribe<String, Integer>()
+		Observable<SwingWorkerDto<String, Integer>> observable = Observable.create( new OnSubscribeFromSwingWorker<String, Integer>()
 		{
 			@Override
 			protected String doInBackground() throws Exception

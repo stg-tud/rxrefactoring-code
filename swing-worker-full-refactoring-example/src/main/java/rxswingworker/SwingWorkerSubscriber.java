@@ -37,7 +37,6 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	private PropertyChangeSupport propertyChangeSupport;
 	private AtomicInteger progress;
 	private AtomicBoolean cancelled;
-	private AtomicBoolean done;
 	private SwingWorker.StateValue currentState;
 	private CountDownLatch countDownLatch;
 
@@ -71,7 +70,7 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	 * and {@link this#get(long, TimeUnit)}
 	 */
 	@Override
-	public void onStart()
+	public final void onStart()
 	{
 		initializeStates();
 		this.countDownLatch = new CountDownLatch( 1 );
@@ -80,18 +79,13 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 
 	/**
 	 * Used to process that items after a
-	 * {@link SwingWorker#publish(Object[])} has been invoked. This
-	 * class is not supposed to be overridden by subclasses. Therefore
-	 * it was set as {@link Deprecated}. Use {@link this#process(List)}
-	 * to process the items sent after by
-	 * {@link SwingWorkerRxOnSubscribe#publish(Object[])}
+	 * {@link SwingWorker#publish(Object[])} has been invoked.
 	 *
 	 * @param dto
 	 *            Data transfer object for chunks and asyncResult
 	 */
 	@Override
-	@Deprecated
-	public void onNext( SwingWorkerDto<ResultType, ProcessType> dto )
+	public final void onNext( SwingWorkerDto<ResultType, ProcessType> dto )
 	{
 		asyncResult = dto.getResult();
 		if ( dto.isProgressValueAvailable() )
@@ -106,12 +100,10 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	/**
 	 * Updates the {@link CountDownLatch} setting it to 0. Calls
 	 * {@link this#done(Object)} and set the state to
-	 * {@link SwingWorker.StateValue#DONE}. This class should be
-	 * overridden by subclasses. Use {@link this#done(Object)} instead
+	 * {@link SwingWorker.StateValue#DONE}.
 	 */
 	@Override
-	@Deprecated
-	public void onCompleted()
+	public final void onCompleted()
 	{
 		countDownLatch.countDown();
 		done( asyncResult );
@@ -126,7 +118,7 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	 * observed in {@link SwingScheduler#getInstance()}
 	 */
 	@Override
-	public void execute()
+	public final void execute()
 	{
 		if ( !isSubscribed() )
 		{
@@ -142,7 +134,7 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	 * The operation is observed in {@link SwingScheduler#getInstance()}
 	 */
 	@Override
-	public void run()
+	public final void run()
 	{
 		if ( !isSubscribed() )
 		{
@@ -152,33 +144,33 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	}
 
 	/**
-	 * Waits from the result of {@link SwingWorkerRxOnSubscribe#doInBackground()}
+	 * Waits from the result of {@link OnSubscribeFromSwingWorker#doInBackground()}
 	 *
-	 * @return return value of {@link SwingWorkerRxOnSubscribe#doInBackground()}
+	 * @return return value of {@link OnSubscribeFromSwingWorker#doInBackground()}
 	 * @throws InterruptedException
 	 *             if the thread is interrupted while waiting
 	 */
 	@Override
-	public ResultType get() throws InterruptedException
+	public final ResultType get() throws InterruptedException
 	{
 		countDownLatch.await();
 		return asyncResult;
 	}
 
 	/**
-	 * Waits from the result of {@link SwingWorkerRxOnSubscribe#doInBackground()}
+	 * Waits from the result of {@link OnSubscribeFromSwingWorker#doInBackground()}
 	 * given a timeout and a unit
 	 *
 	 * @param timeout
 	 *            timeout
 	 * @param unit
 	 *            time unit
-	 * @return return value of {@link SwingWorkerRxOnSubscribe#doInBackground()}
+	 * @return return value of {@link OnSubscribeFromSwingWorker#doInBackground()}
 	 * @throws InterruptedException
 	 *             if the thread is interrupted while waiting
 	 */
 	@Override
-	public ResultType get( long timeout, TimeUnit unit ) throws InterruptedException
+	public final ResultType get( long timeout, TimeUnit unit ) throws InterruptedException
 	{
 		countDownLatch.await( timeout, unit );
 		boolean timeExpired = countDownLatch.getCount() > 0;
@@ -196,7 +188,7 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	 * @return state of this observer
 	 */
 	@Override
-	public SwingWorker.StateValue getState()
+	public final SwingWorker.StateValue getState()
 	{
 		return this.currentState;
 	}
@@ -207,9 +199,9 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	 *         executed. False otherwise.
 	 */
 	@Override
-	public boolean isDone()
+	public final boolean isDone()
 	{
-		return this.done.get();
+		return SwingWorker.StateValue.DONE.equals( currentState );
 	}
 
 	/**
@@ -217,7 +209,7 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	 * @return true if this observer has been cancel. False otherwise
 	 */
 	@Override
-	public boolean isCancelled()
+	public final boolean isCancelled()
 	{
 		return this.cancelled.get();
 	}
@@ -233,7 +225,7 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	 * @return true if this observer was successfully unsubscribed, false otherwise
 	 */
 	@Override
-	public boolean cancel( boolean mayInterruptIfRunning )
+	public final boolean cancel( boolean mayInterruptIfRunning )
 	{
 		if ( cancelled.get() || currentState.equals( SwingWorker.StateValue.DONE ) )
 		{
@@ -257,7 +249,7 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	 *         must be set by {@link this#setProgress(int)}
 	 */
 	@Override
-	public int getProgress()
+	public final int getProgress()
 	{
 		return this.progress.get();
 	}
@@ -269,7 +261,7 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	 *            listener to be added
 	 */
 	@Override
-	public void addPropertyChangeListener( PropertyChangeListener listener )
+	public final void addPropertyChangeListener( PropertyChangeListener listener )
 	{
 		synchronized ( this )
 		{
@@ -284,7 +276,7 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	 *            listener to be removed
 	 */
 	@Override
-	public void removePropertyChangeListener( PropertyChangeListener listener )
+	public final void removePropertyChangeListener( PropertyChangeListener listener )
 	{
 		synchronized ( this )
 		{
@@ -303,7 +295,7 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	 *            new value of the property
 	 */
 	@Override
-	public void firePropertyChange( String propertyName, Object oldValue, Object newValue )
+	public final void firePropertyChange( String propertyName, Object oldValue, Object newValue )
 	{
 		synchronized ( this )
 		{
@@ -316,7 +308,7 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	 * @return the {@link PropertyChangeListener} of this observer
 	 */
 	@Override
-	public PropertyChangeSupport getPropertyChangeSupport()
+	public final PropertyChangeSupport getPropertyChangeSupport()
 	{
 		return propertyChangeSupport;
 	}
@@ -324,19 +316,19 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	// ### Protected Methods ###
 
 	/**
-	 * This method is invoked after {@link SwingWorkerRxOnSubscribe#doInBackground()} has completed.
+	 * This method is invoked after {@link OnSubscribeFromSwingWorker#doInBackground()} has completed.
 	 * The method is invoked in {@link SwingScheduler#getInstance()}
 	 * 
 	 * @param asyncResult
-	 *            result from {@link SwingWorkerRxOnSubscribe#doInBackground()}
+	 *            result from {@link OnSubscribeFromSwingWorker#doInBackground()}
 	 */
 	protected abstract void done( ResultType asyncResult );
 
 	/**
-	 * This method is invokated everytime {@link SwingWorkerRxOnSubscribe#publish(Object[])} is invoked.
+	 * This method is invokated everytime {@link OnSubscribeFromSwingWorker#publish(Object[])} is invoked.
 	 * 
 	 * @param chunks
-	 *            arguments passed to {@link SwingWorkerRxOnSubscribe#publish(Object[])}
+	 *            arguments passed to {@link OnSubscribeFromSwingWorker#publish(Object[])}
 	 */
 	protected abstract void process( List<ProcessType> chunks );
 
@@ -347,7 +339,7 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	 * @param progress
 	 *            progress to be set
 	 */
-	protected void setProgress( int progress )
+	protected final void setProgress( int progress )
 	{
 		if ( progress < 0 || progress > 100 )
 		{
@@ -371,7 +363,6 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	{
 		this.progress = new AtomicInteger( 0 );
 		this.cancelled = new AtomicBoolean( false );
-		this.done = new AtomicBoolean( false );
 	}
 
 	private boolean isSubscribed()
@@ -382,7 +373,6 @@ public abstract class SwingWorkerSubscriber<ResultType, ProcessType>
 	private void subscribeObservable( Scheduler scheduler )
 	{
 		this.subscription = this.observable
-				// .onBackpressureBuffer() // not needed if the emitter is used.
 				.observeOn( SwingScheduler.getInstance() )
 				.subscribeOn( scheduler )
 				.subscribe( this );

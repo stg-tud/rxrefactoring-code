@@ -13,7 +13,7 @@ import rx.Subscriber;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/02/2016
  */
-public abstract class SwingWorkerRxOnSubscribe<ReturnType, ProcessType> implements Observable.OnSubscribe<SwingWorkerDto<ReturnType, ProcessType>>, Producer
+public abstract class OnSubscribeFromSwingWorker<ReturnType, ProcessType> implements Observable.OnSubscribe<SwingWorkerDto<ReturnType, ProcessType>>, Producer
 {
 	private Subscriber<? super SwingWorkerDto<ReturnType, ProcessType>> observer;
 	private SwingWorkerDto<ReturnType, ProcessType> dto;
@@ -23,15 +23,13 @@ public abstract class SwingWorkerRxOnSubscribe<ReturnType, ProcessType> implemen
 	 * Manages the workflow of a SwingWorker by setting up the data
 	 * transfer object {@link SwingWorkerDto <ReturnType, ProcessType>}
 	 * that is used for sending progress, chunks of data and finally the async result
-	 * to the observer. This class should not be overridden by subclasses. Therefore
-	 * is is marked as {@link Deprecated}
+	 * to the observer.
 	 * 
 	 * @param observer
 	 *            observer
 	 */
 	@Override
-	@Deprecated
-	public void call( Subscriber<? super SwingWorkerDto<ReturnType, ProcessType>> observer )
+	public final void call( Subscriber<? super SwingWorkerDto<ReturnType, ProcessType>> observer )
 	{
 		this.observer = observer;
 		try
@@ -48,7 +46,7 @@ public abstract class SwingWorkerRxOnSubscribe<ReturnType, ProcessType> implemen
 		}
 		catch ( Exception throwable )
 		{
-			observer.onError( throwable );
+			this.observer.onError( throwable );
 		}
 	}
 

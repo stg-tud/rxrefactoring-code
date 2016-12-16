@@ -14,9 +14,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import rxswingworker.OnSubscribeFromSwingWorker;
 import rxswingworker.RxSwingWorkerAPI;
 import rxswingworker.SwingWorkerSubscriber;
-import swingworker_rx.RxSwingWorkerFactoryWithEmitter;
+import swingworker_rx.RxSwingWorkerFactoryFromEmitter;
 import swingworker_vs_rx.test_helpers.RxSwingWorkerWrapper;
 
 /**
@@ -28,8 +29,8 @@ import swingworker_vs_rx.test_helpers.RxSwingWorkerWrapper;
  */
 public class RxVsSwingWorkerComparisonTests
 {
-	private static final int DEFAULT_AMOUNT_OF_WORK = 3;
-	private static final long TIME_FOR_WORK_UNIT = 2000L;
+	private static final int DEFAULT_AMOUNT_OF_WORK = 10;
+	private static final long TIME_FOR_WORK_UNIT = 2L;
 	private static RxSwingWorkerAPI<String> swingWorkerApiWrapper;
 
 	/**
@@ -37,14 +38,14 @@ public class RxVsSwingWorkerComparisonTests
 	 * should be run using the regular {@link SwingWorker} or
 	 * the RxSwingWorker.<br>
 	 * RxSwingWorker uses {@link SwingWorkerSubscriber} and
-	 * {@link rxswingworker.SwingWorkerRxOnSubscribe}
+	 * {@link OnSubscribeFromSwingWorker}
 	 */
 	@Before
 	public void initializeApiWrapper()
 	{
 //		swingWorkerApiWrapper = new SwingWorkerWrapper<String, Integer>( SwingWorkerFactory.createSwingWorker( DEFAULT_AMOUNT_OF_WORK ) );
 		// swingWorkerApiWrapper = new RxSwingWorkerWrapper<String, Integer>(RxSwingWorkerFactoryWithOnSubscribe.createObserver(DEFAULT_AMOUNT_OF_WORK));
-		swingWorkerApiWrapper = new RxSwingWorkerWrapper<String, Integer>( RxSwingWorkerFactoryWithEmitter.createObserver( DEFAULT_AMOUNT_OF_WORK ) );
+		swingWorkerApiWrapper = new RxSwingWorkerWrapper<String, Integer>( RxSwingWorkerFactoryFromEmitter.createObserver( DEFAULT_AMOUNT_OF_WORK ) );
 	}
 
 	@After
@@ -76,7 +77,7 @@ public class RxVsSwingWorkerComparisonTests
 		printTestName( "testCancelInterruptingAndIsCancelled" );
 
 		swingWorkerApiWrapper.execute();
-		Thread.sleep( 2000L );
+		Thread.sleep( TIME_FOR_WORK_UNIT );
 
 		swingWorkerApiWrapper.cancel( true );
 
@@ -92,7 +93,7 @@ public class RxVsSwingWorkerComparisonTests
 		printTestName( "testCancelWithtoutInterruptingAndIsCancelled" );
 
 		swingWorkerApiWrapper.execute();
-		Thread.sleep( 2000L );
+		Thread.sleep( TIME_FOR_WORK_UNIT );
 
 		swingWorkerApiWrapper.cancel( false );
 
@@ -106,7 +107,7 @@ public class RxVsSwingWorkerComparisonTests
 		printTestName( "testGetWithoutTimeout" );
 
 		swingWorkerApiWrapper.execute();
-		Thread.sleep( 2000L );
+		Thread.sleep( TIME_FOR_WORK_UNIT );
 
 		String asyncResult = swingWorkerApiWrapper.get();
 		System.out.println( "Get = " + asyncResult );
@@ -118,7 +119,7 @@ public class RxVsSwingWorkerComparisonTests
 		printTestName( "testGetWithTimeout" );
 
 		swingWorkerApiWrapper.execute();
-		Thread.sleep( 2000L );
+		Thread.sleep( TIME_FOR_WORK_UNIT );
 
 		String asyncResult = swingWorkerApiWrapper.get( 2L, TimeUnit.SECONDS );
 		System.out.println( "Get = " + asyncResult );
@@ -134,7 +135,7 @@ public class RxVsSwingWorkerComparisonTests
 
 		for ( int i = 0; i < DEFAULT_AMOUNT_OF_WORK * 2 + 1; i++ )
 		{
-			Thread.sleep( 1000L );
+			Thread.sleep( TIME_FOR_WORK_UNIT / 2 );
 			int progress = swingWorkerApiWrapper.getProgress();
 			System.out.println( "Progress = " + progress );
 		}
@@ -149,7 +150,7 @@ public class RxVsSwingWorkerComparisonTests
 		System.out.println( "isDone = " + swingWorkerApiWrapper.isDone() );
 		swingWorkerApiWrapper.execute();
 
-		Thread.sleep( 1000L );
+		Thread.sleep( TIME_FOR_WORK_UNIT / 2 );
 		System.out.println( "State while executing = " + swingWorkerApiWrapper.getState() );
 		System.out.println( "isDone = " + swingWorkerApiWrapper.isDone() );
 
@@ -181,7 +182,7 @@ public class RxVsSwingWorkerComparisonTests
 		propertyChangeSupport.addPropertyChangeListener( propertyChangeListener );
 		swingWorkerApiWrapper.execute();
 
-		Thread.sleep( 4000L );
+		Thread.sleep( TIME_FOR_WORK_UNIT * 2 );
 		swingWorkerApiWrapper.removePropertyChangeListener( propertyChangeListener );
 		System.out.println( "Property Change Listener removed" );
 	}

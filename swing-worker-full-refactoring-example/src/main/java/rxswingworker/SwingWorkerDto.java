@@ -9,14 +9,14 @@ import rx.Subscriber;
 
 /**
  * Description: Data transfer object to allow the interaction
- * between {@link SwingWorkerRxOnSubscribe} and {@link SwingWorkerSubscriber}
+ * between {@link OnSubscribeFromSwingWorker} and {@link SwingWorkerSubscriber}
  * This class is public so that it can be used when declaring observables.
  * However all methods are only package visible because the are only supposed
- * to be used by {@link SwingWorkerRxOnSubscribe} and {@link SwingWorkerSubscriber}<br>
+ * to be used by {@link OnSubscribeFromSwingWorker} and {@link SwingWorkerSubscriber}<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/01/2016
  */
-public class SwingWorkerDto<ReturnType, ProcessType>
+public final class SwingWorkerDto<ReturnType, ProcessType>
 {
 	private static final int DEFAULT_PROGRESS = -1;
 	private ReturnType asyncResult;
@@ -52,8 +52,8 @@ public class SwingWorkerDto<ReturnType, ProcessType>
 	 * @param asyncResult
 	 *            result to be set
 	 * @return this object so that it can be used in {@link rx.Subscriber#onNext(Object)} }.
-	 *         See {@link SwingWorkerRxOnSubscribe#call(Subscriber)}, {@link SwingWorkerRxOnSubscribe#setProgress(int)}
-	 *         and {@link SwingWorkerRxOnSubscribe#publish(Object[])}
+	 *         See {@link OnSubscribeFromSwingWorker#call(Subscriber)}, {@link OnSubscribeFromSwingWorker#setProgress(int)}
+	 *         and {@link OnSubscribeFromSwingWorker#publish(Object[])}
 	 */
 	SwingWorkerDto<ReturnType, ProcessType> setResult( ReturnType asyncResult )
 	{
@@ -108,9 +108,9 @@ public class SwingWorkerDto<ReturnType, ProcessType>
 	}
 
 	/**
-	 * To send the progress from {@link SwingWorkerRxOnSubscribe} to
+	 * To send the progress from {@link OnSubscribeFromSwingWorker} to
 	 * {@link SwingWorkerSubscriber}.
-	 * See {@link SwingWorkerRxOnSubscribe#setProgress(int)}
+	 * See {@link OnSubscribeFromSwingWorker#setProgress(int)}
 	 * 
 	 * @param progress
 	 * @return
@@ -144,15 +144,5 @@ public class SwingWorkerDto<ReturnType, ProcessType>
 		int progress = this.progress.get();
 		this.progress.set( DEFAULT_PROGRESS ); // reset progress after each get
 		return progress;
-	}
-
-	@Override
-	public String toString()
-	{
-		return "SwingWorkerDto{" +
-				"asyncResult=" + asyncResult +
-				", chunks=" + chunks.toString() +
-				", progress=" + progress.get() +
-				'}';
 	}
 }

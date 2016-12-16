@@ -24,15 +24,13 @@ public abstract class SwingWorkerEmitter<ReturnType, ProcessType> implements Act
 	 * Manages the workflow of a SwingWorker by setting up the data
 	 * transfer object {@link SwingWorkerDto <ReturnType, ProcessType>}
 	 * that is used for sending progress, chunks of data and finally the async result
-	 * to the emitter. This class should not be overridden by subclasses. Therefore
-	 * is is marked as {@link Deprecated}
+	 * to the emitter.
 	 * 
 	 * @param emitter
 	 *            emitter
 	 */
 	@Override
-	@Deprecated
-	public void call( Emitter<SwingWorkerDto<ReturnType, ProcessType>> emitter )
+	public final void call( Emitter<SwingWorkerDto<ReturnType, ProcessType>> emitter )
 	{
 
 		if ( running.get() )
