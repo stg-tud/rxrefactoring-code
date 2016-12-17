@@ -126,8 +126,8 @@ public class SwingWorkerAnonymousSimpleCasesTest extends AbstractJavaTest
 
 		RxJavaRefactoringApp app = new RxJavaRefactoringApp();
 		SwingWorkerExtension swingWorkerExtension = new SwingWorkerExtension();
-		app.setCommandId(swingWorkerExtension.getId());
-		app.setExtension(swingWorkerExtension);
+		app.setCommandId( swingWorkerExtension.getId() );
+		app.setExtension( swingWorkerExtension );
 
 		app.refactorOnly( targetFile );
 		app.start( null );

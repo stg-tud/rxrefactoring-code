@@ -37,7 +37,7 @@ public final class ComplexRxObservableBuilder
 	 * @return the builder
 	 * @param icuName
 	 */
-	public static ComplexRxObservableBuilder newComplexRxObservable(String icuName )
+	public static ComplexRxObservableBuilder newComplexRxObservable( String icuName )
 	{
 		;
 		return new ComplexRxObservableBuilder( icuName );
@@ -50,7 +50,7 @@ public final class ComplexRxObservableBuilder
 	 *            field declarations to be added
 	 * @return the builder
 	 */
-	public ComplexRxObservableBuilder withFields(List<FieldDeclaration> fieldDeclarations )
+	public ComplexRxObservableBuilder withFields( List<FieldDeclaration> fieldDeclarations )
 	{
 		for ( FieldDeclaration field : fieldDeclarations )
 		{
@@ -69,7 +69,7 @@ public final class ComplexRxObservableBuilder
 	 *            statemens to be added in the method
 	 * @return the builder
 	 */
-	public ComplexRxObservableBuilder withGetAsyncObservable(String type, String... statements )
+	public ComplexRxObservableBuilder withGetAsyncObservable( String type, String... statements )
 	{
 		rxComplexObservableBuilder.append( "public Observable<" );
 		rxComplexObservableBuilder.append( type );
@@ -93,7 +93,7 @@ public final class ComplexRxObservableBuilder
 	 *            method as string
 	 * @return the builder
 	 */
-	public ComplexRxObservableBuilder withMethod(String method )
+	public ComplexRxObservableBuilder withMethod( String method )
 	{
 		rxComplexObservableBuilder.append( method );
 		return this;
@@ -106,7 +106,7 @@ public final class ComplexRxObservableBuilder
 	 *            the methods to be added
 	 * @return the builder
 	 */
-	public ComplexRxObservableBuilder withMethods(List<MethodDeclaration> methods )
+	public ComplexRxObservableBuilder withMethods( List<MethodDeclaration> methods )
 	{
 		for ( MethodDeclaration method : methods )
 		{

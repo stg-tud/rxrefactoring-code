@@ -1,14 +1,15 @@
 package rxjavarefactoringtests.builders;
 
-import codegenerators.RxObservableStringBuilder;
+import static org.junit.Assert.assertEquals;
+
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.Block;
 import org.junit.Before;
 import org.junit.Test;
+
+import codegenerators.RxObservableStringBuilder;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.constants.SchedulerType;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Description: Tests {@link RxObservableStringBuilder}<br>

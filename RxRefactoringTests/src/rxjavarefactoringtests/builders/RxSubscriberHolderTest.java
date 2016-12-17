@@ -2,11 +2,11 @@ package rxjavarefactoringtests.builders;
 
 import static org.junit.Assert.assertEquals;
 
-import codegenerators.RxSubscriberHolder;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.Block;
 import org.junit.Test;
 
+import codegenerators.RxSubscriberHolder;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 
 /**
@@ -16,33 +16,33 @@ import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
  */
 public class RxSubscriberHolderTest
 {
-    @Test
+	@Test
 	public void testSubscriberHolder()
-    {
-        // setup
-        String doOnNextBlockString = "for (Integer i : chunks) { System.out.println(i); }";
+	{
+		// setup
+		String doOnNextBlockString = "for (Integer i : chunks) { System.out.println(i); }";
 
-        AST ast = AST.newAST(AST.JLS8);
+		AST ast = AST.newAST( AST.JLS8 );
 		Block doOnNextBlock = ASTNodeFactory.createStatementsBlockFromText( ast, doOnNextBlockString );
-        String type = "List<Integer>";
-        String variableName = "chunks";
+		String type = "List<Integer>";
+		String variableName = "chunks";
 		String className = "icuName";
 
-        // build subscriber
+		// build subscriber
 		RxSubscriberHolder subscriberHolder = new RxSubscriberHolder( className, type, doOnNextBlock, variableName );
 
 		String expectedGetSubscriberMethod = "private Subscriber<List<Integer>> getRxUpdateSubscriber() { return new Subscriber<List<Integer>>() {\n" +
-                "@Override public void onCompleted() {}\n" +
-                "@Override public void onError(Throwable throwable) {}\n" +
-                "@Override public void onNext(List<Integer> chunks)\n" +
-                "{\n" +
-                "  for (  Integer i : chunks) {\n" +
-                "    System.out.println(i);\n" +
-                "  }\n" +
-                "}\n" +
+				"@Override public void onCompleted() {}\n" +
+				"@Override public void onError(Throwable throwable) {}\n" +
+				"@Override public void onNext(List<Integer> chunks)\n" +
+				"{\n" +
+				"  for (  Integer i : chunks) {\n" +
+				"    System.out.println(i);\n" +
+				"  }\n" +
+				"}\n" +
 				"};}";
 
 		assertEquals( expectedGetSubscriberMethod, subscriberHolder.getGetMethodDeclaration() );
 
-    }
+	}
 }

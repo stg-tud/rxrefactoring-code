@@ -1,10 +1,14 @@
 package workers;
 
+import java.util.List;
+import java.util.Map;
+
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.dom.*;
+
 import codegenerators.ComplexRxObservableBuilder;
 import codegenerators.RxObservableStringBuilder;
 import codegenerators.RxSubscriberHolder;
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.dom.*;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.codegenerators.IdsManager;
 import rxjavarefactoring.framework.constants.SchedulerType;
@@ -15,9 +19,6 @@ import rxjavarefactoring.framework.writers.RxSingleChangeWriter;
 import rxjavarefactoring.processor.ASTNodesCollector;
 import rxjavarefactoring.processor.WorkerStatus;
 import visitors.SwingWorkerVisitor;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * Description: <br>
@@ -139,7 +140,7 @@ public class AnonymClassWorker extends AbstractRefactorWorker<ASTNodesCollector>
 			rewriter.addInnerClassAfter( complexRxObservableDecl, referenceStatement );
 
 			String lastComplexObsId = IdsManager.getLastComplexObsId( icu.getElementName() );
-            String newStatementString = new StringBuilder().append( "new ComplexRxObservable()" )
+			String newStatementString = new StringBuilder().append( "new ComplexRxObservable()" )
 					.append( lastComplexObsId )
 					.append( ".getAsyncObservable()" )
 					.append( lastComplexObsId )

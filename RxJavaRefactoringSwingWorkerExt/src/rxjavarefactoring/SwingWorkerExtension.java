@@ -1,5 +1,8 @@
 package rxjavarefactoring;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -13,9 +16,6 @@ import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.processor.ASTNodesCollector;
 import workers.AnonymClassWorker;
-
-import java.util.HashSet;
-import java.util.Set;
 
 public class SwingWorkerExtension implements RxJavaRefactoringExtension<ASTNodesCollector>
 {
@@ -73,7 +73,7 @@ public class SwingWorkerExtension implements RxJavaRefactoringExtension<ASTNodes
 	}
 
 	@Override
-	public Set<AbstractRefactorWorker<ASTNodesCollector>> getRefactoringWorkers(ASTNodesCollector collector )
+	public Set<AbstractRefactorWorker<ASTNodesCollector>> getRefactoringWorkers( ASTNodesCollector collector )
 	{
 		Set<AbstractRefactorWorker<ASTNodesCollector>> workers = new HashSet<>();
 		workers.add( new AnonymClassWorker( collector ) );

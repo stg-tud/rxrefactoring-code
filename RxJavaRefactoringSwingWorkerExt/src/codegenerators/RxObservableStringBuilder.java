@@ -67,7 +67,7 @@ public final class RxObservableStringBuilder
 	 *            {@link Observable#observeOn(Scheduler)}
 	 * @return The builder
 	 */
-	public static RxObservableStringBuilder newObservable(String type, Block doInBackground, SchedulerType observeOnScheduler )
+	public static RxObservableStringBuilder newObservable( String type, Block doInBackground, SchedulerType observeOnScheduler )
 	{
 		return new RxObservableStringBuilder( type, doInBackground, observeOnScheduler );
 	}
@@ -89,7 +89,7 @@ public final class RxObservableStringBuilder
 	 *            scheduler used for {@link Observable#observeOn(Scheduler)}
 	 * @return The builder
 	 */
-	public static RxObservableStringBuilder newObservable(String variableName, String type, Block doInBackground, SchedulerType observeOnScheduler )
+	public static RxObservableStringBuilder newObservable( String variableName, String type, Block doInBackground, SchedulerType observeOnScheduler )
 	{
 		return new RxObservableStringBuilder( variableName, type, doInBackground, observeOnScheduler );
 	}
@@ -102,7 +102,7 @@ public final class RxObservableStringBuilder
 	 *            this parameter is null.
 	 * @return The builder
 	 */
-	public RxObservableStringBuilder addDoOnSubscribe(Block doOnSubscribeBlock )
+	public RxObservableStringBuilder addDoOnSubscribe( Block doOnSubscribeBlock )
 	{
 		if ( doOnSubscribeBlock != null )
 		{
@@ -133,7 +133,7 @@ public final class RxObservableStringBuilder
 	 *            for example: for "doOnPostExecute(Integer number)" use number
 	 * @return The builder
 	 */
-	public RxObservableStringBuilder addDoOnNext(Block doOnNextBlock, String resultVariableName )
+	public RxObservableStringBuilder addDoOnNext( Block doOnNextBlock, String resultVariableName )
 	{
 		if ( doOnNextBlock != null )
 		{
@@ -167,7 +167,7 @@ public final class RxObservableStringBuilder
 	 * @param timeoutCatchBlock
 	 * @return The builder
 	 */
-	public RxObservableStringBuilder addTimeout(List<String> arguments, Block timeoutCatchBlock )
+	public RxObservableStringBuilder addTimeout( List<String> arguments, Block timeoutCatchBlock )
 	{
 		if ( !arguments.isEmpty() && arguments.size() == 2 && timeoutCatchBlock != null )
 		{
