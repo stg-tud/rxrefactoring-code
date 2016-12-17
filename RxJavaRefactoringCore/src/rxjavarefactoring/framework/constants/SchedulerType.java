@@ -10,8 +10,7 @@ import rx.Scheduler;
  */
 public enum SchedulerType
 {
-	ANDROID_MAIN_THREAD( "AndroidSchedulers.mainThread()" ),
-	JAVA_MAIN_THREAD( "Schedulers.immediate()" );
+	ANDROID_MAIN_THREAD( "AndroidSchedulers.mainThread()" ), JAVA_MAIN_THREAD( "Schedulers.immediate()" );
 
 	private final String mainThread;
 

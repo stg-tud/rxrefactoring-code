@@ -1,12 +1,12 @@
 package rxjavarefactoring.framework.api;
 
-import org.eclipse.jdt.core.ICompilationUnit;
+import java.util.Set;
 
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.ASTNode;
+
 import rxjavarefactoring.framework.refactoring.AbstractCollector;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
-
-import java.util.Set;
 
 public interface RxJavaRefactoringExtension<CollectorType extends AbstractCollector>
 {
@@ -35,8 +35,10 @@ public interface RxJavaRefactoringExtension<CollectorType extends AbstractCollec
 	 * using List, Sets, Maps, or similar data structures to accumulate
 	 * the {@link ASTNode} in the collector XYZ extends {@link AbstractCollector}.
 	 *
-	 * @param unit current compilation unit
-	 * @param collector collector
+	 * @param unit
+	 *            current compilation unit
+	 * @param collector
+	 *            collector
 	 */
 	void processUnit( ICompilationUnit unit, CollectorType collector );
 
@@ -48,10 +50,11 @@ public interface RxJavaRefactoringExtension<CollectorType extends AbstractCollec
 	 * Consider using a Worker for each refactoring case to avoid
 	 * having complex workers. The collector should help differentiating
 	 * the cases.
+	 * 
 	 * @return list of workers in charge of performing the refactorings
 	 * @param collector
 	 */
-	Set<AbstractRefactorWorker<CollectorType>> getRefactoringWorkers(CollectorType collector);
+	Set<AbstractRefactorWorker<CollectorType>> getRefactoringWorkers( CollectorType collector );
 
 	String getId();
 }

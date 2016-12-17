@@ -42,7 +42,7 @@ class TryBodyVisitor extends ASTVisitor
 		return neededExceptionsTypes;
 	}
 
-	private boolean isInTryBlock(MethodInvocation node )
+	private boolean isInTryBlock( MethodInvocation node )
 	{
 		return ASTUtil.findParent( node, CatchClause.class ) == null;
 	}

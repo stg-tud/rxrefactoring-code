@@ -12,22 +12,22 @@ import org.eclipse.jdt.core.dom.*;
  */
 class TryCatchClausesVisitor extends ASTVisitor
 {
-    private Map<ITypeBinding, CatchClause> caughtExceptionsMap;
+	private Map<ITypeBinding, CatchClause> caughtExceptionsMap;
 
 	TryCatchClausesVisitor()
 	{
-        caughtExceptionsMap = new HashMap<>();
+		caughtExceptionsMap = new HashMap<>();
 	}
 
 	@Override
-    public boolean visit(CatchClause node)
-    {
-        SingleVariableDeclaration exception = node.getException();
-        Type exceptionType = exception.getType();
-        ITypeBinding exceptionTypeBinding = exceptionType.resolveBinding();
-        caughtExceptionsMap.put(exceptionTypeBinding, node);
-        return true;
-    }
+	public boolean visit( CatchClause node )
+	{
+		SingleVariableDeclaration exception = node.getException();
+		Type exceptionType = exception.getType();
+		ITypeBinding exceptionTypeBinding = exceptionType.resolveBinding();
+		caughtExceptionsMap.put( exceptionTypeBinding, node );
+		return true;
+	}
 
 	Map<ITypeBinding, CatchClause> getCaughtExceptionsMap()
 	{

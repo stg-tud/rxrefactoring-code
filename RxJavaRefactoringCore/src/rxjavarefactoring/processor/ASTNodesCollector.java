@@ -25,9 +25,9 @@ public class ASTNodesCollector extends AbstractCollector
 	private final Map<ICompilationUnit, List<VariableDeclaration>> cuAnonymousCachedClassesMap;
 	private final Map<ICompilationUnit, List<MethodInvocation>> cuRelevantUsagesMap;
 
-	public ASTNodesCollector(String collectorName)
+	public ASTNodesCollector( String collectorName )
 	{
-		super(collectorName);
+		super( collectorName );
 		cuSubclassesMap = new HashMap<>();
 		cuAnonymousClassesMap = new HashMap<>();
 		cuAnonymousCachedClassesMap = new HashMap<>();

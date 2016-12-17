@@ -9,7 +9,7 @@ package rxjavarefactoring.framework.exceptions;
  */
 public class RxInvalidSyntaxException extends RuntimeException
 {
-	public RxInvalidSyntaxException(String message, String sourceCode )
+	public RxInvalidSyntaxException( String message, String sourceCode )
 	{
 		super( message + " - Source Code:\n" + sourceCode );
 	}

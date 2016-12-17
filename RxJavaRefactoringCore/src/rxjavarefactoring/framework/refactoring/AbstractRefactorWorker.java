@@ -20,17 +20,17 @@ public abstract class AbstractRefactorWorker<T extends AbstractCollector> implem
 	protected IProgressMonitor monitor;
 	protected final T collector;
 
-	public AbstractRefactorWorker(T collector)
+	public AbstractRefactorWorker( T collector )
 	{
 		this.collector = collector;
 	}
 
-	public void setRxMultipleChangeWriter(RxMultipleChangeWriter rxMultipleChangeWriter)
+	public void setRxMultipleChangeWriter( RxMultipleChangeWriter rxMultipleChangeWriter )
 	{
 		this.rxMultipleChangeWriter = rxMultipleChangeWriter;
 	}
 
-	public void setMonitor(IProgressMonitor monitor)
+	public void setMonitor( IProgressMonitor monitor )
 	{
 		this.monitor = monitor;
 	}

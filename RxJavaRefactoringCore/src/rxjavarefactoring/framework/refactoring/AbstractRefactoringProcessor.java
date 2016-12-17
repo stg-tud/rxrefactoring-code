@@ -12,8 +12,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.ltk.core.refactoring.Refactoring;
-
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
+
 import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.framework.writers.RxMultipleChangeWriter;
 import rxjavarefactoring.processor.WorkerStatus;
@@ -29,7 +29,7 @@ public abstract class AbstractRefactoringProcessor<T extends AbstractCollector> 
 	protected final T collector;
 	protected final RxMultipleChangeWriter rxMultipleChangeWriter;
 
-	public AbstractRefactoringProcessor(AbstractCollector collector)
+	public AbstractRefactoringProcessor( AbstractCollector collector )
 	{
 		this.collector = (T) collector;
 		rxMultipleChangeWriter = new RxMultipleChangeWriter();
@@ -42,7 +42,7 @@ public abstract class AbstractRefactoringProcessor<T extends AbstractCollector> 
 	}
 
 	@Override
-	public RefactoringStatus checkInitialConditions(IProgressMonitor iProgressMonitor ) throws CoreException, OperationCanceledException
+	public RefactoringStatus checkInitialConditions( IProgressMonitor iProgressMonitor ) throws CoreException, OperationCanceledException
 	{
 		return null;
 	}
@@ -61,7 +61,7 @@ public abstract class AbstractRefactoringProcessor<T extends AbstractCollector> 
 	protected <T extends AbstractCollector> void startWorkers( Set<AbstractRefactorWorker<T>> workers )
 	{
 		Set<Callable<WorkerStatus>> workerSet = new HashSet<>();
-		workers.stream().forEach(worker -> workerSet.add(worker));
+		workers.stream().forEach( worker -> workerSet.add( worker ) );
 
 		ExecutorService executor = Executors.newWorkStealingPool();
 		try

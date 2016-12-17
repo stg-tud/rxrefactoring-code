@@ -9,8 +9,8 @@ import org.eclipse.ltk.core.refactoring.Change;
 
 import rxjavarefactoring.framework.api.RxJavaRefactoringExtension;
 import rxjavarefactoring.framework.refactoring.AbstractCollector;
-import rxjavarefactoring.framework.refactoring.AbstractRefactoringProcessor;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
+import rxjavarefactoring.framework.refactoring.AbstractRefactoringProcessor;
 import rxjavarefactoring.framework.utils.RxLogger;
 
 /**
@@ -23,7 +23,7 @@ public class RefactoringProcessor extends AbstractRefactoringProcessor<ASTNodesC
 {
 	private RxJavaRefactoringExtension extension;
 
-	public RefactoringProcessor(RxJavaRefactoringExtension extension, AbstractCollector collector )
+	public RefactoringProcessor( RxJavaRefactoringExtension extension, AbstractCollector collector )
 	{
 		super( collector );
 		this.extension = extension;

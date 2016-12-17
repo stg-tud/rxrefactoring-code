@@ -3,7 +3,10 @@ package pluginhandlers;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.core.runtime.*;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.Platform;
 
 import rxjavarefactoring.RxJavaRefactoringApp;
 import rxjavarefactoring.framework.api.RxJavaRefactoringExtension;
@@ -26,20 +29,24 @@ public class RxRefactoringHandler extends AbstractHandler
 
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
 		String commandId = event.getCommand().getId();
-		IConfigurationElement[] config = registry.getConfigurationElementsFor(EXTENSION_ID);
-		try {
-			for (IConfigurationElement e : config) {
-				System.out.println("Evaluating extension");
-				final Object extension = e.createExecutableExtension("class");
-				if (extension instanceof RxJavaRefactoringExtension ) {
-					rxJavaRefactoringApp.setExtension((RxJavaRefactoringExtension) extension);
-					rxJavaRefactoringApp.setCommandId(commandId);
+		IConfigurationElement[] config = registry.getConfigurationElementsFor( EXTENSION_ID );
+		try
+		{
+			for ( IConfigurationElement e : config )
+			{
+				System.out.println( "Evaluating extension" );
+				final Object extension = e.createExecutableExtension( "class" );
+				if ( extension instanceof RxJavaRefactoringExtension )
+				{
+					rxJavaRefactoringApp.setExtension( (RxJavaRefactoringExtension) extension );
+					rxJavaRefactoringApp.setCommandId( commandId );
 				}
 			}
-		} catch (CoreException ex) {
-			System.out.println(ex.getMessage());
 		}
-
+		catch ( CoreException ex )
+		{
+			System.out.println( ex.getMessage() );
+		}
 
 		try
 		{

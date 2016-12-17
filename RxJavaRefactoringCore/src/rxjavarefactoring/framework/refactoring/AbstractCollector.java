@@ -17,7 +17,7 @@ public abstract class AbstractCollector extends ASTVisitor
 {
 	private String collectorName;
 
-	public AbstractCollector(String collectorName)
+	public AbstractCollector( String collectorName )
 	{
 		this.collectorName = collectorName;
 	}
