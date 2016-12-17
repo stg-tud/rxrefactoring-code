@@ -18,6 +18,7 @@ import rxjavarefactoring.framework.utils.ASTUtil;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/12/2016
  */
+// TODO: make this class thread safe!
 public class RxSingleChangeWriter
 {
 	private final ASTRewrite astRewriter;

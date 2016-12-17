@@ -24,6 +24,7 @@ import rxjavarefactoring.framework.utils.RxLogger;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/12/2016
  */
+// TODO: make this class thread safe
 public class RxMultipleChangeWriter
 {
 	private final Map<ICompilationUnit, CompilationUnitChange> icuChangesMap;

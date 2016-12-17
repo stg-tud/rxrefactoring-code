@@ -51,6 +51,7 @@ public class AnonymClassWorker extends AbstractRefactorWorker<ASTNodesCollector>
 				SwingWorkerVisitor swingWorkerVisitor = new SwingWorkerVisitor();
 				swingWorkerDeclaration.accept( swingWorkerVisitor );
 
+				// TODO: do not create the compilation unit here. Create a Map instead!
 				RxSingleChangeWriter singleChangeWriter = new RxSingleChangeWriter( icu, ast, getClass().getSimpleName() );
 
 				// Create rx.Observable using the Subscriber if necessary
