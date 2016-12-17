@@ -1,0 +1,5 @@
+/bin/
+/.idea/
+/libs/EclipsePDE-Lib
+RxJavaRefactoringCore.iml
+RxJavaRefactoringCore.jar

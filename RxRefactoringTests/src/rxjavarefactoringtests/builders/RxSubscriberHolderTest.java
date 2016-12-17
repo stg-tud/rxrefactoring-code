@@ -2,12 +2,12 @@ package rxjavarefactoringtests.builders;
 
 import static org.junit.Assert.assertEquals;
 
+import codegenerators.RxSubscriberHolder;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.Block;
 import org.junit.Test;
 
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
-import rxjavarefactoring.framework.codegenerators.RxSubscriberHolder;
 
 /**
  * Description: Tests {@link RxSubscriberHolder}<br>

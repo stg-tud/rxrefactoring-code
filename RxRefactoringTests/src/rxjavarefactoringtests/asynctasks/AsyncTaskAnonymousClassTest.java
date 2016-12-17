@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.Map;
 
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import framework.AbstractAndroidTest;
@@ -16,6 +17,7 @@ import rxjavarefactoring.RxJavaRefactoringApp;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/13/2016
  */
+@Ignore
 public class AsyncTaskAnonymousClassTest extends AbstractAndroidTest
 {
 	@Test

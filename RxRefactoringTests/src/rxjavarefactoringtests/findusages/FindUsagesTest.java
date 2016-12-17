@@ -11,6 +11,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.internal.corext.refactoring.util.RefactoringASTParser;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import framework.AbstractJavaTest;
@@ -22,6 +23,8 @@ import rxjavarefactoring.analyzers.InstanceToInvocationVisitor;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/16/2016
  */
+// TODO: remove this class if no longer needed.
+@Ignore
 public class FindUsagesTest extends AbstractJavaTest
 {
 	@Test

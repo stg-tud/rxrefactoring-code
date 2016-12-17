@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import framework.AbstractJavaTest;
 import rxjavarefactoring.RxJavaRefactoringApp;
+import rxjavarefactoring.SwingWorkerExtension;
 
 /**
  * Description: Test simple anonymous SwingWorker. Simple means that
@@ -124,6 +125,9 @@ public class SwingWorkerAnonymousSimpleCasesTest extends AbstractJavaTest
 				"ExpectedClassCase" + caseNumber + ".java" );
 
 		RxJavaRefactoringApp app = new RxJavaRefactoringApp();
+		SwingWorkerExtension swingWorkerExtension = new SwingWorkerExtension();
+		app.setCommandId(swingWorkerExtension.getId());
+		app.setExtension(swingWorkerExtension);
 
 		app.refactorOnly( targetFile );
 		app.start( null );

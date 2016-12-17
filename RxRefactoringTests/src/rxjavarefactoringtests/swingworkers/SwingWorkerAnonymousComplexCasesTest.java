@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import framework.AbstractJavaTest;
 import rxjavarefactoring.RxJavaRefactoringApp;
+import rxjavarefactoring.SwingWorkerExtension;
 
 /**
  * Description: Test complex anonymous SwingWorker.
@@ -105,6 +106,9 @@ public class SwingWorkerAnonymousComplexCasesTest extends AbstractJavaTest
 				"ExpectedClassCase" + caseNumber + ".java" );
 
 		RxJavaRefactoringApp app = new RxJavaRefactoringApp();
+		SwingWorkerExtension swingWorkerExtension = new SwingWorkerExtension();
+		app.setCommandId(swingWorkerExtension.getId());
+		app.setExtension(swingWorkerExtension);
 
 		app.refactorOnly( targetFile );
 		app.start( null );
