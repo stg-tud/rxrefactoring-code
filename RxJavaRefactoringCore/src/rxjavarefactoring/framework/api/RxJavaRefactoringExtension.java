@@ -56,5 +56,18 @@ public interface RxJavaRefactoringExtension<CollectorType extends AbstractCollec
 	 */
 	Set<AbstractRefactorWorker<CollectorType>> getRefactoringWorkers( CollectorType collector );
 
+	/**
+	 * @return Command Id of the extension
+	 */
 	String getId();
+
+	/**
+	 * This method is invoked once before the compilation units
+	 * start being processed. Use this method to specify the jar files
+	 * that should be added to the project
+	 */
+	default String getJarFilesPath()
+	{
+		return null;
+	}
 }

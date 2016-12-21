@@ -1,10 +1,13 @@
 package rxjavarefactoring;
 
+import java.io.File;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.io.FileUtils;
 import org.eclipse.core.runtime.ISafeRunnable;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SafeRunner;
@@ -52,13 +55,35 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 	}
 
 	@Override
+	protected void addJarFiles(String location)
+	{
+		try
+		{
+			String jarFilesPath = this.extension.getJarFilesPath();
+			if ( jarFilesPath == null )
+			{
+				return;
+			}
+
+			// copy jar files to DEPENDENCIES_DIRECTORY
+			String destinationDirectory = Paths.get(location, getDependenciesDirectoryName()).toAbsolutePath().toString();
+			FileUtils.copyDirectory(new File(jarFilesPath), new File(destinationDirectory));
+		}
+		catch ( Throwable throwable )
+		{
+			RxLogger.notifyExceptionInClient( throwable );
+			return;
+		}
+	}
+
+	@Override
 	public void refactorCompilationUnits( Map<String, ICompilationUnit> units )
 	{
 		RxLogger.info( this, "METHOD=refactorCompilationUnits - # units: " + units.size() );
 		AbstractCollector collector;
 		try
 		{
-			collector = extension.getASTNodesCollectorInstance();
+			collector = this.extension.getASTNodesCollectorInstance();
 			if ( collector == null )
 			{
 				new IllegalArgumentException( "getASTNodesCollectorInstance must return not null" );
@@ -74,7 +99,7 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 				.from( units.values() )
 				// Filter using the boolean formula "runningForTest -> validateName"
 				.filter( unit -> !runningForTests || validateUnitName( unit ) )
-				.doOnNext( unit -> processUnitFromExtension( unit, extension, collector ) )
+				.doOnNext( unit -> processUnitFromExtension( unit, this.extension, collector ) )
 				.doOnCompleted( () -> refactorUnits( collector ) )
 				.doOnError( t -> RxLogger.error( this, "METHOD=refactorCompilationUnits", t ) )
 				.subscribe();
@@ -82,8 +107,8 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 
 	public void refactorOnly( String... classNames )
 	{
-		targetClasses = new HashSet<>();
-		targetClasses.addAll( Arrays.asList( classNames ) );
+		this.targetClasses = new HashSet<>();
+		this.targetClasses.addAll( Arrays.asList( classNames ) );
 		runningForTests = true;
 	}
 
@@ -96,7 +121,7 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 
 	private boolean validateUnitName( ICompilationUnit unit )
 	{
-		return targetClasses != null && targetClasses.contains( unit.getElementName() );
+		return this.targetClasses != null && this.targetClasses.contains( unit.getElementName() );
 	}
 
 	private void refactorUnits( AbstractCollector collector )
@@ -113,7 +138,7 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 			NullProgressMonitor progressMonitor = new NullProgressMonitor();
 			processor.createChange( progressMonitor );
 			Map<ICompilationUnit, String> icuVsNewCodeMap = processor.getICompilationUnitVsNewSourceCodeMap();
-			originalCompilationUnitVsNewSourceCodeMap.putAll( icuVsNewCodeMap );
+			this.originalCompilationUnitVsNewSourceCodeMap.putAll( icuVsNewCodeMap );
 		}
 		catch ( Exception e )
 		{

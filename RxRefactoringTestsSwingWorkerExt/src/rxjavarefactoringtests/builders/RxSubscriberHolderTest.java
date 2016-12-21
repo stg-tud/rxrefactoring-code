@@ -19,7 +19,7 @@ public class RxSubscriberHolderTest
 	@Test
 	public void testSubscriberHolder()
 	{
-		// setup
+		// getJarFilesPath
 		String doOnNextBlockString = "for (Integer i : chunks) { System.out.println(i); }";
 
 		AST ast = AST.newAST( AST.JLS8 );

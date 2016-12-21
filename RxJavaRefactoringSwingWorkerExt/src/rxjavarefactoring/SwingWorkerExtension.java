@@ -10,7 +10,7 @@ import org.eclipse.jdt.internal.corext.refactoring.util.RefactoringASTParser;
 
 import domain.ClassDetails;
 import rxjavarefactoring.analyzers.DeclarationVisitor;
-import rxjavarefactoring.analyzers.UsagesVisitor;
+import rxjavarefactoring.analyzers.MethodInvocationVisitor;
 import rxjavarefactoring.framework.api.RxJavaRefactoringExtension;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.RxLogger;
@@ -41,12 +41,12 @@ public class SwingWorkerExtension implements RxJavaRefactoringExtension<ASTNodes
 
 		CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( unit, true );
 		DeclarationVisitor declarationVisitor = new DeclarationVisitor( ClassDetails.SWING_WORKER.getBinaryName() );
-		UsagesVisitor usagesVisitor = new UsagesVisitor(
+		MethodInvocationVisitor methodInvocationVisitor = new MethodInvocationVisitor(
 				ClassDetails.SWING_WORKER.getPublicMethodsMap(),
 				ClassDetails.SWING_WORKER.getBinaryName() );
 
 		cu.accept( declarationVisitor );
-		cu.accept( usagesVisitor );
+		cu.accept(methodInvocationVisitor);
 
 		String location = cu.getPackage().toString()
 				.replaceAll( "package ", "" )
@@ -60,7 +60,7 @@ public class SwingWorkerExtension implements RxJavaRefactoringExtension<ASTNodes
 			RxLogger.info( this, "METHOD=processUnit - " + className + " found in class: " + location );
 		}
 
-		if ( usagesVisitor.isUsagesFound() )
+		if ( methodInvocationVisitor.isUsagesFound() )
 		{
 			RxLogger.info( this, "METHOD=processUnit - Method Invocation of " + className + " found in class: " + location );
 		}
@@ -69,7 +69,7 @@ public class SwingWorkerExtension implements RxJavaRefactoringExtension<ASTNodes
 		collector.addSubclasses( unit, declarationVisitor.getSubclasses() );
 		collector.addAnonymClassDecl( unit, declarationVisitor.getAnonymousClasses() );
 		collector.addAnonymCachedClassDecl( unit, declarationVisitor.getAnonymousCachedClasses() );
-		collector.addRelevantUsages( unit, usagesVisitor.getUsages() );
+		collector.addRelevantUsages( unit, methodInvocationVisitor.getUsages() );
 	}
 
 	@Override

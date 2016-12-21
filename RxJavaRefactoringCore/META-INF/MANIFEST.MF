@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: RxRefactoring
-Bundle-SymbolicName: RxJavaRefactoringCore;singleton:=true
+Bundle-Name: RxJavaRefactoringCore
+Bundle-SymbolicName: de.tudarmstadt.stg.rxjava.refactoring.core;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
@@ -15,6 +15,7 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.jdt.ui;bundle-version="3.12.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ClassPath: libs/rxjava-1.2.2.jar,
+ libs/commons-io-2.5.jar,
  .
 Export-Package: pluginhandlers,
  rx,

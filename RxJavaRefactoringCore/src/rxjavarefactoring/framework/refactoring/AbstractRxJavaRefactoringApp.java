@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.*;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -53,6 +54,8 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 		return null;
 	}
 
+	protected abstract void addJarFiles(String location);
+
 	@Override
 	public void stop()
 	{
@@ -90,6 +93,8 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 		{
 			RxLogger.info( this, "METHOD=refactorProject : PROJECT ----> " + project.getName() );
 			final String location = project.getLocation().toPortableString();
+			addJarFiles(location);
+			project.refreshLocal(IResource.DEPTH_INFINITE, null);
 			updateClassPath( location + getDependenciesDirectoryName(), javaProject );
 			compilationUnitsMap = getCompilationUnits( javaProject );
 			refactorCompilationUnits( compilationUnitsMap );
@@ -97,6 +102,10 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 		catch ( JavaModelException e )
 		{
 			RxLogger.error( this, "Project: " + project.getName() + " could not be refactored.", e );
+		}
+		catch ( CoreException e )
+		{
+			RxLogger.error( this, "Project: " + project.getName() + " resources could not be refreshed.", e );
 		}
 	}
 
