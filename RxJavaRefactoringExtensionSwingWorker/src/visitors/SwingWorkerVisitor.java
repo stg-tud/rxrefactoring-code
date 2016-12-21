@@ -3,9 +3,9 @@ package visitors;
 import java.util.ArrayList;
 import java.util.List;
 
+import domain.SwingWorkerInfo;
 import org.eclipse.jdt.core.dom.*;
 
-import domain.ClassDetails;
 import rxjavarefactoring.framework.utils.ASTUtil;
 
 /**
@@ -35,10 +35,13 @@ public class SwingWorkerVisitor extends ASTVisitor
 	private Block doneBlock;
 	private Block processBlock;
 	private Block timeoutCatchBlock;
+	private Block interruptedCatchBlock;
+	private String timeoutExceptionName;
+	private String interruptedExceptionName;
 	private Type resultType;
-	private String resultVariableName;
-	private String progressUpdateTypeName;
-	private String progressUpdateVariableName;
+	private Type processType;
+	private String asyncResultVarName;
+	private String processVariableName;
 	private List<MethodInvocation> methodInvocationsGet;
 	private List<MethodInvocation> methodInvocationsPublish;
 	private List<SuperMethodInvocation> superMethodInvocationsPublish;
@@ -62,6 +65,16 @@ public class SwingWorkerVisitor extends ASTVisitor
 	}
 
 	@Override
+	public boolean visit(ClassInstanceCreation node)
+	{
+		ParameterizedType type = (ParameterizedType) node.getType();
+		List argumentTypes = type.typeArguments();
+		resultType = (Type) argumentTypes.get(0);
+		processType = (Type) argumentTypes.get(1);
+		return true;
+	}
+
+	@Override
 	public boolean visit( Block node )
 	{
 		ASTNode parent = node.getParent();
@@ -77,13 +90,12 @@ public class SwingWorkerVisitor extends ASTVisitor
 			else if ( DONE.equals( methodDeclarationName ) )
 			{
 				doneBlock = node;
-				resultVariableName = createUniqueName( ASYNC_RESULT );
+				asyncResultVarName = createUniqueName( ASYNC_RESULT );
 			}
 			else if ( PROCESS.equals( methodDeclarationName ) )
 			{
 				processBlock = node;
-				progressUpdateTypeName = ASTUtil.getParameterType( methodDeclaration, 0 );
-				progressUpdateVariableName = ASTUtil.getVariableName( methodDeclaration, 0 );
+				processVariableName = ASTUtil.getVariableName( methodDeclaration, 0 );
 			}
 		}
 		return true;
@@ -92,7 +104,7 @@ public class SwingWorkerVisitor extends ASTVisitor
 	@Override
 	public boolean visit( MethodInvocation node )
 	{
-		if ( ASTUtil.matchesTargetMethod( node, GET, ClassDetails.SWING_WORKER.getBinaryName() ) )
+		if ( ASTUtil.matchesTargetMethod( node, GET, SwingWorkerInfo.getBinaryName()) )
 		{
 			if ( node.arguments().isEmpty() )
 			{
@@ -113,7 +125,7 @@ public class SwingWorkerVisitor extends ASTVisitor
 			}
 
 		}
-		else if ( ASTUtil.matchesTargetMethod( node, PUBLISH, ClassDetails.SWING_WORKER.getBinaryName() ) )
+		else if ( ASTUtil.matchesTargetMethod( node, PUBLISH, SwingWorkerInfo.getBinaryName() ) )
 		{
 			methodInvocationsPublish.add( node );
 
@@ -144,16 +156,16 @@ public class SwingWorkerVisitor extends ASTVisitor
 	@Override
 	public boolean visit( SuperMethodInvocation node )
 	{
-		if ( ASTUtil.matchesTargetMethod( node, GET, ClassDetails.SWING_WORKER.getBinaryName() ) )
+		if ( ASTUtil.matchesTargetMethod( node, GET, SwingWorkerInfo.getBinaryName() ) )
 		{
 			superMethodInvocationsGet.add( node );
 		}
-		else if ( ASTUtil.matchesTargetMethod( node, PUBLISH, ClassDetails.SWING_WORKER.getBinaryName() ) )
+		else if ( ASTUtil.matchesTargetMethod( node, PUBLISH, SwingWorkerInfo.getBinaryName() ) )
 		{
 			superMethodInvocationsPublish.add( node );
 		}
-		else if ( ASTUtil.matchesTargetMethod( node, DONE, ClassDetails.SWING_WORKER.getBinaryName() ) ||
-				ASTUtil.matchesTargetMethod( node, PROCESS, ClassDetails.SWING_WORKER.getBinaryName() ) )
+		else if ( ASTUtil.matchesTargetMethod( node, DONE, SwingWorkerInfo.getBinaryName() ) ||
+				ASTUtil.matchesTargetMethod( node, PROCESS, SwingWorkerInfo.getBinaryName() ) )
 		{
 			superMethodInvocationsToRemove.add( node );
 		}
@@ -175,14 +187,14 @@ public class SwingWorkerVisitor extends ASTVisitor
 		return resultType;
 	}
 
-	public String getProgressUpdateTypeName()
+	public Type getProcessType()
 	{
-		return progressUpdateTypeName;
+		return processType;
 	}
 
-	public String getResultVariableName()
+	public String getAsyncResultVarName()
 	{
-		return resultVariableName;
+		return asyncResultVarName;
 	}
 
 	public List<String> getTimeoutArguments()
@@ -200,14 +212,29 @@ public class SwingWorkerVisitor extends ASTVisitor
 		return timeoutCatchBlock;
 	}
 
+	public Block getInterruptedCatchBlock()
+	{
+		return interruptedCatchBlock;
+	}
+
+	public String getTimeoutExceptionName()
+	{
+		return timeoutExceptionName;
+	}
+
+	public String getInterruptedExceptionName()
+	{
+		return interruptedExceptionName;
+	}
+
 	public Block getProcessBlock()
 	{
 		return processBlock;
 	}
 
-	public String getProgressUpdateVariableName()
+	public String getProcessVariableName()
 	{
-		return progressUpdateVariableName;
+		return processVariableName;
 	}
 
 	public List<MethodInvocation> getMethodInvocationsPublish()
@@ -279,6 +306,15 @@ public class SwingWorkerVisitor extends ASTVisitor
 				if ( ASTUtil.isTypeOf( timeOutException, type.resolveBinding().getBinaryName() ) )
 				{
 					timeoutCatchBlock = catchClause.getBody();
+					timeoutExceptionName = catchClause.getException().getName().toString();
+				}
+
+				ITypeBinding interruptedException = exceptionTypes[ 0 ];
+				type = declaration.getType();
+				if ( ASTUtil.isTypeOf( interruptedException, type.resolveBinding().getBinaryName() ) )
+				{
+					interruptedCatchBlock = catchClause.getBody();
+					interruptedExceptionName = catchClause.getException().getName().toString();
 				}
 			}
 		}

@@ -25,7 +25,7 @@ import rxjavarefactoring.framework.utils.RxLogger;
  * Created: 11/12/2016
  */
 // TODO: make this class thread safe
-public class RxMultipleChangeWriter
+public class RxMultipleUnitsWriter
 {
 	private final Map<ICompilationUnit, CompilationUnitChange> icuChangesMap;
 	private final Map<ICompilationUnit, Set<String>> icuAddedImportsMap;
@@ -33,7 +33,7 @@ public class RxMultipleChangeWriter
 	private final Map<ICompilationUnit, String> icuVsNewSourceCodeMap;
 	private ImportRewrite importRewriter;
 
-	public RxMultipleChangeWriter()
+	public RxMultipleUnitsWriter()
 	{
 		icuChangesMap = new HashMap<>();
 		icuAddedImportsMap = new HashMap<>();
@@ -49,7 +49,7 @@ public class RxMultipleChangeWriter
 	 * @param singleChangeWriter
 	 *            single change writer of the compilation unit
 	 */
-	public void addChange( ICompilationUnit icu, RxSingleChangeWriter singleChangeWriter )
+	public void addChange( ICompilationUnit icu, RxSingleUnitWriter singleChangeWriter )
 	{
 		String name = icu.getElementName();
 		try
@@ -152,7 +152,7 @@ public class RxMultipleChangeWriter
 		}
 	}
 
-	private void updateImports( ICompilationUnit icu, RxSingleChangeWriter singleChangeWriter )
+	private void updateImports( ICompilationUnit icu, RxSingleUnitWriter singleChangeWriter )
 	{
 		Set<String> addedImports = singleChangeWriter.getAddedImports();
 		Set<String> removedImports = singleChangeWriter.getRemovedImports();

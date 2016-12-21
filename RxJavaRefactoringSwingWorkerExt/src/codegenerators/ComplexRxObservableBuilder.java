@@ -5,7 +5,7 @@ import java.util.List;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
-import rxjavarefactoring.framework.codegenerators.IdsManager;
+import rxjavarefactoring.framework.codegenerators.DynamicIdsMapHolder;
 
 /**
  * Description: Builder to create inner classes as string<br>
@@ -22,7 +22,7 @@ public final class ComplexRxObservableBuilder
 
 	private ComplexRxObservableBuilder( String icuName )
 	{
-		idNumber = IdsManager.getNextComplexObsId( icuName );
+		idNumber = DynamicIdsMapHolder.getNextObservableId( icuName );
 		rxComplexObservableBuilder = new StringBuilder();
 		rxComplexObservableBuilder.append( "private class ComplexRxObservable" );
 		rxComplexObservableBuilder.append( getNumber() );

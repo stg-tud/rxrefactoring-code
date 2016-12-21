@@ -10,13 +10,13 @@ import java.util.concurrent.ConcurrentHashMap;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/23/2016
  */
-public final class IdsManager
+public final class DynamicIdsMapHolder
 {
 	private static final String EMPTY = "";
 	private static final int INITIAL_ID = 0;
 
-	private static Map<String, Integer> subscriberCounter = new ConcurrentHashMap<>();
-	private static Map<String, Integer> complexObservableCounter = new ConcurrentHashMap<>();
+	private static Map<String, Integer> observerCounter = new ConcurrentHashMap<>();
+	private static Map<String, Integer> observableCounter = new ConcurrentHashMap<>();
 
 	/**
 	 * retrieves the next id for a generated subscriber for the given
@@ -26,10 +26,10 @@ public final class IdsManager
 	 *            name of the compilation unit
 	 * @return next id
 	 */
-	public static String getNextSubscriberId( String icuName )
+	public static String getNextObserverId(String icuName )
 	{
-		incAndGetCounter( icuName, IdsManager.subscriberCounter );
-		return getId( icuName, IdsManager.subscriberCounter );
+		incAndGetCounter( icuName, DynamicIdsMapHolder.observerCounter);
+		return getId( icuName, DynamicIdsMapHolder.observerCounter);
 	}
 
 	/**
@@ -40,10 +40,10 @@ public final class IdsManager
 	 *            name of the compilation unit
 	 * @return next id
 	 */
-	public static String getNextComplexObsId( String icuName )
+	public static String getNextObservableId( String icuName )
 	{
-		incAndGetCounter( icuName, IdsManager.complexObservableCounter );
-		return getId( icuName, IdsManager.complexObservableCounter );
+		incAndGetCounter( icuName, DynamicIdsMapHolder.observableCounter );
+		return getId( icuName, DynamicIdsMapHolder.observableCounter );
 	}
 
 	/**
@@ -53,9 +53,9 @@ public final class IdsManager
 	 * @param icuName
 	 * @return
 	 */
-	public static String getLastComplexObsId( String icuName )
+	public static String getLastObservableId( String icuName )
 	{
-		return getId( icuName, IdsManager.complexObservableCounter );
+		return getId( icuName, DynamicIdsMapHolder.observableCounter );
 	}
 
 	private static String getId( String icuName, Map<String, Integer> map )

@@ -1,15 +1,9 @@
 package rxjavarefactoring.processor;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.eclipse.jdt.core.dom.VariableDeclaration;
+import org.eclipse.jdt.core.dom.*;
 
 import rxjavarefactoring.framework.refactoring.AbstractCollector;
 
@@ -20,63 +14,80 @@ import rxjavarefactoring.framework.refactoring.AbstractCollector;
  */
 public class ASTNodesCollector extends AbstractCollector
 {
-	private final Map<ICompilationUnit, List<TypeDeclaration>> cuSubclassesMap;
-	private final Map<ICompilationUnit, List<AnonymousClassDeclaration>> cuAnonymousClassesMap;
-	private final Map<ICompilationUnit, List<VariableDeclaration>> cuAnonymousCachedClassesMap;
-	private final Map<ICompilationUnit, List<MethodInvocation>> cuRelevantUsagesMap;
+	private final Map<ICompilationUnit, List<TypeDeclaration>> typeDeclMap;
+	private final Map<ICompilationUnit, List<AnonymousClassDeclaration>> cuAnonymousClassDeclMap;
+	private final Map<ICompilationUnit, List<VariableDeclaration>> variableDeclMap;
+	private final Map<ICompilationUnit, List<Assignment>> assignmentsMap;
+	private final Map<ICompilationUnit, List<MethodInvocation>> methodInvocationMap;
 
 	public ASTNodesCollector( String collectorName )
 	{
 		super( collectorName );
-		cuSubclassesMap = new HashMap<>();
-		cuAnonymousClassesMap = new HashMap<>();
-		cuAnonymousCachedClassesMap = new HashMap<>();
-		cuRelevantUsagesMap = new HashMap<>();
+		typeDeclMap = new HashMap<>();
+		cuAnonymousClassDeclMap = new HashMap<>();
+		variableDeclMap = new HashMap<>();
+		methodInvocationMap = new HashMap<>();
+		assignmentsMap = new HashMap<>();
 	}
 
 	public void addSubclasses( ICompilationUnit cu, List<TypeDeclaration> subclasses )
 	{
-		addToMap( cu, subclasses, cuSubclassesMap );
+		addToMap( cu, subclasses, typeDeclMap);
 	}
 
 	public void addAnonymClassDecl( ICompilationUnit cu, List<AnonymousClassDeclaration> anonymDeclarations )
 	{
-		addToMap( cu, anonymDeclarations, cuAnonymousClassesMap );
+		addToMap( cu, anonymDeclarations, cuAnonymousClassDeclMap);
 	}
 
-	public void addAnonymCachedClassDecl( ICompilationUnit cu, List<VariableDeclaration> anonymCachedDeclarations )
+	public void addVariableDeclarations(ICompilationUnit cu, List<VariableDeclaration> anonymCachedDeclarations )
 	{
-		addToMap( cu, anonymCachedDeclarations, cuAnonymousCachedClassesMap );
+		addToMap( cu, anonymCachedDeclarations, variableDeclMap);
+	}
+
+	public void addAssignments(ICompilationUnit cu, List<Assignment> assignments )
+	{
+		addToMap( cu, assignments, assignmentsMap);
 	}
 
 	public void addRelevantUsages( ICompilationUnit cu, List<MethodInvocation> usages )
 	{
-		addToMap( cu, usages, cuRelevantUsagesMap );
+		addToMap( cu, usages, methodInvocationMap);
 	}
 
-	public Map<ICompilationUnit, List<TypeDeclaration>> getCuSubclassesMap()
+	public Map<ICompilationUnit, List<TypeDeclaration>> getTypeDeclMap()
 	{
-		return Collections.unmodifiableMap( cuSubclassesMap );
+		return Collections.unmodifiableMap(typeDeclMap);
 	}
 
-	public Map<ICompilationUnit, List<AnonymousClassDeclaration>> getCuAnonymousClassesMap()
+	public Map<ICompilationUnit, List<AnonymousClassDeclaration>> getCuAnonymousClassDeclMap()
 	{
-		return Collections.unmodifiableMap( cuAnonymousClassesMap );
+		return Collections.unmodifiableMap(cuAnonymousClassDeclMap);
 	}
 
-	public Map<ICompilationUnit, List<VariableDeclaration>> getCuAnonymousCachedClassesMap()
+	public Map<ICompilationUnit, List<VariableDeclaration>> getVariableDeclMap()
 	{
-		return Collections.unmodifiableMap( cuAnonymousCachedClassesMap );
+		return Collections.unmodifiableMap(variableDeclMap);
 	}
 
-	public Map<ICompilationUnit, List<MethodInvocation>> getCuRelevantUsagesMap()
+	public Map<ICompilationUnit, List<Assignment>> getAssigmentsMap()
 	{
-		return Collections.unmodifiableMap( cuRelevantUsagesMap );
+		return Collections.unmodifiableMap(assignmentsMap);
+	}
+
+	public Map<ICompilationUnit, List<MethodInvocation>> getMethodInvocationMap()
+	{
+		return Collections.unmodifiableMap(methodInvocationMap);
 	}
 
 	public int getNumberOfCompilationUnits()
 	{
-		return cuSubclassesMap.size() + cuAnonymousClassesMap.size()
-				+ cuAnonymousCachedClassesMap.size() + cuRelevantUsagesMap.size();
+		Set<ICompilationUnit> allCompilationUnits = new HashSet<>();
+		allCompilationUnits.addAll(typeDeclMap.keySet());
+		allCompilationUnits.addAll(cuAnonymousClassDeclMap.keySet());
+		allCompilationUnits.addAll(variableDeclMap.keySet());
+		allCompilationUnits.addAll(assignmentsMap.keySet());
+		allCompilationUnits.addAll(methodInvocationMap.keySet());
+		return allCompilationUnits.size();
 	}
 }

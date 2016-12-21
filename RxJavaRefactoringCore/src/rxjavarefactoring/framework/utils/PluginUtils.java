@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URL;
 
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.osgi.framework.Bundle;
 
 /**
@@ -46,5 +47,14 @@ public class PluginUtils
 			pluginInstallDir = pluginInstallDir.substring( 1 );
 
 		return pluginInstallDir;
+	}
+
+	public static String getCompilationUnitFullName(CompilationUnit cu)
+	{
+		return cu.getPackage().toString()
+				.replaceAll( "package ", "" )
+				.replaceAll( ";", "." + cu.getJavaElement().getElementName() )
+				.replaceAll( "\n", "" )
+				.replaceAll( "\\.java", "" );
 	}
 }

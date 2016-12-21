@@ -16,3 +16,6 @@ Require-Bundle: de.tudarmstadt.stg.rxjava.refactoring.core,
  org.eclipse.jface.text;bundle-version="3.8.2",
  org.eclipse.jdt.ui;bundle-version="3.12.1"
 Export-Package: rxjavarefactoring
+Import-Package: org.apache.commons.io
+Bundle-ClassPath: libs/freemarker.jar,
+ .

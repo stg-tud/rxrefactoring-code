@@ -25,15 +25,14 @@ public class JavaAppTestExample extends AbstractJavaTest
 	must be adapted to a real scenario
 	 */
 	@Test
-	@Ignore
 	public void testRefactoring() throws Exception
 	{
-		String targetFile = "ExampleClass.java";
+		String targetFile = "GeneralCase.java";
 
 		// The name of the class does not need to match the name of the file
 		String expectedSourceCode = getSourceCode(
 				"expected.java.code",
-				"ExpectedClass.java" );
+				"GeneralCaseRefactored.java" );
 
 		executeTest( targetFile, expectedSourceCode );
 	}

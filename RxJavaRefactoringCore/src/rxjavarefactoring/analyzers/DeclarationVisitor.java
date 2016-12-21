@@ -3,10 +3,7 @@ package rxjavarefactoring.analyzers;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.eclipse.jdt.core.dom.VariableDeclaration;
+import org.eclipse.jdt.core.dom.*;
 
 import rxjavarefactoring.framework.utils.ASTUtil;
 
@@ -28,14 +25,16 @@ public class DeclarationVisitor extends ASTVisitor
 	private final String classBinaryName;
 	private final List<TypeDeclaration> subclasses;
 	private final List<AnonymousClassDeclaration> anonymousClasses;
-	private final List<VariableDeclaration> anonymousCachedClasses;
+	private final List<VariableDeclaration> variableDeclarations;
+	private final List<Assignment> assignments;
 
 	public DeclarationVisitor( String classBinaryName )
 	{
 		this.classBinaryName = classBinaryName;
 		subclasses = new ArrayList<>();
 		anonymousClasses = new ArrayList<>();
-		anonymousCachedClasses = new ArrayList<>();
+		variableDeclarations = new ArrayList<>();
+		assignments = new ArrayList<>();
 	}
 
 	@Override
@@ -53,15 +52,21 @@ public class DeclarationVisitor extends ASTVisitor
 	{
 		if ( ASTUtil.isTypeOf( node, classBinaryName ) )
 		{
-			VariableDeclaration parent = ASTUtil.findParent( node, VariableDeclaration.class );
-			if ( parent == null )
+			VariableDeclaration varDeclParent = ASTUtil.findParent( node, VariableDeclaration.class );
+			if ( varDeclParent != null )
 			{
-				anonymousClasses.add( node );
+				variableDeclarations.add( varDeclParent );
+				return true;
 			}
-			else
+
+			Assignment assignmentParent = ASTUtil.findParent( node, Assignment.class );
+			if ( assignmentParent != null )
 			{
-				anonymousCachedClasses.add( parent );
+				assignments.add( assignmentParent );
+				return true;
 			}
+
+			anonymousClasses.add( node );
 		}
 		return true;
 	}
@@ -90,21 +95,33 @@ public class DeclarationVisitor extends ASTVisitor
 	}
 
 	/**
-	 * AnonymousCachedClasses correspond to class instance creations that are
+	 * VariableDeclarations correspond to class instance creations that are
 	 * assigned to a variable.<br>
+	 * Example: TargetClass target = new TargetClass(){...}
+	 * 
+	 * @return A variable declaration of TargetClass
+	 */
+	public List<VariableDeclaration> getVariableDeclarations()
+	{
+		return variableDeclarations;
+	}
+
+	/**
+	 * Assigments correspond to class instance creations that are assigned
+	 * without specifying the variable type.<br>
 	 * Example: target = new TargetClass(){...}
 	 * 
-	 * @return A Variable declaration of TargetClass
+	 * @return An assignment of TargetClass
 	 */
-	public List<VariableDeclaration> getAnonymousCachedClasses()
+	public List<Assignment> getAssignments()
 	{
-		return anonymousCachedClasses;
+		return assignments;
 	}
 
 	public boolean isTargetClassFound()
 	{
 		return !subclasses.isEmpty() ||
 				!anonymousClasses.isEmpty() ||
-				!anonymousCachedClasses.isEmpty();
+				!variableDeclarations.isEmpty();
 	}
 }

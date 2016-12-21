@@ -5,7 +5,7 @@ import java.util.concurrent.Callable;
 import org.eclipse.core.runtime.IProgressMonitor;
 
 import rxjavarefactoring.framework.utils.RxLogger;
-import rxjavarefactoring.framework.writers.RxMultipleChangeWriter;
+import rxjavarefactoring.framework.writers.RxMultipleUnitsWriter;
 import rxjavarefactoring.processor.WorkerStatus;
 
 /**
@@ -16,7 +16,7 @@ import rxjavarefactoring.processor.WorkerStatus;
  */
 public abstract class AbstractRefactorWorker<T extends AbstractCollector> implements Callable<WorkerStatus>
 {
-	protected RxMultipleChangeWriter rxMultipleChangeWriter;
+	protected RxMultipleUnitsWriter rxMultipleUnitsWriter;
 	protected IProgressMonitor monitor;
 	protected final T collector;
 
@@ -25,9 +25,9 @@ public abstract class AbstractRefactorWorker<T extends AbstractCollector> implem
 		this.collector = collector;
 	}
 
-	public void setRxMultipleChangeWriter( RxMultipleChangeWriter rxMultipleChangeWriter )
+	public void setRxMultipleUnitsWriter(RxMultipleUnitsWriter rxMultipleUnitsWriter)
 	{
-		this.rxMultipleChangeWriter = rxMultipleChangeWriter;
+		this.rxMultipleUnitsWriter = rxMultipleUnitsWriter;
 	}
 
 	public void setMonitor( IProgressMonitor monitor )

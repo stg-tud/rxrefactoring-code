@@ -19,14 +19,14 @@ import rxjavarefactoring.framework.utils.ASTUtil;
  * Created: 11/12/2016
  */
 // TODO: make this class thread safe!
-public class RxSingleChangeWriter
+public class RxSingleUnitWriter
 {
 	private final ASTRewrite astRewriter;
 	private final CompilationUnitChange cuChange;
 	private final Set<String> addedImports;
 	private final Set<String> removedImports;
 
-	public RxSingleChangeWriter( ICompilationUnit icu, AST ast, String refactoringDescription )
+	public RxSingleUnitWriter(ICompilationUnit icu, AST ast, String refactoringDescription )
 	{
 		addedImports = new HashSet<>();
 		removedImports = new HashSet<>();
@@ -39,7 +39,7 @@ public class RxSingleChangeWriter
 
 	/**
 	 * Add import declaration to the compilation unit. The imports are saved
-	 * into a list that is used by the {@link RxMultipleChangeWriter} where they
+	 * into a list that is used by the {@link RxMultipleUnitsWriter} where they
 	 * are finally added
 	 * 
 	 * @param importClass
@@ -52,7 +52,7 @@ public class RxSingleChangeWriter
 
 	/**
 	 * Remove import declaration from the compilation unit. The imports are
-	 * saved int a list that is used by the {@link RxMultipleChangeWriter} where
+	 * saved int a list that is used by the {@link RxMultipleUnitsWriter} where
 	 * they are finally removed
 	 * 
 	 * @param importClass
@@ -118,7 +118,7 @@ public class RxSingleChangeWriter
 	}
 
 	/**
-	 * Used by {@link RxMultipleChangeWriter}
+	 * Used by {@link RxMultipleUnitsWriter}
 	 * 
 	 * @return writer
 	 */
@@ -128,7 +128,7 @@ public class RxSingleChangeWriter
 	}
 
 	/**
-	 * Used by {@link RxMultipleChangeWriter}
+	 * Used by {@link RxMultipleUnitsWriter}
 	 * 
 	 * @return set of added imports
 	 */
@@ -138,7 +138,7 @@ public class RxSingleChangeWriter
 	}
 
 	/**
-	 * Used by {@link RxMultipleChangeWriter}
+	 * Used by {@link RxMultipleUnitsWriter}
 	 * 
 	 * @return set of removed imports
 	 */

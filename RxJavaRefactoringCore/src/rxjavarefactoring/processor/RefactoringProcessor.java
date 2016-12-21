@@ -50,7 +50,7 @@ public class RefactoringProcessor extends AbstractRefactoringProcessor<ASTNodesC
 		for ( AbstractRefactorWorker worker : workers )
 		{
 			worker.setMonitor( monitor );
-			worker.setRxMultipleChangeWriter( rxMultipleChangeWriter );
+			worker.setRxMultipleUnitsWriter(rxMultipleUnitsWriter);
 		}
 
 		startWorkers( workers );

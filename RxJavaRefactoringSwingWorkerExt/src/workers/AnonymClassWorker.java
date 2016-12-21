@@ -10,12 +10,12 @@ import codegenerators.ComplexRxObservableBuilder;
 import codegenerators.RxObservableStringBuilder;
 import codegenerators.RxSubscriberHolder;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
-import rxjavarefactoring.framework.codegenerators.IdsManager;
+import rxjavarefactoring.framework.codegenerators.DynamicIdsMapHolder;
 import rxjavarefactoring.framework.constants.SchedulerType;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.RxLogger;
-import rxjavarefactoring.framework.writers.RxSingleChangeWriter;
+import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
 import rxjavarefactoring.processor.ASTNodesCollector;
 import rxjavarefactoring.processor.WorkerStatus;
 import visitors.SwingWorkerVisitor;
@@ -37,7 +37,7 @@ public class AnonymClassWorker extends AbstractRefactorWorker<ASTNodesCollector>
 	@Override
 	protected WorkerStatus refactor()
 	{
-		Map<ICompilationUnit, List<AnonymousClassDeclaration>> cuAnonymousClassesMap = collector.getCuAnonymousClassesMap();
+		Map<ICompilationUnit, List<AnonymousClassDeclaration>> cuAnonymousClassesMap = collector.getCuAnonymousClassDeclMap();
 		int numCunits = collector.getNumberOfCompilationUnits();
 		monitor.beginTask( getClass().getSimpleName(), numCunits );
 		RxLogger.info( this, "METHOD=refactor - Number of compilation units: " + numCunits );
@@ -53,7 +53,7 @@ public class AnonymClassWorker extends AbstractRefactorWorker<ASTNodesCollector>
 				swingWorkerDeclaration.accept( swingWorkerVisitor );
 
 				// TODO: do not create the compilation unit here. Create a Map instead!
-				RxSingleChangeWriter singleChangeWriter = new RxSingleChangeWriter( icu, ast, getClass().getSimpleName() );
+				RxSingleUnitWriter singleChangeWriter = new RxSingleUnitWriter( icu, ast, getClass().getSimpleName() );
 
 				// Create rx.Observable using the Subscriber if necessary
 				RxLogger.info( this, "METHOD=refactor - Creating rx.Observable object: " + icu.getElementName() );
@@ -65,7 +65,7 @@ public class AnonymClassWorker extends AbstractRefactorWorker<ASTNodesCollector>
 
 				// Add changes to the multiple compilation units write object
 				RxLogger.info( this, "METHOD=refactor - Refactoring class: " + icu.getElementName() );
-				rxMultipleChangeWriter.addChange( icu, singleChangeWriter );
+				rxMultipleUnitsWriter.addChange( icu, singleChangeWriter );
 
 			}
 			monitor.worked( 1 );
@@ -77,7 +77,7 @@ public class AnonymClassWorker extends AbstractRefactorWorker<ASTNodesCollector>
 
 	private void addRxObservable(
 			ICompilationUnit icu,
-			RxSingleChangeWriter rewriter,
+			RxSingleUnitWriter rewriter,
 			Statement referenceStatement,
 			SwingWorkerVisitor swingWorkerVisitor,
 			AnonymousClassDeclaration swingWorkerDeclaration )
@@ -139,7 +139,7 @@ public class AnonymClassWorker extends AbstractRefactorWorker<ASTNodesCollector>
 			TypeDeclaration complexRxObservableDecl = ASTNodeFactory.createTypeDeclarationFromText( ast, complexRxObservableClass );
 			rewriter.addInnerClassAfter( complexRxObservableDecl, referenceStatement );
 
-			String lastComplexObsId = IdsManager.getLastComplexObsId( icu.getElementName() );
+			String lastComplexObsId = DynamicIdsMapHolder.getLastObservableId( icu.getElementName() );
 			String newStatementString = new StringBuilder().append( "new ComplexRxObservable()" )
 					.append( lastComplexObsId )
 					.append( ".getAsyncObservable()" )
@@ -154,7 +154,7 @@ public class AnonymClassWorker extends AbstractRefactorWorker<ASTNodesCollector>
 		updateImports( rewriter, swingWorkerVisitor );
 	}
 
-	private void updateImports( RxSingleChangeWriter rewriter, SwingWorkerVisitor swingWorkerVisitor )
+	private void updateImports(RxSingleUnitWriter rewriter, SwingWorkerVisitor swingWorkerVisitor )
 	{
 		rewriter.addImport( "rx.Observable" );
 		rewriter.addImport( "rx.schedulers.Schedulers" );

@@ -42,8 +42,8 @@ public class SwingWorkerExtension implements RxJavaRefactoringExtension<ASTNodes
 		CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( unit, true );
 		DeclarationVisitor declarationVisitor = new DeclarationVisitor( ClassDetails.SWING_WORKER.getBinaryName() );
 		MethodInvocationVisitor methodInvocationVisitor = new MethodInvocationVisitor(
-				ClassDetails.SWING_WORKER.getPublicMethodsMap(),
-				ClassDetails.SWING_WORKER.getBinaryName() );
+				ClassDetails.SWING_WORKER.getBinaryName(), ClassDetails.SWING_WORKER.getPublicMethodsMap()
+		);
 
 		cu.accept( declarationVisitor );
 		cu.accept(methodInvocationVisitor);
@@ -68,7 +68,7 @@ public class SwingWorkerExtension implements RxJavaRefactoringExtension<ASTNodes
 		// Cache relevant information in an object that contains maps
 		collector.addSubclasses( unit, declarationVisitor.getSubclasses() );
 		collector.addAnonymClassDecl( unit, declarationVisitor.getAnonymousClasses() );
-		collector.addAnonymCachedClassDecl( unit, declarationVisitor.getAnonymousCachedClasses() );
+		collector.addVariableDeclarations( unit, declarationVisitor.getVariableDeclarations() );
 		collector.addRelevantUsages( unit, methodInvocationVisitor.getUsages() );
 	}
 

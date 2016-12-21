@@ -25,7 +25,7 @@ public class MethodInvocationVisitor extends ASTVisitor
 	private final String classBinaryName;
 	private final List<MethodInvocation> usages;
 
-	public MethodInvocationVisitor(Map<String, String> publicMethodsMap, String classBinaryName )
+	public MethodInvocationVisitor(String classBinaryName, Map<String, String> publicMethodsMap)
 	{
 		this.publicMethodsMap = publicMethodsMap;
 		this.classBinaryName = classBinaryName;

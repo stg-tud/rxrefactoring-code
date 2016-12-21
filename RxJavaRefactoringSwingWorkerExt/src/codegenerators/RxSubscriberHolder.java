@@ -5,7 +5,7 @@ import java.util.List;
 import org.eclipse.jdt.core.dom.Block;
 
 import rx.Subscriber;
-import rxjavarefactoring.framework.codegenerators.IdsManager;
+import rxjavarefactoring.framework.codegenerators.DynamicIdsMapHolder;
 
 /**
  * Description: Holds the necessary information to create Subscribers as text<br>
@@ -60,7 +60,7 @@ public class RxSubscriberHolder
 		rxSubscriber.append( onNext.toString() );
 		rxSubscriber.append( "};" );
 		classInstantiation = rxSubscriber.toString();
-		idNumber = IdsManager.getNextSubscriberId( icuName );
+		idNumber = DynamicIdsMapHolder.getNextObserverId( icuName );
 	}
 
 	/**

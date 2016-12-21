@@ -15,7 +15,7 @@ import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 
 import rxjavarefactoring.framework.utils.RxLogger;
-import rxjavarefactoring.framework.writers.RxMultipleChangeWriter;
+import rxjavarefactoring.framework.writers.RxMultipleUnitsWriter;
 import rxjavarefactoring.processor.WorkerStatus;
 
 /**
@@ -27,12 +27,12 @@ import rxjavarefactoring.processor.WorkerStatus;
 public abstract class AbstractRefactoringProcessor<T extends AbstractCollector> extends Refactoring
 {
 	protected final T collector;
-	protected final RxMultipleChangeWriter rxMultipleChangeWriter;
+	protected final RxMultipleUnitsWriter rxMultipleUnitsWriter;
 
 	public AbstractRefactoringProcessor( AbstractCollector collector )
 	{
 		this.collector = (T) collector;
-		rxMultipleChangeWriter = new RxMultipleChangeWriter();
+		rxMultipleUnitsWriter = new RxMultipleUnitsWriter();
 	}
 
 	@Override
@@ -55,7 +55,7 @@ public abstract class AbstractRefactoringProcessor<T extends AbstractCollector> 
 
 	public Map<ICompilationUnit, String> getICompilationUnitVsNewSourceCodeMap()
 	{
-		return rxMultipleChangeWriter.getIcuVsNewSourceCodeMap();
+		return rxMultipleUnitsWriter.getIcuVsNewSourceCodeMap();
 	}
 
 	protected <T extends AbstractCollector> void startWorkers( Set<AbstractRefactorWorker<T>> workers )
@@ -76,7 +76,7 @@ public abstract class AbstractRefactoringProcessor<T extends AbstractCollector> 
 
 	protected void executeChanges( IProgressMonitor monitor )
 	{
-		rxMultipleChangeWriter.executeChanges( monitor );
+		rxMultipleUnitsWriter.executeChanges( monitor );
 		monitor.done();
 	}
 }
