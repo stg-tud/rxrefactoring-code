@@ -19,13 +19,13 @@ import rxjavarefactoring.framework.utils.ASTUtil;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/11/2016
  */
-public class UsagesVisitor extends ASTVisitor
+public class MethodInvocationVisitor extends ASTVisitor
 {
 	private final Map<String, String> publicMethodsMap;
 	private final String classBinaryName;
 	private final List<MethodInvocation> usages;
 
-	public UsagesVisitor( Map<String, String> publicMethodsMap, String classBinaryName )
+	public MethodInvocationVisitor(Map<String, String> publicMethodsMap, String classBinaryName )
 	{
 		this.publicMethodsMap = publicMethodsMap;
 		this.classBinaryName = classBinaryName;
