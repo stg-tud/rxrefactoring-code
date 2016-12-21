@@ -75,7 +75,16 @@ public abstract class SWEmitter<ReturnType, ProcessType> implements Action1<Emit
 	 */
 	protected void publish( ProcessType... chunks )
 	{
-		this.emitter.onNext( this.dto.send( chunks ) );
+		this.dto.lockChunks();
+		try
+		{
+			this.emitter.onNext( this.dto.send( chunks ) );
+		}
+		finally
+		{
+			this.dto.unlockChunks();
+		}
+
 	}
 
 	/**

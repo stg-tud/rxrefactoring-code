@@ -18,6 +18,7 @@ import rxswingworker.OnSubscribeFromSwingWorker;
 import rxswingworker.RxSwingWorkerAPI;
 import rxswingworker.SWSubscriber;
 import swingworker_rx.RxSwingWorkerFactoryFromEmitter;
+import swingworker_rx.RxSwingWorkerFactoryWithOnSubscribe;
 import swingworker_vs_rx.test_helpers.RxSwingWorkerWrapper;
 
 /**
@@ -44,7 +45,7 @@ public class RxVsSwingWorkerComparisonTests
 	public void initializeApiWrapper()
 	{
 //		swingWorkerApiWrapper = new SwingWorkerWrapper<String, Integer>( SwingWorkerFactory.createSwingWorker( DEFAULT_AMOUNT_OF_WORK ) );
-		// swingWorkerApiWrapper = new RxSwingWorkerWrapper<String, Integer>(RxSwingWorkerFactoryWithOnSubscribe.createObserver(DEFAULT_AMOUNT_OF_WORK));
+//		 swingWorkerApiWrapper = new RxSwingWorkerWrapper<String, Integer>(RxSwingWorkerFactoryWithOnSubscribe.createObserver(DEFAULT_AMOUNT_OF_WORK));
 		swingWorkerApiWrapper = new RxSwingWorkerWrapper<String, Integer>( RxSwingWorkerFactoryFromEmitter.createObserver( DEFAULT_AMOUNT_OF_WORK ) );
 	}
 

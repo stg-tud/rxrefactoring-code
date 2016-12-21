@@ -92,9 +92,18 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 		{
 			setProgress( dto.getProgressAndReset() );
 		}
-		List<ProcessType> processedChunks = dto.getChunks();
-		process( processedChunks );
-		dto.removeChunks( processedChunks );
+
+		dto.lockChunks();
+		try
+		{
+			List<ProcessType> processedChunks = dto.getChunks();
+			process( processedChunks );
+			dto.removeChunks( processedChunks );
+		}
+		finally
+		{
+			dto.unlockChunks();
+		}
 	}
 
 	/**

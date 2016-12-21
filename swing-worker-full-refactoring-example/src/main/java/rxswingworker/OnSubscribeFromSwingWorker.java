@@ -40,13 +40,19 @@ public abstract class OnSubscribeFromSwingWorker<ReturnType, ProcessType> implem
 				this.dto = new SWDto<ReturnType, ProcessType>();
 				this.observer.onStart();
 				ReturnType asyncResult = doInBackground();
-				this.observer.onNext( this.dto.setResult( asyncResult ) );
-				this.observer.onCompleted();
+				if ( !this.observer.isUnsubscribed() )
+				{
+					this.observer.onNext( this.dto.setResult( asyncResult ) );
+					this.observer.onCompleted();
+				}
 			}
 		}
 		catch ( Exception throwable )
 		{
-			this.observer.onError( throwable );
+			if ( !this.observer.isUnsubscribed() )
+			{
+				this.observer.onError( throwable );
+			}
 		}
 	}
 
@@ -88,10 +94,18 @@ public abstract class OnSubscribeFromSwingWorker<ReturnType, ProcessType> implem
 	{
 		// To make sure that the last emission is always the one that sets
 		// the result of the asyn operation
-		if ( requestCount > 1 )
+		this.dto.lockChunks();
+		try
 		{
-			requestCount--;
-			this.observer.onNext( this.dto.send( chunks ) );
+			if ( requestCount > 1 && !this.observer.isUnsubscribed() )
+			{
+				requestCount--;
+				this.observer.onNext( this.dto.send( chunks ) );
+			}
+		}
+		finally
+		{
+			this.dto.unlockChunks();
 		}
 	}
 
@@ -105,7 +119,7 @@ public abstract class OnSubscribeFromSwingWorker<ReturnType, ProcessType> implem
 	{
 		// To make sure that the last emission is always the one that sets
 		// the result of the asyn operation
-		if ( requestCount > 1 )
+		if ( requestCount > 1 && !this.observer.isUnsubscribed() )
 		{
 			requestCount--;
 			this.observer.onNext( this.dto.setProgress( progress ) );

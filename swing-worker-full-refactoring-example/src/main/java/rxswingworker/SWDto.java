@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 import rx.Subscriber;
 
@@ -22,12 +23,16 @@ public final class SWDto<ReturnType, ProcessType>
 	private ReturnType asyncResult;
 	private List<ProcessType> chunks;
 	private AtomicInteger progress;
+	private ReentrantLock processingLock;
+	private Object asyncReultLock;
 
 	SWDto()
 	{
 		this.progress = new AtomicInteger( DEFAULT_PROGRESS );
 		this.chunks = new ArrayList<ProcessType>();
 		this.asyncResult = null;
+		this.processingLock = new ReentrantLock();
+		asyncReultLock = new Object();
 	}
 
 	/**
@@ -57,7 +62,7 @@ public final class SWDto<ReturnType, ProcessType>
 	 */
 	SWDto<ReturnType, ProcessType> setResult( ReturnType asyncResult )
 	{
-		synchronized ( this )
+		synchronized ( asyncReultLock )
 		{
 			this.asyncResult = asyncResult;
 		}
@@ -101,7 +106,7 @@ public final class SWDto<ReturnType, ProcessType>
 	 */
 	ReturnType getResult()
 	{
-		synchronized ( this )
+		synchronized ( asyncReultLock )
 		{
 			return this.asyncResult;
 		}
@@ -144,5 +149,15 @@ public final class SWDto<ReturnType, ProcessType>
 		int progress = this.progress.get();
 		this.progress.set( DEFAULT_PROGRESS ); // reset progress after each get
 		return progress;
+	}
+
+	void lockChunks()
+	{
+		processingLock.lock();
+	}
+
+	void unlockChunks()
+	{
+		processingLock.unlock();
 	}
 }
