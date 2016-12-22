@@ -13,10 +13,12 @@ import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.RxLogger;
+import rxjavarefactoring.framework.utils.StringUtils;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
 import rxjavarefactoring.processor.ASTNodesCollector;
 import rxjavarefactoring.processor.WorkerStatus;
+import utils.RefactoringUtils;
 import utils.TemplateUtils;
 import visitors.SwingWorkerVisitor;
 
@@ -86,7 +88,7 @@ public class AssigmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
 		updateImports( singleUnitWriter );
 
 		String icuName = icu.getElementName();
-		RxObservableDto observableDto = createObservableDto(icuName, swingWorkerVisitor);
+		RxObservableDto observableDto = createObservableDto( icuName, swingWorkerVisitor );
 
 		Map<String, Object> observableData = new HashMap<>();
 		observableData.put( "dto", observableDto );
@@ -100,7 +102,9 @@ public class AssigmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
 		Statement referenceStatement = ASTUtil.findParent( assignment, Statement.class );
 		singleUnitWriter.addStatementBefore( observableStatement, referenceStatement );
 
-		RxSubscriberDto subscriberDto = createObserverDto( icuName, swingWorkerVisitor, observableDto );
+		SimpleName swingWorkerName = (SimpleName) assignment.getLeftHandSide();
+		String rxObserverName = RefactoringUtils.getNewVarName( swingWorkerName.toString() );
+		RxSubscriberDto subscriberDto = createObserverDto( rxObserverName, swingWorkerVisitor, observableDto );
 
 		Map<String, Object> observerData = new HashMap<>();
 		observerData.put( "dto", subscriberDto );
@@ -117,12 +121,14 @@ public class AssigmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
 	{
 		singleUnitWriter.addImport( "rx.Observable" );
 		singleUnitWriter.addImport( "rx.Emitter" );
-		singleUnitWriter.addImport( "rxrefactoring.SWEmitter" );
-		singleUnitWriter.addImport( "rxrefactoring.SWDto" );
+		singleUnitWriter.addImport( "rx.exceptions.Exceptions" );
+		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWEmitter" );
+		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWSubscriber" );
+		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWDto" );
 		singleUnitWriter.removeImport( "java.util.concurrent.TimeoutException" );
 	}
 
-	private RxObservableDto createObservableDto(String icuName, SwingWorkerVisitor swingWorkerVisitor)
+	private RxObservableDto createObservableDto( String icuName, SwingWorkerVisitor swingWorkerVisitor )
 	{
 		RxObservableDto observableDto = new RxObservableDto( icuName );
 		observableDto.setResultType( swingWorkerVisitor.getResultType().toString() );
@@ -131,30 +137,51 @@ public class AssigmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
 		return observableDto;
 	}
 
-	private RxSubscriberDto createObserverDto(String icuName, SwingWorkerVisitor swingWorkerVisitor, RxObservableDto observableDto)
+	private RxSubscriberDto createObserverDto( String observerName, SwingWorkerVisitor swingWorkerVisitor, RxObservableDto observableDto )
 	{
-		RxSubscriberDto subscriberDto = new RxSubscriberDto(icuName);
-		subscriberDto.setObserverName( "rxObserver" );
+		RxSubscriberDto subscriberDto = new RxSubscriberDto();
+		subscriberDto.setObserverName( observerName );
 		subscriberDto.setResultType( swingWorkerVisitor.getResultType().toString() );
 		subscriberDto.setProcessType( swingWorkerVisitor.getProcessType().toString() );
 		subscriberDto.setObservableName( observableDto.getVarName() );
 		subscriberDto.setChunksName( swingWorkerVisitor.getProcessVariableName() );
 		subscriberDto.setAsyncResultVarName( swingWorkerVisitor.getAsyncResultVarName() );
 		Block processBlock = swingWorkerVisitor.getProcessBlock();
-		if (processBlock != null)
+		if ( processBlock != null )
 		{
-			subscriberDto.setProcessBlock(processBlock.toString());
+			subscriberDto.setProcessBlock( processBlock.toString() );
 		}
 		Block doneBlock = swingWorkerVisitor.getDoneBlock();
-		if (doneBlock != null)
+		if ( doneBlock != null )
 		{
-			subscriberDto.setDoneBlock(doneBlock.toString());
+			subscriberDto.setDoneBlock( doneBlock.toString() );
 		}
 
+		String interruptedExceptionName = swingWorkerVisitor.getInterruptedExceptionName();
+		String timeoutExceptionName = swingWorkerVisitor.getTimeoutExceptionName();
+		if ( interruptedExceptionName != null )
+		{
+			subscriberDto.setThrowableName( interruptedExceptionName );
+		}
+		else if ( timeoutExceptionName != null )
+		{
+			subscriberDto.setThrowableName( timeoutExceptionName );
+		}
+		else
+		{
+			subscriberDto.setThrowableName( "throwable" );
+		}
+		subscriberDto.setOnErrorBlockEnabled( true );
 		Block timeoutCatchBlock = swingWorkerVisitor.getTimeoutCatchBlock();
-
-		subscriberDto.setThrowableName( "e" );
-		subscriberDto.setOnErrorBlock( "{}" );
+		if ( timeoutCatchBlock != null )
+		{
+			subscriberDto.setTimeoutExceptionBlock( StringUtils.removeBlockBraces( timeoutCatchBlock ) );
+		}
+		Block interruptedCatchBlock = swingWorkerVisitor.getInterruptedCatchBlock();
+		if ( interruptedCatchBlock != null )
+		{
+			subscriberDto.setInterruptedExceptionBlock( StringUtils.removeBlockBraces( interruptedCatchBlock ) );
+		}
 		return subscriberDto;
 	}
 

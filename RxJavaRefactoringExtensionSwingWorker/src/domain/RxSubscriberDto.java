@@ -18,12 +18,9 @@ public class RxSubscriberDto
     private String asyncResultVarName;
     private String doneBlock;
     private String throwableName;
-    private String onErrorBlock;
-
-    public RxSubscriberDto(String icuName)
-    {
-        observerName = "rxObserver" + DynamicIdsMapHolder.getLastObservableId( icuName );
-    }
+    private boolean onErrorBlockEnabled;
+    private String timeoutExceptionBlock;
+    private String interruptedExceptionBlock;
 
     public String getObserverName()
     {
@@ -115,13 +112,33 @@ public class RxSubscriberDto
         this.throwableName = throwableName;
     }
 
-    public String getOnErrorBlock()
+    public boolean isOnErrorBlockEnabled()
     {
-        return onErrorBlock;
+        return onErrorBlockEnabled;
     }
 
-    public void setOnErrorBlock(String onErrorBlock)
+    public void setOnErrorBlockEnabled(boolean onErrorBlockEnabled)
     {
-        this.onErrorBlock = onErrorBlock;
+        this.onErrorBlockEnabled = onErrorBlockEnabled;
+    }
+
+    public String getTimeoutExceptionBlock()
+    {
+        return timeoutExceptionBlock;
+    }
+
+    public void setTimeoutExceptionBlock(String timeoutExceptionBlock)
+    {
+        this.timeoutExceptionBlock = timeoutExceptionBlock;
+    }
+
+    public String getInterruptedExceptionBlock()
+    {
+        return interruptedExceptionBlock;
+    }
+
+    public void setInterruptedExceptionBlock(String interruptedExceptionBlock)
+    {
+        this.interruptedExceptionBlock = interruptedExceptionBlock;
     }
 }

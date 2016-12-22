@@ -7,8 +7,12 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.*;
 
+import de.tudarmstadt.stg.rx.swingworker.SWDto;
+import de.tudarmstadt.stg.rx.swingworker.SWEmitter;
+import de.tudarmstadt.stg.rx.swingworker.SWSubscriber;
 import rx.Emitter;
 import rx.Observable;
+import rx.exceptions.Exceptions;
 
 /**
  * Description: Basic class for test purposes <br>
@@ -66,11 +70,9 @@ public class GeneralCase
 				if ( e instanceof InterruptedException )
 				{
 					System.out.println( "InterruptedException" );
+					return;
 				}
-				else if ( e instanceof ExecutionException )
-				{
-					System.out.println( "ExecutionException" );
-				}
+				Exceptions.propagate( e );
 			}
 		};
 	}

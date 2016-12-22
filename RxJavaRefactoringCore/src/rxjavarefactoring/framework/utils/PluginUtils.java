@@ -12,8 +12,13 @@ import org.osgi.framework.Bundle;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016
  */
-public class PluginUtils
+public final class PluginUtils
 {
+	private PluginUtils()
+	{
+		// This class should not be instantiated
+	}
+
 	public static String getPluginDir( String pluginId )
 	{
 		/* get bundle with the specified id */

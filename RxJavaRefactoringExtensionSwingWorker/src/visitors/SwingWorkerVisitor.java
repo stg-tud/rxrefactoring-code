@@ -3,9 +3,9 @@ package visitors;
 import java.util.ArrayList;
 import java.util.List;
 
-import domain.SwingWorkerInfo;
 import org.eclipse.jdt.core.dom.*;
 
+import domain.SwingWorkerInfo;
 import rxjavarefactoring.framework.utils.ASTUtil;
 
 /**
@@ -65,12 +65,12 @@ public class SwingWorkerVisitor extends ASTVisitor
 	}
 
 	@Override
-	public boolean visit(ClassInstanceCreation node)
+	public boolean visit( ClassInstanceCreation node )
 	{
 		ParameterizedType type = (ParameterizedType) node.getType();
 		List argumentTypes = type.typeArguments();
-		resultType = (Type) argumentTypes.get(0);
-		processType = (Type) argumentTypes.get(1);
+		resultType = (Type) argumentTypes.get( 0 );
+		processType = (Type) argumentTypes.get( 1 );
 		return true;
 	}
 
@@ -104,12 +104,13 @@ public class SwingWorkerVisitor extends ASTVisitor
 	@Override
 	public boolean visit( MethodInvocation node )
 	{
-		if ( ASTUtil.matchesTargetMethod( node, GET, SwingWorkerInfo.getBinaryName()) )
+		if ( ASTUtil.matchesTargetMethod( node, GET, SwingWorkerInfo.getBinaryName() ) )
 		{
 			if ( node.arguments().isEmpty() )
 			{
 				// SwingWorker.get()
 				methodInvocationsGet.add( node );
+				setInterruptedException( node );
 				return true;
 			}
 			else if ( node.arguments().size() == 2 )
@@ -121,7 +122,7 @@ public class SwingWorkerVisitor extends ASTVisitor
 				timeoutArguments.add( time.getToken() );
 				timeoutArguments.add( unit.getFullyQualifiedName() );
 				methodInvocationsGet.add( node );
-				setTimeoutCatchBlock( node );
+				setExceptionsBlocks( node );
 			}
 
 		}
@@ -285,9 +286,33 @@ public class SwingWorkerVisitor extends ASTVisitor
 		return uniqueName;
 	}
 
-	private void setTimeoutCatchBlock( MethodInvocation node )
+	private void setInterruptedException( MethodInvocation node )
 	{
-		// get block for TimeoutException
+		TryStatement tryStatement = ASTUtil.findParent( node, TryStatement.class );
+		if ( tryStatement != null )
+		{
+			List catchClauses = tryStatement.catchClauses();
+			for ( Object catchClauseObject : catchClauses )
+			{
+				CatchClause catchClause = (CatchClause) catchClauseObject;
+				SingleVariableDeclaration declaration = catchClause.getException();
+				IMethodBinding methodBinding = node.resolveMethodBinding();
+				ITypeBinding[] exceptionTypes = methodBinding.getExceptionTypes();
+				// 0 java.lang.InterruptedException
+				ITypeBinding interruptedException = exceptionTypes[ 0 ];
+				Type type = declaration.getType();
+				if ( ASTUtil.isTypeOf( interruptedException, type.resolveBinding().getBinaryName() ) )
+				{
+					interruptedCatchBlock = catchClause.getBody();
+					interruptedExceptionName = catchClause.getException().getName().toString();
+				}
+			}
+		}
+	}
+
+	private void setExceptionsBlocks( MethodInvocation node )
+	{
+		// get block for TimeoutException and InterruptedException
 		TryStatement tryStatement = ASTUtil.findParent( node, TryStatement.class );
 		if ( tryStatement != null )
 		{
@@ -301,20 +326,19 @@ public class SwingWorkerVisitor extends ASTVisitor
 				// 0 java.lang.InterruptedException
 				// 1 java.util.concurrent.ExecutionException
 				// 2 java.util.concurrent.TimeoutException
-				ITypeBinding timeOutException = exceptionTypes[ 2 ];
-				Type type = declaration.getType();
-				if ( ASTUtil.isTypeOf( timeOutException, type.resolveBinding().getBinaryName() ) )
-				{
-					timeoutCatchBlock = catchClause.getBody();
-					timeoutExceptionName = catchClause.getException().getName().toString();
-				}
-
 				ITypeBinding interruptedException = exceptionTypes[ 0 ];
-				type = declaration.getType();
+				Type type = declaration.getType();
 				if ( ASTUtil.isTypeOf( interruptedException, type.resolveBinding().getBinaryName() ) )
 				{
 					interruptedCatchBlock = catchClause.getBody();
 					interruptedExceptionName = catchClause.getException().getName().toString();
+				}
+
+				ITypeBinding timeOutException = exceptionTypes[ 2 ];
+				if ( ASTUtil.isTypeOf( timeOutException, type.resolveBinding().getBinaryName() ) )
+				{
+					timeoutCatchBlock = catchClause.getBody();
+					timeoutExceptionName = catchClause.getException().getName().toString();
 				}
 			}
 		}

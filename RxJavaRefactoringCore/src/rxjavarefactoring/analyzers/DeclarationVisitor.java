@@ -27,6 +27,7 @@ public class DeclarationVisitor extends ASTVisitor
 	private final List<AnonymousClassDeclaration> anonymousClasses;
 	private final List<VariableDeclaration> variableDeclarations;
 	private final List<Assignment> assignments;
+	private final List<FieldDeclaration> fieldDeclarations;
 
 	public DeclarationVisitor( String classBinaryName )
 	{
@@ -35,6 +36,7 @@ public class DeclarationVisitor extends ASTVisitor
 		anonymousClasses = new ArrayList<>();
 		variableDeclarations = new ArrayList<>();
 		assignments = new ArrayList<>();
+		fieldDeclarations = new ArrayList<>();
 	}
 
 	@Override
@@ -43,6 +45,16 @@ public class DeclarationVisitor extends ASTVisitor
 		if ( ASTUtil.isTypeOf( node, classBinaryName ) )
 		{
 			subclasses.add( node );
+		}
+		return true;
+	}
+
+	@Override
+	public boolean visit( FieldDeclaration node )
+	{
+		if ( ASTUtil.isTypeOf( node, classBinaryName ) )
+		{
+			fieldDeclarations.add( node );
 		}
 		return true;
 	}

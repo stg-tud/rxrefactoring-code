@@ -73,6 +73,10 @@ public final class ASTUtil
 		{
 			superClass = ( (ClassInstanceCreation) type ).resolveTypeBinding().getSuperclass();
 		}
+		else if ( type instanceof FieldDeclaration )
+		{
+			superClass = ( (FieldDeclaration) type ).getType().resolveBinding().getSuperclass();
+		}
 		return isSubclassOf( superClass, target, isDirectChild );
 	}
 
@@ -114,8 +118,8 @@ public final class ASTUtil
 	 *
 	 * @param type
 	 *            current node (The {@link ASTNode} must be from type
-	 *            {@link TypeDeclaration}, {@link AnonymousClassDeclaration})
-	 *            or {@link ClassInstanceCreation}
+	 *            {@link TypeDeclaration}, {@link AnonymousClassDeclaration},
+	 *            {@link ClassInstanceCreation} or {@link FieldDeclaration}
 	 * @param target
 	 *            target type
 	 * @return true if they match
@@ -135,6 +139,10 @@ public final class ASTUtil
 		{
 			classType = ( (ClassInstanceCreation) type ).resolveTypeBinding();
 		}
+		else if ( type instanceof FieldDeclaration )
+		{
+			classType = ( (FieldDeclaration) type ).getType().resolveBinding();
+		}
 		return isClassOf( classType, target );
 	}
 
@@ -143,8 +151,8 @@ public final class ASTUtil
 	 *
 	 * @param type
 	 *            current node (The {@link ASTNode} must be from type
-	 *            {@link TypeDeclaration}, {@link AnonymousClassDeclaration})
-	 *            or {@link ClassInstanceCreation}
+	 *            {@link TypeDeclaration}, {@link AnonymousClassDeclaration},
+	 *            {@link ClassInstanceCreation} or {@link FieldDeclaration}
 	 * @param target
 	 *            target type
 	 * @return true if the current class is of type target or a subclass of
