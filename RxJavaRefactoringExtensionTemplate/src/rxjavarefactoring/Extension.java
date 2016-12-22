@@ -37,7 +37,6 @@ public class Extension implements RxJavaRefactoringExtension<ASTNodesCollector>
 	public void processUnit( ICompilationUnit unit, ASTNodesCollector collector )
 	{
 
-		
 	}
 
 	@Override
@@ -49,8 +48,8 @@ public class Extension implements RxJavaRefactoringExtension<ASTNodesCollector>
 	@Override
 	public String getJarFilesPath()
 	{
-		String pluginDir = PluginUtils.getPluginDir(PLUGIN_ID);
-		Path jarFilsPath = Paths.get(pluginDir, RESOURCES_DIR_NAME).toAbsolutePath();
+		String pluginDir = PluginUtils.getPluginDir( PLUGIN_ID );
+		Path jarFilsPath = Paths.get( pluginDir, RESOURCES_DIR_NAME ).toAbsolutePath();
 		return jarFilsPath.toString();
 	}
 

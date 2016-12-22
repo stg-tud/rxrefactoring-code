@@ -18,7 +18,6 @@ import rxjavarefactoring.framework.utils.ASTUtil;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/12/2016
  */
-// TODO: make this class thread safe!
 public class RxSingleUnitWriter
 {
 	private final ASTRewrite astRewriter;
@@ -26,7 +25,7 @@ public class RxSingleUnitWriter
 	private final Set<String> addedImports;
 	private final Set<String> removedImports;
 
-	public RxSingleUnitWriter(ICompilationUnit icu, AST ast, String refactoringDescription )
+	public RxSingleUnitWriter( ICompilationUnit icu, AST ast, String refactoringDescription )
 	{
 		addedImports = new HashSet<>();
 		removedImports = new HashSet<>();
@@ -47,7 +46,10 @@ public class RxSingleUnitWriter
 	 */
 	public void addImport( String importClass )
 	{
-		addedImports.add( importClass );
+		synchronized ( addedImports )
+		{
+			addedImports.add( importClass );
+		}
 	}
 
 	/**
@@ -60,7 +62,24 @@ public class RxSingleUnitWriter
 	 */
 	public void removeImport( String importClass )
 	{
-		removedImports.add( importClass );
+		synchronized ( removedImports )
+		{
+			removedImports.add( importClass );
+		}
+	}
+
+	/**
+	 * Removes element from the compilation unit
+	 * 
+	 * @param element
+	 *            element to be deleted
+	 */
+	public void removeElement( ASTNode element )
+	{
+		synchronized ( astRewriter )
+		{
+			astRewriter.remove( element, null );
+		}
 	}
 
 	/**
@@ -72,7 +91,10 @@ public class RxSingleUnitWriter
 	 */
 	public void removeStatement( ASTNode elementInTargetStatement )
 	{
-		astRewriter.remove( ASTUtil.findParent( elementInTargetStatement, Statement.class ), null );
+		synchronized ( astRewriter )
+		{
+			astRewriter.remove( ASTUtil.findParent( elementInTargetStatement, Statement.class ), null );
+		}
 	}
 
 	/**
@@ -85,11 +107,31 @@ public class RxSingleUnitWriter
 	 */
 	public void addStatementBefore( Statement newStatement, Statement referenceStatement )
 	{
-		Block parentBlock = (Block) referenceStatement.getParent();
-		ListRewrite statementsBlock = astRewriter.getListRewrite( parentBlock, Block.STATEMENTS_PROPERTY );
-		Statement placeHolder = (Statement) astRewriter.createStringPlaceholder( "", ASTNode.EMPTY_STATEMENT );
-		statementsBlock.insertBefore( newStatement, referenceStatement, null );
-		statementsBlock.insertAfter( placeHolder, newStatement, null );
+		synchronized ( astRewriter )
+		{
+			Block parentBlock = (Block) referenceStatement.getParent();
+			ListRewrite statementsBlock = astRewriter.getListRewrite( parentBlock, Block.STATEMENTS_PROPERTY );
+			Statement placeHolder = (Statement) astRewriter.createStringPlaceholder( "", ASTNode.EMPTY_STATEMENT );
+			statementsBlock.insertBefore( newStatement, referenceStatement, null );
+			statementsBlock.insertAfter( placeHolder, newStatement, null );
+		}
+	}
+
+	/**
+	 * Adds new field declaration before a reference field declaration
+	 * 
+	 * @param newFieldDecl
+	 *            new field declaration
+	 * @param referenceFieldDecl
+	 *            reference field declaration
+	 */
+	public void addFieldDeclarationBefore( FieldDeclaration newFieldDecl, FieldDeclaration referenceFieldDecl )
+	{
+		synchronized ( astRewriter )
+		{
+			ListRewrite classBlock = getClassBlock( referenceFieldDecl );
+			classBlock.insertBefore( newFieldDecl, referenceFieldDecl, null );
+		}
 	}
 
 	/**
@@ -105,16 +147,33 @@ public class RxSingleUnitWriter
 	 */
 	public void addMethodAfter( MethodDeclaration methodDeclaration, ASTNode referenceNode )
 	{
-		MethodDeclaration referenceMethod = ASTUtil.findParent( referenceNode, MethodDeclaration.class );
-		ListRewrite classBlock = getClassBlock( referenceMethod );
-		classBlock.insertAfter( methodDeclaration, referenceMethod, null );
+		synchronized ( astRewriter )
+		{
+			MethodDeclaration referenceMethod = ASTUtil.findParent( referenceNode, MethodDeclaration.class );
+			ListRewrite classBlock = getClassBlock( referenceMethod );
+			classBlock.insertAfter( methodDeclaration, referenceMethod, null );
+		}
 	}
 
+	/**
+	 * Adds a new inner class after a reference node. If the reference node is not
+	 * a {@link MethodDeclaration}, then its parent {@link MethodDeclaration} is
+	 * searched and taken as a reference. In this case, the new method will be
+	 * inserted after the parent found.
+	 * 
+	 * @param typeDeclaration
+	 *            new (class) type declaration to be inserted after the reference node
+	 * @param referenceNode
+	 *            reference node
+	 */
 	public void addInnerClassAfter( TypeDeclaration typeDeclaration, ASTNode referenceNode )
 	{
-		MethodDeclaration referenceMethod = ASTUtil.findParent( referenceNode, MethodDeclaration.class );
-		ListRewrite classBlock = getClassBlock( referenceMethod );
-		classBlock.insertAfter( typeDeclaration, referenceMethod, null );
+		synchronized ( astRewriter )
+		{
+			MethodDeclaration referenceMethod = ASTUtil.findParent( referenceNode, MethodDeclaration.class );
+			ListRewrite classBlock = getClassBlock( referenceMethod );
+			classBlock.insertAfter( typeDeclaration, referenceMethod, null );
+		}
 	}
 
 	/**
@@ -149,9 +208,9 @@ public class RxSingleUnitWriter
 
 	// ### Private Methods ###
 
-	private ListRewrite getClassBlock( MethodDeclaration referenceMethod )
+	private ListRewrite getClassBlock( ASTNode referenceNode )
 	{
-		ASTNode currentClass = referenceMethod.getParent();
+		ASTNode currentClass = referenceNode.getParent();
 		return astRewriter.getListRewrite( currentClass, TypeDeclaration.BODY_DECLARATIONS_PROPERTY );
 	}
 }

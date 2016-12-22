@@ -7,23 +7,27 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Set;
 
-import freemarker.template.Configuration;
-import freemarker.template.TemplateExceptionHandler;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.internal.corext.refactoring.util.RefactoringASTParser;
 
 import domain.SwingWorkerInfo;
-import rxjavarefactoring.analyzers.DeclarationVisitor;
-import rxjavarefactoring.analyzers.MethodInvocationVisitor;
+import freemarker.template.Configuration;
+import freemarker.template.TemplateExceptionHandler;
 import rxjavarefactoring.framework.api.RxJavaRefactoringExtension;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.PluginUtils;
-import rxjavarefactoring.framework.utils.RxLogger;
+import rxjavarefactoring.framework.visitors.GeneralVisitor;
 import rxjavarefactoring.processor.ASTNodesCollector;
 import workers.AssigmentsWorker;
+import workers.FieldDeclarationWorker;
 
+/**
+ * Description: Implementation of API of the RxJavaRefactoringTool<br>
+ * Author: Grebiel Jose Ifill Brito<br>
+ * Created: 12/21/2016
+ */
 public class Extension implements RxJavaRefactoringExtension<ASTNodesCollector>
 {
 	public static final String PLUGIN_ID = "de.tudarmstadt.stg.rxjava.refactoring.extension.swingworker";
@@ -54,32 +58,18 @@ public class Extension implements RxJavaRefactoringExtension<ASTNodesCollector>
 
 		// Initialize Visitors
 		String className = SwingWorkerInfo.getBinaryName();
-		DeclarationVisitor declarationVisitor = new DeclarationVisitor( className );
-		MethodInvocationVisitor methodInvocationVisitor = new MethodInvocationVisitor(
-				className,
-				SwingWorkerInfo.getPublicMethodsMap() );
+		GeneralVisitor generalVisitor = new GeneralVisitor( className );
 
 		// Collect information using visitors
-		cu.accept( declarationVisitor );
-		cu.accept( methodInvocationVisitor );
-
-		String fullName = PluginUtils.getCompilationUnitFullName( cu );
-		if ( declarationVisitor.isTargetClassFound() )
-		{
-			RxLogger.info( this, "METHOD=processUnit - " + className + " found in class: " + fullName );
-		}
-
-		if ( methodInvocationVisitor.isUsagesFound() )
-		{
-			RxLogger.info( this, "METHOD=processUnit - Method Invocation of " + className + " found in class: " + fullName );
-		}
+		cu.accept( generalVisitor );
 
 		// Cache the collected information from visitors in one collector
-		collector.addSubclasses( unit, declarationVisitor.getSubclasses() );
-		collector.addAnonymClassDecl( unit, declarationVisitor.getAnonymousClasses() );
-		collector.addVariableDeclarations( unit, declarationVisitor.getVariableDeclarations() );
-		collector.addAssignments( unit, declarationVisitor.getAssignments() );
-		collector.addRelevantUsages( unit, methodInvocationVisitor.getUsages() );
+		collector.addSubclasses( unit, generalVisitor.getSubclasses() );
+		collector.addAnonymClassDecl( unit, generalVisitor.getAnonymousClasses() );
+		collector.addVariableDeclarations( unit, generalVisitor.getVariableDeclarations() );
+		collector.addAssignments( unit, generalVisitor.getAssignments() );
+		collector.addFieldDeclarations( unit, generalVisitor.getFieldDeclarations() );
+		collector.addMethodInvocatons( unit, generalVisitor.getMethodInvocations() );
 	}
 
 	@Override
@@ -88,6 +78,7 @@ public class Extension implements RxJavaRefactoringExtension<ASTNodesCollector>
 		setupFreemaker();
 		Set<AbstractRefactorWorker<ASTNodesCollector>> workers = new HashSet<>();
 		workers.add( new AssigmentsWorker( collector ) );
+		workers.add( new FieldDeclarationWorker( collector ) );
 		return workers;
 	}
 
@@ -107,18 +98,18 @@ public class Extension implements RxJavaRefactoringExtension<ASTNodesCollector>
 	private void setupFreemaker()
 	{
 		String pluginDir = PluginUtils.getPluginDir( PLUGIN_ID );
-		String templatesDirName = Paths.get(pluginDir, TEMPLATES_DIR_NAME).toAbsolutePath().toString();
-		freemakerCfg = new Configuration(Configuration.VERSION_2_3_25);
-		freemakerCfg.setDefaultEncoding("UTF-8");
-		freemakerCfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
-		freemakerCfg.setLogTemplateExceptions(false);
+		String templatesDirName = Paths.get( pluginDir, TEMPLATES_DIR_NAME ).toAbsolutePath().toString();
+		freemakerCfg = new Configuration( Configuration.VERSION_2_3_25 );
+		freemakerCfg.setDefaultEncoding( "UTF-8" );
+		freemakerCfg.setTemplateExceptionHandler( TemplateExceptionHandler.RETHROW_HANDLER );
+		freemakerCfg.setLogTemplateExceptions( false );
 		try
 		{
-			freemakerCfg.setDirectoryForTemplateLoading(new File(templatesDirName));
+			freemakerCfg.setDirectoryForTemplateLoading( new File( templatesDirName ) );
 		}
 		catch ( IOException e )
 		{
-			throw new RuntimeException("Exception in setDirectoryForTemplateLoading", e);
+			throw new RuntimeException( "Exception in setDirectoryForTemplateLoading", e );
 		}
 	}
 }

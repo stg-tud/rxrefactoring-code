@@ -55,7 +55,7 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 	}
 
 	@Override
-	protected void addJarFiles(String location)
+	protected void addJarFiles( String location )
 	{
 		try
 		{
@@ -66,8 +66,8 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 			}
 
 			// copy jar files to DEPENDENCIES_DIRECTORY
-			String destinationDirectory = Paths.get(location, getDependenciesDirectoryName()).toAbsolutePath().toString();
-			FileUtils.copyDirectory(new File(jarFilesPath), new File(destinationDirectory));
+			String destinationDirectory = Paths.get( location, getDependenciesDirectoryName() ).toAbsolutePath().toString();
+			FileUtils.copyDirectory( new File( jarFilesPath ), new File( destinationDirectory ) );
 		}
 		catch ( Throwable throwable )
 		{

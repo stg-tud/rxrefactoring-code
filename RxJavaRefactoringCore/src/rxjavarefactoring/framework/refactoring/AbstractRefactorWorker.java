@@ -25,7 +25,7 @@ public abstract class AbstractRefactorWorker<T extends AbstractCollector> implem
 		this.collector = collector;
 	}
 
-	public void setRxMultipleUnitsWriter(RxMultipleUnitsWriter rxMultipleUnitsWriter)
+	public void setRxMultipleUnitsWriter( RxMultipleUnitsWriter rxMultipleUnitsWriter )
 	{
 		this.rxMultipleUnitsWriter = rxMultipleUnitsWriter;
 	}

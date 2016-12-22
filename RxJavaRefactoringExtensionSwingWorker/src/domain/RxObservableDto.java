@@ -3,7 +3,7 @@ package domain;
 import rxjavarefactoring.framework.codegenerators.DynamicIdsMapHolder;
 
 /**
- * Description: <br>
+ * Description: Model used to fill up the template observable.ftl<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016
  */
@@ -14,6 +14,17 @@ public class RxObservableDto
 	private String varName;
 	private String doInBackgroundBlock;
 
+	/**
+	 * It generates the name automatically. Example:<br>
+	 * <ul>
+	 * <li>rxObservable</li>
+	 * <li>rxObservable1</li>
+	 * <li>rxObservable2</li>
+	 * <li>etc...</li>
+	 * </ul>
+	 * 
+	 * @param icuName
+	 */
 	public RxObservableDto( String icuName )
 	{
 		varName = "rxObservable" + DynamicIdsMapHolder.getNextObservableId( icuName );

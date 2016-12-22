@@ -9,9 +9,9 @@ import org.eclipse.jdt.core.dom.*;
 import codegenerators.ComplexRxObservableBuilder;
 import codegenerators.RxObservableStringBuilder;
 import codegenerators.RxSubscriberHolder;
+import domain.SchedulerType;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.codegenerators.DynamicIdsMapHolder;
-import rxjavarefactoring.framework.constants.SchedulerType;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.RxLogger;
@@ -154,7 +154,7 @@ public class AnonymClassWorker extends AbstractRefactorWorker<ASTNodesCollector>
 		updateImports( rewriter, swingWorkerVisitor );
 	}
 
-	private void updateImports(RxSingleUnitWriter rewriter, SwingWorkerVisitor swingWorkerVisitor )
+	private void updateImports( RxSingleUnitWriter rewriter, SwingWorkerVisitor swingWorkerVisitor )
 	{
 		rewriter.addImport( "rx.Observable" );
 		rewriter.addImport( "rx.schedulers.Schedulers" );

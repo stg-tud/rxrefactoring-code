@@ -20,9 +20,9 @@ import rxjavarefactoring.RxJavaRefactoringApp;
 public class AndroidAppTestExample extends AbstractAndroidTest
 {
 	/*
-	Test set to ignore because the test fails. The Extension
-	must be implemented first, and the MainActivity and ExpectedClass
-	must be adapted to a real scenario
+	 * Test set to ignore because the test fails. The Extension
+	 * must be implemented first, and the MainActivity and ExpectedClass
+	 * must be adapted to a real scenario
 	 */
 	@Test
 	@Ignore
@@ -37,7 +37,7 @@ public class AndroidAppTestExample extends AbstractAndroidTest
 
 		executeTest( targetFile, expectedSourceCode );
 	}
-	
+
 	// Add more methods for further classes
 
 	private void executeTest( String targetFile, String expectedSourceCode ) throws Exception

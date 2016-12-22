@@ -4,13 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Description: Contains information about classes.<br>
+ * Description: Contains information about the SwingWorker class.<br>
  * Specifically:
  * <ul>
- * <li>Class binary name (including package)</li>
+ * <li>Class binary name (includes package)</li>
  * <li>Class public methods</li>
- * <li>Equivalent methods in RxJava of the public methods. Set null if there is
- * no equivalent</li>
+ * <li>Equivalent methods after refactoring.</li>
  * </ul>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/11/2016

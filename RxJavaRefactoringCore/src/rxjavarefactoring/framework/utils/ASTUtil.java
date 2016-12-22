@@ -178,6 +178,16 @@ public final class ASTUtil
 		return isSubclassOf( type, target, false ) || isClassOf( type, target );
 	}
 
+	/**
+	 * Checks whether the current class is a class or subclass of any of the target classes
+	 *
+	 * @param type
+	 *            current type
+	 * @param targetClasses
+	 *            target types
+	 * @return true if the current class or subclass is type or subtype of the
+	 *         target classes
+	 */
 	public static boolean isTypeOf( ASTNode type, List<String> targetClasses )
 	{
 		for ( String target : targetClasses )

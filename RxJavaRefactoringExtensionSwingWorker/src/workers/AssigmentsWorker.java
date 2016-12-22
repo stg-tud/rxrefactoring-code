@@ -54,9 +54,9 @@ public class AssigmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
 				SwingWorkerVisitor swingWorkerVisitor = new SwingWorkerVisitor();
 				assignment.accept( swingWorkerVisitor );
 
-				RxSingleUnitWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, ast, getClass().getSimpleName() );
-
 				// Register changes in the single unit writer
+				RxLogger.info( this, "METHOD=refactor - Copying changes to the single unit writer: " + icu.getElementName() );
+				RxSingleUnitWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, ast, getClass().getSimpleName() );
 				refactorAssignment( icu, singleUnitWriter, swingWorkerVisitor, assignment );
 
 				// Add changes to the multiple compilation units write object

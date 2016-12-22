@@ -24,7 +24,6 @@ import rxjavarefactoring.framework.utils.RxLogger;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/12/2016
  */
-// TODO: make this class thread safe
 public class RxMultipleUnitsWriter
 {
 	private final Map<ICompilationUnit, CompilationUnitChange> icuChangesMap;
@@ -51,18 +50,21 @@ public class RxMultipleUnitsWriter
 	 */
 	public void addChange( ICompilationUnit icu, RxSingleUnitWriter singleChangeWriter )
 	{
-		String name = icu.getElementName();
-		try
+		synchronized ( this )
 		{
-			CompilationUnitChange compilationUnitChange = getCuChange( name, icu );
-			TextEdit sourceCodeEdits = singleChangeWriter.getAstRewriter().rewriteAST();
-			updateSourceCode( compilationUnitChange, sourceCodeEdits );
-			updateImports( icu, singleChangeWriter );
-			icuChangesMap.put( icu, compilationUnitChange );
-		}
-		catch ( CoreException e )
-		{
-			RxLogger.error( this, "addChange: " + name, e );
+			String name = icu.getElementName();
+			try
+			{
+				CompilationUnitChange compilationUnitChange = getCuChange( name, icu );
+				TextEdit sourceCodeEdits = singleChangeWriter.getAstRewriter().rewriteAST();
+				updateSourceCode( compilationUnitChange, sourceCodeEdits );
+				updateImports( icu, singleChangeWriter );
+				icuChangesMap.put( icu, compilationUnitChange );
+			}
+			catch ( CoreException e )
+			{
+				RxLogger.error( this, "addChange: " + name, e );
+			}
 		}
 	}
 

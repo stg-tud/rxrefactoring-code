@@ -53,11 +53,25 @@ public abstract class AbstractRefactoringProcessor<T extends AbstractCollector> 
 		return null;
 	}
 
+	/**
+	 * Returns a map that contains the final source code for each compilation unit
+	 * that was refactored.
+	 * 
+	 * @return compilation unit vs refactored code
+	 */
 	public Map<ICompilationUnit, String> getICompilationUnitVsNewSourceCodeMap()
 	{
 		return rxMultipleUnitsWriter.getIcuVsNewSourceCodeMap();
 	}
 
+	/**
+	 * Start workers concurrently
+	 * 
+	 * @param workers
+	 *            workers to be started
+	 * @param <T>
+	 *            collector type
+	 */
 	protected <T extends AbstractCollector> void startWorkers( Set<AbstractRefactorWorker<T>> workers )
 	{
 		Set<Callable<WorkerStatus>> workerSet = new HashSet<>();
@@ -74,6 +88,12 @@ public abstract class AbstractRefactoringProcessor<T extends AbstractCollector> 
 		}
 	}
 
+	/**
+	 * Executes the changes registered in {@link this#rxMultipleUnitsWriter}
+	 * 
+	 * @param monitor
+	 *            progress monitor
+	 */
 	protected void executeChanges( IProgressMonitor monitor )
 	{
 		rxMultipleUnitsWriter.executeChanges( monitor );

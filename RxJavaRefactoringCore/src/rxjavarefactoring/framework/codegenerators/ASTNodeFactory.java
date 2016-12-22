@@ -19,6 +19,7 @@ public final class ASTNodeFactory extends ASTVisitor
 {
 	private MethodDeclaration methodDeclaration;
 	private TypeDeclaration typeDeclaration;
+	private FieldDeclaration fieldDeclaration;
 
 	private ASTNodeFactory()
 	{
@@ -37,6 +38,13 @@ public final class ASTNodeFactory extends ASTVisitor
 	{
 		typeDeclaration = node;
 		return true;
+	}
+
+	@Override
+	public boolean visit( FieldDeclaration node )
+	{
+		fieldDeclaration = node;
+		return false;
 	}
 
 	/**
@@ -118,5 +126,29 @@ public final class ASTNodeFactory extends ASTVisitor
 		compilationUnit.accept( visitor );
 		TypeDeclaration typeDecl = visitor.typeDeclaration;
 		return (TypeDeclaration) ASTNode.copySubtree( targetAST, typeDecl );
+	}
+
+	/**
+	 * Creates a {@link FieldDeclaration} given its source code
+	 * 
+	 * @param targetAST
+	 *            target ast of level {@link AST#JLS8}
+	 * @param fieldDecl
+	 *            field declaration source code. It must have a valid syntax
+	 * @return a {@link FieldDeclaration} based on the source code
+	 */
+	public static FieldDeclaration createFieldDeclarationFromText( AST targetAST, String fieldDecl )
+	{
+		String auxClassStart = "public class AuxClass { ";
+		String auxClassEnd = "}";
+		String auxClass = auxClassStart + fieldDecl + auxClassEnd;
+
+		ASTParser javaParser = ASTParser.newParser( AST.JLS8 );
+		javaParser.setSource( auxClass.toCharArray() );
+		CompilationUnit compilationUnit = (CompilationUnit) javaParser.createAST( null );
+		ASTNodeFactory visitor = new ASTNodeFactory();
+		compilationUnit.accept( visitor );
+		FieldDeclaration fieldDeclaration = visitor.fieldDeclaration;
+		return (FieldDeclaration) ASTNode.copySubtree( targetAST, fieldDeclaration );
 	}
 }

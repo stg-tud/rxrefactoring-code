@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.URL;
 
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.osgi.framework.Bundle;
 
 /**
@@ -19,16 +18,25 @@ public final class PluginUtils
 		// This class should not be instantiated
 	}
 
+	/**
+	 * Returns the plugin directory. Necessary to have access to its resources
+	 * or templates
+	 * 
+	 * @param pluginId
+	 *            id of the plugin, i.e:
+	 *            "de.tudarmstadt.stg.rxjava.refactoring.extension.swingworker"
+	 * @return plugin directory path as string
+	 */
 	public static String getPluginDir( String pluginId )
 	{
-		/* get bundle with the specified id */
+		// get bundle with the specified id
 		Bundle bundle = Platform.getBundle( pluginId );
 		if ( bundle == null )
 			throw new RuntimeException( "Could not resolve plugin: " + pluginId + "\r\n" +
 					"Probably the plugin has not been correctly installed.\r\n" +
 					"Running eclipse from shell with -clean option may rectify installation." );
 
-		/* resolve Bundle::getEntry to local URL */
+		// resolve Bundle::getEntry to local URL
 		URL pluginURL = null;
 		try
 		{
@@ -52,14 +60,5 @@ public final class PluginUtils
 			pluginInstallDir = pluginInstallDir.substring( 1 );
 
 		return pluginInstallDir;
-	}
-
-	public static String getCompilationUnitFullName(CompilationUnit cu)
-	{
-		return cu.getPackage().toString()
-				.replaceAll( "package ", "" )
-				.replaceAll( ";", "." + cu.getJavaElement().getElementName() )
-				.replaceAll( "\n", "" )
-				.replaceAll( "\\.java", "" );
 	}
 }

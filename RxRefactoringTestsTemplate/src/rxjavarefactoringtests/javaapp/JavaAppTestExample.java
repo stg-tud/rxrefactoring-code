@@ -20,9 +20,9 @@ import rxjavarefactoring.RxJavaRefactoringApp;
 public class JavaAppTestExample extends AbstractJavaTest
 {
 	/*
-	Test set to ignore because the test fails. The Extension
-	must be implemented first, and the ExampleClass and ExpectedClass
-	must be adapted to a real scenario
+	 * Test set to ignore because the test fails. The Extension
+	 * must be implemented first, and the ExampleClass and ExpectedClass
+	 * must be adapted to a real scenario
 	 */
 	@Test
 	@Ignore

@@ -1,4 +1,4 @@
-package rxjavarefactoring.analyzers;
+package rxjavarefactoring.framework.visitors;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,19 +8,12 @@ import org.eclipse.jdt.core.dom.*;
 import rxjavarefactoring.framework.utils.ASTUtil;
 
 /**
- * Description: This visitor collects all class declarations and groups then
- * into 3 groups:<br>
- * <ul>
- * <li>TypeDeclarations: Classes that extend the target class</li>
- * <li>AnonymousClassDeclarations: Target classes that are instantiated without
- * assigning the object to a variable (fire and forget)</li>
- * <li>VariableDeclarations: Target classes that are assigned to a variable
- * after instantiation</li>
- * </ul>
+ * Description: This visitor collects different ASTNode types
+ * and add them to lists.
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/11/2016
  */
-public class DeclarationVisitor extends ASTVisitor
+public class GeneralVisitor extends ASTVisitor
 {
 	private final String classBinaryName;
 	private final List<TypeDeclaration> subclasses;
@@ -28,8 +21,9 @@ public class DeclarationVisitor extends ASTVisitor
 	private final List<VariableDeclaration> variableDeclarations;
 	private final List<Assignment> assignments;
 	private final List<FieldDeclaration> fieldDeclarations;
+	private final List<MethodInvocation> methodInvocations;
 
-	public DeclarationVisitor( String classBinaryName )
+	public GeneralVisitor( String classBinaryName )
 	{
 		this.classBinaryName = classBinaryName;
 		subclasses = new ArrayList<>();
@@ -37,6 +31,7 @@ public class DeclarationVisitor extends ASTVisitor
 		variableDeclarations = new ArrayList<>();
 		assignments = new ArrayList<>();
 		fieldDeclarations = new ArrayList<>();
+		methodInvocations = new ArrayList<>();
 	}
 
 	@Override
@@ -83,11 +78,33 @@ public class DeclarationVisitor extends ASTVisitor
 		return true;
 	}
 
+	@Override
+	public boolean visit( MethodInvocation node )
+	{
+		IMethodBinding binding = node.resolveMethodBinding();
+		if ( binding == null )
+		{
+			return true;
+		}
+
+		ITypeBinding declaringClass = binding.getDeclaringClass();
+		if ( declaringClass == null )
+		{
+			return true;
+		}
+
+		if ( ASTUtil.isTypeOf( declaringClass, classBinaryName ) )
+		{
+			methodInvocations.add( node );
+		}
+
+		return true;
+	}
+
 	/**
-	 * Subclasses correspond to Java objects that extend the target class<br>
 	 * Example: public class MyClass extends TargetClass { ... }
 	 * 
-	 * @return A type declaration of the class extending TargetClass
+	 * @return List of type declarations of the class extending TargetClass
 	 */
 	public List<TypeDeclaration> getSubclasses()
 	{
@@ -95,11 +112,9 @@ public class DeclarationVisitor extends ASTVisitor
 	}
 
 	/**
-	 * AnonymousClasses correspond to class instance creations without assigning
-	 * the value to a variable.<br>
 	 * Example: new TargetClass(){...}
 	 * 
-	 * @return An anonymous class declaration of TargetClass
+	 * @return List of anonymous class declarations of TargetClass
 	 */
 	public List<AnonymousClassDeclaration> getAnonymousClasses()
 	{
@@ -107,11 +122,9 @@ public class DeclarationVisitor extends ASTVisitor
 	}
 
 	/**
-	 * VariableDeclarations correspond to class instance creations that are
-	 * assigned to a variable.<br>
 	 * Example: TargetClass target = new TargetClass(){...}
 	 * 
-	 * @return A variable declaration of TargetClass
+	 * @return List of variable declarations of TargetClass
 	 */
 	public List<VariableDeclaration> getVariableDeclarations()
 	{
@@ -119,21 +132,32 @@ public class DeclarationVisitor extends ASTVisitor
 	}
 
 	/**
-	 * Assigments correspond to class instance creations that are assigned
-	 * without specifying the variable type.<br>
 	 * Example: target = new TargetClass(){...}
 	 * 
-	 * @return An assignment of TargetClass
+	 * @return List of assignments of TargetClass
 	 */
 	public List<Assignment> getAssignments()
 	{
 		return assignments;
 	}
 
-	public boolean isTargetClassFound()
+	/**
+	 * Example: TargetClass target; do not confuse with variable declarations
+	 *
+	 * @return List of field declarations of TargetClass
+	 */
+	public List<FieldDeclaration> getFieldDeclarations()
 	{
-		return !subclasses.isEmpty() ||
-				!anonymousClasses.isEmpty() ||
-				!variableDeclarations.isEmpty();
+		return fieldDeclarations;
+	}
+
+	/**
+	 * Example: someclassInstance.invokeSomeMethod();
+	 * 
+	 * @return List of methods invocations of TargetClass
+	 */
+	public List<MethodInvocation> getMethodInvocations()
+	{
+		return methodInvocations;
 	}
 }

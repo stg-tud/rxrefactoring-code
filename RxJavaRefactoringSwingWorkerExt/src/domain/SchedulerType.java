@@ -1,4 +1,4 @@
-package rxjavarefactoring.framework.constants;
+package domain;
 
 import rx.Scheduler;
 

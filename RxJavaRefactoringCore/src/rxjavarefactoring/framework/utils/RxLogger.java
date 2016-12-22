@@ -42,12 +42,14 @@ public final class RxLogger
 	}
 
 	/**
-	 *
+	 * Logs exceptions occurred in client (extensions)
+	 * 
 	 * @param throwable
+	 *            exception
 	 */
 	public static void notifyExceptionInClient( Throwable throwable )
 	{
-		System.out.println( "[ ERROR ] Exception in client" );
+		System.err.println( "[ ERROR ] Exception in client" );
 		throwable.printStackTrace();
 	}
 }

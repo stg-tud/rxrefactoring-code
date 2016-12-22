@@ -54,7 +54,13 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 		return null;
 	}
 
-	protected abstract void addJarFiles(String location);
+	/**
+	 * Copy jar files of an extension given the their locations
+	 * 
+	 * @param location
+	 *            location of jar files
+	 */
+	protected abstract void addJarFiles( String location );
 
 	@Override
 	public void stop()
@@ -80,8 +86,20 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 		return compilationUnitsMap;
 	}
 
+	/**
+	 * refactor each compilation unit separately
+	 * 
+	 * @param units
+	 *            compilation units
+	 */
 	protected abstract void refactorCompilationUnits( Map<String, ICompilationUnit> units );
 
+	/**
+	 * returns the directory name that contains all necessary dependencies to perform
+	 * the refactorings. i.e: "all-deps"
+	 * 
+	 * @return directory name
+	 */
 	protected abstract String getDependenciesDirectoryName();
 
 	// ### Private Methods ###
@@ -93,8 +111,8 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 		{
 			RxLogger.info( this, "METHOD=refactorProject : PROJECT ----> " + project.getName() );
 			final String location = project.getLocation().toPortableString();
-			addJarFiles(location);
-			project.refreshLocal(IResource.DEPTH_INFINITE, null);
+			addJarFiles( location );
+			project.refreshLocal( IResource.DEPTH_INFINITE, null );
 			updateClassPath( location + getDependenciesDirectoryName(), javaProject );
 			compilationUnitsMap = getCompilationUnits( javaProject );
 			refactorCompilationUnits( compilationUnitsMap );

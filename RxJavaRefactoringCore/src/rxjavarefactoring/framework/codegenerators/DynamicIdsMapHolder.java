@@ -26,10 +26,10 @@ public final class DynamicIdsMapHolder
 	 *            name of the compilation unit
 	 * @return next id
 	 */
-	public static String getNextObserverId(String icuName )
+	public static String getNextObserverId( String icuName )
 	{
-		incAndGetCounter( icuName, DynamicIdsMapHolder.observerCounter);
-		return getId( icuName, DynamicIdsMapHolder.observerCounter);
+		incAndGetCounter( icuName, DynamicIdsMapHolder.observerCounter );
+		return getId( icuName, DynamicIdsMapHolder.observerCounter );
 	}
 
 	/**

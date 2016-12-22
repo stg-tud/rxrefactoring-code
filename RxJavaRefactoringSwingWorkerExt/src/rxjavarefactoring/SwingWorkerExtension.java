@@ -9,11 +9,9 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.internal.corext.refactoring.util.RefactoringASTParser;
 
 import domain.ClassDetails;
-import rxjavarefactoring.analyzers.DeclarationVisitor;
-import rxjavarefactoring.analyzers.MethodInvocationVisitor;
 import rxjavarefactoring.framework.api.RxJavaRefactoringExtension;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
-import rxjavarefactoring.framework.utils.RxLogger;
+import rxjavarefactoring.framework.visitors.GeneralVisitor;
 import rxjavarefactoring.processor.ASTNodesCollector;
 import workers.AnonymClassWorker;
 
@@ -40,36 +38,15 @@ public class SwingWorkerExtension implements RxJavaRefactoringExtension<ASTNodes
 	{
 
 		CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( unit, true );
-		DeclarationVisitor declarationVisitor = new DeclarationVisitor( ClassDetails.SWING_WORKER.getBinaryName() );
-		MethodInvocationVisitor methodInvocationVisitor = new MethodInvocationVisitor(
-				ClassDetails.SWING_WORKER.getBinaryName(), ClassDetails.SWING_WORKER.getPublicMethodsMap()
-		);
+		GeneralVisitor generalVisitor = new GeneralVisitor( ClassDetails.SWING_WORKER.getBinaryName() );
 
-		cu.accept( declarationVisitor );
-		cu.accept(methodInvocationVisitor);
-
-		String location = cu.getPackage().toString()
-				.replaceAll( "package ", "" )
-				.replaceAll( ";", "." + cu.getJavaElement().getElementName() )
-				.replaceAll( "\n", "" )
-				.replaceAll( "\\.java", "" );
-
-		String className = ClassDetails.SWING_WORKER.getBinaryName();
-		if ( declarationVisitor.isTargetClassFound() )
-		{
-			RxLogger.info( this, "METHOD=processUnit - " + className + " found in class: " + location );
-		}
-
-		if ( methodInvocationVisitor.isUsagesFound() )
-		{
-			RxLogger.info( this, "METHOD=processUnit - Method Invocation of " + className + " found in class: " + location );
-		}
+		cu.accept( generalVisitor );
 
 		// Cache relevant information in an object that contains maps
-		collector.addSubclasses( unit, declarationVisitor.getSubclasses() );
-		collector.addAnonymClassDecl( unit, declarationVisitor.getAnonymousClasses() );
-		collector.addVariableDeclarations( unit, declarationVisitor.getVariableDeclarations() );
-		collector.addRelevantUsages( unit, methodInvocationVisitor.getUsages() );
+		collector.addSubclasses( unit, generalVisitor.getSubclasses() );
+		collector.addAnonymClassDecl( unit, generalVisitor.getAnonymousClasses() );
+		collector.addVariableDeclarations( unit, generalVisitor.getVariableDeclarations() );
+		collector.addMethodInvocatons( unit, generalVisitor.getMethodInvocations() );
 	}
 
 	@Override

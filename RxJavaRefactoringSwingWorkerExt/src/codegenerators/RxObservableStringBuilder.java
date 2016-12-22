@@ -6,13 +6,13 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.core.dom.Block;
 
+import domain.SchedulerType;
 import rx.Observable;
 import rx.Scheduler;
 import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
-import rxjavarefactoring.framework.constants.SchedulerType;
 import rxjavarefactoring.framework.utils.SourceCodeValidator;
 
 /**

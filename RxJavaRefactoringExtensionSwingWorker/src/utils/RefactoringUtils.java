@@ -7,14 +7,26 @@ package utils;
  */
 public final class RefactoringUtils
 {
-
-	public static final int SWINGWORKER_LENGHT = 11;
-
 	private RefactoringUtils()
 	{
-
+		// This class should not be instantiated
 	}
 
+	/**
+	 * Returns a string where the char sequence "swingworker" or
+	 * "worker" was replaced by rxObservable. Example:<br>
+	 * <ul>
+	 * <li>swingworker -> rxObservable</li>
+	 * <li>swingWorker -> rxObservable</li>
+	 * <li>mySwingWorker -> myRxObservable</li>
+	 * <li>mySwingWorker10 -> myRxObservable10</li>
+	 * </ul>
+	 * 
+	 * @param swingworkerVarName
+	 *            string containing the char sequence "swingworker"
+	 *            (case insensitive)
+	 * @return updated string
+	 */
 	public static String getNewVarName( String swingworkerVarName )
 	{
 		String newVarName = swingworkerVarName;
@@ -33,24 +45,24 @@ public final class RefactoringUtils
 			{
 				newVarName = swingworkerVarName.replaceAll( "(?i)swingworker", "RxObserver" );
 			}
-            return newVarName;
+			return newVarName;
 		}
 
-        int workerPosition = searchableVarName.indexOf( "WORKER" );
-        if ( workerPosition >= 0 )
-        {
-            char[] chars = swingworkerVarName.toCharArray();
-            char firstLetter = chars[ workerPosition ];
-            if ( firstLetter == 'w' )
-            {
-                newVarName = swingworkerVarName.replaceAll( "(?i)worker", "rxObserver" );
-            }
-            else if ( firstLetter == 'W' )
-            {
-                newVarName = swingworkerVarName.replaceAll( "(?i)worker", "RxObserver" );
-            }
-            return newVarName;
-        }
+		int workerPosition = searchableVarName.indexOf( "WORKER" );
+		if ( workerPosition >= 0 )
+		{
+			char[] chars = swingworkerVarName.toCharArray();
+			char firstLetter = chars[ workerPosition ];
+			if ( firstLetter == 'w' )
+			{
+				newVarName = swingworkerVarName.replaceAll( "(?i)worker", "rxObserver" );
+			}
+			else if ( firstLetter == 'W' )
+			{
+				newVarName = swingworkerVarName.replaceAll( "(?i)worker", "RxObserver" );
+			}
+			return newVarName;
+		}
 
 		return newVarName;
 	}
