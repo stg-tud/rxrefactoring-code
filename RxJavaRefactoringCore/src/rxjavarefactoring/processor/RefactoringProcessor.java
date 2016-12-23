@@ -19,7 +19,7 @@ import rxjavarefactoring.framework.utils.RxLogger;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/16/2016
  */
-public class RefactoringProcessor extends AbstractRefactoringProcessor<ASTNodesCollector>
+public class RefactoringProcessor extends AbstractRefactoringProcessor
 {
 	private RxJavaRefactoringExtension extension;
 
@@ -32,7 +32,7 @@ public class RefactoringProcessor extends AbstractRefactoringProcessor<ASTNodesC
 	@Override
 	public Change createChange( IProgressMonitor monitor ) throws CoreException, OperationCanceledException
 	{
-		Set<AbstractRefactorWorker<ASTNodesCollector>> workers;
+		Set<AbstractRefactorWorker> workers;
 		try
 		{
 			workers = extension.getRefactoringWorkers( collector );

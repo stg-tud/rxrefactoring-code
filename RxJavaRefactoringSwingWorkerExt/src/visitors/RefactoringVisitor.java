@@ -21,7 +21,7 @@ import rxjavarefactoring.framework.utils.ASTUtil;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/16/2016
  */
-public class SwingWorkerVisitor extends ASTVisitor
+public class RefactoringVisitor extends ASTVisitor
 {
 	private static final String DO_IN_BACKGROUND = "doInBackground";
 	private static final String DONE = "done";
@@ -49,7 +49,7 @@ public class SwingWorkerVisitor extends ASTVisitor
 	private List<FieldDeclaration> fieldDeclarations;
 	private List<MethodDeclaration> additionalMethodDeclarations;
 
-	public SwingWorkerVisitor()
+	public RefactoringVisitor()
 	{
 		timeoutArguments = new ArrayList<>();
 		methodInvocationsGet = new ArrayList<>();

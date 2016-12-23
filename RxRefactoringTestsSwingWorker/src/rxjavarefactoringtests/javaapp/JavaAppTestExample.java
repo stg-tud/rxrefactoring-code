@@ -18,20 +18,39 @@ import rxjavarefactoring.RxJavaRefactoringApp;
  */
 public class JavaAppTestExample extends AbstractJavaTest
 {
-	/*
-	 * Test set to ignore because the test fails. The Extension
-	 * must be implemented first, and the ExampleClass and ExpectedClass
-	 * must be adapted to a real scenario
-	 */
 	@Test
-	public void testRefactoring() throws Exception
+	public void testFieldDeclarations() throws Exception
 	{
-		String targetFile = "GeneralCase.java";
+		String targetFile = "FieldDeclaration.java";
 
 		// The name of the class does not need to match the name of the file
 		String expectedSourceCode = getSourceCode(
 				"expected.java.code",
-				"GeneralCaseRefactored.java" );
+				"FieldDeclarationRefactored.java" );
+
+		executeTest( targetFile, expectedSourceCode );
+	}
+
+	@Test
+	public void testMethodInvocations() throws Exception
+	{
+		String targetFile = "MethodInvocation.java";
+
+		String expectedSourceCode = getSourceCode(
+				"expected.java.code",
+				"MethodInvocationRefactored.java" );
+
+		executeTest( targetFile, expectedSourceCode );
+	}
+
+	@Test
+	public void testAssignments() throws Exception
+	{
+		String targetFile = "Assignment.java";
+
+		String expectedSourceCode = getSourceCode(
+				"expected.java.code",
+				"AssignmentRefactored.java" );
 
 		executeTest( targetFile, expectedSourceCode );
 	}

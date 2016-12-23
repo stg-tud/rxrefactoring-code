@@ -18,8 +18,8 @@ import freemarker.template.TemplateExceptionHandler;
 import rxjavarefactoring.framework.api.RxJavaRefactoringExtension;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.PluginUtils;
-import rxjavarefactoring.framework.visitors.GeneralVisitor;
-import rxjavarefactoring.processor.ASTNodesCollector;
+import visitors.Collector;
+import visitors.DiscoveringVisitor;
 import workers.AssignmentsWorker;
 import workers.FieldDeclarationWorker;
 import workers.MethodInvocationWorker;
@@ -29,7 +29,7 @@ import workers.MethodInvocationWorker;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016
  */
-public class Extension implements RxJavaRefactoringExtension<ASTNodesCollector>
+public class Extension implements RxJavaRefactoringExtension<Collector>
 {
 	public static final String PLUGIN_ID = "de.tudarmstadt.stg.rxjava.refactoring.extension.swingworker";
 	public static final String TEMPLATES_DIR_NAME = "templates";
@@ -47,37 +47,39 @@ public class Extension implements RxJavaRefactoringExtension<ASTNodesCollector>
 	}
 
 	@Override
-	public ASTNodesCollector getASTNodesCollectorInstance()
+	public Collector getASTNodesCollectorInstance()
 	{
-		return new ASTNodesCollector( COLLECTOR_NAME );
+		return new Collector( COLLECTOR_NAME );
 	}
 
 	@Override
-	public void processUnit( ICompilationUnit unit, ASTNodesCollector collector )
+	public void processUnit( ICompilationUnit unit, Collector collector )
 	{
 		CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( unit, true );
 
 		// Initialize Visitors
 		String className = SwingWorkerInfo.getBinaryName();
-		GeneralVisitor generalVisitor = new GeneralVisitor( className );
+		DiscoveringVisitor discoveringVisitor = new DiscoveringVisitor( className );
 
 		// Collect information using visitors
-		cu.accept( generalVisitor );
+		cu.accept(discoveringVisitor);
 
 		// Cache the collected information from visitors in one collector
-		collector.addSubclasses( unit, generalVisitor.getSubclasses() );
-		collector.addAnonymClassDecl( unit, generalVisitor.getAnonymousClasses() );
-		collector.addVariableDeclarations( unit, generalVisitor.getVariableDeclarations() );
-		collector.addAssignments( unit, generalVisitor.getAssignments() );
-		collector.addFieldDeclarations( unit, generalVisitor.getFieldDeclarations() );
-		collector.addMethodInvocatons( unit, generalVisitor.getMethodInvocations() );
+		collector.add( unit, discoveringVisitor.getTypeDeclarations() );
+		collector.add( unit, discoveringVisitor.getFieldDeclarations() );
+		collector.add( unit, discoveringVisitor.getAssignments() );
+		collector.add( unit, discoveringVisitor.getVarDeclStatements() );
+		collector.add( unit, discoveringVisitor.getSimpleNames() );
+		collector.add( unit, discoveringVisitor.getClassInstanceCreations() );
+		collector.add( unit, discoveringVisitor.getMethodInvocations() );
+		collector.add( unit, discoveringVisitor.getSingleVarDeclarations() );
 	}
 
 	@Override
-	public Set<AbstractRefactorWorker<ASTNodesCollector>> getRefactoringWorkers( ASTNodesCollector collector )
+	public Set<AbstractRefactorWorker<Collector>> getRefactoringWorkers(Collector collector )
 	{
 		setupFreemaker();
-		Set<AbstractRefactorWorker<ASTNodesCollector>> workers = new HashSet<>();
+		Set<AbstractRefactorWorker<Collector>> workers = new HashSet<>();
 		workers.add( new AssignmentsWorker( collector ) );
 		workers.add( new FieldDeclarationWorker( collector ) );
 		workers.add( new MethodInvocationWorker( collector ) );

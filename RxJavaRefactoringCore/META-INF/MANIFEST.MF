@@ -20,12 +20,11 @@ Bundle-ClassPath: libs/rxjava-1.2.2.jar,
 Export-Package: pluginhandlers,
  rx,
  rx.functions,
- rx.schedulers,rxjavarefactoring.framework.visitors,
+ rx.schedulers,
  rxjavarefactoring.framework.api,
  rxjavarefactoring.framework.codegenerators,
  rxjavarefactoring.framework.refactoring,
  rxjavarefactoring.framework.utils,
- rxjavarefactoring.framework.visitors,
  rxjavarefactoring.framework.writers,
  rxjavarefactoring.processor
 

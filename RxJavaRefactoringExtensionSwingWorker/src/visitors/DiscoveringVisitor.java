@@ -1,0 +1,168 @@
+package visitors;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.eclipse.jdt.core.dom.*;
+
+import rxjavarefactoring.framework.utils.ASTUtil;
+
+/**
+ * Description: This visitor collects different ASTNode types
+ * and add them to lists.
+ * Author: Grebiel Jose Ifill Brito<br>
+ * Created: 11/11/2016
+ */
+public class DiscoveringVisitor extends ASTVisitor
+{
+	private final String classBinaryName;
+	private final List<TypeDeclaration> typeDeclarations;
+	private final List<FieldDeclaration> fieldDeclarations;
+	private final List<Assignment> assignments;
+	private final List<VariableDeclarationStatement> varDeclStatements;
+	private final List<SimpleName> simpleNames;
+	private final List<ClassInstanceCreation> classInstanceCreations;
+	private final List<SingleVariableDeclaration> singleVarDeclarations;
+
+	private final List<MethodInvocation> methodInvocations;
+
+	public DiscoveringVisitor(String classBinaryName )
+	{
+		this.classBinaryName = classBinaryName;
+		typeDeclarations = new ArrayList<>();
+		assignments = new ArrayList<>();
+		fieldDeclarations = new ArrayList<>();
+		methodInvocations = new ArrayList<>();
+		varDeclStatements = new ArrayList<>();
+		simpleNames = new ArrayList<>();
+		classInstanceCreations = new ArrayList<>();
+		singleVarDeclarations = new ArrayList<>();
+	}
+
+	@Override
+	public boolean visit( FieldDeclaration node )
+	{
+		if ( ASTUtil.isTypeOf( node, classBinaryName ) )
+		{
+			fieldDeclarations.add( node );
+		}
+		return true;
+	}
+
+	@Override
+	public boolean visit( Assignment node )
+	{
+		Expression leftHandSide = node.getLeftHandSide();
+		ITypeBinding type = leftHandSide.resolveTypeBinding();
+		if ( ASTUtil.isTypeOf( type, classBinaryName ) )
+		{
+			assignments.add( node );
+		}
+		return true;
+	}
+
+	@Override
+	public boolean visit( VariableDeclarationStatement node )
+	{
+		ITypeBinding type = node.getType().resolveBinding();
+		if ( ASTUtil.isTypeOf( type, classBinaryName ) )
+		{
+			varDeclStatements.add( node );
+		}
+		return true;
+	}
+
+	@Override
+	public boolean visit( SimpleName node )
+	{
+		ITypeBinding type = node.resolveTypeBinding();
+		if ( ASTUtil.isTypeOf( type, classBinaryName ) )
+		{
+			simpleNames.add( node );
+		}
+		return true;
+	}
+
+	@Override
+	public boolean visit( ClassInstanceCreation node )
+	{
+		ITypeBinding type = node.getType().resolveBinding();
+		if ( ASTUtil.isTypeOf( type, classBinaryName ) )
+		{
+			classInstanceCreations.add( node );
+		}
+		return true;
+	}
+
+	@Override
+	public boolean visit( TypeDeclaration node )
+	{
+		if ( ASTUtil.isTypeOf( node, classBinaryName ) )
+		{
+			typeDeclarations.add( node );
+		}
+		return true;
+	}
+
+	@Override
+	public boolean visit( MethodInvocation node )
+	{
+		ITypeBinding type = node.resolveMethodBinding().getDeclaringClass();
+		if ( ASTUtil.isTypeOf( type, classBinaryName ) )
+		{
+			methodInvocations.add( node );
+		}
+		return true;
+	}
+
+	@Override
+	public boolean visit( SingleVariableDeclaration node )
+	{
+		ITypeBinding type = node.getType().resolveBinding();
+		if ( ASTUtil.isTypeOf( type, classBinaryName ) )
+		{
+			singleVarDeclarations.add( node );
+		}
+		return true;
+	}
+
+	public List<TypeDeclaration> getTypeDeclarations()
+	{
+		return typeDeclarations;
+	}
+
+	public List<FieldDeclaration> getFieldDeclarations()
+	{
+		return fieldDeclarations;
+	}
+
+	public List<Assignment> getAssignments()
+	{
+		return assignments;
+	}
+
+	public List<VariableDeclarationStatement> getVarDeclStatements()
+	{
+		return varDeclStatements;
+	}
+
+	public List<SimpleName> getSimpleNames()
+	{
+		return simpleNames;
+	}
+
+	public List<ClassInstanceCreation> getClassInstanceCreations()
+	{
+		return classInstanceCreations;
+	}
+
+	public List<SingleVariableDeclaration> getSingleVarDeclarations()
+	{
+		return singleVarDeclarations;
+	}
+
+	public List<MethodInvocation> getMethodInvocations()
+	{
+		return methodInvocations;
+	}
+}

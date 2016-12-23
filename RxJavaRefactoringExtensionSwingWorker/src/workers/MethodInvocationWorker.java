@@ -15,18 +15,18 @@ import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
-import rxjavarefactoring.processor.ASTNodesCollector;
 import rxjavarefactoring.processor.WorkerStatus;
 import utils.RefactoringUtils;
+import visitors.Collector;
 
 /**
  * Description: <br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016
  */
-public class MethodInvocationWorker extends AbstractRefactorWorker<ASTNodesCollector>
+public class MethodInvocationWorker extends AbstractRefactorWorker<Collector>
 {
-	public MethodInvocationWorker( ASTNodesCollector collector )
+	public MethodInvocationWorker( Collector collector )
 	{
 		super( collector );
 	}
@@ -34,7 +34,7 @@ public class MethodInvocationWorker extends AbstractRefactorWorker<ASTNodesColle
 	@Override
 	protected WorkerStatus refactor()
 	{
-		Map<ICompilationUnit, List<MethodInvocation>> methodInvocationMap = collector.getMethodInvocationMap();
+		Map<ICompilationUnit, List<MethodInvocation>> methodInvocationMap = collector.getMethodInvocationsMap();
 		int numUnits = collector.getNumberOfCompilationUnits();
 		monitor.beginTask( getClass().getSimpleName(), numUnits );
 		RxLogger.info( this, "METHOD=refactor - Total number of compilation units: " + numUnits );
@@ -60,7 +60,11 @@ public class MethodInvocationWorker extends AbstractRefactorWorker<ASTNodesColle
 		return WorkerStatus.OK;
 	}
 
-	private void refactorInvocation( AST ast, ICompilationUnit icu, RxSingleUnitWriter singleUnitWriter, MethodInvocation methodInvocation )
+	private void refactorInvocation(
+			AST ast,
+			ICompilationUnit icu,
+			RxSingleUnitWriter singleUnitWriter,
+			MethodInvocation methodInvocation )
 	{
 		Statement referenceStatement = ASTUtil.findParent( methodInvocation, Statement.class );
 		String statement = referenceStatement.toString();

@@ -9,9 +9,9 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import rxjavarefactoring.framework.api.RxJavaRefactoringExtension;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.PluginUtils;
-import rxjavarefactoring.processor.ASTNodesCollector;
+import rxjavarefactoring.processor.StubCollector;
 
-public class Extension implements RxJavaRefactoringExtension<ASTNodesCollector>
+public class Extension implements RxJavaRefactoringExtension<StubCollector>
 {
 	// The PLUGIN_ID must match the Bundle-SymbolicName from MANIFEST.MF
 	private static final String PLUGIN_ID = "de.tudarmstadt.stg.rxjava.refactoring.extension.[ID]";
@@ -28,19 +28,19 @@ public class Extension implements RxJavaRefactoringExtension<ASTNodesCollector>
 	}
 
 	@Override
-	public ASTNodesCollector getASTNodesCollectorInstance()
+	public StubCollector getASTNodesCollectorInstance()
 	{
 		return null;
 	}
 
 	@Override
-	public void processUnit( ICompilationUnit unit, ASTNodesCollector collector )
+	public void processUnit( ICompilationUnit unit, StubCollector collector )
 	{
 
 	}
 
 	@Override
-	public Set<AbstractRefactorWorker<ASTNodesCollector>> getRefactoringWorkers( ASTNodesCollector collector )
+	public Set<AbstractRefactorWorker<StubCollector>> getRefactoringWorkers(StubCollector collector )
 	{
 		return null;
 	}

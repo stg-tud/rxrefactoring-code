@@ -12,7 +12,7 @@ import rxjavarefactoring.framework.refactoring.AbstractCollector;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/11/2016
  */
-public class ASTNodesCollector extends AbstractCollector
+public class StubCollector extends AbstractCollector
 {
 	private final Map<ICompilationUnit, List<TypeDeclaration>> typeDeclMap;
 	private final Map<ICompilationUnit, List<AnonymousClassDeclaration>> cuAnonymousClassDeclMap;
@@ -21,7 +21,7 @@ public class ASTNodesCollector extends AbstractCollector
 	private final Map<ICompilationUnit, List<FieldDeclaration>> fieldDeclarationsMap;
 	private final Map<ICompilationUnit, List<MethodInvocation>> methodInvocationMap;
 
-	public ASTNodesCollector( String collectorName )
+	public StubCollector(String collectorName )
 	{
 		super( collectorName );
 		typeDeclMap = new HashMap<>();

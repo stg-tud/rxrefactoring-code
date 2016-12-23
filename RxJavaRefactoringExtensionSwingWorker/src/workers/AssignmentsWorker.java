@@ -15,20 +15,20 @@ import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
-import rxjavarefactoring.processor.ASTNodesCollector;
 import rxjavarefactoring.processor.WorkerStatus;
 import utils.RefactoringUtils;
 import utils.TemplateUtils;
-import visitors.SwingWorkerVisitor;
+import visitors.Collector;
+import visitors.RefactoringVisitor;
 
 /**
  * Description: <br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016
  */
-public class AssignmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
+public class AssignmentsWorker extends AbstractRefactorWorker<Collector>
 {
-	public AssignmentsWorker(ASTNodesCollector collector )
+	public AssignmentsWorker(Collector collector )
 	{
 		super( collector );
 	}
@@ -50,13 +50,13 @@ public class AssignmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
 				// Collect details about the SwingWorker
 				RxLogger.info( this, "METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName() );
 				AST ast = assignment.getAST();
-				SwingWorkerVisitor swingWorkerVisitor = new SwingWorkerVisitor();
-				assignment.accept( swingWorkerVisitor );
+				RefactoringVisitor refactoringVisitor = new RefactoringVisitor();
+				assignment.accept(refactoringVisitor);
 
 				// Register changes in the single unit writer
 				RxLogger.info( this, "METHOD=refactor - Copying changes to the single unit writer: " + icu.getElementName() );
 				RxSingleUnitWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, ast, getClass().getSimpleName() );
-				refactorAssignment( icu, singleUnitWriter, swingWorkerVisitor, assignment );
+				refactorAssignment( icu, singleUnitWriter, refactoringVisitor, assignment );
 
 				// Add changes to the multiple compilation units write object
 				RxLogger.info( this, "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );
@@ -71,14 +71,14 @@ public class AssignmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
 	private void refactorAssignment(
 			ICompilationUnit icu,
 			RxSingleUnitWriter singleUnitWriter,
-			SwingWorkerVisitor swingWorkerVisitor,
+			RefactoringVisitor refactoringVisitor,
 			Assignment assignment )
 	{
-		removeSuperInvocations( swingWorkerVisitor );
+		removeSuperInvocations(refactoringVisitor);
 		updateImports( singleUnitWriter );
 
 		String icuName = icu.getElementName();
-		RxObservableDto observableDto = createObservableDto( icuName, swingWorkerVisitor );
+		RxObservableDto observableDto = createObservableDto( icuName, refactoringVisitor);
 
 		Map<String, Object> observableData = new HashMap<>();
 		observableData.put( "dto", observableDto );
@@ -94,7 +94,7 @@ public class AssignmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
 
 		SimpleName swingWorkerName = (SimpleName) assignment.getLeftHandSide();
 		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.toString() );
-		RxSubscriberDto subscriberDto = createObserverDto( rxObserverName, swingWorkerVisitor, observableDto );
+		RxSubscriberDto subscriberDto = createObserverDto( rxObserverName, refactoringVisitor, observableDto );
 
 		Map<String, Object> observerData = new HashMap<>();
 		observerData.put( "dto", subscriberDto );
@@ -116,29 +116,29 @@ public class AssignmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
 		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWDto" );
 	}
 
-	private RxObservableDto createObservableDto( String icuName, SwingWorkerVisitor swingWorkerVisitor )
+	private RxObservableDto createObservableDto( String icuName, RefactoringVisitor refactoringVisitor)
 	{
 		RxObservableDto observableDto = new RxObservableDto( icuName );
-		observableDto.setResultType( swingWorkerVisitor.getResultType().toString() );
-		observableDto.setProcessType( swingWorkerVisitor.getProcessType().toString() );
-		observableDto.setDoInBackgroundBlock( swingWorkerVisitor.getDoInBackgroundBlock().toString() );
+		observableDto.setResultType( refactoringVisitor.getResultType().toString() );
+		observableDto.setProcessType( refactoringVisitor.getProcessType().toString() );
+		observableDto.setDoInBackgroundBlock( refactoringVisitor.getDoInBackgroundBlock().toString() );
 		return observableDto;
 	}
 
-	private RxSubscriberDto createObserverDto( String observerName, SwingWorkerVisitor swingWorkerVisitor, RxObservableDto observableDto )
+	private RxSubscriberDto createObserverDto(String observerName, RefactoringVisitor refactoringVisitor, RxObservableDto observableDto )
 	{
 		RxSubscriberDto subscriberDto = new RxSubscriberDto();
 		subscriberDto.setObserverName( observerName );
-		subscriberDto.setResultType( swingWorkerVisitor.getResultType().toString() );
-		subscriberDto.setProcessType( swingWorkerVisitor.getProcessType().toString() );
+		subscriberDto.setResultType( refactoringVisitor.getResultType().toString() );
+		subscriberDto.setProcessType( refactoringVisitor.getProcessType().toString() );
 		subscriberDto.setObservableName( observableDto.getVarName() );
-		subscriberDto.setChunksName( swingWorkerVisitor.getProcessVariableName() );
-		Block processBlock = swingWorkerVisitor.getProcessBlock();
+		subscriberDto.setChunksName( refactoringVisitor.getProcessVariableName() );
+		Block processBlock = refactoringVisitor.getProcessBlock();
 		if ( processBlock != null )
 		{
 			subscriberDto.setProcessBlock( processBlock.toString() );
 		}
-		Block doneBlock = swingWorkerVisitor.getDoneBlock();
+		Block doneBlock = refactoringVisitor.getDoneBlock();
 		if ( doneBlock != null )
 		{
 			subscriberDto.setDoneBlock( doneBlock.toString() );
@@ -146,9 +146,9 @@ public class AssignmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
 		return subscriberDto;
 	}
 
-	private void removeSuperInvocations( SwingWorkerVisitor swingWorkerVisitor )
+	private void removeSuperInvocations( RefactoringVisitor refactoringVisitor)
 	{
-		for ( SuperMethodInvocation methodInvocation : swingWorkerVisitor.getSuperMethodInvocationsToRemove() )
+		for ( SuperMethodInvocation methodInvocation : refactoringVisitor.getSuperMethodInvocationsToRemove() )
 		{
 			Statement statement = ASTUtil.findParent( methodInvocation, Statement.class );
 			statement.delete();

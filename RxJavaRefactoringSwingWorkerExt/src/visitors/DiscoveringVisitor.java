@@ -1,4 +1,4 @@
-package rxjavarefactoring.framework.visitors;
+package visitors;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +13,7 @@ import rxjavarefactoring.framework.utils.ASTUtil;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/11/2016
  */
-public class GeneralVisitor extends ASTVisitor
+public class DiscoveringVisitor extends ASTVisitor
 {
 	private final String classBinaryName;
 	private final List<TypeDeclaration> subclasses;
@@ -23,7 +23,7 @@ public class GeneralVisitor extends ASTVisitor
 	private final List<FieldDeclaration> fieldDeclarations;
 	private final List<MethodInvocation> methodInvocations;
 
-	public GeneralVisitor( String classBinaryName )
+	public DiscoveringVisitor(String classBinaryName )
 	{
 		this.classBinaryName = classBinaryName;
 		subclasses = new ArrayList<>();
@@ -103,7 +103,7 @@ public class GeneralVisitor extends ASTVisitor
 
 	/**
 	 * Example: public class MyClass extends TargetClass { ... }
-	 * 
+	 *
 	 * @return List of type declarations of the class extending TargetClass
 	 */
 	public List<TypeDeclaration> getSubclasses()
@@ -113,7 +113,7 @@ public class GeneralVisitor extends ASTVisitor
 
 	/**
 	 * Example: new TargetClass(){...}
-	 * 
+	 *
 	 * @return List of anonymous class declarations of TargetClass
 	 */
 	public List<AnonymousClassDeclaration> getAnonymousClasses()
@@ -123,7 +123,7 @@ public class GeneralVisitor extends ASTVisitor
 
 	/**
 	 * Example: TargetClass target = new TargetClass(){...}
-	 * 
+	 *
 	 * @return List of variable declarations of TargetClass
 	 */
 	public List<VariableDeclaration> getVariableDeclarations()
@@ -133,7 +133,7 @@ public class GeneralVisitor extends ASTVisitor
 
 	/**
 	 * Example: target = new TargetClass(){...}
-	 * 
+	 *
 	 * @return List of assignments of TargetClass
 	 */
 	public List<Assignment> getAssignments()
@@ -153,7 +153,7 @@ public class GeneralVisitor extends ASTVisitor
 
 	/**
 	 * Example: someclassInstance.invokeSomeMethod();
-	 * 
+	 *
 	 * @return List of methods invocations of TargetClass
 	 */
 	public List<MethodInvocation> getMethodInvocations()
