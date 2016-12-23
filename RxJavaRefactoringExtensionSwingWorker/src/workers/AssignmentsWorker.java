@@ -27,9 +27,9 @@ import visitors.SwingWorkerVisitor;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016
  */
-public class AssigmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
+public class AssignmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
 {
-	public AssigmentsWorker( ASTNodesCollector collector )
+	public AssignmentsWorker(ASTNodesCollector collector )
 	{
 		super( collector );
 	}
@@ -61,7 +61,7 @@ public class AssigmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
 
 				// Add changes to the multiple compilation units write object
 				RxLogger.info( this, "METHOD=refactor - Refactoring class: " + icu.getElementName() );
-				rxMultipleUnitsWriter.addChange( icu, singleUnitWriter );
+				rxMultipleUnitsWriter.addCompilationUnit(icu);
 			}
 			monitor.worked( 1 );
 		}
@@ -78,12 +78,12 @@ public class AssigmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
 		removeSuperInvocations( swingWorkerVisitor );
 
 		// changes all get() / get(long, TimeUnit) invocation by a variable name
-		removeGetInvocations( swingWorkerVisitor );
+//		removeGetInvocations( swingWorkerVisitor );
 
 		// get() and get(long, TimeUnit) throw exceptions.
 		// Since they were just replaced by a variable name, the catch clauses
 		// must be removed
-		ASTUtil.removeUnnecessaryCatchClauses( swingWorkerVisitor.getDoneBlock() );
+//		ASTUtil.removeUnnecessaryCatchClauses( swingWorkerVisitor.getDoneBlock() );
 
 		updateImports( singleUnitWriter );
 
@@ -103,7 +103,7 @@ public class AssigmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
 		singleUnitWriter.addStatementBefore( observableStatement, referenceStatement );
 
 		SimpleName swingWorkerName = (SimpleName) assignment.getLeftHandSide();
-		String rxObserverName = RefactoringUtils.getNewVarName( swingWorkerName.toString() );
+		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.toString() );
 		RxSubscriberDto subscriberDto = createObserverDto( rxObserverName, swingWorkerVisitor, observableDto );
 
 		Map<String, Object> observerData = new HashMap<>();
@@ -121,11 +121,9 @@ public class AssigmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
 	{
 		singleUnitWriter.addImport( "rx.Observable" );
 		singleUnitWriter.addImport( "rx.Emitter" );
-		singleUnitWriter.addImport( "rx.exceptions.Exceptions" );
 		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWEmitter" );
 		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWSubscriber" );
 		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWDto" );
-		singleUnitWriter.removeImport( "java.util.concurrent.TimeoutException" );
 	}
 
 	private RxObservableDto createObservableDto( String icuName, SwingWorkerVisitor swingWorkerVisitor )
@@ -145,7 +143,6 @@ public class AssigmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
 		subscriberDto.setProcessType( swingWorkerVisitor.getProcessType().toString() );
 		subscriberDto.setObservableName( observableDto.getVarName() );
 		subscriberDto.setChunksName( swingWorkerVisitor.getProcessVariableName() );
-		subscriberDto.setAsyncResultVarName( swingWorkerVisitor.getAsyncResultVarName() );
 		Block processBlock = swingWorkerVisitor.getProcessBlock();
 		if ( processBlock != null )
 		{
@@ -155,32 +152,6 @@ public class AssigmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
 		if ( doneBlock != null )
 		{
 			subscriberDto.setDoneBlock( doneBlock.toString() );
-		}
-
-		String interruptedExceptionName = swingWorkerVisitor.getInterruptedExceptionName();
-		String timeoutExceptionName = swingWorkerVisitor.getTimeoutExceptionName();
-		if ( interruptedExceptionName != null )
-		{
-			subscriberDto.setThrowableName( interruptedExceptionName );
-		}
-		else if ( timeoutExceptionName != null )
-		{
-			subscriberDto.setThrowableName( timeoutExceptionName );
-		}
-		else
-		{
-			subscriberDto.setThrowableName( "throwable" );
-		}
-		subscriberDto.setOnErrorBlockEnabled( true );
-		Block timeoutCatchBlock = swingWorkerVisitor.getTimeoutCatchBlock();
-		if ( timeoutCatchBlock != null )
-		{
-			subscriberDto.setTimeoutExceptionBlock( StringUtils.removeBlockBraces( timeoutCatchBlock ) );
-		}
-		Block interruptedCatchBlock = swingWorkerVisitor.getInterruptedCatchBlock();
-		if ( interruptedCatchBlock != null )
-		{
-			subscriberDto.setInterruptedExceptionBlock( StringUtils.removeBlockBraces( interruptedCatchBlock ) );
 		}
 		return subscriberDto;
 	}

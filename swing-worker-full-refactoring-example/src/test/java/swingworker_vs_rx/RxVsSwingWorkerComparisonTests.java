@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -31,7 +32,7 @@ import swingworker_vs_rx.test_helpers.RxSwingWorkerWrapper;
 public class RxVsSwingWorkerComparisonTests
 {
 	private static final int DEFAULT_AMOUNT_OF_WORK = 10;
-	private static final long TIME_FOR_WORK_UNIT = 2L;
+	private static final long TIME_FOR_WORK_UNIT = 5L;
 	private static RxSwingWorkerAPI<String> swingWorkerApiWrapper;
 
 	/**
@@ -103,7 +104,7 @@ public class RxVsSwingWorkerComparisonTests
 	}
 
 	@Test
-	public void testGetWithoutTimeout() throws InterruptedException
+	public void testGetWithoutTimeout() throws InterruptedException, ExecutionException
 	{
 		printTestName( "testGetWithoutTimeout" );
 
@@ -115,7 +116,7 @@ public class RxVsSwingWorkerComparisonTests
 	}
 
 	@Test
-	public void testGetWithTimeout() throws InterruptedException, TimeoutException
+	public void testGetWithTimeout() throws InterruptedException, TimeoutException, ExecutionException
 	{
 		printTestName( "testGetWithTimeout" );
 

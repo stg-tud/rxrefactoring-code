@@ -1,4 +1,4 @@
-package rxswingworker;
+package de.tudarmstadt.stg.rx.swingworker;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -134,7 +134,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	 * observed in {@link SwingScheduler#getInstance()}
 	 */
 	@Override
-	public final void execute()
+	public final void executeObservable()
 	{
 		if ( !isSubscribed() )
 		{
@@ -150,7 +150,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	 * The operation is observed in {@link SwingScheduler#getInstance()}
 	 */
 	@Override
-	public final void run()
+	public final void runObservable()
 	{
 		if ( !isSubscribed() )
 		{
@@ -240,7 +240,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	 * @return true if this observer was successfully unsubscribed, false otherwise
 	 */
 	@Override
-	public final boolean cancel(boolean mayInterruptIfRunning )
+	public final boolean cancelObservable(boolean mayInterruptIfRunning )
 	{
 		if ( cancelled.get() || currentState.equals( SwingWorker.StateValue.DONE ) )
 		{

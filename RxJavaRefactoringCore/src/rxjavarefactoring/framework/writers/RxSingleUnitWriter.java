@@ -46,7 +46,7 @@ public class RxSingleUnitWriter
 	 */
 	public void addImport( String importClass )
 	{
-		synchronized ( addedImports )
+		synchronized ( this )
 		{
 			addedImports.add( importClass );
 		}
@@ -62,7 +62,7 @@ public class RxSingleUnitWriter
 	 */
 	public void removeImport( String importClass )
 	{
-		synchronized ( removedImports )
+		synchronized ( this )
 		{
 			removedImports.add( importClass );
 		}
@@ -76,7 +76,7 @@ public class RxSingleUnitWriter
 	 */
 	public void removeElement( ASTNode element )
 	{
-		synchronized ( astRewriter )
+		synchronized ( this )
 		{
 			astRewriter.remove( element, null );
 		}
@@ -91,7 +91,7 @@ public class RxSingleUnitWriter
 	 */
 	public void removeStatement( ASTNode elementInTargetStatement )
 	{
-		synchronized ( astRewriter )
+		synchronized ( this )
 		{
 			astRewriter.remove( ASTUtil.findParent( elementInTargetStatement, Statement.class ), null );
 		}
@@ -107,7 +107,7 @@ public class RxSingleUnitWriter
 	 */
 	public void addStatementBefore( Statement newStatement, Statement referenceStatement )
 	{
-		synchronized ( astRewriter )
+		synchronized ( this )
 		{
 			Block parentBlock = (Block) referenceStatement.getParent();
 			ListRewrite statementsBlock = astRewriter.getListRewrite( parentBlock, Block.STATEMENTS_PROPERTY );
@@ -127,7 +127,7 @@ public class RxSingleUnitWriter
 	 */
 	public void addFieldDeclarationBefore( FieldDeclaration newFieldDecl, FieldDeclaration referenceFieldDecl )
 	{
-		synchronized ( astRewriter )
+		synchronized ( this )
 		{
 			ListRewrite classBlock = getClassBlock( referenceFieldDecl );
 			classBlock.insertBefore( newFieldDecl, referenceFieldDecl, null );
@@ -147,7 +147,7 @@ public class RxSingleUnitWriter
 	 */
 	public void addMethodAfter( MethodDeclaration methodDeclaration, ASTNode referenceNode )
 	{
-		synchronized ( astRewriter )
+		synchronized ( this )
 		{
 			MethodDeclaration referenceMethod = ASTUtil.findParent( referenceNode, MethodDeclaration.class );
 			ListRewrite classBlock = getClassBlock( referenceMethod );
@@ -168,7 +168,7 @@ public class RxSingleUnitWriter
 	 */
 	public void addInnerClassAfter( TypeDeclaration typeDeclaration, ASTNode referenceNode )
 	{
-		synchronized ( astRewriter )
+		synchronized ( this )
 		{
 			MethodDeclaration referenceMethod = ASTUtil.findParent( referenceNode, MethodDeclaration.class );
 			ListRewrite classBlock = getClassBlock( referenceMethod );

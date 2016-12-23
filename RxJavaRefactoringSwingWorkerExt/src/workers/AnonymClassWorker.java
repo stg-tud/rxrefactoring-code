@@ -16,6 +16,7 @@ import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
+import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
 import rxjavarefactoring.processor.ASTNodesCollector;
 import rxjavarefactoring.processor.WorkerStatus;
 import visitors.SwingWorkerVisitor;
@@ -52,8 +53,7 @@ public class AnonymClassWorker extends AbstractRefactorWorker<ASTNodesCollector>
 				SwingWorkerVisitor swingWorkerVisitor = new SwingWorkerVisitor();
 				swingWorkerDeclaration.accept( swingWorkerVisitor );
 
-				// TODO: do not create the compilation unit here. Create a Map instead!
-				RxSingleUnitWriter singleChangeWriter = new RxSingleUnitWriter( icu, ast, getClass().getSimpleName() );
+				RxSingleUnitWriter singleChangeWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, ast, getClass().getSimpleName() );
 
 				// Create rx.Observable using the Subscriber if necessary
 				RxLogger.info( this, "METHOD=refactor - Creating rx.Observable object: " + icu.getElementName() );
@@ -65,7 +65,7 @@ public class AnonymClassWorker extends AbstractRefactorWorker<ASTNodesCollector>
 
 				// Add changes to the multiple compilation units write object
 				RxLogger.info( this, "METHOD=refactor - Refactoring class: " + icu.getElementName() );
-				rxMultipleUnitsWriter.addChange( icu, singleChangeWriter );
+				rxMultipleUnitsWriter.addCompilationUnit( icu );
 
 			}
 			monitor.worked( 1 );

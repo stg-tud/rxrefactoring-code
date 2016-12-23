@@ -2,7 +2,9 @@ package swingworker_vs_rx.test_helpers;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.swing.*;
 
@@ -48,7 +50,7 @@ public class RxSwingWorkerWrapper<ReturnType, ProcessType> implements RxSwingWor
 	}
 
 	@Override
-	public ReturnType get()
+	public ReturnType get()  throws InterruptedException, ExecutionException
 	{
 		try
 		{
@@ -62,7 +64,7 @@ public class RxSwingWorkerWrapper<ReturnType, ProcessType> implements RxSwingWor
 	}
 
 	@Override
-	public ReturnType get( long timeout, TimeUnit unit )
+	public ReturnType get( long timeout, TimeUnit unit ) throws InterruptedException, TimeoutException, ExecutionException
 	{
 		try
 		{

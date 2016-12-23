@@ -23,11 +23,15 @@ public class RefactoringUtilsTest
 		assertTest( "Worker", "RxObserver" );
 		assertTest( "aWorker", "aRxObserver" );
 		assertTest( "aWorker1", "aRxObserver1" );
+		assertTest( "SwingWorker.StateValue state = mySwingWorker.getState();",
+				"SwingWorker.StateValue state = myRxObserver.getState();" );
+		assertTest( "SwingWorker.StateValue state = myWorker.getState();",
+				"SwingWorker.StateValue state = myRxObserver.getState();" );
 	}
 
 	private void assertTest( String inputName, String expectedNewName )
 	{
-		String actualNewName = RefactoringUtils.getNewVarName( inputName );
+		String actualNewName = RefactoringUtils.cleanSwingWorkerName( inputName );
 		assertEquals( expectedNewName, actualNewName );
 	}
 }

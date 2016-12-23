@@ -48,7 +48,7 @@ public class SwingWorkerWrapper<ReturnType, ProcessType> implements RxSwingWorke
 	}
 
 	@Override
-	public ReturnType get()
+	public ReturnType get()  throws InterruptedException, ExecutionException
 	{
 		try
 		{
@@ -66,7 +66,7 @@ public class SwingWorkerWrapper<ReturnType, ProcessType> implements RxSwingWorke
 	}
 
 	@Override
-	public ReturnType get( long timeout, TimeUnit unit )
+	public ReturnType get( long timeout, TimeUnit unit ) throws InterruptedException, TimeoutException, ExecutionException
 	{
 		try
 		{

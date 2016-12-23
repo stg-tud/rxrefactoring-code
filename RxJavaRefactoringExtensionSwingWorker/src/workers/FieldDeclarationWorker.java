@@ -42,14 +42,14 @@ public class FieldDeclarationWorker extends AbstractRefactorWorker<ASTNodesColle
 
 			for ( FieldDeclaration fieldDeclaration : fieldDeclEntry.getValue() )
 			{
-				// Get ast and Writer
+				// Get ast and writer
 				AST ast = fieldDeclaration.getAST();
 				RxSingleUnitWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, ast, getClass().getSimpleName() );
 
 				// Create new field declaration statement
 				RxLogger.info( this, "METHOD=refactor - Creating new field declaration: " + icu.getElementName() );
 				String typeChanged = fieldDeclaration.toString().replace( "SwingWorker", "SWSubscriber" );
-				String finalStatementString = RefactoringUtils.getNewVarName( typeChanged );
+				String finalStatementString = RefactoringUtils.cleanSwingWorkerName( typeChanged );
 				FieldDeclaration newDecl = ASTNodeFactory.createFieldDeclarationFromText( ast, finalStatementString );
 
 				// Replace declarations
@@ -59,7 +59,7 @@ public class FieldDeclarationWorker extends AbstractRefactorWorker<ASTNodesColle
 
 				// Add changes to the multiple compilation units write object
 				RxLogger.info( this, "METHOD=refactor - Refactoring class: " + icu.getElementName() );
-				rxMultipleUnitsWriter.addChange( icu, singleUnitWriter );
+				rxMultipleUnitsWriter.addCompilationUnit(icu);
 			}
 			monitor.worked( 1 );
 		}

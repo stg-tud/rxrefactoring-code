@@ -4,6 +4,7 @@ import java.beans.PropertyChangeSupport;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.swing.*;
 
@@ -12,7 +13,6 @@ import de.tudarmstadt.stg.rx.swingworker.SWEmitter;
 import de.tudarmstadt.stg.rx.swingworker.SWSubscriber;
 import rx.Emitter;
 import rx.Observable;
-import rx.exceptions.Exceptions;
 
 /**
  * Description: Basic class for test purposes <br>
@@ -57,22 +57,22 @@ public class GeneralCase
 			}
 
 			@Override
-			protected void done( String asyncResult )
+			protected void done()
 			{
-				System.out.println( "Entering done() method" );
-				String result = asyncResult;
-				System.out.println( "doInBackground() result = " + result );
-			}
-
-			@Override
-			public void onError( Throwable e )
-			{
-				if ( e instanceof InterruptedException )
+				try
 				{
-					System.out.println( "InterruptedException" );
-					return;
+					System.out.println("Entering done() method");
+					String result = get();
+					System.out.println("doInBackground() result = " + result);
 				}
-				Exceptions.propagate( e );
+				catch ( InterruptedException e )
+				{
+					System.out.println("InterruptedException");
+				}
+				catch ( ExecutionException e )
+				{
+					System.out.println("ExecutionException");
+				}
 			}
 		};
 	}
@@ -92,12 +92,24 @@ public class GeneralCase
 		{
 			e.printStackTrace();
 		}
+		catch ( ExecutionException e )
+		{
+			e.printStackTrace();
+		}
 
 		try
 		{
 			String asyncResult = rxObserver.get( 1000L, TimeUnit.SECONDS );
 		}
 		catch ( InterruptedException e )
+		{
+			e.printStackTrace();
+		}
+		catch ( TimeoutException e )
+		{
+			e.printStackTrace();
+		}
+		catch ( ExecutionException e )
 		{
 			e.printStackTrace();
 		}

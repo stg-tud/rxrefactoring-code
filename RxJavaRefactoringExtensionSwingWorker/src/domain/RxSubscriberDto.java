@@ -13,12 +13,7 @@ public class RxSubscriberDto
 	private String observableName;
 	private String chunksName;
 	private String processBlock;
-	private String asyncResultVarName;
 	private String doneBlock;
-	private String throwableName;
-	private boolean onErrorBlockEnabled;
-	private String timeoutExceptionBlock;
-	private String interruptedExceptionBlock;
 
 	public String getObserverName()
 	{
@@ -80,16 +75,6 @@ public class RxSubscriberDto
 		this.processBlock = processBlock;
 	}
 
-	public String getAsyncResultVarName()
-	{
-		return asyncResultVarName;
-	}
-
-	public void setAsyncResultVarName( String asyncResultVarName )
-	{
-		this.asyncResultVarName = asyncResultVarName;
-	}
-
 	public String getDoneBlock()
 	{
 		return doneBlock;
@@ -98,45 +83,5 @@ public class RxSubscriberDto
 	public void setDoneBlock( String doneBlock )
 	{
 		this.doneBlock = doneBlock;
-	}
-
-	public String getThrowableName()
-	{
-		return throwableName;
-	}
-
-	public void setThrowableName( String throwableName )
-	{
-		this.throwableName = throwableName;
-	}
-
-	public boolean isOnErrorBlockEnabled()
-	{
-		return onErrorBlockEnabled;
-	}
-
-	public void setOnErrorBlockEnabled( boolean onErrorBlockEnabled )
-	{
-		this.onErrorBlockEnabled = onErrorBlockEnabled;
-	}
-
-	public String getTimeoutExceptionBlock()
-	{
-		return timeoutExceptionBlock;
-	}
-
-	public void setTimeoutExceptionBlock( String timeoutExceptionBlock )
-	{
-		this.timeoutExceptionBlock = timeoutExceptionBlock;
-	}
-
-	public String getInterruptedExceptionBlock()
-	{
-		return interruptedExceptionBlock;
-	}
-
-	public void setInterruptedExceptionBlock( String interruptedExceptionBlock )
-	{
-		this.interruptedExceptionBlock = interruptedExceptionBlock;
 	}
 }

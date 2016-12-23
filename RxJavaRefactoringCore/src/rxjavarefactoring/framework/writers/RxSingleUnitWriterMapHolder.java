@@ -13,18 +13,29 @@ import org.eclipse.jdt.core.dom.AST;
  */
 public class RxSingleUnitWriterMapHolder
 {
+	private static Object lock = new Object();
+
 	private static Map<ICompilationUnit, RxSingleUnitWriter> rxSingleUnitWriterMap = new ConcurrentHashMap<>();
 
 	public static RxSingleUnitWriter getSingleUnitWriter( ICompilationUnit icu, AST ast, String refactoringDescription )
 	{
-		RxSingleUnitWriter rxSingleUnitWriter = rxSingleUnitWriterMap.get( icu );
-		if ( rxSingleUnitWriter != null )
+		synchronized ( lock )
 		{
-			return rxSingleUnitWriter;
-		}
 
-		RxSingleUnitWriter newRxSingleUnitWriter = new RxSingleUnitWriter( icu, ast, refactoringDescription );
-		rxSingleUnitWriterMap.put( icu, newRxSingleUnitWriter );
-		return newRxSingleUnitWriter;
+			RxSingleUnitWriter rxSingleUnitWriter = rxSingleUnitWriterMap.get( icu );
+			if ( rxSingleUnitWriter != null )
+			{
+				return rxSingleUnitWriter;
+			}
+
+			RxSingleUnitWriter newRxSingleUnitWriter = new RxSingleUnitWriter( icu, ast, refactoringDescription );
+			rxSingleUnitWriterMap.put( icu, newRxSingleUnitWriter );
+			return newRxSingleUnitWriter;
+		}
+	}
+
+	public static RxSingleUnitWriter findSingleUnitWriter( ICompilationUnit icu )
+	{
+		return rxSingleUnitWriterMap.get( icu );
 	}
 }

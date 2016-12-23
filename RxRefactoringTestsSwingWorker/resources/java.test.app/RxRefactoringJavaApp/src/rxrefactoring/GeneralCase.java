@@ -93,11 +93,15 @@ public class GeneralCase
 		{
 			String asyncResult = swingWorker.get(1000L, TimeUnit.SECONDS);
 		}
-		catch ( InterruptedException | ExecutionException e )
+		catch ( InterruptedException e )
 		{
 			e.printStackTrace();
 		}
 		catch ( TimeoutException e )
+		{
+			e.printStackTrace();
+		}
+		catch ( ExecutionException e )
 		{
 			e.printStackTrace();
 		}

@@ -1,4 +1,4 @@
-package rxswingworker;
+package de.tudarmstadt.stg.rx.swingworker;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,7 +56,7 @@ public final class SWDto<ReturnType, ProcessType>
 	 * 
 	 * @param asyncResult
 	 *            result to be set
-	 * @return this object so that it can be used in {@link Subscriber#onNext(Object)} }.
+	 * @return this object so that it can be used in {@link rx.Subscriber#onNext(Object)} }.
 	 *         See {@link SWEmitter#call(Subscriber)}, {@link SWEmitter#setProgress(int)}
 	 *         and {@link SWEmitter#publish(Object[])}
 	 */

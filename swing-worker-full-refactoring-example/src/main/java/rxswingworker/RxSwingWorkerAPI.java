@@ -1,10 +1,12 @@
 package rxswingworker;
 
-import javax.swing.*;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import javax.swing.*;
 
 /**
  * Description: <br>
@@ -13,17 +15,17 @@ import java.util.concurrent.TimeoutException;
  */
 public interface RxSwingWorkerAPI<ReturnType>
 {
-	void addPropertyChangeListener( PropertyChangeListener listener );
+	void addPropertyChangeListener(PropertyChangeListener listener);
 
-	boolean cancel( boolean mayInterruptIfRunning );
+	boolean cancel(boolean mayInterruptIfRunning);
 
 	void execute();
 
-	void firePropertyChange( String propertyName, Object oldValue, Object newValue );
+	void firePropertyChange(String propertyName, Object oldValue, Object newValue);
 
-	ReturnType get() throws InterruptedException;
+	ReturnType get() throws InterruptedException, ExecutionException;
 
-	ReturnType get( long timeout, TimeUnit unit ) throws InterruptedException;
+	ReturnType get(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException, ExecutionException;
 
 	int getProgress();
 
@@ -35,7 +37,7 @@ public interface RxSwingWorkerAPI<ReturnType>
 
 	boolean isDone();
 
-	void removePropertyChangeListener( PropertyChangeListener listener );
+	void removePropertyChangeListener(PropertyChangeListener listener);
 
 	void run();
 }

@@ -20,8 +20,9 @@ import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.PluginUtils;
 import rxjavarefactoring.framework.visitors.GeneralVisitor;
 import rxjavarefactoring.processor.ASTNodesCollector;
-import workers.AssigmentsWorker;
+import workers.AssignmentsWorker;
 import workers.FieldDeclarationWorker;
+import workers.MethodInvocationWorker;
 
 /**
  * Description: Implementation of API of the RxJavaRefactoringTool<br>
@@ -77,8 +78,9 @@ public class Extension implements RxJavaRefactoringExtension<ASTNodesCollector>
 	{
 		setupFreemaker();
 		Set<AbstractRefactorWorker<ASTNodesCollector>> workers = new HashSet<>();
-		workers.add( new AssigmentsWorker( collector ) );
+		workers.add( new AssignmentsWorker( collector ) );
 		workers.add( new FieldDeclarationWorker( collector ) );
+		workers.add( new MethodInvocationWorker( collector ) );
 		return workers;
 	}
 

@@ -7,6 +7,13 @@ package utils;
  */
 public final class RefactoringUtils
 {
+
+	public static final String SWING_WORKER_STATE_VALUE = "SwingWorker.StateValue";
+	public static final String RX_OBSERVER_FIRST_LOWER = "rxObserver";
+	public static final String RX_OBSERVER_FIRST_UPPER = "RxObserver";
+	public static final String SWING_WORKER_UPPER = "SWINGWORKER";
+	public static final String WORKER_UPPER = "WORKER";
+
 	private RefactoringUtils()
 	{
 		// This class should not be instantiated
@@ -22,48 +29,73 @@ public final class RefactoringUtils
 	 * <li>mySwingWorker10 -> myRxObservable10</li>
 	 * </ul>
 	 * 
-	 * @param swingworkerVarName
+	 * @param text
 	 *            string containing the char sequence "swingworker"
 	 *            (case insensitive)
 	 * @return updated string
 	 */
-	public static String getNewVarName( String swingworkerVarName )
+	public static String cleanSwingWorkerName( String text )
 	{
-		String newVarName = swingworkerVarName;
-		String searchableVarName = swingworkerVarName.toUpperCase();
-		int swingworkerPosition = searchableVarName.indexOf( "SWINGWORKER" );
-		if ( swingworkerPosition >= 0 )
-		{
+		StringBuilder sb = new StringBuilder( text );
+		String searchableText = text.toUpperCase();
 
-			char[] chars = swingworkerVarName.toCharArray();
-			char firstLetter = chars[ swingworkerPosition ];
-			if ( firstLetter == 's' )
+		int indexFrom = 0;
+		while ( indexFrom != -1 )
+		{
+			int swPosition = searchableText.indexOf( SWING_WORKER_UPPER, indexFrom );
+			if ( swPosition == -1 )
 			{
-				newVarName = swingworkerVarName.replaceAll( "(?i)swingworker", "rxObserver" );
+				break;
 			}
-			else if ( firstLetter == 'S' )
+			int swStatePosition = text.indexOf( SWING_WORKER_STATE_VALUE, indexFrom );
+			if ( swPosition != swStatePosition )
 			{
-				newVarName = swingworkerVarName.replaceAll( "(?i)swingworker", "RxObserver" );
+				int endIndex = swPosition + SWING_WORKER_UPPER.length();
+				if ( text.charAt( swPosition ) == 's' )
+				{
+					sb.replace( swPosition, endIndex, RX_OBSERVER_FIRST_LOWER );
+				}
+				else
+				{
+					sb.replace( swPosition, endIndex, RX_OBSERVER_FIRST_UPPER );
+				}
+				indexFrom = swPosition + RX_OBSERVER_FIRST_LOWER.length();
 			}
-			return newVarName;
+			else
+			{
+				indexFrom = searchableText.indexOf( SWING_WORKER_UPPER, SWING_WORKER_STATE_VALUE.length() + 1 );
+			}
 		}
 
-		int workerPosition = searchableVarName.indexOf( "WORKER" );
-		if ( workerPosition >= 0 )
+		indexFrom = 0;
+		searchableText = sb.toString().toUpperCase();
+		while ( indexFrom != -1 )
 		{
-			char[] chars = swingworkerVarName.toCharArray();
-			char firstLetter = chars[ workerPosition ];
-			if ( firstLetter == 'w' )
+			int swPosition = searchableText.indexOf( WORKER_UPPER, indexFrom );
+			if ( swPosition == -1 )
 			{
-				newVarName = swingworkerVarName.replaceAll( "(?i)worker", "rxObserver" );
+				break;
 			}
-			else if ( firstLetter == 'W' )
+			int swStatePosition = text.indexOf( SWING_WORKER_STATE_VALUE, indexFrom );
+			if ( swStatePosition != ( swPosition - SWING_WORKER_UPPER.length() + WORKER_UPPER.length() ) )
 			{
-				newVarName = swingworkerVarName.replaceAll( "(?i)worker", "RxObserver" );
+				int endIndex = swPosition + WORKER_UPPER.length();
+				if ( text.charAt( swPosition ) == 'w' )
+				{
+					sb.replace( swPosition, endIndex, RX_OBSERVER_FIRST_LOWER );
+				}
+				else
+				{
+					sb.replace( swPosition, endIndex, RX_OBSERVER_FIRST_UPPER );
+				}
+				indexFrom = swPosition + RX_OBSERVER_FIRST_LOWER.length();
 			}
-			return newVarName;
+			else
+			{
+				indexFrom = searchableText.indexOf( WORKER_UPPER, SWING_WORKER_STATE_VALUE.length() + 1 );
+			}
 		}
 
-		return newVarName;
+		return sb.toString();
 	}
 }
