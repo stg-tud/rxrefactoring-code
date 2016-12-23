@@ -26,7 +26,7 @@ import visitors.RxCollector;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016
  */
-public class VariableDeclStatementWorker extends AbstractRefactorWorker<RxCollector>
+public class VariableDeclStatementWorker extends GeneralWorker
 {
 	public VariableDeclStatementWorker( RxCollector rxCollector )
 	{
@@ -106,6 +106,7 @@ public class VariableDeclStatementWorker extends AbstractRefactorWorker<RxCollec
 		SimpleName swingWorkerName = fragment.getName();
 		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.toString() );
 		RxSubscriberDto subscriberDto = createObserverDto( rxObserverName, refactoringVisitor, observableDto );
+        subscriberDto.setVariableDecl(true);
 
 		Map<String, Object> observerData = new HashMap<>();
 		observerData.put( "dto", subscriberDto );
@@ -116,70 +117,5 @@ public class VariableDeclStatementWorker extends AbstractRefactorWorker<RxCollec
 		singleUnitWriter.addStatementBefore( observerStatement, varDeclStatement );
 
 		singleUnitWriter.removeStatement( varDeclStatement );
-	}
-
-	private void updateImports( RxSingleUnitWriter singleUnitWriter )
-	{
-		singleUnitWriter.addImport( "rx.Observable" );
-		singleUnitWriter.addImport( "rx.Emitter" );
-		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWEmitter" );
-		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWSubscriber" );
-		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWDto" );
-	}
-
-	private RxObservableDto createObservableDto( String icuName, RefactoringVisitor refactoringVisitor )
-	{
-		RxObservableDto observableDto = new RxObservableDto( icuName );
-		observableDto.setResultType( refactoringVisitor.getResultType().toString() );
-		observableDto.setProcessType( refactoringVisitor.getProcessType().toString() );
-		observableDto.setDoInBackgroundBlock( refactoringVisitor.getDoInBackgroundBlock().toString() );
-		return observableDto;
-	}
-
-	private RxSubscriberDto createObserverDto( String observerName, RefactoringVisitor refactoringVisitor, RxObservableDto observableDto )
-	{
-		RxSubscriberDto subscriberDto = new RxSubscriberDto();
-		subscriberDto.setObserverName( observerName );
-		subscriberDto.setVariableDecl( true );
-		Type resultType = refactoringVisitor.getResultType();
-		if ( resultType != null )
-		{
-			subscriberDto.setResultType( resultType.toString() );
-		}
-		else
-		{
-			subscriberDto.setResultType( "Object" );
-		}
-		Type processType = refactoringVisitor.getProcessType();
-		if ( processType != null )
-		{
-			subscriberDto.setProcessType( processType.toString() );
-		}
-		else
-		{
-			subscriberDto.setProcessType( "Object" );
-		}
-		subscriberDto.setObservableName( observableDto.getVarName() );
-		subscriberDto.setChunksName( refactoringVisitor.getProcessVariableName() );
-		Block processBlock = refactoringVisitor.getProcessBlock();
-		if ( processBlock != null )
-		{
-			subscriberDto.setProcessBlock( processBlock.toString() );
-		}
-		Block doneBlock = refactoringVisitor.getDoneBlock();
-		if ( doneBlock != null )
-		{
-			subscriberDto.setDoneBlock( doneBlock.toString() );
-		}
-		return subscriberDto;
-	}
-
-	private void removeSuperInvocations( RefactoringVisitor refactoringVisitor )
-	{
-		for ( SuperMethodInvocation methodInvocation : refactoringVisitor.getSuperMethodInvocationsToRemove() )
-		{
-			Statement statement = ASTUtil.findParent( methodInvocation, Statement.class );
-			statement.delete();
-		}
 	}
 }
