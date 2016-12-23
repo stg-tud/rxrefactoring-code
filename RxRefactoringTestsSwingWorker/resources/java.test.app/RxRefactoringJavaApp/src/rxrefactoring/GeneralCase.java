@@ -67,6 +67,34 @@ public class GeneralCase
 				}
 			}
 		};
+
+		SwingWorker<String, Integer> swingWorkerRef = swingWorker;
+		SwingWorker swingWorkerRef2 = swingWorker;
+
+		doSomething(swingWorkerRef);
+
+		new SwingWorker<String, Integer>()
+		{
+			@Override
+			protected String doInBackground() throws Exception
+			{
+				return null;
+			}
+		};
+
+		new SwingWorker<String, Integer>()
+		{
+			@Override
+			protected String doInBackground() throws Exception
+			{
+				return null;
+			}
+		}.execute();
+	}
+
+	private void doSomething(SwingWorker<String, Integer> anotherSwingWorker)
+	{
+		anotherSwingWorker.execute();
 	}
 
 	public void swingWorkerCalls()

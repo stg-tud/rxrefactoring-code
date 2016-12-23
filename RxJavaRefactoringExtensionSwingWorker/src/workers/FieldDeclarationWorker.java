@@ -14,18 +14,18 @@ import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
 import rxjavarefactoring.processor.WorkerStatus;
 import utils.RefactoringUtils;
-import visitors.Collector;
+import visitors.RxCollector;
 
 /**
  * Description: <br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/22/2016
  */
-public class FieldDeclarationWorker extends AbstractRefactorWorker<Collector>
+public class FieldDeclarationWorker extends AbstractRefactorWorker<RxCollector>
 {
-	public FieldDeclarationWorker( Collector collector )
+	public FieldDeclarationWorker( RxCollector rxCollector)
 	{
-		super( collector );
+		super(rxCollector);
 	}
 
 	@Override

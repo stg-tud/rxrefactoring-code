@@ -55,6 +55,18 @@ public class JavaAppTestExample extends AbstractJavaTest
 		executeTest( targetFile, expectedSourceCode );
 	}
 
+	@Test
+	public void testVariableDeclarationStatements() throws Exception
+	{
+		String targetFile = "VariableDeclStatement.java";
+
+		String expectedSourceCode = getSourceCode(
+				"expected.java.code",
+				"VariableDeclStatementRefactored.java" );
+
+		executeTest( targetFile, expectedSourceCode );
+	}
+
 	// Add more methods for further classes
 
 	private void executeTest( String targetFile, String expectedSourceCode ) throws Exception

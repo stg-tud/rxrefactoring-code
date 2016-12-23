@@ -14,6 +14,7 @@ public class RxSubscriberDto
 	private String chunksName;
 	private String processBlock;
 	private String doneBlock;
+	private boolean variableDecl;
 
 	public String getObserverName()
 	{
@@ -83,5 +84,15 @@ public class RxSubscriberDto
 	public void setDoneBlock( String doneBlock )
 	{
 		this.doneBlock = doneBlock;
+	}
+
+	public boolean isVariableDecl()
+	{
+		return variableDecl;
+	}
+
+	public void setVariableDecl(boolean variableDecl)
+	{
+		this.variableDecl = variableDecl;
 	}
 }

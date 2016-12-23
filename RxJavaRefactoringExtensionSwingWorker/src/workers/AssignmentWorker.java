@@ -18,19 +18,19 @@ import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
 import rxjavarefactoring.processor.WorkerStatus;
 import utils.RefactoringUtils;
 import utils.TemplateUtils;
-import visitors.Collector;
 import visitors.RefactoringVisitor;
+import visitors.RxCollector;
 
 /**
  * Description: <br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016
  */
-public class AssignmentWorker extends AbstractRefactorWorker<Collector>
+public class AssignmentWorker extends AbstractRefactorWorker<RxCollector>
 {
-	public AssignmentWorker(Collector collector )
+	public AssignmentWorker( RxCollector rxCollector )
 	{
-		super( collector );
+		super( rxCollector );
 	}
 
 	@Override
@@ -41,11 +41,11 @@ public class AssignmentWorker extends AbstractRefactorWorker<Collector>
 		monitor.beginTask( getClass().getSimpleName(), numUnits );
 		RxLogger.info( this, "METHOD=refactor - Total number of compilation units: " + numUnits );
 
-		for ( Map.Entry<ICompilationUnit, List<Assignment>> assigmentEntry : varDeclMap.entrySet() )
+		for ( Map.Entry<ICompilationUnit, List<Assignment>> assignmentEntry : varDeclMap.entrySet() )
 		{
-			ICompilationUnit icu = assigmentEntry.getKey();
+			ICompilationUnit icu = assignmentEntry.getKey();
 
-			for ( Assignment assignment : assigmentEntry.getValue() )
+			for ( Assignment assignment : assignmentEntry.getValue() )
 			{
 				// Collect details about the SwingWorker
 				RxLogger.info( this, "METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName() );
@@ -63,13 +63,13 @@ public class AssignmentWorker extends AbstractRefactorWorker<Collector>
 				}
 				else
 				{
-					Statement referenceStatement = ASTUtil.findParent(assignment, Statement.class);
-					String cleanedStatement = RefactoringUtils.cleanSwingWorkerName(referenceStatement.toString());
-					Statement newStatement = ASTNodeFactory.createSingleStatementFromText(ast, cleanedStatement);
+					Statement referenceStatement = ASTUtil.findParent( assignment, Statement.class );
+					String cleanedStatement = RefactoringUtils.cleanSwingWorkerName( referenceStatement.toString() );
+					Statement newStatement = ASTNodeFactory.createSingleStatementFromText( ast, cleanedStatement );
 
 					RxLogger.info( this, "METHOD=refactor - Copying changes to the single unit writer: " + icu.getElementName() );
-					singleUnitWriter.addStatementBefore(newStatement, referenceStatement);
-					singleUnitWriter.removeStatement(assignment);
+					singleUnitWriter.addStatementBefore( newStatement, referenceStatement );
+					singleUnitWriter.removeStatement( assignment );
 				}
 
 				// Add changes to the multiple compilation units write object
@@ -143,8 +143,24 @@ public class AssignmentWorker extends AbstractRefactorWorker<Collector>
 	{
 		RxSubscriberDto subscriberDto = new RxSubscriberDto();
 		subscriberDto.setObserverName( observerName );
-		subscriberDto.setResultType( refactoringVisitor.getResultType().toString() );
-		subscriberDto.setProcessType( refactoringVisitor.getProcessType().toString() );
+		Type resultType = refactoringVisitor.getResultType();
+		if ( resultType != null )
+		{
+			subscriberDto.setResultType( resultType.toString() );
+		}
+		else
+		{
+			subscriberDto.setResultType( "Object" );
+		}
+		Type processType = refactoringVisitor.getProcessType();
+		if ( processType != null )
+		{
+			subscriberDto.setProcessType( processType.toString() );
+		}
+		else
+		{
+			subscriberDto.setProcessType( "Object" );
+		}
 		subscriberDto.setObservableName( observableDto.getVarName() );
 		subscriberDto.setChunksName( refactoringVisitor.getProcessVariableName() );
 		Block processBlock = refactoringVisitor.getProcessBlock();

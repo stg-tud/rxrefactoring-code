@@ -17,18 +17,18 @@ import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
 import rxjavarefactoring.processor.WorkerStatus;
 import utils.RefactoringUtils;
-import visitors.Collector;
+import visitors.RxCollector;
 
 /**
  * Description: <br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016
  */
-public class MethodInvocationWorker extends AbstractRefactorWorker<Collector>
+public class MethodInvocationWorker extends AbstractRefactorWorker<RxCollector>
 {
-	public MethodInvocationWorker( Collector collector )
+	public MethodInvocationWorker( RxCollector rxCollector)
 	{
-		super( collector );
+		super(rxCollector);
 	}
 
 	@Override

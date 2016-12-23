@@ -8,11 +8,11 @@ package utils;
 public final class RefactoringUtils
 {
 
-	public static final String SWING_WORKER_STATE_VALUE = "SwingWorker.StateValue";
-	public static final String RX_OBSERVER_FIRST_LOWER = "rxObserver";
-	public static final String RX_OBSERVER_FIRST_UPPER = "RxObserver";
-	public static final String SWING_WORKER_UPPER = "SWINGWORKER";
-	public static final String WORKER_UPPER = "WORKER";
+	private static final String SWING_WORKER_STATE_VALUE = "SwingWorker.StateValue";
+	private static final String RX_OBSERVER_FIRST_LOWER = "rxObserver";
+	private static final String RX_OBSERVER_FIRST_UPPER = "RxObserver";
+	private static final String SWING_WORKER_UPPER = "SWINGWORKER";
+	private static final String WORKER_UPPER = "WORKER";
 
 	private RefactoringUtils()
 	{
@@ -60,6 +60,8 @@ public final class RefactoringUtils
 					sb.replace( swPosition, endIndex, RX_OBSERVER_FIRST_UPPER );
 				}
 				indexFrom = swPosition + RX_OBSERVER_FIRST_LOWER.length();
+				searchableText = sb.toString().toUpperCase();
+				text = sb.toString();
 			}
 			else
 			{
@@ -89,6 +91,8 @@ public final class RefactoringUtils
 					sb.replace( swPosition, endIndex, RX_OBSERVER_FIRST_UPPER );
 				}
 				indexFrom = swPosition + RX_OBSERVER_FIRST_LOWER.length();
+				searchableText = sb.toString().toUpperCase();
+				text = sb.toString();
 			}
 			else
 			{

@@ -93,7 +93,14 @@ public class RxSingleUnitWriter
 	{
 		synchronized ( this )
 		{
-			astRewriter.remove( ASTUtil.findParent( elementInTargetStatement, Statement.class ), null );
+			if ( elementInTargetStatement instanceof Statement )
+			{
+				astRewriter.remove( elementInTargetStatement, null );
+			}
+			else
+			{
+				astRewriter.remove( ASTUtil.findParent( elementInTargetStatement, Statement.class ), null );
+			}
 		}
 	}
 

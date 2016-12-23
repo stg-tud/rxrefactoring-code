@@ -12,7 +12,7 @@ import rxjavarefactoring.framework.refactoring.AbstractCollector;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/11/2016
  */
-public class Collector extends AbstractCollector
+public class RxCollector extends AbstractCollector
 {
 	private final Map<ICompilationUnit, List<TypeDeclaration>> typeDeclMap;
 	private final Map<ICompilationUnit, List<FieldDeclaration>> fieldDeclMap;
@@ -23,7 +23,7 @@ public class Collector extends AbstractCollector
 	private final Map<ICompilationUnit, List<SingleVariableDeclaration>> singleVarDeclMap;
 	private final Map<ICompilationUnit, List<MethodInvocation>> methodInvocationsMap;
 
-	public Collector( String collectorName )
+	public RxCollector(String collectorName )
 	{
 		super( collectorName );
 		typeDeclMap = new HashMap<>();

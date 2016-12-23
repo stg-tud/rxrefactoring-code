@@ -18,18 +18,19 @@ import freemarker.template.TemplateExceptionHandler;
 import rxjavarefactoring.framework.api.RxJavaRefactoringExtension;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.PluginUtils;
-import visitors.Collector;
+import visitors.RxCollector;
 import visitors.DiscoveringVisitor;
 import workers.AssignmentWorker;
 import workers.FieldDeclarationWorker;
 import workers.MethodInvocationWorker;
+import workers.VariableDeclStatementWorker;
 
 /**
  * Description: Implementation of API of the RxJavaRefactoringTool<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016
  */
-public class Extension implements RxJavaRefactoringExtension<Collector>
+public class Extension implements RxJavaRefactoringExtension<RxCollector>
 {
 	public static final String PLUGIN_ID = "de.tudarmstadt.stg.rxjava.refactoring.extension.swingworker";
 	public static final String TEMPLATES_DIR_NAME = "templates";
@@ -47,13 +48,13 @@ public class Extension implements RxJavaRefactoringExtension<Collector>
 	}
 
 	@Override
-	public Collector getASTNodesCollectorInstance()
+	public RxCollector getASTNodesCollectorInstance()
 	{
-		return new Collector( COLLECTOR_NAME );
+		return new RxCollector( COLLECTOR_NAME );
 	}
 
 	@Override
-	public void processUnit( ICompilationUnit unit, Collector collector )
+	public void processUnit( ICompilationUnit unit, RxCollector rxCollector)
 	{
 		CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( unit, true );
 
@@ -65,24 +66,25 @@ public class Extension implements RxJavaRefactoringExtension<Collector>
 		cu.accept(discoveringVisitor);
 
 		// Cache the collected information from visitors in one collector
-		collector.add( unit, discoveringVisitor.getTypeDeclarations() );
-		collector.add( unit, discoveringVisitor.getFieldDeclarations() );
-		collector.add( unit, discoveringVisitor.getAssignments() );
-		collector.add( unit, discoveringVisitor.getVarDeclStatements() );
-		collector.add( unit, discoveringVisitor.getSimpleNames() );
-		collector.add( unit, discoveringVisitor.getClassInstanceCreations() );
-		collector.add( unit, discoveringVisitor.getMethodInvocations() );
-		collector.add( unit, discoveringVisitor.getSingleVarDeclarations() );
+		rxCollector.add( unit, discoveringVisitor.getTypeDeclarations() );
+		rxCollector.add( unit, discoveringVisitor.getFieldDeclarations() );
+		rxCollector.add( unit, discoveringVisitor.getAssignments() );
+		rxCollector.add( unit, discoveringVisitor.getVarDeclStatements() );
+		rxCollector.add( unit, discoveringVisitor.getSimpleNames() );
+		rxCollector.add( unit, discoveringVisitor.getClassInstanceCreations() );
+		rxCollector.add( unit, discoveringVisitor.getMethodInvocations() );
+		rxCollector.add( unit, discoveringVisitor.getSingleVarDeclarations() );
 	}
 
 	@Override
-	public Set<AbstractRefactorWorker<Collector>> getRefactoringWorkers(Collector collector )
+	public Set<AbstractRefactorWorker<RxCollector>> getRefactoringWorkers(RxCollector rxCollector)
 	{
 		setupFreemaker();
-		Set<AbstractRefactorWorker<Collector>> workers = new HashSet<>();
-		workers.add( new AssignmentWorker( collector ) );
-		workers.add( new FieldDeclarationWorker( collector ) );
-		workers.add( new MethodInvocationWorker( collector ) );
+		Set<AbstractRefactorWorker<RxCollector>> workers = new HashSet<>();
+		workers.add( new AssignmentWorker(rxCollector) );
+		workers.add( new FieldDeclarationWorker(rxCollector) );
+		workers.add( new MethodInvocationWorker(rxCollector) );
+		workers.add( new VariableDeclStatementWorker(rxCollector) );
 		return workers;
 	}
 
