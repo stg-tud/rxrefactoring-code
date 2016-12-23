@@ -26,9 +26,9 @@ import visitors.RefactoringVisitor;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016
  */
-public class AssignmentsWorker extends AbstractRefactorWorker<Collector>
+public class AssignmentWorker extends AbstractRefactorWorker<Collector>
 {
-	public AssignmentsWorker(Collector collector )
+	public AssignmentWorker(Collector collector )
 	{
 		super( collector );
 	}
@@ -50,17 +50,31 @@ public class AssignmentsWorker extends AbstractRefactorWorker<Collector>
 				// Collect details about the SwingWorker
 				RxLogger.info( this, "METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName() );
 				AST ast = assignment.getAST();
-				RefactoringVisitor refactoringVisitor = new RefactoringVisitor();
-				assignment.accept(refactoringVisitor);
-
-				// Register changes in the single unit writer
-				RxLogger.info( this, "METHOD=refactor - Copying changes to the single unit writer: " + icu.getElementName() );
 				RxSingleUnitWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, ast, getClass().getSimpleName() );
-				refactorAssignment( icu, singleUnitWriter, refactoringVisitor, assignment );
+
+				Expression rightHandSide = assignment.getRightHandSide();
+				if ( rightHandSide instanceof ClassInstanceCreation )
+				{
+					RefactoringVisitor refactoringVisitor = new RefactoringVisitor();
+					assignment.accept( refactoringVisitor );
+
+					RxLogger.info( this, "METHOD=refactor - Copying changes to the single unit writer: " + icu.getElementName() );
+					refactorAssignment( icu, singleUnitWriter, refactoringVisitor, assignment );
+				}
+				else
+				{
+					Statement referenceStatement = ASTUtil.findParent(assignment, Statement.class);
+					String cleanedStatement = RefactoringUtils.cleanSwingWorkerName(referenceStatement.toString());
+					Statement newStatement = ASTNodeFactory.createSingleStatementFromText(ast, cleanedStatement);
+
+					RxLogger.info( this, "METHOD=refactor - Copying changes to the single unit writer: " + icu.getElementName() );
+					singleUnitWriter.addStatementBefore(newStatement, referenceStatement);
+					singleUnitWriter.removeStatement(assignment);
+				}
 
 				// Add changes to the multiple compilation units write object
 				RxLogger.info( this, "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );
-				rxMultipleUnitsWriter.addCompilationUnit(icu);
+				rxMultipleUnitsWriter.addCompilationUnit( icu );
 			}
 			monitor.worked( 1 );
 		}
@@ -74,11 +88,11 @@ public class AssignmentsWorker extends AbstractRefactorWorker<Collector>
 			RefactoringVisitor refactoringVisitor,
 			Assignment assignment )
 	{
-		removeSuperInvocations(refactoringVisitor);
+		removeSuperInvocations( refactoringVisitor );
 		updateImports( singleUnitWriter );
 
 		String icuName = icu.getElementName();
-		RxObservableDto observableDto = createObservableDto( icuName, refactoringVisitor);
+		RxObservableDto observableDto = createObservableDto( icuName, refactoringVisitor );
 
 		Map<String, Object> observableData = new HashMap<>();
 		observableData.put( "dto", observableDto );
@@ -116,7 +130,7 @@ public class AssignmentsWorker extends AbstractRefactorWorker<Collector>
 		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWDto" );
 	}
 
-	private RxObservableDto createObservableDto( String icuName, RefactoringVisitor refactoringVisitor)
+	private RxObservableDto createObservableDto( String icuName, RefactoringVisitor refactoringVisitor )
 	{
 		RxObservableDto observableDto = new RxObservableDto( icuName );
 		observableDto.setResultType( refactoringVisitor.getResultType().toString() );
@@ -125,7 +139,7 @@ public class AssignmentsWorker extends AbstractRefactorWorker<Collector>
 		return observableDto;
 	}
 
-	private RxSubscriberDto createObserverDto(String observerName, RefactoringVisitor refactoringVisitor, RxObservableDto observableDto )
+	private RxSubscriberDto createObserverDto( String observerName, RefactoringVisitor refactoringVisitor, RxObservableDto observableDto )
 	{
 		RxSubscriberDto subscriberDto = new RxSubscriberDto();
 		subscriberDto.setObserverName( observerName );
@@ -146,7 +160,7 @@ public class AssignmentsWorker extends AbstractRefactorWorker<Collector>
 		return subscriberDto;
 	}
 
-	private void removeSuperInvocations( RefactoringVisitor refactoringVisitor)
+	private void removeSuperInvocations( RefactoringVisitor refactoringVisitor )
 	{
 		for ( SuperMethodInvocation methodInvocation : refactoringVisitor.getSuperMethodInvocationsToRemove() )
 		{

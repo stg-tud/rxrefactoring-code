@@ -17,6 +17,7 @@ public class Assignment
 	private static final long TIME_FOR_WORK_UNIT = 2000L;
 
 	private SWSubscriber<String, Integer> rxObserver;
+	private SWSubscriber<String, Integer> anotherRxObserver;
 
 	public void someMethod()
 	{
@@ -67,5 +68,7 @@ public class Assignment
 				}
 			}
 		};
+
+		anotherRxObserver = rxObserver;
 	}
 }

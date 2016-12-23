@@ -20,7 +20,7 @@ import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.PluginUtils;
 import visitors.Collector;
 import visitors.DiscoveringVisitor;
-import workers.AssignmentsWorker;
+import workers.AssignmentWorker;
 import workers.FieldDeclarationWorker;
 import workers.MethodInvocationWorker;
 
@@ -80,7 +80,7 @@ public class Extension implements RxJavaRefactoringExtension<Collector>
 	{
 		setupFreemaker();
 		Set<AbstractRefactorWorker<Collector>> workers = new HashSet<>();
-		workers.add( new AssignmentsWorker( collector ) );
+		workers.add( new AssignmentWorker( collector ) );
 		workers.add( new FieldDeclarationWorker( collector ) );
 		workers.add( new MethodInvocationWorker( collector ) );
 		return workers;

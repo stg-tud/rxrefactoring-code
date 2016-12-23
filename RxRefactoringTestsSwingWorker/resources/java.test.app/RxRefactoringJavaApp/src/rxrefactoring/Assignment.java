@@ -11,6 +11,7 @@ public class Assignment
 	private static final long TIME_FOR_WORK_UNIT = 2000L;
 
 	private SwingWorker<String, Integer> swingWorker;
+	private SwingWorker<String, Integer> anotherWorker;
 
 	public void someMethod()
 	{
@@ -59,5 +60,7 @@ public class Assignment
 				}
 			}
 		};
+		
+		anotherWorker = swingWorker;
 	}
 }
