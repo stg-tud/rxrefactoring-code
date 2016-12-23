@@ -1,6 +1,7 @@
 package rxjavarefactoring.framework.refactoring;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.*;
 
 import org.eclipse.core.resources.IProject;
@@ -8,6 +9,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
@@ -113,7 +115,8 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 			final String location = project.getLocation().toPortableString();
 			addJarFiles( location );
 			project.refreshLocal( IResource.DEPTH_INFINITE, null );
-			updateClassPath( location + getDependenciesDirectoryName(), javaProject );
+			String dependenciesDir = Paths.get(location, getDependenciesDirectoryName()).toAbsolutePath().toString();
+			updateClassPath(dependenciesDir, javaProject );
 			compilationUnitsMap = getCompilationUnits( javaProject );
 			refactorCompilationUnits( compilationUnitsMap );
 		}
@@ -134,11 +137,25 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 		if ( libs.isDirectory() && libs.exists() )
 		{
 			String[] allLibs = libs.list();
+			List<String> sourceLibs = Observable.from(allLibs)
+					.filter(lib -> lib.contains("-sources.jar"))
+					.map(lib -> lib.replace("-sources", ""))
+					.toList().toBlocking().single();
+
 			List<IClasspathEntry> cps = new ArrayList<>();
 			for ( String lib : allLibs )
 			{
+				if (lib.contains("-sources.jar"))
+				{
+					continue;
+				}
 				String ap = libs.getAbsolutePath() + File.separator + lib;
-				cps.add( JavaCore.newLibraryEntry( Path.fromOSString( ap ), null, null ) );
+				IPath sourcesPath = null;
+				if (sourceLibs.contains(lib))
+				{
+					sourcesPath = Path.fromOSString(ap.replace(".jar", "-sources.jar"));
+				}
+				cps.add( JavaCore.newLibraryEntry( Path.fromOSString( ap ), sourcesPath, null ) );
 			}
 			for ( IClasspathEntry oldEntry : oldEntries )
 			{

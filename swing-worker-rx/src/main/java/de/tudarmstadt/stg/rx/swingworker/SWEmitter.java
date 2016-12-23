@@ -22,7 +22,7 @@ public abstract class SWEmitter<ReturnType, ProcessType> implements Action1<Emit
 
 	/**
 	 * Manages the workflow of a SwingWorker by setting up the data
-	 * transfer object {@link SWDto <ReturnType, ProcessType>}
+	 * transfer object {@link SWDto}{@literal <}ReturnType, ProcessType{@literal >}
 	 * that is used for sending progress, chunks of data and finally the async result
 	 * to the emitter.
 	 * 

@@ -14,8 +14,10 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 
+import rxjavarefactoring.framework.codegenerators.DynamicIdsMapHolder;
 import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.framework.writers.RxMultipleUnitsWriter;
+import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
 import rxjavarefactoring.processor.WorkerStatus;
 
 /**
@@ -33,6 +35,8 @@ public abstract class AbstractRefactoringProcessor<T extends AbstractCollector> 
 	{
 		this.collector = (T) collector;
 		rxMultipleUnitsWriter = new RxMultipleUnitsWriter();
+		RxSingleUnitWriterMapHolder.initializeUnitWriters();
+		DynamicIdsMapHolder.reset();
 	}
 
 	@Override

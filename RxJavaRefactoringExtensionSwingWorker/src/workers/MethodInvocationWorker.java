@@ -61,8 +61,8 @@ public class MethodInvocationWorker extends AbstractRefactorWorker<ASTNodesColle
 					Statement referenceStatement = ASTUtil.findParent( methodInvocation, Statement.class );
 					String statement = referenceStatement.toString();
 
-					String target = "." + methodName + "(";
-					String replacement = "." + newMethodName + "(";
+					String target = methodName + "(";
+					String replacement = newMethodName + "(";
 					if ( statement.indexOf( target ) < 0 )
 					{
 						continue; // nothing to modify

@@ -109,14 +109,14 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 
 	/**
 	 * Updates the {@link CountDownLatch} setting it to 0. Calls
-	 * {@link this#done(Object)} and set the state to
+	 * {@link this#done} and set the state to
 	 * {@link SwingWorker.StateValue#DONE}.
 	 */
 	@Override
 	public final void onCompleted()
 	{
 		countDownLatch.countDown();
-		done( asyncResult );
+		done();
 		setState( SwingWorker.StateValue.DONE );
 
 	}
@@ -210,7 +210,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 
 	/**
 	 * 
-	 * @return true if {@link this#done(Object)} has successfully been
+	 * @return true if {@link this#done} has successfully been
 	 *         executed. False otherwise.
 	 */
 	@Override
@@ -333,17 +333,15 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	/**
 	 * This method is invoked after {@link SWEmitter#doInBackground()} has completed.
 	 * The method is invoked in {@link SwingScheduler#getInstance()}
-	 * 
-	 * @param asyncResult
-	 *            result from {@link SWEmitter#doInBackground()}
+	 *
 	 */
-	protected void done( ResultType asyncResult )
+	protected void done()
 	{
 
 	}
 
 	/**
-	 * This method is invokated everytime {@link SWEmitter#publish(Object[])} is invoked.
+	 * This method is invoked every time {@link SWEmitter#publish(Object[])} is invoked.
 	 * 
 	 * @param chunks
 	 *            arguments passed to {@link SWEmitter#publish(Object[])}

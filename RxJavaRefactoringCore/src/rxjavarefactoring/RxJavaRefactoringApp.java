@@ -32,7 +32,7 @@ import rxjavarefactoring.processor.RefactoringProcessor;
  */
 public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 {
-	private static final String DEPENDENCIES_DIRECTORY = "/all-deps";
+	private static final String DEPENDENCIES_DIRECTORY = "all-deps";
 	private Set<String> targetClasses;
 	private static boolean runningForTests = false;
 	private RxJavaRefactoringExtension extension;

@@ -18,6 +18,12 @@ public final class DynamicIdsMapHolder
 	private static Map<String, Integer> observerCounter = new ConcurrentHashMap<>();
 	private static Map<String, Integer> observableCounter = new ConcurrentHashMap<>();
 
+	public static void reset()
+	{
+		observableCounter = new ConcurrentHashMap<>();
+		observerCounter = new ConcurrentHashMap<>();
+	}
+
 	/**
 	 * retrieves the next id for a generated subscriber for the given
 	 * compilation unit
