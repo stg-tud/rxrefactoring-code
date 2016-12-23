@@ -1,14 +1,19 @@
 package rxjavarefactoring.framework.writers;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IBuffer;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
 import org.eclipse.jdt.internal.corext.codemanipulation.StubUtility;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.text.edits.TextEdit;
 
@@ -24,18 +29,11 @@ import rxjavarefactoring.framework.utils.RxLogger;
  */
 public class RxMultipleUnitsWriter
 {
-	private final Map<ICompilationUnit, CompilationUnitChange> icuChangesMap;
-	private final Map<ICompilationUnit, Set<String>> icuAddedImportsMap;
-	private final Map<ICompilationUnit, Set<String>> icuRemovedImportsMap;
 	private final Map<ICompilationUnit, String> icuVsNewSourceCodeMap;
 	private final Set<ICompilationUnit> compilationUnits;
-	private ImportRewrite importRewriter;
 
 	public RxMultipleUnitsWriter()
 	{
-		icuChangesMap = new HashMap<>();
-		icuAddedImportsMap = new HashMap<>();
-		icuRemovedImportsMap = new HashMap<>();
 		icuVsNewSourceCodeMap = new HashMap<>();
 		compilationUnits = new HashSet<>();
 	}
@@ -44,7 +42,7 @@ public class RxMultipleUnitsWriter
 	{
 		synchronized ( this )
 		{
-			compilationUnits.add(icu);
+			compilationUnits.add( icu );
 		}
 	}
 
@@ -58,48 +56,13 @@ public class RxMultipleUnitsWriter
 	{
 		for ( ICompilationUnit icu : compilationUnits )
 		{
-			addChange( icu, RxSingleUnitWriterMapHolder.findSingleUnitWriter( icu ) );
-		}
-
-		for ( ICompilationUnit icu : icuChangesMap.keySet() )
-		{
-			String compilationUnitName = "";
+			String compilationUnitName = icu.getElementName();
 			try
 			{
-				compilationUnitName = icu.getElementName();
-
-				// process imports
-				importRewriter = StubUtility.createImportRewrite( icu, true );
-
-				Observable
-						.from( icuAddedImportsMap.get( icu ) )
-						.doOnNext( newImport -> importRewriter.addImport( newImport ) )
-						.subscribe();
-
-				Observable
-						.from( icuRemovedImportsMap.get( icu ) )
-						.doOnNext( deletedImport -> importRewriter.removeImport( deletedImport ) )
-						.subscribe();
-
-				// process source code
-				CompilationUnitChange sourceCodeEdit = icuChangesMap.get( icu );
-				String sourceCode = sourceCodeEdit.getCompilationUnit().getSource();
-
-				// load document and apply changes
-				Document document = new Document( sourceCode );
-				sourceCodeEdit.getEdit().apply( document );
-				TextEdit importsEdit = importRewriter.rewriteImports( progressMonitor );
-				importsEdit.apply( document );
-				String newSourceCode = document.get();
-				icuVsNewSourceCodeMap.put( icu, newSourceCode );
-				IBuffer buffer = icu.getBuffer();
-				buffer.setContents( newSourceCode );
-
-				// save changes
-				if ( !RxJavaRefactoringApp.isRunningForTests() )
-				{
-					buffer.save( progressMonitor, false );
-				}
+				RxSingleUnitWriter singleUnitWriter = RxSingleUnitWriterMapHolder.findSingleUnitWriter( icu );
+				CompilationUnitChange compilationUnitChange = createCompilationUnitChange(icu, singleUnitWriter);
+				ImportRewrite importRewriter = createImportWriter(icu, singleUnitWriter);
+				applyChanges(icu, importRewriter, compilationUnitChange, progressMonitor);
 			}
 			catch ( Exception e )
 			{
@@ -115,70 +78,49 @@ public class RxMultipleUnitsWriter
 
 	// ### Private Methods ###
 
-	private void addChange( ICompilationUnit icu, RxSingleUnitWriter singleChangeWriter )
+	private CompilationUnitChange createCompilationUnitChange(ICompilationUnit icu, RxSingleUnitWriter singleUnitWriter) throws JavaModelException
 	{
-		synchronized ( this )
-		{
-			String name = icu.getElementName();
-			try
-			{
-				CompilationUnitChange compilationUnitChange = getCuChange( name, icu );
-				TextEdit sourceCodeEdits = singleChangeWriter.getAstRewriter().rewriteAST();
-				updateSourceCode( compilationUnitChange, sourceCodeEdits );
-				updateImports( icu, singleChangeWriter );
-				icuChangesMap.put( icu, compilationUnitChange );
-			}
-			catch ( CoreException e )
-			{
-				RxLogger.error( this, "addChange: " + name, e );
-			}
-		}
-	}
-
-	private CompilationUnitChange getCuChange( String name, ICompilationUnit icu )
-	{
-		CompilationUnitChange compilationUnitChange = icuChangesMap.get( icu );
-		if ( compilationUnitChange == null )
-		{
-			compilationUnitChange = new CompilationUnitChange( name, icu );
-
-		}
+		String name = icu.getElementName();
+		CompilationUnitChange compilationUnitChange = new CompilationUnitChange( name, icu );
+		TextEdit sourceCodeEdits = singleUnitWriter.getAstRewriter().rewriteAST();
+		compilationUnitChange.setEdit( sourceCodeEdits );
 		return compilationUnitChange;
 	}
 
-	private void updateSourceCode( CompilationUnitChange compilationUnitChange, TextEdit sourceCodeEdits )
+	private ImportRewrite createImportWriter(ICompilationUnit icu, RxSingleUnitWriter singleUnitWriter) throws JavaModelException
 	{
-		TextEdit edit = compilationUnitChange.getEdit();
-		if ( edit == null )
-		{
-			compilationUnitChange.setEdit( sourceCodeEdits );
-		}
-		else
-		{
-			edit.addChild( sourceCodeEdits );
-		}
+		ImportRewrite importRewriter = StubUtility.createImportRewrite( icu, true );
+		Observable
+				.from( singleUnitWriter.getAddedImports() )
+				.doOnNext( newImport -> importRewriter.addImport( newImport ) )
+				.subscribe();
+
+		Observable
+				.from( singleUnitWriter.getRemovedImports() )
+				.doOnNext( deletedImport -> importRewriter.removeImport( deletedImport ) )
+				.subscribe();
+		return importRewriter;
 	}
 
-	private void updateImports( ICompilationUnit icu, RxSingleUnitWriter singleChangeWriter )
+	private void applyChanges(ICompilationUnit icu, ImportRewrite importRewriter, CompilationUnitChange compilationUnitChange, IProgressMonitor progressMonitor) throws BadLocationException, CoreException
 	{
-		Set<String> addedImports = singleChangeWriter.getAddedImports();
-		Set<String> removedImports = singleChangeWriter.getRemovedImports();
+		// process source code
+		String sourceCode = compilationUnitChange.getCompilationUnit().getSource();
 
-		addToMapOrUpdate( icu, addedImports, icuAddedImportsMap );
-		addToMapOrUpdate( icu, removedImports, icuRemovedImportsMap );
-	}
+		// load document and apply changes
+		Document document = new Document( sourceCode );
+		compilationUnitChange.getEdit().apply( document );
+		TextEdit importsEdit = importRewriter.rewriteImports( progressMonitor );
+		importsEdit.apply( document );
+		String newSourceCode = document.get();
+		icuVsNewSourceCodeMap.put( icu, newSourceCode );
+		IBuffer buffer = icu.getBuffer();
+		buffer.setContents( newSourceCode );
 
-	private <T> void addToMapOrUpdate( ICompilationUnit icu, Set<String> set, Map<ICompilationUnit, Set<String>> map )
-	{
-		Set<String> retrievedSet = map.get( icu );
-		if ( retrievedSet == null )
+		// save changes
+		if ( !RxJavaRefactoringApp.isRunningForTests() )
 		{
-			map.put( icu, set );
-		}
-		else
-		{
-			retrievedSet.addAll( set );
-			map.put( icu, retrievedSet );
+			buffer.save( progressMonitor, false );
 		}
 	}
 }
