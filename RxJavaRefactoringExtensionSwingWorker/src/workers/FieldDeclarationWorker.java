@@ -58,7 +58,7 @@ public class FieldDeclarationWorker extends AbstractRefactorWorker<ASTNodesColle
 				singleUnitWriter.removeElement( fieldDeclaration );
 
 				// Add changes to the multiple compilation units write object
-				RxLogger.info( this, "METHOD=refactor - Refactoring class: " + icu.getElementName() );
+				RxLogger.info( this, "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );
 				rxMultipleUnitsWriter.addCompilationUnit(icu);
 			}
 			monitor.worked( 1 );

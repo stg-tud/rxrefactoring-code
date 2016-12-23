@@ -13,7 +13,6 @@ import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.RxLogger;
-import rxjavarefactoring.framework.utils.StringUtils;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
 import rxjavarefactoring.processor.ASTNodesCollector;
@@ -60,7 +59,7 @@ public class AssignmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
 				refactorAssignment( icu, singleUnitWriter, swingWorkerVisitor, assignment );
 
 				// Add changes to the multiple compilation units write object
-				RxLogger.info( this, "METHOD=refactor - Refactoring class: " + icu.getElementName() );
+				RxLogger.info( this, "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );
 				rxMultipleUnitsWriter.addCompilationUnit(icu);
 			}
 			monitor.worked( 1 );
@@ -76,15 +75,6 @@ public class AssignmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
 			Assignment assignment )
 	{
 		removeSuperInvocations( swingWorkerVisitor );
-
-		// changes all get() / get(long, TimeUnit) invocation by a variable name
-//		removeGetInvocations( swingWorkerVisitor );
-
-		// get() and get(long, TimeUnit) throw exceptions.
-		// Since they were just replaced by a variable name, the catch clauses
-		// must be removed
-//		ASTUtil.removeUnnecessaryCatchClauses( swingWorkerVisitor.getDoneBlock() );
-
 		updateImports( singleUnitWriter );
 
 		String icuName = icu.getElementName();
@@ -154,28 +144,6 @@ public class AssignmentsWorker extends AbstractRefactorWorker<ASTNodesCollector>
 			subscriberDto.setDoneBlock( doneBlock.toString() );
 		}
 		return subscriberDto;
-	}
-
-	private void removeGetInvocations( SwingWorkerVisitor swingWorkerVisitor )
-	{
-		if ( swingWorkerVisitor.getDoneBlock() != null )
-		{
-			for ( MethodInvocation methodInvocation : swingWorkerVisitor.getMethodInvocationsGet() )
-			{
-				replaceGetInvocation( swingWorkerVisitor, methodInvocation );
-			}
-			for ( SuperMethodInvocation methodInvocation : swingWorkerVisitor.getSuperMethodInvocationsGet() )
-			{
-				replaceGetInvocation( swingWorkerVisitor, methodInvocation );
-			}
-		}
-	}
-
-	private <T extends ASTNode> void replaceGetInvocation( SwingWorkerVisitor swingWorkerVisitor, T methodInvocation )
-	{
-		String resultVariableName = swingWorkerVisitor.getAsyncResultVarName();
-		SimpleName variableName = methodInvocation.getAST().newSimpleName( resultVariableName );
-		ASTUtil.replaceInStatement( methodInvocation, variableName );
 	}
 
 	private void removeSuperInvocations( SwingWorkerVisitor swingWorkerVisitor )
