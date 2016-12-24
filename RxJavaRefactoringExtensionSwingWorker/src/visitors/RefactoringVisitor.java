@@ -67,10 +67,13 @@ public class RefactoringVisitor extends ASTVisitor
 	@Override
 	public boolean visit( ClassInstanceCreation node )
 	{
-		ParameterizedType type = (ParameterizedType) node.getType();
-		List argumentTypes = type.typeArguments();
-		resultType = (Type) argumentTypes.get( 0 );
-		processType = (Type) argumentTypes.get( 1 );
+		Type type = node.getType();
+		if ( type instanceof ParameterizedType )
+		{
+			List argumentTypes = ( (ParameterizedType) type ).typeArguments();
+			resultType = (Type) argumentTypes.get( 0 );
+			processType = (Type) argumentTypes.get( 1 );
+		}
 		return true;
 	}
 

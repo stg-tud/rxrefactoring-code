@@ -183,6 +183,26 @@ public class RxSingleUnitWriter
 		}
 	}
 
+	public void replaceType(SimpleType oldType, String newType)
+	{
+		synchronized ( this )
+		{
+			AST ast = astRewriter.getAST();
+			SimpleType newSimpleType = ast.newSimpleType(ast.newName(newType));
+			astRewriter.replace(oldType, newSimpleType, null);
+		}
+	}
+
+	public void replaceSimpleName(SimpleName oldSimpleName, String newName)
+	{
+		synchronized ( this )
+		{
+			AST ast = astRewriter.getAST();
+			SimpleName newSimpleName = ast.newSimpleName(newName);
+			astRewriter.replace(oldSimpleName, newSimpleName, null);
+		}
+	}
+
 	/**
 	 * Used by {@link RxMultipleUnitsWriter}
 	 * 

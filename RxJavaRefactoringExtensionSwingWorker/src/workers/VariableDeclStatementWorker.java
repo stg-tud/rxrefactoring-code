@@ -10,8 +10,6 @@ import org.eclipse.jdt.core.dom.*;
 import domain.RxObservableDto;
 import domain.RxSubscriberDto;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
-import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
-import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
@@ -74,6 +72,7 @@ public class VariableDeclStatementWorker extends GeneralWorker
 					singleUnitWriter.removeStatement( varDeclStatement );
 				}
 			}
+            monitor.worked( 1 );
 		}
 
 		return WorkerStatus.OK;
@@ -106,7 +105,7 @@ public class VariableDeclStatementWorker extends GeneralWorker
 		SimpleName swingWorkerName = fragment.getName();
 		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.toString() );
 		RxSubscriberDto subscriberDto = createObserverDto( rxObserverName, refactoringVisitor, observableDto );
-        subscriberDto.setVariableDecl(true);
+		subscriberDto.setVariableDecl( true );
 
 		Map<String, Object> observerData = new HashMap<>();
 		observerData.put( "dto", subscriberDto );

@@ -1,23 +1,15 @@
 package workers;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.SuperMethodInvocation;
+import org.eclipse.jdt.core.dom.Type;
 
 import domain.RxObservableDto;
 import domain.RxSubscriberDto;
-import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.ASTUtil;
-import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
-import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
-import rxjavarefactoring.processor.WorkerStatus;
-import utils.RefactoringUtils;
-import utils.TemplateUtils;
 import visitors.RefactoringVisitor;
 import visitors.RxCollector;
 
@@ -28,7 +20,7 @@ import visitors.RxCollector;
  */
 public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 {
-	public GeneralWorker(RxCollector rxCollector )
+	public GeneralWorker( RxCollector rxCollector )
 	{
 		super( rxCollector );
 	}
@@ -45,8 +37,24 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 	protected RxObservableDto createObservableDto( String icuName, RefactoringVisitor refactoringVisitor )
 	{
 		RxObservableDto observableDto = new RxObservableDto( icuName );
-		observableDto.setResultType( refactoringVisitor.getResultType().toString() );
-		observableDto.setProcessType( refactoringVisitor.getProcessType().toString() );
+		Type resultType = refactoringVisitor.getResultType();
+		if ( resultType != null )
+		{
+			observableDto.setResultType( resultType.toString() );
+		}
+		else
+		{
+			observableDto.setResultType( "Object" );
+		}
+		Type processType = refactoringVisitor.getProcessType();
+		if ( processType != null )
+		{
+			observableDto.setProcessType( processType.toString() );
+		}
+		else
+		{
+			observableDto.setProcessType( "Object" );
+		}
 		observableDto.setDoInBackgroundBlock( refactoringVisitor.getDoInBackgroundBlock().toString() );
 		return observableDto;
 	}

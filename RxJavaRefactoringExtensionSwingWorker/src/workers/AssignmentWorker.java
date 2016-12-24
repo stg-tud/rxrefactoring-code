@@ -109,6 +109,7 @@ public class AssignmentWorker extends GeneralWorker
 		SimpleName swingWorkerName = (SimpleName) assignment.getLeftHandSide();
 		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.toString() );
 		RxSubscriberDto subscriberDto = createObserverDto( rxObserverName, refactoringVisitor, observableDto );
+		subscriberDto.setVariableDecl( false );
 
 		Map<String, Object> observerData = new HashMap<>();
 		observerData.put( "dto", subscriberDto );

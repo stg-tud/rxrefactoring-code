@@ -73,12 +73,12 @@ public class DiscoveringVisitor extends ASTVisitor
 	}
 
 	@Override
-	public boolean visit( SimpleName node )
+	public boolean visit( SimpleName simpleName )
 	{
-		ITypeBinding type = node.resolveTypeBinding();
+		ITypeBinding type = simpleName.resolveTypeBinding();
 		if ( ASTUtil.isTypeOf( type, classBinaryName ) )
 		{
-			simpleNames.add( node );
+//			simpleNames.add( simpleName );
 		}
 		return true;
 	}
@@ -111,6 +111,19 @@ public class DiscoveringVisitor extends ASTVisitor
 		if ( ASTUtil.isTypeOf( type, classBinaryName ) )
 		{
 			methodInvocations.add( node );
+		}
+
+		for (Object arg : node.arguments())
+		{
+			if ( arg instanceof SimpleName )
+			{
+				SimpleName simpleName = (SimpleName) arg;
+				ITypeBinding argType = simpleName.resolveTypeBinding();
+				if ( ASTUtil.isTypeOf( argType, classBinaryName ) )
+				{
+					simpleNames.add( simpleName );
+				}
+			}
 		}
 		return true;
 	}

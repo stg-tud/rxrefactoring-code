@@ -20,10 +20,7 @@ import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.PluginUtils;
 import visitors.RxCollector;
 import visitors.DiscoveringVisitor;
-import workers.AssignmentWorker;
-import workers.FieldDeclarationWorker;
-import workers.MethodInvocationWorker;
-import workers.VariableDeclStatementWorker;
+import workers.*;
 
 /**
  * Description: Implementation of API of the RxJavaRefactoringTool<br>
@@ -85,6 +82,8 @@ public class Extension implements RxJavaRefactoringExtension<RxCollector>
 		workers.add( new FieldDeclarationWorker(rxCollector) );
 		workers.add( new MethodInvocationWorker(rxCollector) );
 		workers.add( new VariableDeclStatementWorker(rxCollector) );
+		workers.add( new SimpleNameWorker(rxCollector) );
+		workers.add( new SingleVariableDeclWorker(rxCollector) );
 		return workers;
 	}
 

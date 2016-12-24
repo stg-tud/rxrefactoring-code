@@ -67,7 +67,17 @@ public class JavaAppTestExample extends AbstractJavaTest
 		executeTest( targetFile, expectedSourceCode );
 	}
 
-	// Add more methods for further classes
+	@Test
+	public void testSimpleName() throws Exception
+	{
+		String targetFile = "SimpleName.java";
+
+		String expectedSourceCode = getSourceCode(
+				"expected.java.code",
+				"SimpleNameRefactored.java" );
+
+		executeTest( targetFile, expectedSourceCode );
+	}
 
 	private void executeTest( String targetFile, String expectedSourceCode ) throws Exception
 	{
