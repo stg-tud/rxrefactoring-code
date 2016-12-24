@@ -50,7 +50,7 @@ public class SimpleNameWorker extends AbstractRefactorWorker<RxCollector>
 				MethodInvocation methodInvocation = ASTUtil.findParent( simpleName, MethodInvocation.class );
 				if ( methodInvocation != null )
 				{
-					RxLogger.info( this, "METHOD=refactor - Copying changes to the single unit writer: " + icu.getElementName() );
+					RxLogger.info( this, "METHOD=refactor - Refactoring simple name in: " + icu.getElementName() );
 					singleUnitWriter.replaceSimpleName( simpleName, RefactoringUtils.cleanSwingWorkerName( simpleName.getIdentifier() ) );
 
 					// Add changes to the multiple compilation units write object

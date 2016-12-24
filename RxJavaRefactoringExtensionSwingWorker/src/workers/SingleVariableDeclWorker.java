@@ -47,6 +47,7 @@ public class SingleVariableDeclWorker extends AbstractRefactorWorker<RxCollector
 				AST ast = singleVarDecl.getAST();
 				RxSingleUnitWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, ast, getClass().getSimpleName() );
 
+				RxLogger.info( this, "METHOD=refactor - Refactoring single variable declaration in: " + icu.getElementName() );
 				SimpleTypeVisitor visitor = new SimpleTypeVisitor();
 				singleVarDecl.accept( visitor );
 

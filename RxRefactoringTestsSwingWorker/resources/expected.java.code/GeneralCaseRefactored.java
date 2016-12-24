@@ -57,7 +57,7 @@ public class GeneralCase
 			}
 
 			@Override
-			protected void done()
+			protected void done( )
 			{
 				try
 				{
@@ -75,6 +75,40 @@ public class GeneralCase
 				}
 			}
 		};
+
+		SWSubscriber<String, Integer> rxObserverRef = rxObserver;
+		SWSubscriber rxObserverRef2 = rxObserver;
+
+		doSomething(rxObserverRef);
+
+		Observable<SWDto<String, Integer>> rxObservable1 = Observable.fromEmitter(new SWEmitter<String, Integer>()
+		{
+
+			@Override
+			protected String doInBackground() throws Exception
+			{
+				return null;
+			}
+		}, Emitter.BackpressureMode.BUFFER);
+
+		new SWSubscriber<String, Integer>(rxObservable1){};
+
+		Observable<SWDto<String, Integer>> rxObservable2 = Observable.fromEmitter(new SWEmitter<String, Integer>()
+		{
+
+			@Override
+			protected String doInBackground() throws Exception
+			{
+				return null;
+			}
+		}, Emitter.BackpressureMode.BUFFER);
+
+		new SWSubscriber<String, Integer>(rxObservable2){}.executeObservable();
+	}
+
+	private void doSomething(SWSubscriber<String, Integer> anotherRxObserver)
+	{
+		anotherRxObserver.executeObservable();
 	}
 
 	public void swingWorkerCalls()

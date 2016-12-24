@@ -55,7 +55,7 @@ public class FieldDeclarationWorker extends AbstractRefactorWorker<RxCollector>
 				FieldDeclaration newDecl = ASTNodeFactory.createFieldDeclarationFromText( ast, finalStatementString );
 
 				// Replace declarations
-				RxLogger.info( this, "METHOD=refactor - Copying changes to the single unit writer: " + icu.getElementName() );
+				RxLogger.info( this, "METHOD=refactor - Refactoring field declaration in: " + icu.getElementName() );
 				singleUnitWriter.addFieldDeclarationBefore( newDecl, fieldDeclaration );
 				singleUnitWriter.removeElement( fieldDeclaration );
 

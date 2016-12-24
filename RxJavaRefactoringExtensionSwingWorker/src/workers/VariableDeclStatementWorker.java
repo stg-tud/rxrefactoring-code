@@ -45,8 +45,6 @@ public class VariableDeclStatementWorker extends GeneralWorker
 
 			for ( VariableDeclarationStatement varDeclStatement : varDelcEntry.getValue() )
 			{
-				// Collect details about the SwingWorker
-				RxLogger.info( this, "METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName() );
 				AST ast = varDeclStatement.getAST();
 				RxSingleUnitWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, ast, getClass().getSimpleName() );
 
@@ -54,10 +52,12 @@ public class VariableDeclStatementWorker extends GeneralWorker
 				Expression initializer = fragment.getInitializer();
 				if ( initializer instanceof ClassInstanceCreation )
 				{
+					// Collect details about the SwingWorker
+					RxLogger.info( this, "METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName() );
 					RefactoringVisitor refactoringVisitor = new RefactoringVisitor();
 					varDeclStatement.accept( refactoringVisitor );
 
-					RxLogger.info( this, "METHOD=refactor - Copying changes to the single unit writer: " + icu.getElementName() );
+					RxLogger.info( this, "METHOD=refactor - Refactoring variable declaration statement in: " + icu.getElementName() );
 					refactorVarDecl( icu, singleUnitWriter, refactoringVisitor, varDeclStatement, fragment );
 				}
 				else

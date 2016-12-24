@@ -57,7 +57,7 @@ public class AssignmentWorker extends GeneralWorker
 					RefactoringVisitor refactoringVisitor = new RefactoringVisitor();
 					assignment.accept( refactoringVisitor );
 
-					RxLogger.info( this, "METHOD=refactor - Copying changes to the single unit writer: " + icu.getElementName() );
+					RxLogger.info( this, "METHOD=refactor - Refactoring assignment in: " + icu.getElementName() );
 					refactorAssignment( icu, singleUnitWriter, refactoringVisitor, assignment );
 				}
 				else

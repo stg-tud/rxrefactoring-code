@@ -59,7 +59,7 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 				RefactoringVisitor refactoringVisitor = new RefactoringVisitor();
 				classInstanceCreation.accept( refactoringVisitor );
 
-				RxLogger.info( this, "METHOD=refactor - Copying changes to the single unit writer: " + icu.getElementName() );
+				RxLogger.info( this, "METHOD=refactor - Refactoring class instance creation in: " + icu.getElementName() );
 				refactorClassInstanceCreation( icu, singleUnitWriter, refactoringVisitor, classInstanceCreation );
 
 				// Add changes to the multiple compilation units write object

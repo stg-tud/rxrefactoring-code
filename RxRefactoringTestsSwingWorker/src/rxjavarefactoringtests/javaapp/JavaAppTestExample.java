@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.Map;
 
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import framework.AbstractJavaTest;
@@ -87,6 +88,24 @@ public class JavaAppTestExample extends AbstractJavaTest
 		String expectedSourceCode = getSourceCode(
 				"expected.java.code",
 				"ClassInstanceCreationRefactored.java" );
+
+		executeTest( targetFile, expectedSourceCode );
+	}
+
+	@Test
+	@Ignore
+	/* Set to ignore because expected file depends
+	 * on the order of execution (not deterministic).
+	 * Enable the test to see how all workers interact in one
+	 * file and analyze if the result is correct
+	 */
+	public void testGeneralCase() throws Exception
+	{
+		String targetFile = "GeneralCase.java";
+
+		String expectedSourceCode = getSourceCode(
+				"expected.java.code",
+				"GeneralCaseRefactored.java" );
 
 		executeTest( targetFile, expectedSourceCode );
 	}
