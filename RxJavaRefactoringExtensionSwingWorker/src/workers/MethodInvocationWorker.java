@@ -4,9 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.*;
 
 import domain.SwingWorkerInfo;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
@@ -45,6 +43,13 @@ public class MethodInvocationWorker extends AbstractRefactorWorker<RxCollector>
 
 			for ( MethodInvocation methodInvocation : invocationEntry.getValue() )
 			{
+				Expression expression = methodInvocation.getExpression();
+				if (expression instanceof ClassInstanceCreation)
+				{
+					// another worker will handle this case
+					continue;
+				}
+
 				// Get ast and writer
 				AST ast = methodInvocation.getAST();
 				RxSingleUnitWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, ast, getClass().getSimpleName() );

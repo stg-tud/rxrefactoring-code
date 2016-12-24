@@ -19,11 +19,29 @@ public class SimpleName
 		};
 		
 		doSomethingElse(swingWorker);
+		
+		SwingWorker<String, Integer> swingWorker2 = new SwingWorker<String, Integer>(){
+
+			@Override
+			protected String doInBackground() throws Exception 
+			{
+				return null;
+			}
+		};
+		
+		doSomethingElseParameterized(swingWorker2);
 	}
 
 	private void doSomethingElse(SwingWorker swingWorker) 
 	{
 		swingWorker.execute();
 	}
+	
+	private void doSomethingElseParameterized(SwingWorker<String, Integer> swingWorker) 
+	{
+		swingWorker.execute();
+	}
+	
+	
 	
 }

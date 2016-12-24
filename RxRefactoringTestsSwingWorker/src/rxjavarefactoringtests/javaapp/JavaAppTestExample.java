@@ -79,6 +79,18 @@ public class JavaAppTestExample extends AbstractJavaTest
 		executeTest( targetFile, expectedSourceCode );
 	}
 
+	@Test
+	public void testClassInstanceCreation() throws Exception
+	{
+		String targetFile = "ClassInstanceCreation.java";
+
+		String expectedSourceCode = getSourceCode(
+				"expected.java.code",
+				"ClassInstanceCreationRefactored.java" );
+
+		executeTest( targetFile, expectedSourceCode );
+	}
+
 	private void executeTest( String targetFile, String expectedSourceCode ) throws Exception
 	{
 		RxJavaRefactoringApp app = new RxJavaRefactoringApp();

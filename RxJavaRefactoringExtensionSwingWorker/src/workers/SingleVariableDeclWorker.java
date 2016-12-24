@@ -50,11 +50,6 @@ public class SingleVariableDeclWorker extends AbstractRefactorWorker<RxCollector
 				SimpleTypeVisitor visitor = new SimpleTypeVisitor();
 				singleVarDecl.accept( visitor );
 
-				for ( SimpleType simpleType : visitor.simpleTypes )
-				{
-					singleUnitWriter.replaceType( simpleType, "SWSubscriber" );
-				}
-
 				for ( SimpleName simpleName : visitor.simpleNames )
 				{
 					if ( "SwingWorker".equals( simpleName.toString() ) )
@@ -71,6 +66,7 @@ public class SingleVariableDeclWorker extends AbstractRefactorWorker<RxCollector
 				RxLogger.info( this, "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );
 				rxMultipleUnitsWriter.addCompilationUnit( icu );
 			}
+			monitor.worked( 1 );
 		}
 
 		return WorkerStatus.OK;
@@ -78,20 +74,7 @@ public class SingleVariableDeclWorker extends AbstractRefactorWorker<RxCollector
 
 	private class SimpleTypeVisitor extends ASTVisitor
 	{
-		private List<SimpleType> simpleTypes = new ArrayList<>();
 		private List<SimpleName> simpleNames = new ArrayList<>();
-
-		@Override
-		public boolean visit( SimpleType node )
-		{
-			ITypeBinding type = node.resolveBinding();
-			if ( ASTUtil.isTypeOf( type, SwingWorkerInfo.getBinaryName() ) )
-			{
-				simpleTypes.add( node );
-			}
-
-			return true;
-		}
 
 		@Override
 		public boolean visit( SimpleName node )

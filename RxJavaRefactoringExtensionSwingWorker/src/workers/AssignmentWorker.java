@@ -10,7 +10,6 @@ import org.eclipse.jdt.core.dom.*;
 import domain.RxObservableDto;
 import domain.RxSubscriberDto;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
-import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
@@ -47,14 +46,14 @@ public class AssignmentWorker extends GeneralWorker
 
 			for ( Assignment assignment : assignmentEntry.getValue() )
 			{
-				// Collect details about the SwingWorker
-				RxLogger.info( this, "METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName() );
 				AST ast = assignment.getAST();
 				RxSingleUnitWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, ast, getClass().getSimpleName() );
 
 				Expression rightHandSide = assignment.getRightHandSide();
 				if ( rightHandSide instanceof ClassInstanceCreation )
 				{
+					// Collect details about the SwingWorker
+					RxLogger.info( this, "METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName() );
 					RefactoringVisitor refactoringVisitor = new RefactoringVisitor();
 					assignment.accept( refactoringVisitor );
 

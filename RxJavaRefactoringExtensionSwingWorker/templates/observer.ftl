@@ -1,4 +1,6 @@
-<#if dto.variableDecl>SWSubscriber<${dto.resultType}, ${dto.processType}></#if> ${dto.observerName} =
+<#if dto.observerName??>
+    <#if dto.variableDecl>SWSubscriber<${dto.resultType}, ${dto.processType}></#if> ${dto.observerName} =
+</#if>
     new SWSubscriber<${dto.resultType}, ${dto.processType}>( ${dto.observableName} ) {
 
 <#if dto.processBlock??>

@@ -84,6 +84,7 @@ public class Extension implements RxJavaRefactoringExtension<RxCollector>
 		workers.add( new VariableDeclStatementWorker(rxCollector) );
 		workers.add( new SimpleNameWorker(rxCollector) );
 		workers.add( new SingleVariableDeclWorker(rxCollector) );
+		workers.add( new ClassInstanceCreationWorker(rxCollector) );
 		return workers;
 	}
 
