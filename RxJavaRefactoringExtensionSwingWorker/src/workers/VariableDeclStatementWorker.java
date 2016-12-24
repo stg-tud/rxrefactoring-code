@@ -72,7 +72,7 @@ public class VariableDeclStatementWorker extends GeneralWorker
 					singleUnitWriter.removeStatement( varDeclStatement );
 				}
 			}
-            monitor.worked( 1 );
+			monitor.worked( 1 );
 		}
 
 		return WorkerStatus.OK;

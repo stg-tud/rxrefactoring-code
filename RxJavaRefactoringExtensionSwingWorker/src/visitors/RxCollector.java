@@ -23,7 +23,7 @@ public class RxCollector extends AbstractCollector
 	private final Map<ICompilationUnit, List<SingleVariableDeclaration>> singleVarDeclMap;
 	private final Map<ICompilationUnit, List<MethodInvocation>> methodInvocationsMap;
 
-	public RxCollector(String collectorName )
+	public RxCollector( String collectorName )
 	{
 		super( collectorName );
 		typeDeclMap = new HashMap<>();

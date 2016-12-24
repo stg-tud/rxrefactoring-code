@@ -94,7 +94,8 @@ public class JavaAppTestExample extends AbstractJavaTest
 
 	@Test
 	@Ignore
-	/* Set to ignore because expected file depends
+	/*
+	 * Set to ignore because expected file depends
 	 * on the order of execution (not deterministic).
 	 * Enable the test to see how all workers interact in one
 	 * file and analyze if the result is correct

@@ -26,7 +26,7 @@ public class DiscoveringVisitor extends ASTVisitor
 
 	private final List<MethodInvocation> methodInvocations;
 
-	public DiscoveringVisitor(String classBinaryName )
+	public DiscoveringVisitor( String classBinaryName )
 	{
 		this.classBinaryName = classBinaryName;
 		typeDeclarations = new ArrayList<>();
@@ -78,7 +78,7 @@ public class DiscoveringVisitor extends ASTVisitor
 		ITypeBinding type = simpleName.resolveTypeBinding();
 		if ( ASTUtil.isTypeOf( type, classBinaryName ) )
 		{
-//			simpleNames.add( simpleName );
+			// simpleNames.add( simpleName );
 		}
 		return true;
 	}
@@ -113,7 +113,7 @@ public class DiscoveringVisitor extends ASTVisitor
 			methodInvocations.add( node );
 		}
 
-		for (Object arg : node.arguments())
+		for ( Object arg : node.arguments() )
 		{
 			if ( arg instanceof SimpleName )
 			{

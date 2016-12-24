@@ -23,9 +23,9 @@ import visitors.RxCollector;
  */
 public class FieldDeclarationWorker extends AbstractRefactorWorker<RxCollector>
 {
-	public FieldDeclarationWorker( RxCollector rxCollector)
+	public FieldDeclarationWorker( RxCollector rxCollector )
 	{
-		super(rxCollector);
+		super( rxCollector );
 	}
 
 	@Override
@@ -61,14 +61,14 @@ public class FieldDeclarationWorker extends AbstractRefactorWorker<RxCollector>
 
 				// Add changes to the multiple compilation units write object
 				RxLogger.info( this, "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );
-				rxMultipleUnitsWriter.addCompilationUnit(icu);
+				rxMultipleUnitsWriter.addCompilationUnit( icu );
 			}
 			monitor.worked( 1 );
 		}
 		return WorkerStatus.OK;
 	}
 
-	private void updateImports(RxSingleUnitWriter singleUnitWriter)
+	private void updateImports( RxSingleUnitWriter singleUnitWriter )
 	{
 		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWSubscriber" );
 	}

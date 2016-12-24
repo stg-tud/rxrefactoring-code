@@ -18,8 +18,8 @@ import freemarker.template.TemplateExceptionHandler;
 import rxjavarefactoring.framework.api.RxJavaRefactoringExtension;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.PluginUtils;
-import visitors.RxCollector;
 import visitors.DiscoveringVisitor;
+import visitors.RxCollector;
 import workers.*;
 
 /**
@@ -51,7 +51,7 @@ public class Extension implements RxJavaRefactoringExtension<RxCollector>
 	}
 
 	@Override
-	public void processUnit( ICompilationUnit unit, RxCollector rxCollector)
+	public void processUnit( ICompilationUnit unit, RxCollector rxCollector )
 	{
 		CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( unit, true );
 
@@ -60,7 +60,7 @@ public class Extension implements RxJavaRefactoringExtension<RxCollector>
 		DiscoveringVisitor discoveringVisitor = new DiscoveringVisitor( className );
 
 		// Collect information using visitors
-		cu.accept(discoveringVisitor);
+		cu.accept( discoveringVisitor );
 
 		// Cache the collected information from visitors in one collector
 		rxCollector.add( unit, discoveringVisitor.getTypeDeclarations() );
@@ -74,17 +74,17 @@ public class Extension implements RxJavaRefactoringExtension<RxCollector>
 	}
 
 	@Override
-	public Set<AbstractRefactorWorker<RxCollector>> getRefactoringWorkers(RxCollector rxCollector)
+	public Set<AbstractRefactorWorker<RxCollector>> getRefactoringWorkers( RxCollector rxCollector )
 	{
 		setupFreemaker();
 		Set<AbstractRefactorWorker<RxCollector>> workers = new HashSet<>();
-		workers.add( new AssignmentWorker(rxCollector) );
-		workers.add( new FieldDeclarationWorker(rxCollector) );
-		workers.add( new MethodInvocationWorker(rxCollector) );
-		workers.add( new VariableDeclStatementWorker(rxCollector) );
-		workers.add( new SimpleNameWorker(rxCollector) );
-		workers.add( new SingleVariableDeclWorker(rxCollector) );
-		workers.add( new ClassInstanceCreationWorker(rxCollector) );
+		workers.add( new AssignmentWorker( rxCollector ) );
+		workers.add( new FieldDeclarationWorker( rxCollector ) );
+		workers.add( new MethodInvocationWorker( rxCollector ) );
+		workers.add( new VariableDeclStatementWorker( rxCollector ) );
+		workers.add( new SimpleNameWorker( rxCollector ) );
+		workers.add( new SingleVariableDeclWorker( rxCollector ) );
+		workers.add( new ClassInstanceCreationWorker( rxCollector ) );
 		return workers;
 	}
 

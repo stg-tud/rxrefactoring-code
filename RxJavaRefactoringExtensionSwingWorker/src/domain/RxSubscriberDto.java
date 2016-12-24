@@ -91,7 +91,7 @@ public class RxSubscriberDto
 		return variableDecl;
 	}
 
-	public void setVariableDecl(boolean variableDecl)
+	public void setVariableDecl( boolean variableDecl )
 	{
 		this.variableDecl = variableDecl;
 	}

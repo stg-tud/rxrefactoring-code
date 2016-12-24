@@ -125,8 +125,8 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 			String statement = ASTUtil.findParent( methodInvocation, Statement.class ).toString();
 			String statementUpdated = statement.replace( target, replacement );
 			String invocation = statementUpdated.substring( statementUpdated.indexOf( replacement ) );
-            String classInstanceCreationString = observerString.substring(0, observerString.length() - 1);
-            observerString = classInstanceCreationString + "." + invocation;
+			String classInstanceCreationString = observerString.substring( 0, observerString.length() - 1 );
+			observerString = classInstanceCreationString + "." + invocation;
 		}
 
 		Statement observerStatement = ASTNodeFactory.createSingleStatementFromText( ast, observerString );

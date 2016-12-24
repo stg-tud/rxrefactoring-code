@@ -24,9 +24,9 @@ import visitors.RxCollector;
  */
 public class MethodInvocationWorker extends AbstractRefactorWorker<RxCollector>
 {
-	public MethodInvocationWorker( RxCollector rxCollector)
+	public MethodInvocationWorker( RxCollector rxCollector )
 	{
-		super(rxCollector);
+		super( rxCollector );
 	}
 
 	@Override
@@ -44,7 +44,7 @@ public class MethodInvocationWorker extends AbstractRefactorWorker<RxCollector>
 			for ( MethodInvocation methodInvocation : invocationEntry.getValue() )
 			{
 				Expression expression = methodInvocation.getExpression();
-				if (expression instanceof ClassInstanceCreation)
+				if ( expression instanceof ClassInstanceCreation )
 				{
 					// another worker will handle this case
 					continue;
