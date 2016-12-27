@@ -9,6 +9,7 @@ import org.eclipse.jdt.core.dom.*;
 
 import domain.RxObservableDto;
 import domain.RxObserverDto;
+import domain.SWSubscriberDto;
 import domain.SwingWorkerInfo;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.utils.ASTUtil;
@@ -90,6 +91,61 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 		removeSuperInvocations( refactoringVisitor );
 		updateImports( singleUnitWriter );
 
+		if ( refactoringVisitor.hasAdditionalFieldsOrMethods() )
+		{
+			refactorStatefulSwingWorker( icu, singleUnitWriter, refactoringVisitor, classInstanceCreation );
+		}
+		else
+		{
+			refactorStatelessSwingWorker( icu, singleUnitWriter, refactoringVisitor, classInstanceCreation );
+		}
+	}
+
+	private void refactorStatefulSwingWorker(
+			ICompilationUnit icu,
+			RxSingleUnitWriter singleUnitWriter,
+			RefactoringVisitor refactoringVisitor,
+			ClassInstanceCreation classInstanceCreation )
+	{
+		String icuName = icu.getElementName();
+		String rxSubscriberName = "rxSubscriber";
+		SWSubscriberDto subscriberDto = createSWSubscriberDto( rxSubscriberName, icuName, refactoringVisitor );
+
+		Map<String, Object> subscriberData = new HashMap<>();
+		subscriberData.put( "dto", subscriberDto );
+		String subscriberTemplate = "subscriber.ftl";
+
+		String subscriberString = TemplateUtils.processTemplate( subscriberTemplate, subscriberData );
+		AST ast = classInstanceCreation.getAST();
+		TypeDeclaration typeDeclaration = ASTNodeFactory.createTypeDeclarationFromText( ast, subscriberString );
+
+		Statement referenceStatement = ASTUtil.findParent( classInstanceCreation, Statement.class );
+		singleUnitWriter.addBefore( typeDeclaration, referenceStatement );
+
+		MethodInvocation methodInvocation = ASTUtil.findParent( classInstanceCreation, MethodInvocation.class );
+		if ( methodInvocation != null )
+		{
+			String invocation = getInvocationWithArguments(methodInvocation);
+			String newInstanceCreationString = "new " + subscriberDto.getClassName() + "()." + invocation;
+			Statement newInstanceCreation = ASTNodeFactory.createSingleStatementFromText( ast, newInstanceCreationString );
+			singleUnitWriter.addBefore( newInstanceCreation, referenceStatement );
+		}
+		else
+		{
+			String newInstanceCreationString = "new " + subscriberDto.getClassName() + "()";
+			Statement newInstanceCreation = ASTNodeFactory.createSingleStatementFromText( ast, newInstanceCreationString );
+			singleUnitWriter.addBefore( newInstanceCreation, referenceStatement );
+		}
+
+		singleUnitWriter.removeStatement( classInstanceCreation );
+	}
+
+	private void refactorStatelessSwingWorker(
+			ICompilationUnit icu,
+			RxSingleUnitWriter singleUnitWriter,
+			RefactoringVisitor refactoringVisitor,
+			ClassInstanceCreation classInstanceCreation )
+	{
 		String icuName = icu.getElementName();
 		RxObservableDto observableDto = createObservableDto( icuName, refactoringVisitor );
 
@@ -116,15 +172,7 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 		MethodInvocation methodInvocation = ASTUtil.findParent( classInstanceCreation, MethodInvocation.class );
 		if ( methodInvocation != null )
 		{
-			String methodName = methodInvocation.getName().toString();
-			String newMethodName = getNewMethodName( methodName );
-
-			String target = methodName + "(";
-			String replacement = newMethodName + "(";
-
-			String statement = ASTUtil.findParent( methodInvocation, Statement.class ).toString();
-			String statementUpdated = statement.replace( target, replacement );
-			String invocation = statementUpdated.substring( statementUpdated.indexOf( replacement ) );
+			String invocation = getInvocationWithArguments(methodInvocation);
 			String classInstanceCreationString = observerString.substring( 0, observerString.length() - 1 );
 			observerString = classInstanceCreationString + "." + invocation;
 		}
@@ -133,6 +181,19 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 		singleUnitWriter.addBefore( observerStatement, referenceStatement );
 
 		singleUnitWriter.removeStatement( classInstanceCreation );
+	}
+
+	private String getInvocationWithArguments(MethodInvocation methodInvocation)
+	{
+		String methodName = methodInvocation.getName().toString();
+		String newMethodName = getNewMethodName( methodName );
+
+		String target = methodName + "(";
+		String replacement = newMethodName + "(";
+
+		String statement = ASTUtil.findParent( methodInvocation, Statement.class ).toString();
+		String statementUpdated = statement.replace( target, replacement );
+		return statementUpdated.substring( statementUpdated.indexOf( replacement ) );
 	}
 
 	private String getNewMethodName( String methodName )

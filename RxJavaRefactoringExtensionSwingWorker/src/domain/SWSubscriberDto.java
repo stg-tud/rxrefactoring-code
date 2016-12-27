@@ -20,11 +20,13 @@ public class SWSubscriberDto
     private String doneBlock;
     private List<String> fieldDeclarations;
     private List<String> methods;
+    private List<String> typeDeclarations;
 
     public SWSubscriberDto()
     {
         fieldDeclarations = new ArrayList<>();
         methods = new ArrayList<>();
+        typeDeclarations = new ArrayList<>();
     }
 
     public String getSubscriberName()
@@ -125,5 +127,15 @@ public class SWSubscriberDto
     public void setMethods(List<String> methods)
     {
         this.methods = methods;
+    }
+
+    public List<String> getTypeDeclarations()
+    {
+        return typeDeclarations;
+    }
+
+    public void setTypeDeclarations(List<String> typeDeclarations)
+    {
+        this.typeDeclarations = typeDeclarations;
     }
 }

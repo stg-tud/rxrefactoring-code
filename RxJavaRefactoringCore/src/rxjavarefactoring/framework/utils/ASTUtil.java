@@ -97,7 +97,13 @@ public final class ASTUtil
 		{
 			while ( superClass != null )
 			{
-				if ( superClass.getBinaryName().equals( target ) )
+				String binaryName = superClass.getBinaryName();
+				if ( binaryName == null )
+				{
+					return false;
+				}
+
+				if ( binaryName.equals( target ) )
 				{
 					return true;
 				}
@@ -106,8 +112,16 @@ public final class ASTUtil
 		}
 		else
 		{
-			if ( superClass != null && superClass.getBinaryName().equals( target ) )
+			String binaryName = superClass.getBinaryName();
+			if ( binaryName == null )
+			{
+				return false;
+			}
+
+			if ( superClass != null && binaryName.equals( target ) )
+			{
 				return true;
+			}
 		}
 		return false;
 	}

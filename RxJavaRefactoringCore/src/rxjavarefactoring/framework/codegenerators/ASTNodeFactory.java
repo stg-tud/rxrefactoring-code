@@ -20,6 +20,7 @@ public final class ASTNodeFactory extends ASTVisitor
 	private MethodDeclaration methodDeclaration;
 	private TypeDeclaration typeDeclaration;
 	private FieldDeclaration fieldDeclaration;
+	private int counter;
 
 	private ASTNodeFactory()
 	{
@@ -36,8 +37,13 @@ public final class ASTNodeFactory extends ASTVisitor
 	@Override
 	public boolean visit( TypeDeclaration node )
 	{
-		typeDeclaration = node;
-		return true;
+		if ( counter == 0 )
+		{
+			typeDeclaration = node;
+		}
+
+		// return true only the first time
+		return counter++ == 0;
 	}
 
 	@Override
@@ -103,6 +109,7 @@ public final class ASTNodeFactory extends ASTVisitor
 		javaParser.setSource( auxClass.toCharArray() );
 		CompilationUnit compilationUnit = (CompilationUnit) javaParser.createAST( null );
 		ASTNodeFactory visitor = new ASTNodeFactory();
+		visitor.counter = 0;
 		compilationUnit.accept( visitor );
 		MethodDeclaration methodDeclaration = visitor.methodDeclaration;
 		return (MethodDeclaration) ASTNode.copySubtree( targetAST, methodDeclaration );

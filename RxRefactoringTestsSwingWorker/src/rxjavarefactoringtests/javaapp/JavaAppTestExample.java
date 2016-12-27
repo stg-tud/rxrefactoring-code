@@ -135,6 +135,18 @@ public class JavaAppTestExample extends AbstractJavaTest
 		executeTest( targetFile, expectedSourceCode );
 	}
 
+	@Test
+	public void testStatefulClassInstanceCreation() throws Exception
+	{
+		String targetFile = "StatefulClassInstanceCreation.java";
+
+		String expectedSourceCode = getSourceCode(
+				"expected.java.code",
+				"StatefulClassInstanceCreationRefactored.java" );
+
+		executeTest( targetFile, expectedSourceCode );
+	}
+
 
 
 	private void executeTest( String targetFile, String expectedSourceCode ) throws Exception

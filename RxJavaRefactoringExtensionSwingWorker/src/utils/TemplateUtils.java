@@ -16,6 +16,8 @@ import rxjavarefactoring.framework.utils.RxLogger;
  */
 public final class TemplateUtils
 {
+	private static Object lock = new Object();
+
 	private TemplateUtils()
 	{
 		// This class should not be instantiated
@@ -32,20 +34,23 @@ public final class TemplateUtils
 	 */
 	public static String processTemplate( String templateName, Map<String, Object> data )
 	{
-		String observableString = "";
-		try
+		synchronized ( lock )
 		{
-			Template template = Extension.getFreemakerCfg().getTemplate( templateName );
-			StringWriter out = new StringWriter();
-			template.process( data, out );
-			observableString = out.toString();
+			String observableString = "";
+			try
+			{
+				Template template = Extension.getFreemakerCfg().getTemplate( templateName );
+				StringWriter out = new StringWriter();
+				template.process( data, out );
+				observableString = out.toString();
+			}
+			catch ( IOException | TemplateException e )
+			{
+				RxLogger.error( TemplateUtils.class, "METHOD=createObservable - Failed", e );
+				throw new IllegalArgumentException( "Template could not be processed. TEMPLATE=" + templateName + "DATA=" + data, e );
+			}
+			return observableString;
 		}
-		catch ( IOException | TemplateException e )
-		{
-			RxLogger.error( TemplateUtils.class, "METHOD=createObservable - Failed", e );
-			throw new IllegalArgumentException( "Template could not be processed. TEMPLATE=" + templateName + "DATA=" + data, e );
-		}
-		return observableString;
 	}
 
 }

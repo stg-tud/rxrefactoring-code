@@ -1,10 +1,10 @@
 package workers;
 
-import domain.SWSubscriberDto;
 import org.eclipse.jdt.core.dom.*;
 
 import domain.RxObservableDto;
 import domain.RxObserverDto;
+import domain.SWSubscriberDto;
 import rxjavarefactoring.framework.codegenerators.DynamicIdsMapHolder;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.ASTUtil;
@@ -35,8 +35,8 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 
 	protected RxObservableDto createObservableDto( String icuName, RefactoringVisitor refactoringVisitor )
 	{
-		String varName = "rxObservable" + DynamicIdsMapHolder.getNextObservableId(icuName);
-		RxObservableDto observableDto = new RxObservableDto(varName);
+		String varName = "rxObservable" + DynamicIdsMapHolder.getNextObservableId( icuName );
+		RxObservableDto observableDto = new RxObservableDto( varName );
 		Type resultType = refactoringVisitor.getResultType();
 		if ( resultType != null )
 		{
@@ -59,7 +59,7 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		return observableDto;
 	}
 
-	protected RxObserverDto createObserverDto(String observerName, RefactoringVisitor refactoringVisitor, RxObservableDto observableDto )
+	protected RxObserverDto createObserverDto( String observerName, RefactoringVisitor refactoringVisitor, RxObservableDto observableDto )
 	{
 		RxObserverDto observerDto = new RxObserverDto();
 		observerDto.setObserverName( observerName );
@@ -105,9 +105,9 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		}
 	}
 
-	protected SWSubscriberDto createSWSubscriberDto(String subscriberName, String icuName, RefactoringVisitor refactoringVisitor)
+	protected SWSubscriberDto createSWSubscriberDto( String subscriberName, String icuName, RefactoringVisitor refactoringVisitor )
 	{
-		String nextObserverId = DynamicIdsMapHolder.getNextObserverId(icuName);
+		String nextObserverId = DynamicIdsMapHolder.getNextObserverId( icuName );
 		String className = "RxObserver" + nextObserverId;
 		subscriberName = subscriberName + nextObserverId;
 		SWSubscriberDto dto = new SWSubscriberDto();
@@ -150,6 +150,10 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		for ( MethodDeclaration methodDeclaration : refactoringVisitor.getAdditionalMethodDeclarations() )
 		{
 			dto.getMethods().add( methodDeclaration.toString() );
+		}
+		for ( TypeDeclaration typeDeclaration : refactoringVisitor.getTypeDeclarations() )
+		{
+			dto.getTypeDeclarations().add( typeDeclaration.toString() );
 		}
 
 		return dto;

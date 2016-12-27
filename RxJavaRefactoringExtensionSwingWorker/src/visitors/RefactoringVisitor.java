@@ -38,12 +38,14 @@ public class RefactoringVisitor extends ASTVisitor
 	// for "stateful" classes
 	private List<FieldDeclaration> fieldDeclarations;
 	private List<MethodDeclaration> additionalMethodDeclarations;
+	private List<TypeDeclaration> typeDeclarations;
 
 	public RefactoringVisitor()
 	{
 		fieldDeclarations = new ArrayList<>();
 		additionalMethodDeclarations = new ArrayList<>();
 		superMethodInvocationsToRemove = new ArrayList<>();
+		typeDeclarations = new ArrayList<>();
 	}
 
 	@Override
@@ -86,21 +88,50 @@ public class RefactoringVisitor extends ASTVisitor
 	}
 
 	@Override
+	public boolean visit( TypeDeclaration node )
+	{
+		typeDeclarations.add( node );
+		return true;
+	}
+
+	@Override
 	public boolean visit( FieldDeclaration node )
 	{
-		fieldDeclarations.add( node );
+		TypeDeclaration parent = ASTUtil.findParent(node, TypeDeclaration.class);
+		if ( isRelevant(parent))
+		{
+			fieldDeclarations.add(node);
+		}
 		return true;
+	}
+
+	private boolean isRelevant(TypeDeclaration parent)
+	{
+		boolean ignore = false;
+		for (TypeDeclaration typeDeclaration : typeDeclarations)
+		{
+			if (typeDeclaration.equals(parent))
+			{
+				ignore = true;
+				break;
+			}
+		}
+		return !ignore;
 	}
 
 	@Override
 	public boolean visit( MethodDeclaration node )
 	{
-		String methodDeclarationName = node.getName().toString();
-		if ( !DO_IN_BACKGROUND.equals( methodDeclarationName ) &&
-				!DONE.equals( methodDeclarationName ) &&
-				!PROCESS.equals( methodDeclarationName ) )
+		TypeDeclaration parent = ASTUtil.findParent(node, TypeDeclaration.class);
+		if ( isRelevant(parent))
 		{
-			additionalMethodDeclarations.add( node );
+			String methodDeclarationName = node.getName().toString();
+			if ( !DO_IN_BACKGROUND.equals(methodDeclarationName) &&
+					!DONE.equals(methodDeclarationName) &&
+					!PROCESS.equals(methodDeclarationName) )
+			{
+				additionalMethodDeclarations.add(node);
+			}
 		}
 		return true;
 	}
@@ -161,9 +192,16 @@ public class RefactoringVisitor extends ASTVisitor
 		return superMethodInvocationsToRemove;
 	}
 
+	public List<TypeDeclaration> getTypeDeclarations()
+	{
+		return typeDeclarations;
+	}
+
 	public boolean hasAdditionalFieldsOrMethods()
 	{
-		return !fieldDeclarations.isEmpty() || !additionalMethodDeclarations.isEmpty();
+		return !fieldDeclarations.isEmpty() ||
+				!additionalMethodDeclarations.isEmpty() ||
+				!typeDeclarations.isEmpty();
 	}
 
 	// ### Private Methods ###

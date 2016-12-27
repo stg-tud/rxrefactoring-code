@@ -4,7 +4,7 @@ class ${dto.className} extends SWSubscriber<${dto.resultType}, ${dto.processType
     ${fieldDeclaration}
 </#list>
 
-RxObserver() {
+${dto.className}() {
     setObservable(getRxObservable());
 }
 
@@ -31,5 +31,9 @@ Observable <SWDto<${dto.resultType}, ${dto.processType}>> getRxObservable() {
 
 <#list dto.methods as method>
     ${method}
+</#list>
+
+<#list dto.typeDeclarations as typeDeclaration>
+    ${typeDeclaration}
 </#list>
 }
