@@ -9,6 +9,7 @@ import org.eclipse.jdt.core.dom.*;
 
 import domain.RxObservableDto;
 import domain.RxObserverDto;
+import domain.SWSubscriberDto;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
@@ -88,6 +89,53 @@ public class VariableDeclStatementWorker extends GeneralWorker
 		removeSuperInvocations( refactoringVisitor );
 		updateImports( singleUnitWriter );
 
+		if ( refactoringVisitor.hasAdditionalFieldsOrMethods() )
+		{
+			refactorStatefulSwingWorker( icu, singleUnitWriter, refactoringVisitor, varDeclStatement, fragment );
+		}
+		else
+		{
+			refactorStatelessSwingWorker( icu, singleUnitWriter, refactoringVisitor, varDeclStatement, fragment );
+		}
+	}
+
+	private void refactorStatefulSwingWorker(
+			ICompilationUnit icu,
+			RxSingleUnitWriter singleUnitWriter,
+			RefactoringVisitor refactoringVisitor,
+			VariableDeclarationStatement varDeclStatement,
+			VariableDeclarationFragment fragment )
+	{
+		String icuName = icu.getElementName();
+		SimpleName swingWorkerName = fragment.getName();
+		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.toString() );
+		SWSubscriberDto subscriberDto = createSWSubscriberDto( rxObserverName, icuName, refactoringVisitor );
+
+		Map<String, Object> subscriberData = new HashMap<>();
+		subscriberData.put( "dto", subscriberDto );
+		String subscriberTemplate = "subscriber.ftl";
+
+		String subscriberString = TemplateUtils.processTemplate( subscriberTemplate, subscriberData );
+		AST ast = varDeclStatement.getAST();
+		TypeDeclaration typeDeclaration = ASTNodeFactory.createTypeDeclarationFromText( ast, subscriberString );
+
+		singleUnitWriter.addBefore( typeDeclaration, varDeclStatement );
+
+		String newVarDeclStatementString = "SWSubscriber<" + subscriberDto.getResultType() + ", " + subscriberDto.getProcessType() + "> " +
+				subscriberDto.getSubscriberName() + " = new " + subscriberDto.getClassName() + "()";
+		Statement newVarDeclStatement = ASTNodeFactory.createSingleStatementFromText( ast, newVarDeclStatementString );
+		singleUnitWriter.addBefore( newVarDeclStatement, varDeclStatement );
+
+		singleUnitWriter.removeStatement( varDeclStatement );
+	}
+
+	private void refactorStatelessSwingWorker(
+			ICompilationUnit icu,
+			RxSingleUnitWriter singleUnitWriter,
+			RefactoringVisitor refactoringVisitor,
+			VariableDeclarationStatement varDeclStatement,
+			VariableDeclarationFragment fragment )
+	{
 		String icuName = icu.getElementName();
 		RxObservableDto observableDto = createObservableDto( icuName, refactoringVisitor );
 

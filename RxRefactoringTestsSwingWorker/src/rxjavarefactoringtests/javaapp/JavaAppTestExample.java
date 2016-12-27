@@ -123,6 +123,20 @@ public class JavaAppTestExample extends AbstractJavaTest
 		executeTest( targetFile, expectedSourceCode );
 	}
 
+	@Test
+	public void testStatefulVariableDeclStatement() throws Exception
+	{
+		String targetFile = "StatefulVariableDeclStatement.java";
+
+		String expectedSourceCode = getSourceCode(
+				"expected.java.code",
+				"StatefulVariableDeclStatementRefactored.java" );
+
+		executeTest( targetFile, expectedSourceCode );
+	}
+
+
+
 	private void executeTest( String targetFile, String expectedSourceCode ) throws Exception
 	{
 		RxJavaRefactoringApp app = new RxJavaRefactoringApp();

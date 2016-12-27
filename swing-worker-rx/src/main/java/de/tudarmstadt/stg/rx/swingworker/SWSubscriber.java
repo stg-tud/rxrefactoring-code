@@ -52,12 +52,22 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 		initialize();
 	}
 
+	/**
+	 * Constructor: if this constructor is used, the observable must be set
+	 * before executing {@link this#executeObservable()} or {@link this#runObservable()}
+	 */
 	public SWSubscriber()
 	{
 		initialize();
 	}
 
-	public void setObservable(Observable<SWDto<ResultType, ProcessType>> observable)
+	/**
+	 * Sets observable
+	 * 
+	 * @param observable
+	 *            observable
+	 */
+	public void setObservable( Observable<SWDto<ResultType, ProcessType>> observable )
 	{
 		this.observable = observable;
 	}
@@ -130,7 +140,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	}
 
 	@Override
-	public void onError(Throwable e)
+	public void onError( Throwable e )
 	{
 
 	}
@@ -248,7 +258,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	 * @return true if this observer was successfully unsubscribed, false otherwise
 	 */
 	@Override
-	public final boolean cancelObservable(boolean mayInterruptIfRunning )
+	public final boolean cancelObservable( boolean mayInterruptIfRunning )
 	{
 		if ( cancelled.get() || currentState.equals( SwingWorker.StateValue.DONE ) )
 		{
@@ -401,10 +411,10 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 
 	private void subscribeObservable( Scheduler scheduler )
 	{
-		if (this.observable == null)
+		if ( this.observable == null )
 		{
-			throw new IllegalArgumentException("observable must be set in the constructor or " +
-					"by using the method setObservable.");
+			throw new IllegalArgumentException( "observable must be set in the constructor or " +
+					"by using the method setObservable." );
 		}
 
 		this.subscription = this.observable
