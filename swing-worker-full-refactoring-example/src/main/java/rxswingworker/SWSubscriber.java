@@ -49,9 +49,17 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	public SWSubscriber( Observable<SWDto<ResultType, ProcessType>> observable )
 	{
 		this.observable = observable;
-		this.propertyChangeSupport = new PropertyChangeSupport( this );
-		this.currentState = SwingWorker.StateValue.PENDING;
-		initializeStates();
+		initialize();
+	}
+
+	public SWSubscriber()
+	{
+		initialize();
+	}
+
+	public void setObservable(Observable<SWDto<ResultType, ProcessType>> observable)
+	{
+		this.observable = observable;
 	}
 
 	/**
@@ -73,7 +81,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	@Override
 	public final void onStart()
 	{
-		initializeStates();
+		initialize();
 		this.countDownLatch = new CountDownLatch( 1 );
 		setState( SwingWorker.StateValue.STARTED );
 	}
@@ -109,7 +117,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 
 	/**
 	 * Updates the {@link CountDownLatch} setting it to 0. Calls
-	 * {@link this#done(Object)} and set the state to
+	 * {@link this#done} and set the state to
 	 * {@link SwingWorker.StateValue#DONE}.
 	 */
 	@Override
@@ -209,8 +217,8 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	}
 
 	/**
-	 * 
-	 * @return true if {@link this#done(Object)} has successfully been
+	 *
+	 * @return true if {@link this#done} has successfully been
 	 *         executed. False otherwise.
 	 */
 	@Override
@@ -220,7 +228,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	}
 
 	/**
-	 * 
+	 *
 	 * @return true if this observer has been cancel. False otherwise
 	 */
 	@Override
@@ -233,7 +241,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	 * unsubscribes this observer if it is subscribed and {@param mayInterruptIfRunning}
 	 * is true. The method returns false if this observer has already been cancelled, or
 	 * if the tasks has already completed normally.
-	 * 
+	 *
 	 * @param mayInterruptIfRunning
 	 *            to indicate whether a running observer should be
 	 *            unsubscribed or not
@@ -271,7 +279,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 
 	/**
 	 * Adds a property change listener to this observer
-	 * 
+	 *
 	 * @param listener
 	 *            listener to be added
 	 */
@@ -286,7 +294,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 
 	/**
 	 * Removes a property change listener from this observer
-	 * 
+	 *
 	 * @param listener
 	 *            listener to be removed
 	 */
@@ -301,7 +309,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 
 	/**
 	 * Fires a proparty change
-	 * 
+	 *
 	 * @param propertyName
 	 *            name of the property
 	 * @param oldValue
@@ -333,9 +341,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	/**
 	 * This method is invoked after {@link SWEmitter#doInBackground()} has completed.
 	 * The method is invoked in {@link SwingScheduler#getInstance()}
-	 * 
-	 * @param asyncResult
-	 *            result from {@link SWEmitter#doInBackground()}
+	 *
 	 */
 	protected void done( ResultType asyncResult )
 	{
@@ -343,8 +349,8 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	}
 
 	/**
-	 * This method is invokated everytime {@link SWEmitter#publish(Object[])} is invoked.
-	 * 
+	 * This method is invoked every time {@link SWEmitter#publish(Object[])} is invoked.
+	 *
 	 * @param chunks
 	 *            arguments passed to {@link SWEmitter#publish(Object[])}
 	 */
@@ -356,7 +362,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	/**
 	 * This method updates the progress of the observer. It can only
 	 * take values between 0 and 100.
-	 * 
+	 *
 	 * @param progress
 	 *            progress to be set
 	 */
@@ -380,8 +386,10 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 
 	// ### Private Methods ###
 
-	private void initializeStates()
+	private void initialize()
 	{
+		this.propertyChangeSupport = new PropertyChangeSupport( this );
+		this.currentState = SwingWorker.StateValue.PENDING;
 		this.progress = new AtomicInteger( 0 );
 		this.cancelled = new AtomicBoolean( false );
 	}

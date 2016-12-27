@@ -89,7 +89,7 @@ public class MethodInvocationWorker extends AbstractRefactorWorker<RxCollector>
 
 			Statement newStatement = ASTNodeFactory.createSingleStatementFromText( ast, updatedStatement );
 
-			singleUnitWriter.addStatementBefore( newStatement, referenceStatement );
+			singleUnitWriter.addBefore( newStatement, referenceStatement );
 			singleUnitWriter.removeStatement( methodInvocation );
 
 			// Add changes to the multiple compilation units write object

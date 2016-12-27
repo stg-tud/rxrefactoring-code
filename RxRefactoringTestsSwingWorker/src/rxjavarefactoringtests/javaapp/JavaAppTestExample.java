@@ -111,6 +111,18 @@ public class JavaAppTestExample extends AbstractJavaTest
 		executeTest( targetFile, expectedSourceCode );
 	}
 
+	@Test
+	public void testStatefulAssignments() throws Exception
+	{
+		String targetFile = "StatefulAssignment.java";
+
+		String expectedSourceCode = getSourceCode(
+				"expected.java.code",
+				"StatefulAssignmentRefactored.java" );
+
+		executeTest( targetFile, expectedSourceCode );
+	}
+
 	private void executeTest( String targetFile, String expectedSourceCode ) throws Exception
 	{
 		RxJavaRefactoringApp app = new RxJavaRefactoringApp();

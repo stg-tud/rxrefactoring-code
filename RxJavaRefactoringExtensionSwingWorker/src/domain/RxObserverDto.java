@@ -5,7 +5,7 @@ package domain;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016
  */
-public class RxSubscriberDto
+public class RxObserverDto
 {
 	private String observerName;
 	private String resultType;

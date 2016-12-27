@@ -8,7 +8,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
 
 import domain.RxObservableDto;
-import domain.RxSubscriberDto;
+import domain.RxObserverDto;
 import domain.SwingWorkerInfo;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.utils.ASTUtil;
@@ -103,9 +103,9 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 		Statement observableStatement = ASTNodeFactory.createSingleStatementFromText( ast, observableString );
 
 		Statement referenceStatement = ASTUtil.findParent( classInstanceCreation, Statement.class );
-		singleUnitWriter.addStatementBefore( observableStatement, referenceStatement );
+		singleUnitWriter.addBefore( observableStatement, referenceStatement );
 
-		RxSubscriberDto subscriberDto = createObserverDto( null, refactoringVisitor, observableDto );
+		RxObserverDto subscriberDto = createObserverDto( null, refactoringVisitor, observableDto );
 
 		Map<String, Object> observerData = new HashMap<>();
 		observerData.put( "dto", subscriberDto );
@@ -130,7 +130,7 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 		}
 
 		Statement observerStatement = ASTNodeFactory.createSingleStatementFromText( ast, observerString );
-		singleUnitWriter.addStatementBefore( observerStatement, referenceStatement );
+		singleUnitWriter.addBefore( observerStatement, referenceStatement );
 
 		singleUnitWriter.removeStatement( classInstanceCreation );
 	}

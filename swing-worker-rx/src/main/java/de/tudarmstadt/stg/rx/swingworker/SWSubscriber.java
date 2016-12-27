@@ -49,9 +49,17 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	public SWSubscriber( Observable<SWDto<ResultType, ProcessType>> observable )
 	{
 		this.observable = observable;
-		this.propertyChangeSupport = new PropertyChangeSupport( this );
-		this.currentState = SwingWorker.StateValue.PENDING;
-		initializeStates();
+		initialize();
+	}
+
+	public SWSubscriber()
+	{
+		initialize();
+	}
+
+	public void setObservable(Observable<SWDto<ResultType, ProcessType>> observable)
+	{
+		this.observable = observable;
 	}
 
 	/**
@@ -73,7 +81,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	@Override
 	public final void onStart()
 	{
-		initializeStates();
+		initialize();
 		this.countDownLatch = new CountDownLatch( 1 );
 		setState( SwingWorker.StateValue.STARTED );
 	}
@@ -378,8 +386,10 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 
 	// ### Private Methods ###
 
-	private void initializeStates()
+	private void initialize()
 	{
+		this.propertyChangeSupport = new PropertyChangeSupport( this );
+		this.currentState = SwingWorker.StateValue.PENDING;
 		this.progress = new AtomicInteger( 0 );
 		this.cancelled = new AtomicBoolean( false );
 	}
@@ -391,6 +401,12 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 
 	private void subscribeObservable( Scheduler scheduler )
 	{
+		if (this.observable == null)
+		{
+			throw new IllegalArgumentException("observable must be set in the constructor or " +
+					"by using the method setObservable.");
+		}
+
 		this.subscription = this.observable
 				.observeOn( SwingScheduler.getInstance() )
 				.subscribeOn( scheduler )

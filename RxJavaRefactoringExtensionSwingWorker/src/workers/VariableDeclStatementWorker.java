@@ -8,7 +8,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
 
 import domain.RxObservableDto;
-import domain.RxSubscriberDto;
+import domain.RxObserverDto;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
@@ -68,7 +68,7 @@ public class VariableDeclStatementWorker extends GeneralWorker
 					Statement newStatement = ASTNodeFactory.createSingleStatementFromText( ast, cleanedStatement );
 
 					RxLogger.info( this, "METHOD=refactor - Copying changes to the single unit writer: " + icu.getElementName() );
-					singleUnitWriter.addStatementBefore( newStatement, varDeclStatement );
+					singleUnitWriter.addBefore( newStatement, varDeclStatement );
 					singleUnitWriter.removeStatement( varDeclStatement );
 				}
 			}
@@ -100,11 +100,11 @@ public class VariableDeclStatementWorker extends GeneralWorker
 		AST ast = varDeclStatement.getAST();
 		Statement observableStatement = ASTNodeFactory.createSingleStatementFromText( ast, observableString );
 
-		singleUnitWriter.addStatementBefore( observableStatement, varDeclStatement );
+		singleUnitWriter.addBefore( observableStatement, varDeclStatement );
 
 		SimpleName swingWorkerName = fragment.getName();
 		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.toString() );
-		RxSubscriberDto subscriberDto = createObserverDto( rxObserverName, refactoringVisitor, observableDto );
+		RxObserverDto subscriberDto = createObserverDto( rxObserverName, refactoringVisitor, observableDto );
 		subscriberDto.setVariableDecl( true );
 
 		Map<String, Object> observerData = new HashMap<>();
@@ -113,7 +113,7 @@ public class VariableDeclStatementWorker extends GeneralWorker
 
 		String observerString = TemplateUtils.processTemplate( observerTemplate, observerData );
 		Statement observerStatement = ASTNodeFactory.createSingleStatementFromText( ast, observerString );
-		singleUnitWriter.addStatementBefore( observerStatement, varDeclStatement );
+		singleUnitWriter.addBefore( observerStatement, varDeclStatement );
 
 		singleUnitWriter.removeStatement( varDeclStatement );
 	}

@@ -110,10 +110,10 @@ public class AnonymClassWorker extends AbstractRefactorWorker<Collector>
 
 				String subscriberDecl = subscriberHolder.getSubscriberDeclaration();
 				Statement getSubscriberStatement = ASTNodeFactory.createSingleStatementFromText( ast, subscriberDecl );
-				rewriter.addStatementBefore( getSubscriberStatement, referenceStatement );
+				rewriter.addBefore( getSubscriberStatement, referenceStatement );
 			}
 			Statement newStatement = ASTNodeFactory.createSingleStatementFromText( ast, subscribedObservable );
-			rewriter.addStatementBefore( newStatement, referenceStatement );
+			rewriter.addBefore( newStatement, referenceStatement );
 		}
 		else
 		{
@@ -147,7 +147,7 @@ public class AnonymClassWorker extends AbstractRefactorWorker<Collector>
 					.append( ".subscribe();" ).toString();
 
 			Statement newSatement = ASTNodeFactory.createSingleStatementFromText( ast, newStatementString );
-			rewriter.addStatementBefore( newSatement, referenceStatement );
+			rewriter.addBefore( newSatement, referenceStatement );
 
 		}
 

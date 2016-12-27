@@ -106,21 +106,19 @@ public class RxSingleUnitWriter
 
 	/**
 	 * Adds new statement before a reference statement
-	 * 
-	 * @param newStatement
+	 *  @param newElement
 	 *            new statement
 	 * @param referenceStatement
-	 *            reference statement
 	 */
-	public void addStatementBefore( Statement newStatement, Statement referenceStatement )
+	public void addBefore(ASTNode newElement, Statement referenceStatement )
 	{
 		synchronized ( this )
 		{
 			Block parentBlock = (Block) referenceStatement.getParent();
 			ListRewrite statementsBlock = astRewriter.getListRewrite( parentBlock, Block.STATEMENTS_PROPERTY );
 			Statement placeHolder = (Statement) astRewriter.createStringPlaceholder( "", ASTNode.EMPTY_STATEMENT );
-			statementsBlock.insertBefore( newStatement, referenceStatement, null );
-			statementsBlock.insertAfter( placeHolder, newStatement, null );
+			statementsBlock.insertBefore(newElement, referenceStatement, null );
+			statementsBlock.insertAfter( placeHolder, newElement, null );
 		}
 	}
 

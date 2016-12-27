@@ -23,11 +23,11 @@ public class RxObservableDto
 	 * <li>etc...</li>
 	 * </ul>
 	 * 
-	 * @param icuName
+	 * @param varName
 	 */
-	public RxObservableDto( String icuName )
+	public RxObservableDto( String varName )
 	{
-		varName = "rxObservable" + DynamicIdsMapHolder.getNextObservableId( icuName );
+		this.varName = varName;
 	}
 
 	public String getResultType()

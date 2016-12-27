@@ -1,12 +1,11 @@
 package workers;
 
-import org.eclipse.jdt.core.dom.Block;
-import org.eclipse.jdt.core.dom.Statement;
-import org.eclipse.jdt.core.dom.SuperMethodInvocation;
-import org.eclipse.jdt.core.dom.Type;
+import domain.SWSubscriberDto;
+import org.eclipse.jdt.core.dom.*;
 
 import domain.RxObservableDto;
-import domain.RxSubscriberDto;
+import domain.RxObserverDto;
+import rxjavarefactoring.framework.codegenerators.DynamicIdsMapHolder;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
@@ -36,7 +35,8 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 
 	protected RxObservableDto createObservableDto( String icuName, RefactoringVisitor refactoringVisitor )
 	{
-		RxObservableDto observableDto = new RxObservableDto( icuName );
+		String varName = "rxObservable" + DynamicIdsMapHolder.getNextObservableId(icuName);
+		RxObservableDto observableDto = new RxObservableDto(varName);
 		Type resultType = refactoringVisitor.getResultType();
 		if ( resultType != null )
 		{
@@ -59,41 +59,41 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		return observableDto;
 	}
 
-	protected RxSubscriberDto createObserverDto( String observerName, RefactoringVisitor refactoringVisitor, RxObservableDto observableDto )
+	protected RxObserverDto createObserverDto(String observerName, RefactoringVisitor refactoringVisitor, RxObservableDto observableDto )
 	{
-		RxSubscriberDto subscriberDto = new RxSubscriberDto();
-		subscriberDto.setObserverName( observerName );
+		RxObserverDto observerDto = new RxObserverDto();
+		observerDto.setObserverName( observerName );
 		Type resultType = refactoringVisitor.getResultType();
 		if ( resultType != null )
 		{
-			subscriberDto.setResultType( resultType.toString() );
+			observerDto.setResultType( resultType.toString() );
 		}
 		else
 		{
-			subscriberDto.setResultType( "Object" );
+			observerDto.setResultType( "Object" );
 		}
 		Type processType = refactoringVisitor.getProcessType();
 		if ( processType != null )
 		{
-			subscriberDto.setProcessType( processType.toString() );
+			observerDto.setProcessType( processType.toString() );
 		}
 		else
 		{
-			subscriberDto.setProcessType( "Object" );
+			observerDto.setProcessType( "Object" );
 		}
-		subscriberDto.setObservableName( observableDto.getVarName() );
-		subscriberDto.setChunksName( refactoringVisitor.getProcessVariableName() );
+		observerDto.setObservableName( observableDto.getVarName() );
+		observerDto.setChunksName( refactoringVisitor.getProcessVariableName() );
 		Block processBlock = refactoringVisitor.getProcessBlock();
 		if ( processBlock != null )
 		{
-			subscriberDto.setProcessBlock( processBlock.toString() );
+			observerDto.setProcessBlock( processBlock.toString() );
 		}
 		Block doneBlock = refactoringVisitor.getDoneBlock();
 		if ( doneBlock != null )
 		{
-			subscriberDto.setDoneBlock( doneBlock.toString() );
+			observerDto.setDoneBlock( doneBlock.toString() );
 		}
-		return subscriberDto;
+		return observerDto;
 	}
 
 	protected void removeSuperInvocations( RefactoringVisitor refactoringVisitor )
@@ -103,5 +103,55 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 			Statement statement = ASTUtil.findParent( methodInvocation, Statement.class );
 			statement.delete();
 		}
+	}
+
+	protected SWSubscriberDto createSWSubscriberDto(String subscriberName, String icuName, RefactoringVisitor refactoringVisitor)
+	{
+		String nextObserverId = DynamicIdsMapHolder.getNextObserverId(icuName);
+		String className = "RxObserver" + nextObserverId;
+		subscriberName = subscriberName + nextObserverId;
+		SWSubscriberDto dto = new SWSubscriberDto();
+		Type resultType = refactoringVisitor.getResultType();
+		if ( resultType != null )
+		{
+			dto.setResultType( resultType.toString() );
+		}
+		else
+		{
+			dto.setResultType( "Object" );
+		}
+		Type processType = refactoringVisitor.getProcessType();
+		if ( processType != null )
+		{
+			dto.setProcessType( processType.toString() );
+		}
+		else
+		{
+			dto.setProcessType( "Object" );
+		}
+		dto.setClassName( className );
+		dto.setSubscriberName( subscriberName );
+		dto.setChunksName( refactoringVisitor.getProcessVariableName() );
+		Block processBlock = refactoringVisitor.getProcessBlock();
+		if ( processBlock != null )
+		{
+			dto.setProcessBlock( processBlock.toString() );
+		}
+		Block doneBlock = refactoringVisitor.getDoneBlock();
+		if ( doneBlock != null )
+		{
+			dto.setDoneBlock( doneBlock.toString() );
+		}
+		dto.setDoInBackgroundBlock( refactoringVisitor.getDoInBackgroundBlock().toString() );
+		for ( FieldDeclaration fieldDeclaration : refactoringVisitor.getFieldDeclarations() )
+		{
+			dto.getFieldDeclarations().add( fieldDeclaration.toString() );
+		}
+		for ( MethodDeclaration methodDeclaration : refactoringVisitor.getAdditionalMethodDeclarations() )
+		{
+			dto.getMethods().add( methodDeclaration.toString() );
+		}
+
+		return dto;
 	}
 }

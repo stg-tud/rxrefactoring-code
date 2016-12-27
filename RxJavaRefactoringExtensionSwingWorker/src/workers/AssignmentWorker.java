@@ -8,7 +8,8 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
 
 import domain.RxObservableDto;
-import domain.RxSubscriberDto;
+import domain.RxObserverDto;
+import domain.SWSubscriberDto;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.RxLogger;
@@ -67,7 +68,7 @@ public class AssignmentWorker extends GeneralWorker
 					Statement newStatement = ASTNodeFactory.createSingleStatementFromText( ast, cleanedStatement );
 
 					RxLogger.info( this, "METHOD=refactor - Copying changes to the single unit writer: " + icu.getElementName() );
-					singleUnitWriter.addStatementBefore( newStatement, referenceStatement );
+					singleUnitWriter.addBefore( newStatement, referenceStatement );
 					singleUnitWriter.removeStatement( assignment );
 				}
 
@@ -90,6 +91,52 @@ public class AssignmentWorker extends GeneralWorker
 		removeSuperInvocations( refactoringVisitor );
 		updateImports( singleUnitWriter );
 
+		if ( refactoringVisitor.hasAdditionalFieldsOrMethods() )
+		{
+			refactorStatefulSwingWorker( icu, singleUnitWriter, refactoringVisitor, assignment );
+		}
+		else
+		{
+			refactorStatelessSwingWorker( icu, singleUnitWriter, refactoringVisitor, assignment );
+		}
+	}
+
+	private void refactorStatefulSwingWorker(
+			ICompilationUnit icu,
+			RxSingleUnitWriter singleUnitWriter,
+			RefactoringVisitor refactoringVisitor,
+			Assignment assignment )
+	{
+		String icuName = icu.getElementName();
+		SimpleName swingWorkerName = (SimpleName) assignment.getLeftHandSide();
+		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.toString() );
+		SWSubscriberDto subscriberDto = createSWSubscriberDto( rxObserverName, icuName, refactoringVisitor );
+
+		Map<String, Object> subscriberData = new HashMap<>();
+		subscriberData.put( "dto", subscriberDto );
+		String subscriberTemplate = "subscriber.ftl";
+
+		String subscriberString = TemplateUtils.processTemplate( subscriberTemplate, subscriberData );
+		AST ast = assignment.getAST();
+		TypeDeclaration typeDeclaration = ASTNodeFactory.createTypeDeclarationFromText( ast, subscriberString );
+
+		Statement referenceStatement = ASTUtil.findParent( assignment, Statement.class );
+		singleUnitWriter.addBefore( typeDeclaration, referenceStatement );
+
+		String newAssignmentString = subscriberDto.getSubscriberName() + " = new " + subscriberDto.getClassName() + "()";
+		Statement newAssignment = ASTNodeFactory.createSingleStatementFromText( ast, newAssignmentString );
+		singleUnitWriter.addBefore( newAssignment, referenceStatement );
+
+		singleUnitWriter.removeStatement( assignment );
+
+	}
+
+	private void refactorStatelessSwingWorker(
+			ICompilationUnit icu,
+			RxSingleUnitWriter singleUnitWriter,
+			RefactoringVisitor refactoringVisitor,
+			Assignment assignment )
+	{
 		String icuName = icu.getElementName();
 		RxObservableDto observableDto = createObservableDto( icuName, refactoringVisitor );
 
@@ -103,20 +150,20 @@ public class AssignmentWorker extends GeneralWorker
 		Statement observableStatement = ASTNodeFactory.createSingleStatementFromText( ast, observableString );
 
 		Statement referenceStatement = ASTUtil.findParent( assignment, Statement.class );
-		singleUnitWriter.addStatementBefore( observableStatement, referenceStatement );
+		singleUnitWriter.addBefore( observableStatement, referenceStatement );
 
 		SimpleName swingWorkerName = (SimpleName) assignment.getLeftHandSide();
 		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.toString() );
-		RxSubscriberDto subscriberDto = createObserverDto( rxObserverName, refactoringVisitor, observableDto );
-		subscriberDto.setVariableDecl( false );
+		RxObserverDto observerDto = createObserverDto( rxObserverName, refactoringVisitor, observableDto );
+		observerDto.setVariableDecl( false );
 
 		Map<String, Object> observerData = new HashMap<>();
-		observerData.put( "dto", subscriberDto );
+		observerData.put( "dto", observerDto );
 		String observerTemplate = "observer.ftl";
 
 		String observerString = TemplateUtils.processTemplate( observerTemplate, observerData );
 		Statement observerStatement = ASTNodeFactory.createSingleStatementFromText( ast, observerString );
-		singleUnitWriter.addStatementBefore( observerStatement, referenceStatement );
+		singleUnitWriter.addBefore( observerStatement, referenceStatement );
 
 		singleUnitWriter.removeStatement( assignment );
 	}
