@@ -55,7 +55,8 @@ public class RefactoringVisitor extends ASTVisitor
 	public boolean visit( ClassInstanceCreation node )
 	{
 		Type type = node.getType();
-		if ( type instanceof ParameterizedType )
+		boolean target = ASTUtil.isClassOf(node, SwingWorkerInfo.getBinaryName());
+		if ( target && type instanceof ParameterizedType )
 		{
 			List argumentTypes = ( (ParameterizedType) type ).typeArguments();
 			resultType = (Type) argumentTypes.get( 0 );
@@ -75,7 +76,6 @@ public class RefactoringVisitor extends ASTVisitor
 			if ( DO_IN_BACKGROUND.equals( methodDeclarationName ) )
 			{
 				doInBackgroundBlock = node;
-				resultType = methodDeclaration.getReturnType2();
 			}
 			else if ( DONE.equals( methodDeclarationName ) )
 			{
