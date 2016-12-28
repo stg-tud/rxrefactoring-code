@@ -1,12 +1,14 @@
 package workers;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import domain.SwingWorkerInfo;
+import domain.SWSubscriberDto;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
 
+import domain.SwingWorkerInfo;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.ASTUtil;
@@ -15,6 +17,8 @@ import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
 import rxjavarefactoring.processor.WorkerStatus;
 import utils.RefactoringUtils;
+import utils.TemplateUtils;
+import visitors.RefactoringVisitor;
 import visitors.RxCollector;
 
 /**
@@ -22,7 +26,7 @@ import visitors.RxCollector;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/22/2016
  */
-public class FieldDeclarationWorker extends AbstractRefactorWorker<RxCollector>
+public class FieldDeclarationWorker extends GeneralWorker
 {
 	public FieldDeclarationWorker( RxCollector rxCollector )
 	{
@@ -47,23 +51,38 @@ public class FieldDeclarationWorker extends AbstractRefactorWorker<RxCollector>
 				AST ast = fieldDeclaration.getAST();
 				RxSingleUnitWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, ast, getClass().getSimpleName() );
 
-				updateImports( singleUnitWriter );
-
 				RxLogger.info( this, "METHOD=refactor - Changing type: " + icu.getElementName() );
 				Type type = fieldDeclaration.getType();
-				if (type instanceof ParameterizedType)
+				if ( type instanceof ParameterizedType )
 				{
-					type = ((ParameterizedType) type).getType();
-					if ( ASTUtil.isClassOf(type, SwingWorkerInfo.getBinaryName()))
+					type = ( (ParameterizedType) type ).getType();
+					if ( ASTUtil.isClassOf( type, SwingWorkerInfo.getBinaryName() ) )
 					{
-						singleUnitWriter.replaceType((SimpleType) type, "SWSubscriber");
+						singleUnitWriter.replaceType( (SimpleType) type, "SWSubscriber" );
 					}
 				}
 
 				RxLogger.info( this, "METHOD=refactor - Changing field name: " + icu.getElementName() );
-				VariableDeclarationFragment varDecl = (VariableDeclarationFragment) fieldDeclaration.fragments().get(0);
-				String oldIdentifier = varDecl.getName().getIdentifier();
-				singleUnitWriter.replaceSimpleName(varDecl.getName(), RefactoringUtils.cleanSwingWorkerName(oldIdentifier));
+				VariableDeclarationFragment varDeclFrag = (VariableDeclarationFragment) fieldDeclaration.fragments().get( 0 );
+				String oldIdentifier = varDeclFrag.getName().getIdentifier();
+				singleUnitWriter.replaceSimpleName( varDeclFrag.getName(), RefactoringUtils.cleanSwingWorkerName( oldIdentifier ) );
+
+				singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWSubscriber" );
+
+				Expression initializer = varDeclFrag.getInitializer();
+				if ( initializer != null && initializer instanceof ClassInstanceCreation )
+				{
+					ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) initializer;
+					if ( ASTUtil.isClassOf( classInstanceCreation, SwingWorkerInfo.getBinaryName() ) )
+					{
+						RxLogger.info( this, "METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName() );
+						RefactoringVisitor refactoringVisitor = new RefactoringVisitor();
+						classInstanceCreation.accept( refactoringVisitor );
+
+						RxLogger.info( this, "METHOD=refactor - Refactoring assignment in: " + icu.getElementName() );
+						refactor( icu, singleUnitWriter, refactoringVisitor, fieldDeclaration );
+					}
+				}
 
 				// Add changes to the multiple compilation units write object
 				RxLogger.info( this, "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );
@@ -74,8 +93,35 @@ public class FieldDeclarationWorker extends AbstractRefactorWorker<RxCollector>
 		return WorkerStatus.OK;
 	}
 
-	private void updateImports( RxSingleUnitWriter singleUnitWriter )
+	private void refactor(
+			ICompilationUnit icu,
+			RxSingleUnitWriter singleUnitWriter,
+			RefactoringVisitor refactoringVisitor,
+			FieldDeclaration fieldDeclaration)
 	{
-		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWSubscriber" );
+		removeSuperInvocations( refactoringVisitor );
+		updateImports( singleUnitWriter );
+
+		String icuName = icu.getElementName();
+		VariableDeclarationFragment varDeclFrag = (VariableDeclarationFragment) fieldDeclaration.fragments().get( 0 );
+		String oldIdentifier = varDeclFrag.getName().getIdentifier();
+		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( oldIdentifier );
+		SWSubscriberDto subscriberDto = createSWSubscriberDto( rxObserverName, icuName, refactoringVisitor );
+
+		Map<String, Object> subscriberData = new HashMap<>();
+		subscriberData.put( "dto", subscriberDto );
+		String subscriberTemplate = "subscriber.ftl";
+
+		String subscriberString = TemplateUtils.processTemplate( subscriberTemplate, subscriberData );
+		AST ast = fieldDeclaration.getAST();
+		TypeDeclaration typeDeclaration = ASTNodeFactory.createTypeDeclarationFromText(ast, subscriberString);
+
+		singleUnitWriter.addInnerClassAfter(typeDeclaration, fieldDeclaration);
+
+		ClassInstanceCreation newClassInstanceCreation = ast.newClassInstanceCreation();
+		newClassInstanceCreation.setType(ast.newSimpleType(ast.newName(subscriberDto.getClassName())));
+
+		ClassInstanceCreation oldClassInstanceCreation = (ClassInstanceCreation) varDeclFrag.getInitializer();
+		singleUnitWriter.replaceNode(newClassInstanceCreation, oldClassInstanceCreation);
 	}
 }

@@ -75,6 +75,7 @@ public class TypeDeclarationWorker extends GeneralWorker
 			RefactoringVisitor refactoringVisitor,
 			TypeDeclaration typeDeclaration )
 	{
+		removeSuperInvocations( refactoringVisitor );
 		updateImports( singleUnitWriter );
 		String resultType = "Object";
 		String processType = "Object";

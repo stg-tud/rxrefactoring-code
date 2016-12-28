@@ -148,7 +148,7 @@ public class RxSingleUnitWriter
 	 * @param typeDeclaration
 	 *            target type declaration
 	 */
-	public void addMethod(MethodDeclaration constructor, TypeDeclaration typeDeclaration )
+	public void addMethod( MethodDeclaration constructor, TypeDeclaration typeDeclaration )
 	{
 		synchronized ( this )
 		{
@@ -165,7 +165,7 @@ public class RxSingleUnitWriter
 	 * @param methodDeclaration
 	 *            target method declaration
 	 */
-	public void addStatement(Statement statement, MethodDeclaration methodDeclaration )
+	public void addStatement( Statement statement, MethodDeclaration methodDeclaration )
 	{
 		synchronized ( this )
 		{
@@ -218,10 +218,10 @@ public class RxSingleUnitWriter
 	}
 
 	/**
-	 * Adds a new inner class after a reference node. If the reference node is not
-	 * a {@link MethodDeclaration}, then its parent {@link MethodDeclaration} is
-	 * searched and taken as a reference. In this case, the new method will be
-	 * inserted after the parent found.
+	 * Adds a new inner class after a reference node. The reference node can be
+	 * a {@link FieldDeclaration} or a {@link MethodDeclaration}. If the reference node is not
+	 * any of those, then its parents are searched until a {@link MethodDeclaration} is found.
+	 * In this case, the new method will be inserted after the parent found.
 	 * 
 	 * @param typeDeclaration
 	 *            new (class) type declaration to be inserted after the reference node
@@ -232,7 +232,18 @@ public class RxSingleUnitWriter
 	{
 		synchronized ( this )
 		{
+			if ( referenceNode instanceof FieldDeclaration )
+			{
+				ListRewrite classBlock = getClassBlock( referenceNode );
+				classBlock.insertAfter( typeDeclaration, referenceNode, null );
+				return;
+			}
 			MethodDeclaration referenceMethod = ASTUtil.findParent( referenceNode, MethodDeclaration.class );
+			if ( referenceMethod == null )
+			{
+				throw new IllegalArgumentException( this.getClass().getName() + ": referenceNode must be a " +
+						"FieldDeclaration, a MethodDeclaration or a child of a MethodDeclaration" );
+			}
 			ListRewrite classBlock = getClassBlock( referenceMethod );
 			classBlock.insertAfter( typeDeclaration, referenceMethod, null );
 		}
@@ -255,6 +266,14 @@ public class RxSingleUnitWriter
 			AST ast = astRewriter.getAST();
 			SimpleName newSimpleName = ast.newSimpleName( newName );
 			astRewriter.replace( oldSimpleName, newSimpleName, null );
+		}
+	}
+
+	public void replaceNode(ASTNode newNode, ASTNode oldNode)
+	{
+		synchronized ( this )
+		{
+			astRewriter.replace(oldNode, newNode, null);
 		}
 	}
 

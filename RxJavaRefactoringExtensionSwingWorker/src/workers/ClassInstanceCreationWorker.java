@@ -78,8 +78,9 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 	{
 		Assignment assignmentParent = ASTUtil.findParent( classInstanceCreation, Assignment.class );
 		VariableDeclarationStatement varDeclParent = ASTUtil.findParent( classInstanceCreation, VariableDeclarationStatement.class );
+		FieldDeclaration fieldDeclParent = ASTUtil.findParent(classInstanceCreation, FieldDeclaration.class);
 		// if any is not null, then another worker handles this case
-		return ( assignmentParent == null && varDeclParent == null );
+		return ( assignmentParent == null && varDeclParent == null && fieldDeclParent == null);
 	}
 
 	private void refactorClassInstanceCreation(
