@@ -3,6 +3,7 @@
 	<classpathentry kind="lib" path="/home/gjib/git/Thesis/RxRefactoringTestsSwingWorker/resources/java.test.app/RxRefactoringJavaApp/all-deps/rxandroid-1.2.1.jar" sourcepath="/home/gjib/git/Thesis/RxRefactoringTestsSwingWorker/resources/java.test.app/RxRefactoringJavaApp/all-deps/rxandroid-1.2.1-sources.jar"/>
 	<classpathentry kind="lib" path="/home/gjib/git/Thesis/RxRefactoringTestsSwingWorker/resources/java.test.app/RxRefactoringJavaApp/all-deps/stg-rxswingworker-1.0.0.jar" sourcepath="/home/gjib/git/Thesis/RxRefactoringTestsSwingWorker/resources/java.test.app/RxRefactoringJavaApp/all-deps/stg-rxswingworker-1.0.0-sources.jar"/>
 	<classpathentry kind="lib" path="/home/gjib/git/Thesis/RxRefactoringTestsSwingWorker/resources/java.test.app/RxRefactoringJavaApp/all-deps/rxjava-1.2.4.jar" sourcepath="/home/gjib/git/Thesis/RxRefactoringTestsSwingWorker/resources/java.test.app/RxRefactoringJavaApp/all-deps/rxjava-1.2.4-sources.jar"/>
+	<classpathentry kind="lib" path="/home/gjib/git/Thesis/RxRefactoringTestsSwingWorker/resources/java.test.app/RxRefactoringJavaApp/all-deps/rxjava-swing-0.20.7.jar" sourcepath="/home/gjib/git/Thesis/RxRefactoringTestsSwingWorker/resources/java.test.app/RxRefactoringJavaApp/all-deps/rxjava-swing-0.20.7-sources.jar"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="output" path="bin"/>

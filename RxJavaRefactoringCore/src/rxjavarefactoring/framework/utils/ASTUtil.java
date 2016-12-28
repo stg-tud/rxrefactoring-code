@@ -37,7 +37,7 @@ public final class ASTUtil
 	 */
 	public static <T extends ASTNode> T findParent( ASTNode node, Class<T> target )
 	{
-		if (target.isInstance(node))
+		if ( target.isInstance( node ) )
 		{
 			return (T) node;
 		}
@@ -55,8 +55,9 @@ public final class ASTUtil
 	 *
 	 * @param type
 	 *            current node (The {@link ASTNode} must be from type
-	 *            {@link TypeDeclaration}, {@link AnonymousClassDeclaration})
-	 *            or {@link ClassInstanceCreation}
+	 *            {@link TypeDeclaration}, {@link AnonymousClassDeclaration},
+	 *            {@link ClassInstanceCreation}, {@link FieldDeclaration} or
+	 *            {@link Type}
 	 * @param target
 	 *            query
 	 * @param isDirectChild
@@ -76,11 +77,15 @@ public final class ASTUtil
 		}
 		else if ( type instanceof ClassInstanceCreation )
 		{
-			superClass = ( (ClassInstanceCreation) type ).resolveTypeBinding().getSuperclass();
+			superClass = ( (ClassInstanceCreation) type ).getType().resolveBinding().getSuperclass();
 		}
 		else if ( type instanceof FieldDeclaration )
 		{
 			superClass = ( (FieldDeclaration) type ).getType().resolveBinding().getSuperclass();
+		}
+		else if ( type instanceof Type )
+		{
+			superClass = ( (Type) type ).resolveBinding().getSuperclass();
 		}
 		return isSubclassOf( superClass, target, isDirectChild );
 	}
@@ -138,7 +143,8 @@ public final class ASTUtil
 	 * @param type
 	 *            current node (The {@link ASTNode} must be from type
 	 *            {@link TypeDeclaration}, {@link AnonymousClassDeclaration},
-	 *            {@link ClassInstanceCreation} or {@link FieldDeclaration}
+	 *            {@link ClassInstanceCreation}, {@link FieldDeclaration} or
+	 *            {@link Type}
 	 * @param target
 	 *            target type
 	 * @return true if they match
@@ -156,11 +162,15 @@ public final class ASTUtil
 		}
 		else if ( type instanceof ClassInstanceCreation )
 		{
-			classType = ( (ClassInstanceCreation) type ).resolveTypeBinding();
+			classType = ( (ClassInstanceCreation) type ).getType().resolveBinding();
 		}
 		else if ( type instanceof FieldDeclaration )
 		{
 			classType = ( (FieldDeclaration) type ).getType().resolveBinding();
+		}
+		else if ( type instanceof Type )
+		{
+			classType = ( (Type) type ).resolveBinding();
 		}
 		return isClassOf( classType, target );
 	}

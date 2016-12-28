@@ -92,7 +92,7 @@ public class TypeDeclarationWorker extends GeneralWorker
 		singleUnitWriter.replaceType( (SimpleType) superclassType, "SWSubscriber" );
 
 		AST ast = typeDeclaration.getAST();
-		MethodDeclaration constructor = addOrUpdateConstructor(ast, singleUnitWriter, refactoringVisitor, typeDeclaration);
+		addOrUpdateConstructor(ast, singleUnitWriter, refactoringVisitor, typeDeclaration);
 
 		Block doInBackgroundBlock = refactoringVisitor.getDoInBackgroundBlock();
 		if ( doInBackgroundBlock != null )
@@ -109,14 +109,14 @@ public class TypeDeclarationWorker extends GeneralWorker
 			String observableString = TemplateUtils.processTemplate( observableTemplate, observableData );
 			MethodDeclaration observableGetMethod = ASTNodeFactory.createMethodFromText( ast, observableString );
 
-			singleUnitWriter.addMethodAfter( observableGetMethod, constructor );
+			singleUnitWriter.addMethodBefore( observableGetMethod, doInBackgroundBlock );
 
 			MethodDeclaration doInBackgroundDecl = ASTUtil.findParent( doInBackgroundBlock, MethodDeclaration.class );
 			singleUnitWriter.removeElement( doInBackgroundDecl );
 		}
 	}
 
-	private MethodDeclaration addOrUpdateConstructor(AST ast, RxSingleUnitWriter singleUnitWriter, RefactoringVisitor refactoringVisitor, TypeDeclaration typeDeclaration)
+	private void addOrUpdateConstructor(AST ast, RxSingleUnitWriter singleUnitWriter, RefactoringVisitor refactoringVisitor, TypeDeclaration typeDeclaration)
 	{
 		MethodDeclaration constructor = refactoringVisitor.getConstructor();
 		if ( constructor == null )
@@ -144,7 +144,6 @@ public class TypeDeclarationWorker extends GeneralWorker
 			Statement setObservableStatement = ASTNodeFactory.createSingleStatementFromText( ast, "setObservable(getRxObservable())" );
 			singleUnitWriter.addStatement( setObservableStatement, constructor );
 		}
-		return constructor;
 	}
 
 }

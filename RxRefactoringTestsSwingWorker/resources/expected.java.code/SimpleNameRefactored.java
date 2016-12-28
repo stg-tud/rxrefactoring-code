@@ -2,7 +2,8 @@ package rxrefactoring;
 
 import java.util.Arrays;
 import java.util.List;
-
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.swing.*;
 
 import de.tudarmstadt.stg.rx.swingworker.SWDto;
@@ -40,6 +41,9 @@ public class SimpleName
 		SWSubscriber<String, Integer> rxObserver2 = new SWSubscriber<String, Integer>( rxObservable1 ) {};
 
 		doSomethingElseParameterized(rxObserver2);
+
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		rxObserver.executeObservable();
 	}
 
 	private void doSomethingElse(SWSubscriber rxObserver)

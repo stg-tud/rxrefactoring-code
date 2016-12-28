@@ -3,12 +3,13 @@ package workers;
 import java.util.List;
 import java.util.Map;
 
+import domain.SwingWorkerInfo;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.*;
 
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
+import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
@@ -48,16 +49,21 @@ public class FieldDeclarationWorker extends AbstractRefactorWorker<RxCollector>
 
 				updateImports( singleUnitWriter );
 
-				// Create new field declaration statement
-				RxLogger.info( this, "METHOD=refactor - Creating new field declaration: " + icu.getElementName() );
-				String typeChanged = fieldDeclaration.toString().replace( "SwingWorker", "SWSubscriber" );
-				String finalStatementString = RefactoringUtils.cleanSwingWorkerName( typeChanged );
-				FieldDeclaration newDecl = ASTNodeFactory.createFieldDeclarationFromText( ast, finalStatementString );
+				RxLogger.info( this, "METHOD=refactor - Changing type: " + icu.getElementName() );
+				Type type = fieldDeclaration.getType();
+				if (type instanceof ParameterizedType)
+				{
+					type = ((ParameterizedType) type).getType();
+					if ( ASTUtil.isClassOf(type, SwingWorkerInfo.getBinaryName()))
+					{
+						singleUnitWriter.replaceType((SimpleType) type, "SWSubscriber");
+					}
+				}
 
-				// Replace declarations
-				RxLogger.info( this, "METHOD=refactor - Refactoring field declaration in: " + icu.getElementName() );
-				singleUnitWriter.addFieldDeclarationBefore( newDecl, fieldDeclaration );
-				singleUnitWriter.removeElement( fieldDeclaration );
+				RxLogger.info( this, "METHOD=refactor - Changing field name: " + icu.getElementName() );
+				VariableDeclarationFragment varDecl = (VariableDeclarationFragment) fieldDeclaration.fragments().get(0);
+				String oldIdentifier = varDecl.getName().getIdentifier();
+				singleUnitWriter.replaceSimpleName(varDecl.getName(), RefactoringUtils.cleanSwingWorkerName(oldIdentifier));
 
 				// Add changes to the multiple compilation units write object
 				RxLogger.info( this, "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );

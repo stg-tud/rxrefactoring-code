@@ -4,10 +4,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.*;
 
+import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.RxLogger;
@@ -50,8 +49,22 @@ public class SimpleNameWorker extends AbstractRefactorWorker<RxCollector>
 				MethodInvocation methodInvocation = ASTUtil.findParent( simpleName, MethodInvocation.class );
 				if ( methodInvocation != null )
 				{
-					RxLogger.info( this, "METHOD=refactor - Refactoring simple name in: " + icu.getElementName() );
-					singleUnitWriter.replaceSimpleName( simpleName, RefactoringUtils.cleanSwingWorkerName( simpleName.getIdentifier() ) );
+					ITypeBinding declaringClass = methodInvocation.resolveMethodBinding().getDeclaringClass();
+					boolean executor = ASTUtil.isTypeOf( declaringClass, "java.util.concurrent.ExecutorService" );
+					String newIdentifier = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
+					if ( executor && "submit".equals( methodInvocation.getName().toString() ) )
+					{
+						String executeObservableString = newIdentifier + ".executeObservable()";
+						Statement executeObservableStatement = ASTNodeFactory.createSingleStatementFromText(ast, executeObservableString);
+						Statement referenceStatement = ASTUtil.findParent(simpleName, Statement.class);
+						singleUnitWriter.addBefore(executeObservableStatement, referenceStatement);
+						singleUnitWriter.removeStatement(simpleName);
+					}
+					else
+					{
+						RxLogger.info( this, "METHOD=refactor - Refactoring simple name in: " + icu.getElementName() );
+						singleUnitWriter.replaceSimpleName( simpleName, newIdentifier);
+					}
 
 					// Add changes to the multiple compilation units write object
 					RxLogger.info( this, "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );

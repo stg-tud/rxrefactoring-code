@@ -10,7 +10,9 @@ import org.eclipse.jdt.core.dom.*;
 import domain.RxObservableDto;
 import domain.RxObserverDto;
 import domain.SWSubscriberDto;
+import domain.SwingWorkerInfo;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
+import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
@@ -53,13 +55,24 @@ public class VariableDeclStatementWorker extends GeneralWorker
 				Expression initializer = fragment.getInitializer();
 				if ( initializer instanceof ClassInstanceCreation )
 				{
-					// Collect details about the SwingWorker
-					RxLogger.info( this, "METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName() );
-					RefactoringVisitor refactoringVisitor = new RefactoringVisitor();
-					varDeclStatement.accept( refactoringVisitor );
+					ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) initializer;
 
-					RxLogger.info( this, "METHOD=refactor - Refactoring variable declaration statement in: " + icu.getElementName() );
-					refactorVarDecl( icu, singleUnitWriter, refactoringVisitor, varDeclStatement, fragment );
+					if ( ASTUtil.isClassOf( classInstanceCreation, SwingWorkerInfo.getBinaryName() ) )
+					{
+						RxLogger.info( this, "METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName() );
+						RefactoringVisitor refactoringVisitor = new RefactoringVisitor();
+						varDeclStatement.accept( refactoringVisitor );
+
+						RxLogger.info( this, "METHOD=refactor - Refactoring variable declaration statement in: " + icu.getElementName() );
+						refactorVarDecl( icu, singleUnitWriter, refactoringVisitor, varDeclStatement, fragment );
+					}
+					else
+					{
+						RxLogger.info( this, "METHOD=refactor - Refactoring variable name: " + icu.getElementName() );
+						SimpleName simpleName = fragment.getName();
+						String newIdentifier = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
+						singleUnitWriter.replaceSimpleName(simpleName, newIdentifier);
+					}
 				}
 				else
 				{

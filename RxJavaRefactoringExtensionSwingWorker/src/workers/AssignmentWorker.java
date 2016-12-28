@@ -10,6 +10,7 @@ import org.eclipse.jdt.core.dom.*;
 import domain.RxObservableDto;
 import domain.RxObserverDto;
 import domain.SWSubscriberDto;
+import domain.SwingWorkerInfo;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.RxLogger;
@@ -53,13 +54,28 @@ public class AssignmentWorker extends GeneralWorker
 				Expression rightHandSide = assignment.getRightHandSide();
 				if ( rightHandSide instanceof ClassInstanceCreation )
 				{
-					// Collect details about the SwingWorker
-					RxLogger.info( this, "METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName() );
-					RefactoringVisitor refactoringVisitor = new RefactoringVisitor();
-					assignment.accept( refactoringVisitor );
+					ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) rightHandSide;
 
-					RxLogger.info( this, "METHOD=refactor - Refactoring assignment in: " + icu.getElementName() );
-					refactorAssignment( icu, singleUnitWriter, refactoringVisitor, assignment );
+					if ( ASTUtil.isClassOf( classInstanceCreation, SwingWorkerInfo.getBinaryName() ) )
+					{
+						RxLogger.info( this, "METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName() );
+						RefactoringVisitor refactoringVisitor = new RefactoringVisitor();
+						assignment.accept( refactoringVisitor );
+
+						RxLogger.info( this, "METHOD=refactor - Refactoring assignment in: " + icu.getElementName() );
+						refactorAssignment( icu, singleUnitWriter, refactoringVisitor, assignment );
+					}
+					else
+					{
+						Expression leftHandSide = assignment.getLeftHandSide();
+						if (leftHandSide instanceof SimpleName)
+						{
+							RxLogger.info( this, "METHOD=refactor - Refactoring variable name: " + icu.getElementName() );
+							SimpleName simpleName = (SimpleName) leftHandSide;
+							String newIdentifier = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
+							singleUnitWriter.replaceSimpleName(simpleName, newIdentifier);
+						}
+					}
 				}
 				else
 				{
