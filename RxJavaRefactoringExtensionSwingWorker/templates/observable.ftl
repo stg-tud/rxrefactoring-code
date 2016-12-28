@@ -1,7 +1,4 @@
 Observable <SWDto<${dto.resultType}, ${dto.processType}>> ${dto.varName} =
     Observable.fromEmitter(new SWEmitter<${dto.resultType}, ${dto.processType}>() {
-
-    @Override
-    protected ${dto.resultType} doInBackground() throws Exception
-    ${dto.doInBackgroundBlock}
+    <#include "common/doInBackgroundBlock.ftl">
 }, Emitter.BackpressureMode.BUFFER );

@@ -34,16 +34,19 @@ public class RefactoringVisitor extends ASTVisitor
 	private Type processType;
 	private String processVariableName;
 	private List<SuperMethodInvocation> superMethodInvocationsToRemove;
+	private MethodDeclaration constructor;
 
 	// for "stateful" classes
 	private List<FieldDeclaration> fieldDeclarations;
 	private List<MethodDeclaration> additionalMethodDeclarations;
+	private List<MethodDeclaration> allMethodDeclarations;
 	private List<TypeDeclaration> typeDeclarations;
 
 	public RefactoringVisitor()
 	{
 		fieldDeclarations = new ArrayList<>();
 		additionalMethodDeclarations = new ArrayList<>();
+		allMethodDeclarations = new ArrayList<>();
 		superMethodInvocationsToRemove = new ArrayList<>();
 		typeDeclarations = new ArrayList<>();
 	}
@@ -97,20 +100,20 @@ public class RefactoringVisitor extends ASTVisitor
 	@Override
 	public boolean visit( FieldDeclaration node )
 	{
-		TypeDeclaration parent = ASTUtil.findParent(node, TypeDeclaration.class);
-		if ( isRelevant(parent))
+		TypeDeclaration parent = ASTUtil.findParent( node, TypeDeclaration.class );
+		if ( isRelevant( parent ) )
 		{
-			fieldDeclarations.add(node);
+			fieldDeclarations.add( node );
 		}
 		return true;
 	}
 
-	private boolean isRelevant(TypeDeclaration parent)
+	private boolean isRelevant( TypeDeclaration parent )
 	{
 		boolean ignore = false;
-		for (TypeDeclaration typeDeclaration : typeDeclarations)
+		for ( TypeDeclaration typeDeclaration : typeDeclarations )
 		{
-			if (typeDeclaration.equals(parent))
+			if ( typeDeclaration.equals( parent ) )
 			{
 				ignore = true;
 				break;
@@ -122,15 +125,24 @@ public class RefactoringVisitor extends ASTVisitor
 	@Override
 	public boolean visit( MethodDeclaration node )
 	{
-		TypeDeclaration parent = ASTUtil.findParent(node, TypeDeclaration.class);
-		if ( isRelevant(parent))
+		if ( constructor == null && node.isConstructor() )
+		{
+			constructor = node;
+		}
+		else
+		{
+			allMethodDeclarations.add( node );
+		}
+
+		TypeDeclaration parent = ASTUtil.findParent( node, TypeDeclaration.class );
+		if ( isRelevant( parent ) )
 		{
 			String methodDeclarationName = node.getName().toString();
-			if ( !DO_IN_BACKGROUND.equals(methodDeclarationName) &&
-					!DONE.equals(methodDeclarationName) &&
-					!PROCESS.equals(methodDeclarationName) )
+			if ( !DO_IN_BACKGROUND.equals( methodDeclarationName ) &&
+					!DONE.equals( methodDeclarationName ) &&
+					!PROCESS.equals( methodDeclarationName ) )
 			{
-				additionalMethodDeclarations.add(node);
+				additionalMethodDeclarations.add( node );
 			}
 		}
 		return true;
@@ -195,6 +207,16 @@ public class RefactoringVisitor extends ASTVisitor
 	public List<TypeDeclaration> getTypeDeclarations()
 	{
 		return typeDeclarations;
+	}
+
+	public MethodDeclaration getConstructor()
+	{
+		return constructor;
+	}
+
+	public List<MethodDeclaration> getAllMethodDeclarations()
+	{
+		return allMethodDeclarations;
 	}
 
 	public boolean hasAdditionalFieldsOrMethods()

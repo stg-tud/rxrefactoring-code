@@ -37,6 +37,11 @@ public final class ASTUtil
 	 */
 	public static <T extends ASTNode> T findParent( ASTNode node, Class<T> target )
 	{
+		if (target.isInstance(node))
+		{
+			return (T) node;
+		}
+
 		ASTNode parent = node.getParent();
 		while ( parent != null && !target.isInstance( parent ) )
 		{

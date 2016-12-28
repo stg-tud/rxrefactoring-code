@@ -147,7 +147,17 @@ public class JavaAppTestExample extends AbstractJavaTest
 		executeTest( targetFile, expectedSourceCode );
 	}
 
+	@Test
+	public void testTypeDeclaration() throws Exception
+	{
+		String targetFile = "TypeDeclaration.java";
 
+		String expectedSourceCode = getSourceCode(
+				"expected.java.code",
+				"TypeDeclarationRefactored.java" );
+
+		executeTest( targetFile, expectedSourceCode );
+	}
 
 	private void executeTest( String targetFile, String expectedSourceCode ) throws Exception
 	{

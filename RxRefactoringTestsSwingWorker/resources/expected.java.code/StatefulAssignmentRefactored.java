@@ -28,7 +28,7 @@ public class StatefulAssignment
 				setObservable( getRxObservable() );
 			}
 
-			Observable<SWDto<String, Integer>> getRxObservable()
+			private Observable<SWDto<String, Integer>> getRxObservable()
 			{
 				return Observable.fromEmitter( new SWEmitter<String, Integer>()
 				{

@@ -106,18 +106,19 @@ public class RxSingleUnitWriter
 
 	/**
 	 * Adds new statement before a reference statement
-	 *  @param newElement
+	 * 
+	 * @param newElement
 	 *            new statement
 	 * @param referenceStatement
 	 */
-	public void addBefore(ASTNode newElement, Statement referenceStatement )
+	public void addBefore( ASTNode newElement, Statement referenceStatement )
 	{
 		synchronized ( this )
 		{
 			Block parentBlock = (Block) referenceStatement.getParent();
 			ListRewrite statementsBlock = astRewriter.getListRewrite( parentBlock, Block.STATEMENTS_PROPERTY );
 			Statement placeHolder = (Statement) astRewriter.createStringPlaceholder( "", ASTNode.EMPTY_STATEMENT );
-			statementsBlock.insertBefore(newElement, referenceStatement, null );
+			statementsBlock.insertBefore( newElement, referenceStatement, null );
 			statementsBlock.insertAfter( placeHolder, newElement, null );
 		}
 	}
@@ -136,6 +137,62 @@ public class RxSingleUnitWriter
 		{
 			ListRewrite classBlock = getClassBlock( referenceFieldDecl );
 			classBlock.insertBefore( newFieldDecl, referenceFieldDecl, null );
+		}
+	}
+
+	/**
+	 * Adds a new node at the first position of a {@link TypeDeclaration}
+	 *
+	 * @param constructor
+	 *            new method to be inserted
+	 * @param typeDeclaration
+	 *            target type declaration
+	 */
+	public void addMethod(MethodDeclaration constructor, TypeDeclaration typeDeclaration )
+	{
+		synchronized ( this )
+		{
+			ListRewrite listRewrite = astRewriter.getListRewrite( typeDeclaration, TypeDeclaration.BODY_DECLARATIONS_PROPERTY );
+			listRewrite.insertFirst( constructor, null );
+		}
+	}
+
+	/**
+	 * Adds a new statement at the lat position of a {@link MethodDeclaration}
+	 *
+	 * @param statement
+	 *            new method to be inserted
+	 * @param methodDeclaration
+	 *            target method declaration
+	 */
+	public void addStatement(Statement statement, MethodDeclaration methodDeclaration )
+	{
+		synchronized ( this )
+		{
+			Block body = methodDeclaration.getBody();
+			ListRewrite listRewrite = astRewriter.getListRewrite( body, Block.STATEMENTS_PROPERTY );
+			listRewrite.insertLast( statement, null );
+		}
+	}
+
+	/**
+	 * Adds a new method before a reference node. If the reference node is not
+	 * a {@link MethodDeclaration}, then its parent {@link MethodDeclaration} is
+	 * searched and taken as a reference. In this case, the new method will be
+	 * inserted before the parent found.
+	 *
+	 * @param methodDeclaration
+	 *            new method to be inserted before the reference node
+	 * @param referenceNode
+	 *            reference node
+	 */
+	public void addMethodBefore( MethodDeclaration methodDeclaration, ASTNode referenceNode )
+	{
+		synchronized ( this )
+		{
+			MethodDeclaration referenceMethod = ASTUtil.findParent( referenceNode, MethodDeclaration.class );
+			ListRewrite classBlock = getClassBlock( referenceMethod );
+			classBlock.insertBefore( methodDeclaration, referenceMethod, null );
 		}
 	}
 
@@ -181,23 +238,23 @@ public class RxSingleUnitWriter
 		}
 	}
 
-	public void replaceType(SimpleType oldType, String newType)
+	public void replaceType( SimpleType oldType, String newType )
 	{
 		synchronized ( this )
 		{
 			AST ast = astRewriter.getAST();
-			SimpleType newSimpleType = ast.newSimpleType(ast.newName(newType));
-			astRewriter.replace(oldType, newSimpleType, null);
+			SimpleType newSimpleType = ast.newSimpleType( ast.newName( newType ) );
+			astRewriter.replace( oldType, newSimpleType, null );
 		}
 	}
 
-	public void replaceSimpleName(SimpleName oldSimpleName, String newName)
+	public void replaceSimpleName( SimpleName oldSimpleName, String newName )
 	{
 		synchronized ( this )
 		{
 			AST ast = astRewriter.getAST();
-			SimpleName newSimpleName = ast.newSimpleName(newName);
-			astRewriter.replace(oldSimpleName, newSimpleName, null);
+			SimpleName newSimpleName = ast.newSimpleName( newName );
+			astRewriter.replace( oldSimpleName, newSimpleName, null );
 		}
 	}
 

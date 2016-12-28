@@ -25,7 +25,7 @@ public class StatefulClassInstanceCreation
 				setObservable( getRxObservable() );
 			}
 
-			Observable<SWDto<String, Integer>> getRxObservable()
+			private Observable<SWDto<String, Integer>> getRxObservable()
 			{
 				return Observable.fromEmitter( new SWEmitter<String, Integer>()
 				{
@@ -90,7 +90,7 @@ public class StatefulClassInstanceCreation
 				setObservable( getRxObservable() );
 			}
 
-			Observable<SWDto<String, Integer>> getRxObservable()
+			private Observable<SWDto<String, Integer>> getRxObservable()
 			{
 				return Observable.fromEmitter( new SWEmitter<String, Integer>()
 				{
