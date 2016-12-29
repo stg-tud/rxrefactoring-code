@@ -73,17 +73,6 @@ public class DiscoveringVisitor extends ASTVisitor
 	}
 
 	@Override
-	public boolean visit( SimpleName simpleName )
-	{
-		ITypeBinding type = simpleName.resolveTypeBinding();
-		if ( ASTUtil.isTypeOf( type, classBinaryName ) )
-		{
-			// simpleNames.add( simpleName );
-		}
-		return true;
-	}
-
-	@Override
 	public boolean visit( ClassInstanceCreation node )
 	{
 		ITypeBinding type = node.getType().resolveBinding();

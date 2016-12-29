@@ -17,6 +17,7 @@ import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
 import rxjavarefactoring.processor.WorkerStatus;
+import utils.RefactoringUtils;
 import utils.TemplateUtils;
 import visitors.RefactoringVisitor;
 import visitors.RxCollector;
@@ -78,9 +79,9 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 	{
 		Assignment assignmentParent = ASTUtil.findParent( classInstanceCreation, Assignment.class );
 		VariableDeclarationStatement varDeclParent = ASTUtil.findParent( classInstanceCreation, VariableDeclarationStatement.class );
-		FieldDeclaration fieldDeclParent = ASTUtil.findParent(classInstanceCreation, FieldDeclaration.class);
+		FieldDeclaration fieldDeclParent = ASTUtil.findParent( classInstanceCreation, FieldDeclaration.class );
 		// if any is not null, then another worker handles this case
-		return ( assignmentParent == null && varDeclParent == null && fieldDeclParent == null);
+		return ( assignmentParent == null && varDeclParent == null && fieldDeclParent == null );
 	}
 
 	private void refactorClassInstanceCreation(
@@ -89,6 +90,20 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 			RefactoringVisitor refactoringVisitor,
 			ClassInstanceCreation classInstanceCreation )
 	{
+		// Check if the class instance creation corresponds to a subclass of SwingWorker
+		MethodInvocation methodInvocation = ASTUtil.findParent( classInstanceCreation, MethodInvocation.class );
+		if ( methodInvocation != null && methodInvocation.getExpression() instanceof ClassInstanceCreation )
+		{
+			if ( ASTUtil.isSubclassOf( classInstanceCreation, SwingWorkerInfo.getBinaryName(), false ) )
+			{
+				// Refactor only the method name
+				SimpleName methodInvocationName = methodInvocation.getName();
+				String newMethodName = RefactoringUtils.getNewMethodName( methodInvocationName.getIdentifier() );
+				singleUnitWriter.replaceSimpleName( methodInvocationName, newMethodName );
+				return;
+			}
+		}
+
 		removeSuperInvocations( refactoringVisitor );
 		updateImports( singleUnitWriter );
 
@@ -126,7 +141,7 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 		MethodInvocation methodInvocation = ASTUtil.findParent( classInstanceCreation, MethodInvocation.class );
 		if ( methodInvocation != null )
 		{
-			String invocation = getInvocationWithArguments(methodInvocation);
+			String invocation = getInvocationWithArguments( methodInvocation );
 			String newInstanceCreationString = "new " + subscriberDto.getClassName() + "()." + invocation;
 			Statement newInstanceCreation = ASTNodeFactory.createSingleStatementFromText( ast, newInstanceCreationString );
 			singleUnitWriter.addBefore( newInstanceCreation, referenceStatement );
@@ -173,7 +188,7 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 		MethodInvocation methodInvocation = ASTUtil.findParent( classInstanceCreation, MethodInvocation.class );
 		if ( methodInvocation != null )
 		{
-			String invocation = getInvocationWithArguments(methodInvocation);
+			String invocation = getInvocationWithArguments( methodInvocation );
 			String classInstanceCreationString = observerString.substring( 0, observerString.length() - 1 );
 			observerString = classInstanceCreationString + "." + invocation;
 		}
@@ -184,7 +199,7 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 		singleUnitWriter.removeStatement( classInstanceCreation );
 	}
 
-	private String getInvocationWithArguments(MethodInvocation methodInvocation)
+	private String getInvocationWithArguments( MethodInvocation methodInvocation )
 	{
 		String methodName = methodInvocation.getName().toString();
 		String newMethodName = getNewMethodName( methodName );

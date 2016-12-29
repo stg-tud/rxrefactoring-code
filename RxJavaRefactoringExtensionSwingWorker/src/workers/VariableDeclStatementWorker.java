@@ -70,21 +70,35 @@ public class VariableDeclStatementWorker extends GeneralWorker
 					{
 						RxLogger.info( this, "METHOD=refactor - Refactoring variable name: " + icu.getElementName() );
 						SimpleName simpleName = fragment.getName();
-						String newIdentifier = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
-						singleUnitWriter.replaceSimpleName(simpleName, newIdentifier);
+						String newIdentifier = RefactoringUtils.cleanSwingWorkerName( simpleName.getIdentifier() );
+						singleUnitWriter.replaceSimpleName( simpleName, newIdentifier );
 					}
 				}
 				else
 				{
-					String originalStatement = varDeclStatement.toString();
-					String typeChanged = originalStatement.replace( "SwingWorker", "SWSubscriber" );
-					String cleanedStatement = RefactoringUtils.cleanSwingWorkerName( typeChanged );
-					Statement newStatement = ASTNodeFactory.createSingleStatementFromText( ast, cleanedStatement );
+					// change type
+					Type type = varDeclStatement.getType();
+					if (type instanceof ParameterizedType)
+					{
+						type = ((ParameterizedType) type).getType();
+					}
 
-					RxLogger.info( this, "METHOD=refactor - Copying changes to the single unit writer: " + icu.getElementName() );
-					singleUnitWriter.addBefore( newStatement, varDeclStatement );
-					singleUnitWriter.removeStatement( varDeclStatement );
+					if (ASTUtil.isClassOf(type, SwingWorkerInfo.getBinaryName()))
+					{
+						singleUnitWriter.replaceType((SimpleType) type, "SWSubscriber");
+					}
+
+					String newVarName = RefactoringUtils.cleanSwingWorkerName(fragment.getName().getIdentifier());
+					singleUnitWriter.replaceSimpleName(fragment.getName(), newVarName);
+
+					SimpleName assignedVarSimpleName = (SimpleName) fragment.getInitializer();
+					String newAssignedVarName = RefactoringUtils.cleanSwingWorkerName((assignedVarSimpleName).getIdentifier());
+					singleUnitWriter.replaceSimpleName(assignedVarSimpleName, newAssignedVarName);
 				}
+
+				// Add changes to the multiple compilation units write object
+				RxLogger.info( this, "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );
+				rxMultipleUnitsWriter.addCompilationUnit( icu );
 			}
 			monitor.worked( 1 );
 		}
@@ -121,7 +135,7 @@ public class VariableDeclStatementWorker extends GeneralWorker
 	{
 		String icuName = icu.getElementName();
 		SimpleName swingWorkerName = fragment.getName();
-		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.toString() );
+		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.getIdentifier() );
 		SWSubscriberDto subscriberDto = createSWSubscriberDto( rxObserverName, icuName, refactoringVisitor );
 
 		Map<String, Object> subscriberData = new HashMap<>();
@@ -164,7 +178,7 @@ public class VariableDeclStatementWorker extends GeneralWorker
 		singleUnitWriter.addBefore( observableStatement, varDeclStatement );
 
 		SimpleName swingWorkerName = fragment.getName();
-		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.toString() );
+		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.getIdentifier() );
 		RxObserverDto subscriberDto = createObserverDto( rxObserverName, refactoringVisitor, observableDto );
 		subscriberDto.setVariableDecl( true );
 

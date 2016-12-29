@@ -49,8 +49,8 @@ public class StatefulClassInstanceCreation
 			{
 				for ( Integer number : chunks )
 				{
-					printInfo( "Processing " + number );
-					setProgress( number * 100 / ( AMOUNT_OF_WORK * 2 ) );
+					this.printInfo( "Processing " + number );
+					setProgress( number * 100 / ( this.AMOUNT_OF_WORK * 2 ) );
 				}
 			}
 
@@ -59,17 +59,17 @@ public class StatefulClassInstanceCreation
 			{
 				try
 				{
-					printInfo( "Entering done() method" );
+					this.printInfo( "Entering done() method" );
 					String result = get();
-					printInfo( "doInBackground() result = " + result );
+					this.printInfo( "doInBackground() result = " + result );
 				}
 				catch ( InterruptedException e )
 				{
-					printInfo( "InterruptedException" );
+					this.printInfo( "InterruptedException" );
 				}
 				catch ( ExecutionException e )
 				{
-					printInfo( "ExecutionException" );
+					this.printInfo( "ExecutionException" );
 				}
 			}
 

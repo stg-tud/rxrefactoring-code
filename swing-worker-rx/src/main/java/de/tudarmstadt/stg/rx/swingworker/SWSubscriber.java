@@ -48,6 +48,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	 */
 	public SWSubscriber( Observable<SWDto<ResultType, ProcessType>> observable )
 	{
+		this.propertyChangeSupport = new PropertyChangeSupport( this );
 		this.observable = observable;
 		initialize();
 	}
@@ -58,6 +59,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	 */
 	public SWSubscriber()
 	{
+		this.propertyChangeSupport = new PropertyChangeSupport( this );
 		initialize();
 	}
 
@@ -398,7 +400,6 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 
 	private void initialize()
 	{
-		this.propertyChangeSupport = new PropertyChangeSupport( this );
 		this.currentState = SwingWorker.StateValue.PENDING;
 		this.progress = new AtomicInteger( 0 );
 		this.cancelled = new AtomicBoolean( false );

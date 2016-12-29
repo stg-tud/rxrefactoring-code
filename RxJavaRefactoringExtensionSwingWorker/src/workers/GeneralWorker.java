@@ -55,7 +55,7 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		{
 			observableDto.setProcessType( "Object" );
 		}
-		observableDto.setDoInBackgroundBlock( refactoringVisitor.getDoInBackgroundBlock().toString() );
+		observableDto.setDoInBackgroundBlock( removeKeywordThis( refactoringVisitor.getDoInBackgroundBlock().toString() ) );
 		return observableDto;
 	}
 
@@ -142,7 +142,7 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		{
 			dto.setDoneBlock( doneBlock.toString() );
 		}
-		dto.setDoInBackgroundBlock( refactoringVisitor.getDoInBackgroundBlock().toString() );
+		dto.setDoInBackgroundBlock( removeKeywordThis( refactoringVisitor.getDoInBackgroundBlock().toString() ) );
 		for ( FieldDeclaration fieldDeclaration : refactoringVisitor.getFieldDeclarations() )
 		{
 			dto.getFieldDeclarations().add( fieldDeclaration.toString() );
@@ -157,5 +157,10 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		}
 
 		return dto;
+	}
+
+	private String removeKeywordThis( String block )
+	{
+		return block.replaceAll( "this\\.", "" );
 	}
 }

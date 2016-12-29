@@ -1,5 +1,7 @@
 package utils;
 
+import domain.SwingWorkerInfo;
+
 /**
  * Description: <br>
  * Author: Grebiel Jose Ifill Brito<br>
@@ -101,5 +103,16 @@ public final class RefactoringUtils
 		}
 
 		return sb.toString();
+	}
+
+	public static String getNewMethodName( String methodName )
+	{
+		String newMethodName = SwingWorkerInfo.getPublicMethodsMap().get( methodName );
+
+		if ( newMethodName == null )
+		{
+			newMethodName = methodName;
+		}
+		return newMethodName;
 	}
 }

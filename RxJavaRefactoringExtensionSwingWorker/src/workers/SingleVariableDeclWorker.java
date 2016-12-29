@@ -59,7 +59,7 @@ public class SingleVariableDeclWorker extends AbstractRefactorWorker<RxCollector
 					}
 					else
 					{
-						singleUnitWriter.replaceSimpleName( simpleName, RefactoringUtils.cleanSwingWorkerName( simpleName.toString() ) );
+						singleUnitWriter.replaceSimpleName( simpleName, RefactoringUtils.cleanSwingWorkerName( simpleName.getIdentifier() ) );
 					}
 				}
 

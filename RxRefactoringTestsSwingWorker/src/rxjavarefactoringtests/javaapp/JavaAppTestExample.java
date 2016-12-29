@@ -159,6 +159,18 @@ public class JavaAppTestExample extends AbstractJavaTest
 		executeTest( targetFile, expectedSourceCode );
 	}
 
+	@Test
+	public void testMethodInvocationSubclass() throws Exception
+	{
+		String targetFile = "MethodInvocationSubclass.java";
+
+		String expectedSourceCode = getSourceCode(
+				"expected.java.code",
+				"MethodInvocationSubclassRefactored.java" );
+
+		executeTest( targetFile, expectedSourceCode );
+	}
+
 	private void executeTest( String targetFile, String expectedSourceCode ) throws Exception
 	{
 		RxJavaRefactoringApp app = new RxJavaRefactoringApp();

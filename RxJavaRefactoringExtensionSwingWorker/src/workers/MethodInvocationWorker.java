@@ -7,9 +7,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
 
 import domain.SwingWorkerInfo;
-import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
-import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
@@ -58,6 +56,10 @@ public class MethodInvocationWorker extends AbstractRefactorWorker<RxCollector>
 				RxLogger.info( this, "METHOD=refactor - refactoring method invocation: "
 						+ methodInvocation.getName() + "in " + icu.getElementName() );
 				refactorInvocation( ast, icu, singleUnitWriter, methodInvocation );
+
+				// Add changes to the multiple compilation units write object
+				RxLogger.info( this, "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );
+				rxMultipleUnitsWriter.addCompilationUnit( icu );
 			}
 			monitor.worked( 1 );
 		}
@@ -71,46 +73,18 @@ public class MethodInvocationWorker extends AbstractRefactorWorker<RxCollector>
 			RxSingleUnitWriter singleUnitWriter,
 			MethodInvocation methodInvocation )
 	{
-		Statement referenceStatement = ASTUtil.findParent( methodInvocation, Statement.class );
-		String statement = referenceStatement.toString();
 
-		String methodName = methodInvocation.getName().toString();
-		String newMethodName = getNewMethodName( methodName );
+		SimpleName methodSimpleName = methodInvocation.getName();
+		String newMethodName = RefactoringUtils.getNewMethodName( methodSimpleName.toString() );
 
-		String target = methodName + "(";
-		String replacement = newMethodName + "(";
-		int targetIndex = statement.indexOf( target );
+		singleUnitWriter.replaceSimpleName( methodSimpleName, newMethodName );
 
-		if ( targetIndex >= 0 && isMethodNameStart( statement, targetIndex ) )
+		Expression expression = methodInvocation.getExpression();
+		if ( expression instanceof SimpleName )
 		{
-			// Create new statement containing the method invocation
-			String invocationUpdated = statement.replace( target, replacement );
-			String updatedStatement = RefactoringUtils.cleanSwingWorkerName( invocationUpdated );
-
-			Statement newStatement = ASTNodeFactory.createSingleStatementFromText( ast, updatedStatement );
-
-			singleUnitWriter.addBefore( newStatement, referenceStatement );
-			singleUnitWriter.removeStatement( methodInvocation );
-
-			// Add changes to the multiple compilation units write object
-			RxLogger.info( this, "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );
-			rxMultipleUnitsWriter.addCompilationUnit( icu );
+			SimpleName simpleName = (SimpleName) expression;
+			String newName = RefactoringUtils.cleanSwingWorkerName( simpleName.getIdentifier() );
+			singleUnitWriter.replaceSimpleName( simpleName, newName );
 		}
-	}
-
-	private String getNewMethodName( String methodName )
-	{
-		String newMethodName = SwingWorkerInfo.getPublicMethodsMap().get( methodName );
-
-		if ( newMethodName == null )
-		{
-			newMethodName = methodName;
-		}
-		return newMethodName;
-	}
-
-	private boolean isMethodNameStart( String methodName, int targetIndex )
-	{
-		return targetIndex == 0 || methodName.charAt( targetIndex - 1 ) <= 'a' || methodName.charAt( targetIndex - 1 ) >= 'Z';
 	}
 }

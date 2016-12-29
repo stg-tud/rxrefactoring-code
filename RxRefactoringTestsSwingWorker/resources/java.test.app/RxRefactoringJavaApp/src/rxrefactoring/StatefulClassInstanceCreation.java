@@ -17,13 +17,13 @@ public class StatefulClassInstanceCreation
 			@Override
 			protected String doInBackground() throws Exception
 			{
-				printInfo( "Entering doInBackground() method" );
-				for ( int i = 0; i < AMOUNT_OF_WORK * 2; i = i + 2 )
+				this.printInfo( "Entering doInBackground() method" );
+				for ( int i = 0; i < this.AMOUNT_OF_WORK * 2; i = i + 2 )
 				{
 					publish( i, i + 1 );
-					Thread.sleep( TIME_FOR_WORK_UNIT );
+					Thread.sleep( this.TIME_FOR_WORK_UNIT );
 				}
-				printInfo( "doInBackground() finished successfully" );
+				this.printInfo( "doInBackground() finished successfully" );
 				return "Async Result";
 			}
 
@@ -32,8 +32,8 @@ public class StatefulClassInstanceCreation
 			{
 				for ( Integer number : chunks )
 				{
-					printInfo( "Processing " + number );
-					setProgress( number * 100 / ( AMOUNT_OF_WORK * 2 ) );
+					this.printInfo( "Processing " + number );
+					setProgress( number * 100 / ( this.AMOUNT_OF_WORK * 2 ) );
 				}
 			}
 
@@ -42,17 +42,17 @@ public class StatefulClassInstanceCreation
 			{
 				try
 				{
-					printInfo( "Entering done() method" );
+					this.printInfo( "Entering done() method" );
 					String result = get();
-					printInfo( "doInBackground() result = " + result );
+					this.printInfo( "doInBackground() result = " + result );
 				}
 				catch ( InterruptedException e )
 				{
-					printInfo( "InterruptedException" );
+					this.printInfo( "InterruptedException" );
 				}
 				catch ( ExecutionException e )
 				{
-					printInfo( "ExecutionException" );
+					this.printInfo( "ExecutionException" );
 				}
 			}
 

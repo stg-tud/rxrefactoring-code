@@ -65,27 +65,22 @@ public class AssignmentWorker extends GeneralWorker
 						RxLogger.info( this, "METHOD=refactor - Refactoring assignment in: " + icu.getElementName() );
 						refactorAssignment( icu, singleUnitWriter, refactoringVisitor, assignment );
 					}
-					else
-					{
-						Expression leftHandSide = assignment.getLeftHandSide();
-						if (leftHandSide instanceof SimpleName)
-						{
-							RxLogger.info( this, "METHOD=refactor - Refactoring variable name: " + icu.getElementName() );
-							SimpleName simpleName = (SimpleName) leftHandSide;
-							String newIdentifier = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
-							singleUnitWriter.replaceSimpleName(simpleName, newIdentifier);
-						}
-					}
 				}
-				else
+				else if ( rightHandSide instanceof SimpleName )
 				{
-					Statement referenceStatement = ASTUtil.findParent( assignment, Statement.class );
-					String cleanedStatement = RefactoringUtils.cleanSwingWorkerName( referenceStatement.toString() );
-					Statement newStatement = ASTNodeFactory.createSingleStatementFromText( ast, cleanedStatement );
+					RxLogger.info( this, "METHOD=refactor - Refactoring right variable name: " + icu.getElementName() );
+					SimpleName simpleName = (SimpleName) rightHandSide;
+					String newIdentifier = RefactoringUtils.cleanSwingWorkerName( simpleName.getIdentifier() );
+					singleUnitWriter.replaceSimpleName( simpleName, newIdentifier );
+				}
 
-					RxLogger.info( this, "METHOD=refactor - Copying changes to the single unit writer: " + icu.getElementName() );
-					singleUnitWriter.addBefore( newStatement, referenceStatement );
-					singleUnitWriter.removeStatement( assignment );
+				Expression leftHandSide = assignment.getLeftHandSide();
+				if ( leftHandSide instanceof SimpleName )
+				{
+					RxLogger.info( this, "METHOD=refactor - Refactoring left variable name: " + icu.getElementName() );
+					SimpleName simpleName = (SimpleName) leftHandSide;
+					String newIdentifier = RefactoringUtils.cleanSwingWorkerName( simpleName.getIdentifier() );
+					singleUnitWriter.replaceSimpleName( simpleName, newIdentifier );
 				}
 
 				// Add changes to the multiple compilation units write object
@@ -125,7 +120,7 @@ public class AssignmentWorker extends GeneralWorker
 	{
 		String icuName = icu.getElementName();
 		SimpleName swingWorkerName = (SimpleName) assignment.getLeftHandSide();
-		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.toString() );
+		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.getIdentifier() );
 		SWSubscriberDto subscriberDto = createSWSubscriberDto( rxObserverName, icuName, refactoringVisitor );
 
 		Map<String, Object> subscriberData = new HashMap<>();
@@ -169,7 +164,7 @@ public class AssignmentWorker extends GeneralWorker
 		singleUnitWriter.addBefore( observableStatement, referenceStatement );
 
 		SimpleName swingWorkerName = (SimpleName) assignment.getLeftHandSide();
-		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.toString() );
+		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.getIdentifier() );
 		RxObserverDto observerDto = createObserverDto( rxObserverName, refactoringVisitor, observableDto );
 		observerDto.setVariableDecl( false );
 
