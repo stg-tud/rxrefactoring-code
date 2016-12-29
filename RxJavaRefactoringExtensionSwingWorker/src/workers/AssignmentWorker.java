@@ -38,9 +38,9 @@ public class AssignmentWorker extends GeneralWorker
 	protected WorkerStatus refactor()
 	{
 		Map<ICompilationUnit, List<Assignment>> varDeclMap = collector.getAssigmentsMap();
-		int numUnits = collector.getNumberOfCompilationUnits();
-		monitor.beginTask( getClass().getSimpleName(), numUnits );
-		RxLogger.info( this, "METHOD=refactor - Total number of compilation units: " + numUnits );
+		int total = varDeclMap.values().size();
+		monitor.beginTask( getClass().getSimpleName(), total );
+		RxLogger.info( this, "METHOD=refactor - Total number of <<Assignment>>: " + total );
 
 		for ( Map.Entry<ICompilationUnit, List<Assignment>> assignmentEntry : varDeclMap.entrySet() )
 		{

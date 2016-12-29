@@ -38,9 +38,9 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 	protected WorkerStatus refactor()
 	{
 		Map<ICompilationUnit, List<ClassInstanceCreation>> classInstanceMap = collector.getClassInstanceMap();
-		int numUnits = collector.getNumberOfCompilationUnits();
-		monitor.beginTask( getClass().getSimpleName(), numUnits );
-		RxLogger.info( this, "METHOD=refactor - Total number of compilation units: " + numUnits );
+		int total = classInstanceMap.values().size();
+		monitor.beginTask( getClass().getSimpleName(), total );
+		RxLogger.info( this, "METHOD=refactor - Total number of <<ClassInstanceCreation>>: " + total );
 
 		for ( Map.Entry<ICompilationUnit, List<ClassInstanceCreation>> classInsCreationEntry : classInstanceMap.entrySet() )
 		{

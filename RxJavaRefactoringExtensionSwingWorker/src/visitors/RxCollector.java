@@ -2,6 +2,7 @@ package visitors;
 
 import java.util.*;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
 
@@ -14,6 +15,7 @@ import rxjavarefactoring.framework.refactoring.AbstractCollector;
  */
 public class RxCollector extends AbstractCollector
 {
+	private IProject project;
 	private final Map<ICompilationUnit, List<TypeDeclaration>> typeDeclMap;
 	private final Map<ICompilationUnit, List<FieldDeclaration>> fieldDeclMap;
 	private final Map<ICompilationUnit, List<Assignment>> assigmentsMap;
@@ -23,9 +25,10 @@ public class RxCollector extends AbstractCollector
 	private final Map<ICompilationUnit, List<SingleVariableDeclaration>> singleVarDeclMap;
 	private final Map<ICompilationUnit, List<MethodInvocation>> methodInvocationsMap;
 
-	public RxCollector( String collectorName )
+	public RxCollector( IProject project, String collectorName )
 	{
 		super( collectorName );
+		this.project = project;
 		typeDeclMap = new HashMap<>();
 		fieldDeclMap = new HashMap<>();
 		assigmentsMap = new HashMap<>();
@@ -129,5 +132,20 @@ public class RxCollector extends AbstractCollector
 		allCompilationUnits.addAll( classInstanceMap.keySet() );
 		allCompilationUnits.addAll( singleVarDeclMap.keySet() );
 		return allCompilationUnits.size();
+	}
+
+	@Override
+	public String getInfo()
+	{
+		return "\nRxCollector: " + getNumberOfCompilationUnits() + " java file(s).\n" +
+				"Project = " + project.getName() + "\n" +
+				"TypeDeclarations = " + typeDeclMap.values().size() + "\n" +
+				"FieldDeclarations = " + fieldDeclMap.values().size() + "\n" +
+				"Assignments = " + assigmentsMap.values().size() + "\n" +
+				"VariableDeclarationStatements = " + varDeclMap.values().size() + "\n" +
+				"SimpleNames = " + simpleNamesMap.values().size() + "\n" +
+				"ClassInstanceCreations = " + classInstanceMap.values().size() + "\n" +
+				"SingleVariableDeclarations = " + singleVarDeclMap.values().size() + "\n" +
+				"MethodInvocations = " + methodInvocationsMap.values().size();
 	}
 }

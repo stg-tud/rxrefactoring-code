@@ -3,6 +3,7 @@ package rxjavarefactoring;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -28,7 +29,7 @@ public class SwingWorkerExtension implements RxJavaRefactoringExtension<Collecto
 	}
 
 	@Override
-	public Collector getASTNodesCollectorInstance()
+	public Collector getASTNodesCollectorInstance(IProject project)
 	{
 		return new Collector( COLLECTOR_NAME );
 	}

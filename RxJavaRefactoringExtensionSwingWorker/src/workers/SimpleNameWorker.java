@@ -32,9 +32,9 @@ public class SimpleNameWorker extends AbstractRefactorWorker<RxCollector>
 	protected WorkerStatus refactor()
 	{
 		Map<ICompilationUnit, List<SimpleName>> simpleNamesMap = collector.getSimpleNamesMap();
-		int numUnits = collector.getNumberOfCompilationUnits();
-		monitor.beginTask( getClass().getSimpleName(), numUnits );
-		RxLogger.info( this, "METHOD=refactor - Total number of compilation units: " + numUnits );
+		int total = simpleNamesMap.values().size();
+		monitor.beginTask( getClass().getSimpleName(), total );
+		RxLogger.info( this, "METHOD=refactor - Total number of <<SimpleName>>: " + total );
 
 		for ( Map.Entry<ICompilationUnit, List<SimpleName>> simpleNameEntry : simpleNamesMap.entrySet() )
 		{

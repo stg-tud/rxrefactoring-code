@@ -1,13 +1,11 @@
 package rxjavarefactoring;
 
-import java.io.File;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.io.FileUtils;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.ISafeRunnable;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SafeRunner;
@@ -54,13 +52,13 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 	}
 
 	@Override
-	public void refactorCompilationUnits( Map<String, ICompilationUnit> units )
+	public void refactorCompilationUnits( IProject project, Map<String, ICompilationUnit> units )
 	{
 		RxLogger.info( this, "METHOD=refactorCompilationUnits - # units: " + units.size() );
 		AbstractCollector collector;
 		try
 		{
-			collector = this.extension.getASTNodesCollectorInstance();
+			collector = this.extension.getASTNodesCollectorInstance( project );
 			if ( collector == null )
 			{
 				new IllegalArgumentException( "getASTNodesCollectorInstance must return not null" );

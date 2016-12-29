@@ -28,6 +28,24 @@ public abstract class AbstractCollector extends ASTVisitor
 	}
 
 	/**
+	 * Override method to print information after
+	 * a project has been refactored.
+	 *
+	 * The default implementation returns the name
+	 * of the collector
+	 * 
+	 * @return relevant information. For Example:<br>
+	 *         - Number of refactored files
+	 *         - Number of refactored X elements
+	 *         - Number of refactored Y elements
+	 *         - ...
+	 */
+	public String getInfo()
+	{
+		return collectorName;
+	}
+
+	/**
 	 * Add or updates the list of a map given its key
 	 * 
 	 * @param cu

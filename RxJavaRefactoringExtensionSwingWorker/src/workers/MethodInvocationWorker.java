@@ -31,9 +31,9 @@ public class MethodInvocationWorker extends AbstractRefactorWorker<RxCollector>
 	protected WorkerStatus refactor()
 	{
 		Map<ICompilationUnit, List<MethodInvocation>> methodInvocationMap = collector.getMethodInvocationsMap();
-		int numUnits = collector.getNumberOfCompilationUnits();
-		monitor.beginTask( getClass().getSimpleName(), numUnits );
-		RxLogger.info( this, "METHOD=refactor - Total number of compilation units: " + numUnits );
+		int total = methodInvocationMap.values().size();
+		monitor.beginTask( getClass().getSimpleName(), total );
+		RxLogger.info( this, "METHOD=refactor - Total number of <<MethodInvocation>>: " + total );
 
 		for ( Map.Entry<ICompilationUnit, List<MethodInvocation>> invocationEntry : methodInvocationMap.entrySet() )
 		{

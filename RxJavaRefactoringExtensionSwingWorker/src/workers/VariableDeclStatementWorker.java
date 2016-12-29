@@ -38,9 +38,9 @@ public class VariableDeclStatementWorker extends GeneralWorker
 	protected WorkerStatus refactor()
 	{
 		Map<ICompilationUnit, List<VariableDeclarationStatement>> varDeclMap = collector.getVarDeclMap();
-		int numUnits = collector.getNumberOfCompilationUnits();
-		monitor.beginTask( getClass().getSimpleName(), numUnits );
-		RxLogger.info( this, "METHOD=refactor - Total number of compilation units: " + numUnits );
+		int total = varDeclMap.values().size();
+		monitor.beginTask( getClass().getSimpleName(), total );
+		RxLogger.info( this, "METHOD=refactor - Total number of <<VariableDeclarationStatement>>: " + total );
 
 		for ( Map.Entry<ICompilationUnit, List<VariableDeclarationStatement>> varDelcEntry : varDeclMap.entrySet() )
 		{

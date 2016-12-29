@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -45,9 +46,9 @@ public class Extension implements RxJavaRefactoringExtension<RxCollector>
 	}
 
 	@Override
-	public RxCollector getASTNodesCollectorInstance()
+	public RxCollector getASTNodesCollectorInstance(IProject project)
 	{
-		return new RxCollector( COLLECTOR_NAME );
+		return new RxCollector( project, COLLECTOR_NAME );
 	}
 
 	@Override

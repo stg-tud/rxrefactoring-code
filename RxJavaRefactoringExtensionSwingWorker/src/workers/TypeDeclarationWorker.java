@@ -35,9 +35,9 @@ public class TypeDeclarationWorker extends GeneralWorker
 	protected WorkerStatus refactor()
 	{
 		Map<ICompilationUnit, List<TypeDeclaration>> typeDeclMap = collector.getTypeDeclMap();
-		int numUnits = collector.getNumberOfCompilationUnits();
-		monitor.beginTask( getClass().getSimpleName(), numUnits );
-		RxLogger.info( this, "METHOD=refactor - Total number of compilation units: " + numUnits );
+		int total = typeDeclMap.values().size();
+		monitor.beginTask( getClass().getSimpleName(), total );
+		RxLogger.info( this, "METHOD=refactor - Total number of <<TypeDeclaration>>: " + total );
 
 		for ( Map.Entry<ICompilationUnit, List<TypeDeclaration>> typeDeclEntry : typeDeclMap.entrySet() )
 		{

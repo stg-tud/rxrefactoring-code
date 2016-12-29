@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.ICompilationUnit;
 
 import rxjavarefactoring.framework.api.RxJavaRefactoringExtension;
@@ -28,7 +29,7 @@ public class Extension implements RxJavaRefactoringExtension<StubCollector>
 	}
 
 	@Override
-	public StubCollector getASTNodesCollectorInstance()
+	public StubCollector getASTNodesCollectorInstance( IProject project )
 	{
 		return null;
 	}
@@ -40,7 +41,7 @@ public class Extension implements RxJavaRefactoringExtension<StubCollector>
 	}
 
 	@Override
-	public Set<AbstractRefactorWorker<StubCollector>> getRefactoringWorkers(StubCollector collector )
+	public Set<AbstractRefactorWorker<StubCollector>> getRefactoringWorkers( StubCollector collector )
 	{
 		return null;
 	}

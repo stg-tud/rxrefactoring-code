@@ -55,6 +55,7 @@ public class RefactoringProcessor extends AbstractRefactoringProcessor
 
 		startWorkers( workers );
 		executeChanges( monitor );
+		RxLogger.info( this, collector.getInfo() );
 		return null;
 	}
 }

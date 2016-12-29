@@ -33,9 +33,9 @@ public class SingleVariableDeclWorker extends AbstractRefactorWorker<RxCollector
 	protected WorkerStatus refactor()
 	{
 		Map<ICompilationUnit, List<SingleVariableDeclaration>> singleVarDeclMap = collector.getSingleVarDeclMap();
-		int numUnits = collector.getNumberOfCompilationUnits();
-		monitor.beginTask( getClass().getSimpleName(), numUnits );
-		RxLogger.info( this, "METHOD=refactor - Total number of compilation units: " + numUnits );
+		int total = singleVarDeclMap.values().size();
+		monitor.beginTask( getClass().getSimpleName(), total );
+		RxLogger.info( this, "METHOD=refactor - Total number of <<SingleVariableDeclaration>>: " + total );
 
 		for ( Map.Entry<ICompilationUnit, List<SingleVariableDeclaration>> singVarDeclEntry : singleVarDeclMap.entrySet() )
 		{

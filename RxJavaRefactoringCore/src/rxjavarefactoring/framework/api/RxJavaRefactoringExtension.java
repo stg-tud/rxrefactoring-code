@@ -2,6 +2,7 @@ package rxjavarefactoring.framework.api;
 
 import java.util.Set;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.ASTNode;
 
@@ -22,8 +23,9 @@ public interface RxJavaRefactoringExtension<CollectorType extends AbstractCollec
 	 * 2.) Return an instance of XYZ. {@code new XYZ()}
 	 * 
 	 * @return an instance of XYZ to collect information
+	 * @param project
 	 */
-	CollectorType getASTNodesCollectorInstance();
+	CollectorType getASTNodesCollectorInstance(IProject project);
 
 	/**
 	 * This method is responsible for adding the relevant information

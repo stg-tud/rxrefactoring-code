@@ -86,11 +86,11 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 
 	/**
 	 * refactor each compilation unit separately
-	 * 
+	 *
+	 * @param project
 	 * @param units
-	 *            compilation units
 	 */
-	protected abstract void refactorCompilationUnits( Map<String, ICompilationUnit> units );
+	protected abstract void refactorCompilationUnits(IProject project, Map<String, ICompilationUnit> units);
 
 	/**
 	 * returns the directory name that contains all necessary dependencies to perform
@@ -114,7 +114,7 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 			String dependenciesDir = Paths.get( location, getDependenciesDirectoryName() ).toAbsolutePath().toString();
 			updateClassPath( dependenciesDir, javaProject );
 			compilationUnitsMap = getCompilationUnits( javaProject );
-			refactorCompilationUnits( compilationUnitsMap );
+			refactorCompilationUnits( project, compilationUnitsMap );
 		}
 		catch ( JavaModelException e )
 		{

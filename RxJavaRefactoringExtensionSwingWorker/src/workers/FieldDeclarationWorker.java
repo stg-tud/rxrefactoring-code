@@ -37,9 +37,9 @@ public class FieldDeclarationWorker extends GeneralWorker
 	protected WorkerStatus refactor()
 	{
 		Map<ICompilationUnit, List<FieldDeclaration>> fieldDeclMap = collector.getFieldDeclMap();
-		int numUnits = collector.getNumberOfCompilationUnits();
-		monitor.beginTask( getClass().getSimpleName(), numUnits );
-		RxLogger.info( this, "METHOD=refactor - Total number of compilation units: " + numUnits );
+		int total = fieldDeclMap.values().size();
+		monitor.beginTask( getClass().getSimpleName(), total );
+		RxLogger.info( this, "METHOD=refactor - Total number of <<FieldDeclaration>>: " + total );
 
 		for ( Map.Entry<ICompilationUnit, List<FieldDeclaration>> fieldDeclEntry : fieldDeclMap.entrySet() )
 		{
