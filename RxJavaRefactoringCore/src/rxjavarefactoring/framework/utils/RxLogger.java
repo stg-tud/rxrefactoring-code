@@ -5,6 +5,8 @@ import java.io.StringWriter;
 
 import org.eclipse.ui.console.*;
 
+import rxjavarefactoring.RxJavaRefactoringApp;
+
 /**
  * Description: This class is responsible for managing logging task<br>
  * Author: Grebiel Jose Ifill Brito<br>
@@ -29,9 +31,16 @@ public final class RxLogger
 	 */
 	public static void info( Object currentClass, String text )
 	{
-		MessageConsole myConsole = findConsole( CONSOLE_NAME );
-		MessageConsoleStream out = myConsole.newMessageStream();
-		out.println( "[ INFO ] " + currentClass.getClass().getSimpleName() + ": " + text );
+		if ( !RxJavaRefactoringApp.isRunningForTests() )
+		{
+			MessageConsole myConsole = findConsole( CONSOLE_NAME );
+			MessageConsoleStream out = myConsole.newMessageStream();
+			out.println( "[ INFO ] " + currentClass.getClass().getSimpleName() + ": " + text );
+		}
+		else
+		{
+			System.out.println( "[ INFO ] " + currentClass.getClass().getSimpleName() + ": " + text );
+		}
 	}
 
 	/**
@@ -46,8 +55,16 @@ public final class RxLogger
 	 */
 	public static void error( Object currentClass, String text, Throwable throwable )
 	{
-		String errorMessage = "[ ERROR ] " + currentClass.getClass().getSimpleName() + ": " + text;
-		printErrorToConsole( errorMessage, throwable );
+		if ( !RxJavaRefactoringApp.isRunningForTests() )
+		{
+			String errorMessage = "[ ERROR ] " + currentClass.getClass().getSimpleName() + ": " + text;
+			printErrorToConsole( errorMessage, throwable );
+		}
+		else
+		{
+			System.err.println( "[ ERROR ] " + currentClass.getClass().getSimpleName() + ": " + text );
+			throwable.printStackTrace();
+		}
 	}
 
 	/**
@@ -58,8 +75,16 @@ public final class RxLogger
 	 */
 	public static void notifyExceptionInClient( Throwable throwable )
 	{
-		String errorMessage = "[ ERROR ] Exception in client";
-		printErrorToConsole( errorMessage, throwable );
+		if ( !RxJavaRefactoringApp.isRunningForTests() )
+		{
+			String errorMessage = "[ ERROR ] Exception in client";
+			printErrorToConsole( errorMessage, throwable );
+		}
+		else
+		{
+			System.err.println( "[ ERROR ] Exception in client" );
+			throwable.printStackTrace();
+		}
 	}
 
 	private static MessageConsole findConsole( String name )
