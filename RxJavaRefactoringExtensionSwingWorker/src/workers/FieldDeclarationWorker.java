@@ -56,10 +56,10 @@ public class FieldDeclarationWorker extends GeneralWorker
 				if ( type instanceof ParameterizedType )
 				{
 					type = ( (ParameterizedType) type ).getType();
-					if ( ASTUtil.isClassOf( type, SwingWorkerInfo.getBinaryName() ) )
-					{
-						singleUnitWriter.replaceType( (SimpleType) type, "SWSubscriber" );
-					}
+				}
+				if ( ASTUtil.isClassOf( type, SwingWorkerInfo.getBinaryName() ) )
+				{
+					singleUnitWriter.replaceType( (SimpleType) type, "SWSubscriber" );
 				}
 
 				RxLogger.info( this, "METHOD=refactor - Changing field name: " + icu.getElementName() );

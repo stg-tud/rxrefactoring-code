@@ -13,4 +13,6 @@ public class FieldDeclaration
 			return "AsyncResult";
 		}
 	};
+
+	private static SwingWorker aThirdSwingWorker;
 }

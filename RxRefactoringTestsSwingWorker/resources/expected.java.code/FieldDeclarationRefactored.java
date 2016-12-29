@@ -33,4 +33,6 @@ public class FieldDeclaration
 			}, Emitter.BackpressureMode.BUFFER );
 		}
 	}
+
+	private static SWSubscriber aThirdRxObserver;
 }
