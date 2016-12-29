@@ -137,7 +137,8 @@ public class RxCollector extends AbstractCollector
 	@Override
 	public String getInfo()
 	{
-		return "\nRxCollector: " + getNumberOfCompilationUnits() + " java file(s).\n" +
+		return "\n******************************************************************\n" +
+				"RxCollector: " + getNumberOfCompilationUnits() + " java file(s).\n" +
 				"Project = " + project.getName() + "\n" +
 				"TypeDeclarations = " + typeDeclMap.values().size() + "\n" +
 				"FieldDeclarations = " + fieldDeclMap.values().size() + "\n" +
@@ -146,6 +147,7 @@ public class RxCollector extends AbstractCollector
 				"SimpleNames = " + simpleNamesMap.values().size() + "\n" +
 				"ClassInstanceCreations = " + classInstanceMap.values().size() + "\n" +
 				"SingleVariableDeclarations = " + singleVarDeclMap.values().size() + "\n" +
-				"MethodInvocations = " + methodInvocationsMap.values().size();
+				"MethodInvocations = " + methodInvocationsMap.values().size() +
+				"\n******************************************************************\n";
 	}
 }
