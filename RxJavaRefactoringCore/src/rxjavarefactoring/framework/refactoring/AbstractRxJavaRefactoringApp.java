@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.util.*;
 
+import org.apache.commons.io.FileUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -16,6 +17,7 @@ import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.jdt.core.*;
 
 import rx.Observable;
+import rxjavarefactoring.framework.api.RxJavaRefactoringExtension;
 import rxjavarefactoring.framework.utils.RxLogger;
 
 /**
@@ -29,9 +31,11 @@ import rxjavarefactoring.framework.utils.RxLogger;
  */
 public abstract class AbstractRxJavaRefactoringApp implements IApplication
 {
-	private static final String PACKAGE_SEPARATOR = ".";
 	protected Map<ICompilationUnit, String> originalCompilationUnitVsNewSourceCodeMap;
 	protected Map<String, ICompilationUnit> compilationUnitsMap;
+	protected RxJavaRefactoringExtension extension;
+
+	private static final String PACKAGE_SEPARATOR = ".";
 
 	public AbstractRxJavaRefactoringApp()
 	{
@@ -55,14 +59,6 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 
 		return null;
 	}
-
-	/**
-	 * Copy jar files of an extension given the their locations
-	 * 
-	 * @param location
-	 *            location of jar files
-	 */
-	protected abstract void addJarFiles( String location );
 
 	@Override
 	public void stop()
@@ -115,8 +111,8 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 			final String location = project.getLocation().toPortableString();
 			addJarFiles( location );
 			project.refreshLocal( IResource.DEPTH_INFINITE, null );
-			String dependenciesDir = Paths.get(location, getDependenciesDirectoryName()).toAbsolutePath().toString();
-			updateClassPath(dependenciesDir, javaProject );
+			String dependenciesDir = Paths.get( location, getDependenciesDirectoryName() ).toAbsolutePath().toString();
+			updateClassPath( dependenciesDir, javaProject );
 			compilationUnitsMap = getCompilationUnits( javaProject );
 			refactorCompilationUnits( compilationUnitsMap );
 		}
@@ -130,6 +126,27 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 		}
 	}
 
+	private void addJarFiles( String location )
+	{
+		try
+		{
+			String jarFilesPath = this.extension.getJarFilesPath();
+			if ( jarFilesPath == null )
+			{
+				return;
+			}
+
+			// copy jar files to DEPENDENCIES_DIRECTORY
+			String destinationDirectory = Paths.get( location, getDependenciesDirectoryName() ).toAbsolutePath().toString();
+			FileUtils.copyDirectory( new File( jarFilesPath ), new File( destinationDirectory ) );
+		}
+		catch ( Throwable throwable )
+		{
+			RxLogger.notifyExceptionInClient( throwable );
+			return;
+		}
+	}
+
 	private void updateClassPath( String location, IJavaProject javaProject ) throws JavaModelException
 	{
 		IClasspathEntry[] oldEntries = javaProject.getRawClasspath();
@@ -137,30 +154,29 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 		if ( libs.isDirectory() && libs.exists() )
 		{
 			String[] allLibs = libs.list();
-			List<String> sourceLibs = Observable.from(allLibs)
-					.filter(lib -> lib.contains("-sources.jar"))
-					.map(lib -> lib.replace("-sources", ""))
+			List<String> sourceLibs = Observable.from( allLibs )
+					.filter( lib -> lib.contains( "-sources.jar" ) )
+					.map( lib -> lib.replace( "-sources", "" ) )
 					.toList().toBlocking().single();
 
-			List<IClasspathEntry> cps = new ArrayList<>();
+			Set<IClasspathEntry> cps = new HashSet<>();
 			for ( String lib : allLibs )
 			{
-				if (lib.contains("-sources.jar"))
+				if ( lib.contains( "-sources.jar" ) )
 				{
 					continue;
 				}
 				String ap = libs.getAbsolutePath() + File.separator + lib;
 				IPath sourcesPath = null;
-				if (sourceLibs.contains(lib))
+				if ( sourceLibs.contains( lib ) )
 				{
-					sourcesPath = Path.fromOSString(ap.replace(".jar", "-sources.jar"));
+					sourcesPath = Path.fromOSString( ap.replace( ".jar", "-sources.jar" ) );
 				}
 				cps.add( JavaCore.newLibraryEntry( Path.fromOSString( ap ), sourcesPath, null ) );
 			}
 			for ( IClasspathEntry oldEntry : oldEntries )
 			{
-				if ( oldEntry.getEntryKind() != IClasspathEntry.CPE_LIBRARY )
-					cps.add( oldEntry );
+				cps.add( oldEntry );
 			}
 			javaProject.setRawClasspath( cps.toArray( new IClasspathEntry[ 0 ] ), null );
 		}

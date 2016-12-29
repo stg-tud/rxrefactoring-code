@@ -35,7 +35,6 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 	private static final String DEPENDENCIES_DIRECTORY = "all-deps";
 	private Set<String> targetClasses;
 	private static boolean runningForTests = false;
-	private RxJavaRefactoringExtension extension;
 	private String commandId;
 
 	@Override
@@ -52,28 +51,6 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 	public void setCommandId( String commandId )
 	{
 		this.commandId = commandId;
-	}
-
-	@Override
-	protected void addJarFiles( String location )
-	{
-		try
-		{
-			String jarFilesPath = this.extension.getJarFilesPath();
-			if ( jarFilesPath == null )
-			{
-				return;
-			}
-
-			// copy jar files to DEPENDENCIES_DIRECTORY
-			String destinationDirectory = Paths.get( location, getDependenciesDirectoryName() ).toAbsolutePath().toString();
-			FileUtils.copyDirectory( new File( jarFilesPath ), new File( destinationDirectory ) );
-		}
-		catch ( Throwable throwable )
-		{
-			RxLogger.notifyExceptionInClient( throwable );
-			return;
-		}
 	}
 
 	@Override
