@@ -6,14 +6,13 @@ import java.util.Map;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
 
-import domain.SwingWorkerInfo;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.RxLogger;
-import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
 import rxjavarefactoring.processor.WorkerStatus;
 import utils.RefactoringUtils;
 import visitors.RxCollector;
+import writer.RxSwingWorkerWriter;
 
 /**
  * Description: <br>
@@ -50,7 +49,8 @@ public class MethodInvocationWorker extends AbstractRefactorWorker<RxCollector>
 
 				// Get ast and writer
 				AST ast = methodInvocation.getAST();
-				RxSingleUnitWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, ast, getClass().getSimpleName() );
+				RxSwingWorkerWriter rxSwingWorkerWriter = new RxSwingWorkerWriter(icu, ast, getClass().getSimpleName());
+				RxSwingWorkerWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, rxSwingWorkerWriter );
 
 				// refactor invocation
 				RxLogger.info( this, "METHOD=refactor - refactoring method invocation: "
@@ -70,7 +70,7 @@ public class MethodInvocationWorker extends AbstractRefactorWorker<RxCollector>
 	private void refactorInvocation(
 			AST ast,
 			ICompilationUnit icu,
-			RxSingleUnitWriter singleUnitWriter,
+			RxSwingWorkerWriter singleUnitWriter,
 			MethodInvocation methodInvocation )
 	{
 

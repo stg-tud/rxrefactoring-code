@@ -18,6 +18,7 @@ import rxjavarefactoring.processor.WorkerStatus;
 import utils.TemplateUtils;
 import visitors.RefactoringVisitor;
 import visitors.RxCollector;
+import writer.RxSwingWorkerWriter;
 
 /**
  * Description: <br>
@@ -46,7 +47,8 @@ public class TypeDeclarationWorker extends GeneralWorker
 			for ( TypeDeclaration typeDeclaration : typeDeclEntry.getValue() )
 			{
 				AST ast = typeDeclaration.getAST();
-				RxSingleUnitWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, ast, getClass().getSimpleName() );
+				RxSwingWorkerWriter rxSwingWorkerWriter = new RxSwingWorkerWriter(icu, ast, getClass().getSimpleName());
+				RxSwingWorkerWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, rxSwingWorkerWriter );
 
 				if ( !ASTUtil.isSubclassOf( typeDeclaration, SwingWorkerInfo.getBinaryName(), true ) )
 				{
@@ -71,7 +73,7 @@ public class TypeDeclarationWorker extends GeneralWorker
 
 	private void refactorTypeDeclaration(
 			ICompilationUnit icu,
-			RxSingleUnitWriter singleUnitWriter,
+			RxSwingWorkerWriter singleUnitWriter,
 			RefactoringVisitor refactoringVisitor,
 			TypeDeclaration typeDeclaration )
 	{

@@ -20,10 +20,10 @@ import rxjavarefactoring.framework.utils.ASTUtil;
  */
 public class RxSingleUnitWriter
 {
-	private final ASTRewrite astRewriter;
-	private final CompilationUnitChange cuChange;
-	private final Set<String> addedImports;
-	private final Set<String> removedImports;
+	protected final ASTRewrite astRewriter;
+	protected final CompilationUnitChange cuChange;
+	protected final Set<String> addedImports;
+	protected final Set<String> removedImports;
 
 	public RxSingleUnitWriter( ICompilationUnit icu, AST ast, String refactoringDescription )
 	{
@@ -40,7 +40,7 @@ public class RxSingleUnitWriter
 	 * Add import declaration to the compilation unit. The imports are saved
 	 * into a list that is used by the {@link RxMultipleUnitsWriter} where they
 	 * are finally added
-	 * 
+	 *
 	 * @param importClass
 	 *            name of the class to be imported
 	 */
@@ -56,7 +56,7 @@ public class RxSingleUnitWriter
 	 * Remove import declaration from the compilation unit. The imports are
 	 * saved int a list that is used by the {@link RxMultipleUnitsWriter} where
 	 * they are finally removed
-	 * 
+	 *
 	 * @param importClass
 	 *            name of the class to be removed
 	 */
@@ -70,7 +70,7 @@ public class RxSingleUnitWriter
 
 	/**
 	 * Removes element from the compilation unit
-	 * 
+	 *
 	 * @param element
 	 *            element to be deleted
 	 */
@@ -85,7 +85,7 @@ public class RxSingleUnitWriter
 	/**
 	 * Removes statement from the compilation unit given a node contained in the
 	 * statement
-	 * 
+	 *
 	 * @param elementInTargetStatement
 	 *            a node inside of a statement
 	 */
@@ -269,11 +269,11 @@ public class RxSingleUnitWriter
 		}
 	}
 
-	public void replaceNode(ASTNode newNode, ASTNode oldNode)
+	public void replaceNode( ASTNode newNode, ASTNode oldNode )
 	{
 		synchronized ( this )
 		{
-			astRewriter.replace(oldNode, newNode, null);
+			astRewriter.replace( oldNode, newNode, null );
 		}
 	}
 
@@ -309,7 +309,7 @@ public class RxSingleUnitWriter
 
 	// ### Private Methods ###
 
-	private ListRewrite getClassBlock( ASTNode referenceNode )
+	protected ListRewrite getClassBlock( ASTNode referenceNode )
 	{
 		ASTNode currentClass = referenceNode.getParent();
 		return astRewriter.getListRewrite( currentClass, TypeDeclaration.BODY_DECLARATIONS_PROPERTY );

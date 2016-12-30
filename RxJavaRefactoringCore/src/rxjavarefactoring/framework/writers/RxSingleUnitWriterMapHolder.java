@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.dom.AST;
 
 /**
  * Description: <br>
@@ -22,20 +21,19 @@ public class RxSingleUnitWriterMapHolder
 		rxSingleUnitWriterMap = new ConcurrentHashMap<>();
 	}
 
-	public static RxSingleUnitWriter getSingleUnitWriter( ICompilationUnit icu, AST ast, String refactoringDescription )
+	public static <Writer extends RxSingleUnitWriter> Writer getSingleUnitWriter( ICompilationUnit icu, Writer rxSingleUnitWriterInstance )
 	{
 		synchronized ( lock )
 		{
 
-			RxSingleUnitWriter rxSingleUnitWriter = rxSingleUnitWriterMap.get( icu );
+			Writer rxSingleUnitWriter = (Writer) rxSingleUnitWriterMap.get( icu );
 			if ( rxSingleUnitWriter != null )
 			{
 				return rxSingleUnitWriter;
 			}
 
-			RxSingleUnitWriter newRxSingleUnitWriter = new RxSingleUnitWriter( icu, ast, refactoringDescription );
-			rxSingleUnitWriterMap.put( icu, newRxSingleUnitWriter );
-			return newRxSingleUnitWriter;
+			rxSingleUnitWriterMap.put( icu, rxSingleUnitWriterInstance );
+			return rxSingleUnitWriterInstance;
 		}
 	}
 

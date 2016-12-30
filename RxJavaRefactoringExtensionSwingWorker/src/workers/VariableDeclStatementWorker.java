@@ -14,13 +14,13 @@ import domain.SwingWorkerInfo;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.RxLogger;
-import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
 import rxjavarefactoring.processor.WorkerStatus;
 import utils.RefactoringUtils;
 import utils.TemplateUtils;
 import visitors.RefactoringVisitor;
 import visitors.RxCollector;
+import writer.RxSwingWorkerWriter;
 
 /**
  * Description: <br>
@@ -49,7 +49,8 @@ public class VariableDeclStatementWorker extends GeneralWorker
 			for ( VariableDeclarationStatement varDeclStatement : varDelcEntry.getValue() )
 			{
 				AST ast = varDeclStatement.getAST();
-				RxSingleUnitWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, ast, getClass().getSimpleName() );
+				RxSwingWorkerWriter rxSwingWorkerWriter = new RxSwingWorkerWriter(icu, ast, getClass().getSimpleName());
+				RxSwingWorkerWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, rxSwingWorkerWriter );
 
 				VariableDeclarationFragment fragment = (VariableDeclarationFragment) varDeclStatement.fragments().get( 0 );
 				Expression initializer = fragment.getInitializer();
@@ -108,7 +109,7 @@ public class VariableDeclStatementWorker extends GeneralWorker
 
 	private void refactorVarDecl(
 			ICompilationUnit icu,
-			RxSingleUnitWriter singleUnitWriter,
+			RxSwingWorkerWriter singleUnitWriter,
 			RefactoringVisitor refactoringVisitor,
 			VariableDeclarationStatement varDeclStatement,
 			VariableDeclarationFragment fragment )
@@ -128,7 +129,7 @@ public class VariableDeclStatementWorker extends GeneralWorker
 
 	private void refactorStatefulSwingWorker(
 			ICompilationUnit icu,
-			RxSingleUnitWriter singleUnitWriter,
+			RxSwingWorkerWriter singleUnitWriter,
 			RefactoringVisitor refactoringVisitor,
 			VariableDeclarationStatement varDeclStatement,
 			VariableDeclarationFragment fragment )
@@ -158,7 +159,7 @@ public class VariableDeclStatementWorker extends GeneralWorker
 
 	private void refactorStatelessSwingWorker(
 			ICompilationUnit icu,
-			RxSingleUnitWriter singleUnitWriter,
+			RxSwingWorkerWriter singleUnitWriter,
 			RefactoringVisitor refactoringVisitor,
 			VariableDeclarationStatement varDeclStatement,
 			VariableDeclarationFragment fragment )

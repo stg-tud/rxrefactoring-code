@@ -148,6 +148,6 @@ public class RxCollector extends AbstractCollector
 				"ClassInstanceCreations = " + classInstanceMap.values().size() + "\n" +
 				"SingleVariableDeclarations = " + singleVarDeclMap.values().size() + "\n" +
 				"MethodInvocations = " + methodInvocationsMap.values().size() +
-				"\n******************************************************************\n";
+				"\n******************************************************************";
 	}
 }

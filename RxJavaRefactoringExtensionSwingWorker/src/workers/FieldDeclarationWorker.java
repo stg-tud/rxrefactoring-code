@@ -4,22 +4,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import domain.SWSubscriberDto;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
 
+import domain.SWSubscriberDto;
 import domain.SwingWorkerInfo;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
-import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.RxLogger;
-import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
 import rxjavarefactoring.processor.WorkerStatus;
 import utils.RefactoringUtils;
 import utils.TemplateUtils;
 import visitors.RefactoringVisitor;
 import visitors.RxCollector;
+import writer.RxSwingWorkerWriter;
 
 /**
  * Description: <br>
@@ -49,7 +48,8 @@ public class FieldDeclarationWorker extends GeneralWorker
 			{
 				// Get ast and writer
 				AST ast = fieldDeclaration.getAST();
-				RxSingleUnitWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, ast, getClass().getSimpleName() );
+				RxSwingWorkerWriter rxSwingWorkerWriter = new RxSwingWorkerWriter(icu, ast, getClass().getSimpleName());
+				RxSwingWorkerWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, rxSwingWorkerWriter );
 
 				RxLogger.info( this, "METHOD=refactor - Changing type: " + icu.getElementName() );
 				Type type = fieldDeclaration.getType();
@@ -95,7 +95,7 @@ public class FieldDeclarationWorker extends GeneralWorker
 
 	private void refactor(
 			ICompilationUnit icu,
-			RxSingleUnitWriter singleUnitWriter,
+			RxSwingWorkerWriter singleUnitWriter,
 			RefactoringVisitor refactoringVisitor,
 			FieldDeclaration fieldDeclaration)
 	{

@@ -14,13 +14,13 @@ import domain.SwingWorkerInfo;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.RxLogger;
-import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
 import rxjavarefactoring.processor.WorkerStatus;
 import utils.RefactoringUtils;
 import utils.TemplateUtils;
 import visitors.RefactoringVisitor;
 import visitors.RxCollector;
+import writer.RxSwingWorkerWriter;
 
 /**
  * Description: <br>
@@ -54,7 +54,8 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 				}
 
 				AST ast = classInstanceCreation.getAST();
-				RxSingleUnitWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, ast, getClass().getSimpleName() );
+				RxSwingWorkerWriter rxSwingWorkerWriter = new RxSwingWorkerWriter(icu, ast, getClass().getSimpleName());
+				RxSwingWorkerWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, rxSwingWorkerWriter );
 
 				// Collect details about the SwingWorker
 				RxLogger.info( this, "METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName() );
@@ -86,7 +87,7 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 
 	private void refactorClassInstanceCreation(
 			ICompilationUnit icu,
-			RxSingleUnitWriter singleUnitWriter,
+			RxSwingWorkerWriter singleUnitWriter,
 			RefactoringVisitor refactoringVisitor,
 			ClassInstanceCreation classInstanceCreation )
 	{
@@ -119,7 +120,7 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 
 	private void refactorStatefulSwingWorker(
 			ICompilationUnit icu,
-			RxSingleUnitWriter singleUnitWriter,
+			RxSwingWorkerWriter singleUnitWriter,
 			RefactoringVisitor refactoringVisitor,
 			ClassInstanceCreation classInstanceCreation )
 	{
@@ -158,7 +159,7 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 
 	private void refactorStatelessSwingWorker(
 			ICompilationUnit icu,
-			RxSingleUnitWriter singleUnitWriter,
+			RxSwingWorkerWriter singleUnitWriter,
 			RefactoringVisitor refactoringVisitor,
 			ClassInstanceCreation classInstanceCreation )
 	{

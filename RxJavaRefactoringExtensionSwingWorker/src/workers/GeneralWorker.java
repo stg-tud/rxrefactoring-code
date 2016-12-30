@@ -8,9 +8,9 @@ import domain.SWSubscriberDto;
 import rxjavarefactoring.framework.codegenerators.DynamicIdsMapHolder;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.ASTUtil;
-import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
 import visitors.RefactoringVisitor;
 import visitors.RxCollector;
+import writer.RxSwingWorkerWriter;
 
 /**
  * Description: <br>
@@ -24,7 +24,7 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		super( rxCollector );
 	}
 
-	protected void updateImports( RxSingleUnitWriter singleUnitWriter )
+	protected void updateImports( RxSwingWorkerWriter singleUnitWriter )
 	{
 		singleUnitWriter.addImport( "rx.Observable" );
 		singleUnitWriter.addImport( "rx.Emitter" );
