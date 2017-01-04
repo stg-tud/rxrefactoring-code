@@ -83,19 +83,11 @@ public abstract class AbstractRefactoringProcessor<T extends AbstractCollector> 
 		ExecutorService executor = Executors.newWorkStealingPool();
 		try
 		{
-			List<Future<WorkerStatus>> futures = executor.invokeAll(workerSet);
-			for (Future<WorkerStatus> future: futures)
-			{
-				WorkerStatus workerStatus = future.get();
-			}
+			executor.invokeAll(workerSet);
 		}
 		catch ( InterruptedException e )
 		{
 			RxLogger.error( this, "createChange: Interrupted", e );
-		}
-		catch ( ExecutionException e )
-		{
-			throw new IllegalArgumentException("Exception executing worker");
 		}
 	}
 
