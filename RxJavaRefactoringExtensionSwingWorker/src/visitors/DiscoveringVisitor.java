@@ -23,6 +23,7 @@ public class DiscoveringVisitor extends ASTVisitor
 	private final List<SimpleName> simpleNames;
 	private final List<ClassInstanceCreation> classInstanceCreations;
 	private final List<SingleVariableDeclaration> singleVarDeclarations;
+	private final List<MethodDeclaration> methodDeclarations;
 
 	private final List<MethodInvocation> methodInvocations;
 
@@ -37,6 +38,7 @@ public class DiscoveringVisitor extends ASTVisitor
 		simpleNames = new ArrayList<>();
 		classInstanceCreations = new ArrayList<>();
 		singleVarDeclarations = new ArrayList<>();
+		methodDeclarations = new ArrayList<>();
 	}
 
 	@Override
@@ -73,6 +75,25 @@ public class DiscoveringVisitor extends ASTVisitor
 	}
 
 	@Override
+	public boolean visit( SimpleName simpleName )
+	{
+		ITypeBinding typeBinding = simpleName.resolveTypeBinding();
+		IBinding iBinding = simpleName.resolveBinding();
+		if ( iBinding != null )
+		{
+			int kind = iBinding.getKind();
+			if ( ASTUtil.isTypeOf( typeBinding, classBinaryName ) && kind == IBinding.VARIABLE )
+			{
+				if ( !simpleNames.contains( simpleName ) )
+				{
+					simpleNames.add( simpleName );
+				}
+			}
+		}
+		return true;
+	}
+
+	@Override
 	public boolean visit( ClassInstanceCreation node )
 	{
 		ITypeBinding type = node.getType().resolveBinding();
@@ -94,6 +115,19 @@ public class DiscoveringVisitor extends ASTVisitor
 	}
 
 	@Override
+	public boolean visit( MethodDeclaration node )
+	{
+		IMethodBinding binding = node.resolveBinding();
+		ITypeBinding returnType = binding.getReturnType();
+
+		if ( ASTUtil.isTypeOf( returnType, classBinaryName ) )
+		{
+			methodDeclarations.add( node );
+		}
+		return true;
+	}
+
+	@Override
 	public boolean visit( MethodInvocation node )
 	{
 		ITypeBinding type = node.resolveMethodBinding().getDeclaringClass();
@@ -110,7 +144,10 @@ public class DiscoveringVisitor extends ASTVisitor
 				ITypeBinding argType = simpleName.resolveTypeBinding();
 				if ( ASTUtil.isTypeOf( argType, classBinaryName ) )
 				{
-					simpleNames.add( simpleName );
+					if ( !simpleNames.contains( simpleName ) )
+					{
+						simpleNames.add( simpleName );
+					}
 				}
 			}
 		}
@@ -166,5 +203,10 @@ public class DiscoveringVisitor extends ASTVisitor
 	public List<MethodInvocation> getMethodInvocations()
 	{
 		return methodInvocations;
+	}
+
+	public List<MethodDeclaration> getMethodDeclarations()
+	{
+		return methodDeclarations;
 	}
 }

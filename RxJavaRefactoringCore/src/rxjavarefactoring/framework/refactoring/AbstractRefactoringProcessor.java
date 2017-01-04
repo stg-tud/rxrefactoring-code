@@ -1,11 +1,10 @@
 package rxjavarefactoring.framework.refactoring;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -84,11 +83,19 @@ public abstract class AbstractRefactoringProcessor<T extends AbstractCollector> 
 		ExecutorService executor = Executors.newWorkStealingPool();
 		try
 		{
-			executor.invokeAll( workerSet );
+			List<Future<WorkerStatus>> futures = executor.invokeAll(workerSet);
+			for (Future<WorkerStatus> future: futures)
+			{
+				WorkerStatus workerStatus = future.get();
+			}
 		}
 		catch ( InterruptedException e )
 		{
 			RxLogger.error( this, "createChange: Interrupted", e );
+		}
+		catch ( ExecutionException e )
+		{
+			throw new IllegalArgumentException("Exception executing worker");
 		}
 	}
 

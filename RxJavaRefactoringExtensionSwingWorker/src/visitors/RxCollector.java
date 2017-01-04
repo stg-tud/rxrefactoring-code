@@ -24,6 +24,7 @@ public class RxCollector extends AbstractCollector
 	private final Map<ICompilationUnit, List<ClassInstanceCreation>> classInstanceMap;
 	private final Map<ICompilationUnit, List<SingleVariableDeclaration>> singleVarDeclMap;
 	private final Map<ICompilationUnit, List<MethodInvocation>> methodInvocationsMap;
+	private final Map<ICompilationUnit, List<MethodDeclaration>> methodDeclarationsMap;
 
 	public RxCollector( IProject project, String collectorName )
 	{
@@ -37,6 +38,7 @@ public class RxCollector extends AbstractCollector
 		classInstanceMap = new HashMap<>();
 		singleVarDeclMap = new HashMap<>();
 		methodInvocationsMap = new HashMap<>();
+		methodDeclarationsMap = new HashMap<>();
 	}
 
 	public void add( ICompilationUnit cu, List subclasses )
@@ -77,6 +79,10 @@ public class RxCollector extends AbstractCollector
 		else if ( subclasses.get( 0 ) instanceof MethodInvocation )
 		{
 			addToMap( cu, subclasses, methodInvocationsMap );
+		}
+		else if ( subclasses.get( 0 ) instanceof MethodDeclaration )
+		{
+			addToMap( cu, subclasses, methodDeclarationsMap );
 		}
 
 	}
@@ -121,6 +127,11 @@ public class RxCollector extends AbstractCollector
 		return methodInvocationsMap;
 	}
 
+	public Map<ICompilationUnit, List<MethodDeclaration>> getMethodDeclarationsMap()
+	{
+		return methodDeclarationsMap;
+	}
+
 	public int getNumberOfCompilationUnits()
 	{
 		Set<ICompilationUnit> allCompilationUnits = new HashSet<>();
@@ -131,6 +142,8 @@ public class RxCollector extends AbstractCollector
 		allCompilationUnits.addAll( simpleNamesMap.keySet() );
 		allCompilationUnits.addAll( classInstanceMap.keySet() );
 		allCompilationUnits.addAll( singleVarDeclMap.keySet() );
+		allCompilationUnits.addAll( methodInvocationsMap.keySet() );
+		allCompilationUnits.addAll( methodDeclarationsMap.keySet() );
 		return allCompilationUnits.size();
 	}
 
@@ -138,7 +151,22 @@ public class RxCollector extends AbstractCollector
 	public String getInfo()
 	{
 		return "\n******************************************************************\n" +
-				"RxCollector: " + getNumberOfCompilationUnits() + " java file(s).\n" +
+				getDetails() +
+				"\n******************************************************************";
+	}
+
+	@Override
+	public String getError()
+	{
+		return "\n******************************************************************\n" +
+				" [ ERROR during refactoring ]\n" +
+				getDetails() +
+				"\n******************************************************************";
+	}
+
+	private String getDetails()
+	{
+		return "RxCollector: " + getNumberOfCompilationUnits() + " java file(s).\n" +
 				"Project = " + project.getName() + "\n" +
 				"TypeDeclarations = " + typeDeclMap.values().size() + "\n" +
 				"FieldDeclarations = " + fieldDeclMap.values().size() + "\n" +
@@ -147,7 +175,7 @@ public class RxCollector extends AbstractCollector
 				"SimpleNames = " + simpleNamesMap.values().size() + "\n" +
 				"ClassInstanceCreations = " + classInstanceMap.values().size() + "\n" +
 				"SingleVariableDeclarations = " + singleVarDeclMap.values().size() + "\n" +
-				"MethodInvocations = " + methodInvocationsMap.values().size() +
-				"\n******************************************************************";
+				"MethodInvocations = " + methodInvocationsMap.values().size() + "\n" +
+				"MethodDeclarations = " + methodDeclarationsMap.values().size();
 	}
 }

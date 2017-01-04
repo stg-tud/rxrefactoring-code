@@ -10,13 +10,12 @@ import de.tudarmstadt.stg.rx.swingworker.SWDto;
 import de.tudarmstadt.stg.rx.swingworker.SWEmitter;
 import de.tudarmstadt.stg.rx.swingworker.SWSubscriber;
 import rx.Emitter;
-import rx.Observable;
 
 public class SimpleName
 {
 	public void doSomething()
 	{
-		Observable<SWDto<Object, Object>> rxObservable = Observable.fromEmitter(new SWEmitter<Object, Object>()
+		rx.Observable<SWDto<Object, Object>> rxObservable = rx.Observable.fromEmitter(new SWEmitter<Object, Object>()
 		{
 			@Override
 			protected Object doInBackground() throws Exception
@@ -29,7 +28,7 @@ public class SimpleName
 
 		doSomethingElse(rxObserver);
 
-		Observable<SWDto<String, Integer>> rxObservable1 = Observable.fromEmitter(new SWEmitter<String, Integer>()
+		rx.Observable<SWDto<String, Integer>> rxObservable1 = rx.Observable.fromEmitter(new SWEmitter<String, Integer>()
 		{
 			@Override
 			protected String doInBackground() throws Exception

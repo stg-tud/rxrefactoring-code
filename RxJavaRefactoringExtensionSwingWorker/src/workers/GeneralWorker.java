@@ -1,5 +1,8 @@
 package workers;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.jdt.core.dom.*;
 
 import domain.RxObservableDto;
@@ -19,6 +22,11 @@ import writer.RxSwingWorkerWriter;
  */
 public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 {
+
+	public static final String KEYWORD_THIS_WITH_DOT = "this.";
+	public static final String EMPTY = "";
+	public static final String OBJECT_TYPE_NAME = "Object";
+
 	public GeneralWorker( RxCollector rxCollector )
 	{
 		super( rxCollector );
@@ -26,7 +34,7 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 
 	protected void updateImports( RxSwingWorkerWriter singleUnitWriter )
 	{
-		singleUnitWriter.addImport( "rx.Observable" );
+//		singleUnitWriter.addImport( "rx.Observable" );
 		singleUnitWriter.addImport( "rx.Emitter" );
 		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWEmitter" );
 		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWSubscriber" );
@@ -44,7 +52,7 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		}
 		else
 		{
-			observableDto.setResultType( "Object" );
+			observableDto.setResultType( OBJECT_TYPE_NAME );
 		}
 		Type processType = refactoringVisitor.getProcessType();
 		if ( processType != null )
@@ -53,9 +61,15 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		}
 		else
 		{
-			observableDto.setProcessType( "Object" );
+			observableDto.setProcessType( OBJECT_TYPE_NAME );
 		}
-		observableDto.setDoInBackgroundBlock( removeKeywordThis( refactoringVisitor.getDoInBackgroundBlock().toString() ) );
+		if (refactoringVisitor.getDoInBackgroundBlock() != null) 
+		{
+			TypeDeclaration typeDeclaration = ASTUtil.findParent( refactoringVisitor.getDoInBackgroundBlock(), TypeDeclaration.class );
+			String block = refactoringVisitor.getDoInBackgroundBlock().toString();
+			String className = typeDeclaration.getName().getIdentifier();
+			observableDto.setDoInBackgroundBlock( specifyClassOfKeywordThis( block, className ) );
+		}
 		return observableDto;
 	}
 
@@ -70,7 +84,7 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		}
 		else
 		{
-			observerDto.setResultType( "Object" );
+			observerDto.setResultType( OBJECT_TYPE_NAME );
 		}
 		Type processType = refactoringVisitor.getProcessType();
 		if ( processType != null )
@@ -79,7 +93,7 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		}
 		else
 		{
-			observerDto.setProcessType( "Object" );
+			observerDto.setProcessType( OBJECT_TYPE_NAME );
 		}
 		observerDto.setObservableName( observableDto.getVarName() );
 		observerDto.setChunksName( refactoringVisitor.getProcessVariableName() );
@@ -118,7 +132,7 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		}
 		else
 		{
-			dto.setResultType( "Object" );
+			dto.setResultType( OBJECT_TYPE_NAME );
 		}
 		Type processType = refactoringVisitor.getProcessType();
 		if ( processType != null )
@@ -127,7 +141,7 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		}
 		else
 		{
-			dto.setProcessType( "Object" );
+			dto.setProcessType( OBJECT_TYPE_NAME );
 		}
 		dto.setClassName( className );
 		dto.setSubscriberName( subscriberName );
@@ -142,7 +156,8 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		{
 			dto.setDoneBlock( doneBlock.toString() );
 		}
-		dto.setDoInBackgroundBlock( removeKeywordThis( refactoringVisitor.getDoInBackgroundBlock().toString() ) );
+		String block = refactoringVisitor.getDoInBackgroundBlock().toString();
+		dto.setDoInBackgroundBlock( specifyClassOfKeywordThis( block, className ) );
 		for ( FieldDeclaration fieldDeclaration : refactoringVisitor.getFieldDeclarations() )
 		{
 			dto.getFieldDeclarations().add( fieldDeclaration.toString() );
@@ -159,8 +174,39 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		return dto;
 	}
 
-	private String removeKeywordThis( String block )
+	private String specifyClassOfKeywordThis( String block, String replacement )
 	{
-		return block.replaceAll( "this\\.", "" );
+		if ( !EMPTY.equals( replacement ) )
+		{
+			replacement = replacement + "." + KEYWORD_THIS_WITH_DOT;
+		}
+		StringBuilder sb = new StringBuilder( block );
+		List<Integer> indexes = new ArrayList<>();
+		int startIndex = 0;
+		while ( true )
+		{
+			int i = block.indexOf( KEYWORD_THIS_WITH_DOT, startIndex );
+			if ( i == -1 )
+			{
+				break;
+			}
+			indexes.add( i );
+			startIndex = i + KEYWORD_THIS_WITH_DOT.length();
+		}
+
+		int adjustmentFactor = 0;
+		for ( Integer index : indexes )
+		{
+			int newIndex = index + adjustmentFactor;
+			if (index == 0 || (index > 0 && block.charAt(index-1) != '_'
+					&& block.charAt(index-1) != '.' && block.charAt(index-1) != '$'
+					&& (block.charAt(index-1) < 'a' || block.charAt(index-1) > 'Z' )))
+			{
+				sb.replace( newIndex, newIndex + KEYWORD_THIS_WITH_DOT.length(), replacement );
+				adjustmentFactor += replacement.length() - KEYWORD_THIS_WITH_DOT.length();
+			}
+		}
+
+		return sb.toString();
 	}
 }

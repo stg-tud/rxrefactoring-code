@@ -9,7 +9,6 @@ import de.tudarmstadt.stg.rx.swingworker.SWDto;
 import de.tudarmstadt.stg.rx.swingworker.SWEmitter;
 import de.tudarmstadt.stg.rx.swingworker.SWSubscriber;
 import rx.Emitter;
-import rx.Observable;
 
 public class Assignment
 {
@@ -21,7 +20,7 @@ public class Assignment
 
 	public void someMethod()
 	{
-		Observable<SWDto<String, Integer>> rxObservable = Observable.fromEmitter(new SWEmitter<String, Integer>()
+		rx.Observable<SWDto<String, Integer>> rxObservable = rx.Observable.fromEmitter(new SWEmitter<String, Integer>()
 		{
 			@Override
 			protected String doInBackground() throws Exception

@@ -46,7 +46,7 @@ public class Extension implements RxJavaRefactoringExtension<RxCollector>
 	}
 
 	@Override
-	public RxCollector getASTNodesCollectorInstance(IProject project)
+	public RxCollector getASTNodesCollectorInstance( IProject project )
 	{
 		return new RxCollector( project, COLLECTOR_NAME );
 	}
@@ -72,6 +72,7 @@ public class Extension implements RxJavaRefactoringExtension<RxCollector>
 		rxCollector.add( unit, discoveringVisitor.getClassInstanceCreations() );
 		rxCollector.add( unit, discoveringVisitor.getMethodInvocations() );
 		rxCollector.add( unit, discoveringVisitor.getSingleVarDeclarations() );
+		rxCollector.add( unit, discoveringVisitor.getMethodDeclarations() );
 	}
 
 	@Override
@@ -87,6 +88,7 @@ public class Extension implements RxJavaRefactoringExtension<RxCollector>
 		workers.add( new SingleVariableDeclWorker( rxCollector ) );
 		workers.add( new ClassInstanceCreationWorker( rxCollector ) );
 		workers.add( new TypeDeclarationWorker( rxCollector ) );
+		workers.add( new MethodDeclarationWorker( rxCollector ) );
 		return workers;
 	}
 

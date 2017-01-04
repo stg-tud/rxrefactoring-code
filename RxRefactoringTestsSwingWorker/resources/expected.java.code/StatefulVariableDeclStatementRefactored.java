@@ -9,7 +9,6 @@ import de.tudarmstadt.stg.rx.swingworker.SWDto;
 import de.tudarmstadt.stg.rx.swingworker.SWEmitter;
 import de.tudarmstadt.stg.rx.swingworker.SWSubscriber;
 import rx.Emitter;
-import rx.Observable;
 
 public class StatefulVariableDeclStatement
 {
@@ -25,9 +24,9 @@ public class StatefulVariableDeclStatement
 				setObservable(getRxObservable());
 			}
 
-			private Observable<SWDto<String, Integer>> getRxObservable()
+			private rx.Observable<SWDto<String, Integer>> getRxObservable()
 			{
-				return Observable.fromEmitter(new SWEmitter<String, Integer>()
+				return rx.Observable.fromEmitter(new SWEmitter<String, Integer>()
 											  {
 												  @Override
 												  protected String doInBackground() throws Exception

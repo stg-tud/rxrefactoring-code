@@ -82,7 +82,7 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 		VariableDeclarationStatement varDeclParent = ASTUtil.findParent( classInstanceCreation, VariableDeclarationStatement.class );
 		FieldDeclaration fieldDeclParent = ASTUtil.findParent( classInstanceCreation, FieldDeclaration.class );
 		// if any is not null, then another worker handles this case
-		return ( assignmentParent == null && varDeclParent == null && fieldDeclParent == null );
+		return (assignmentParent == null && varDeclParent == null && fieldDeclParent == null );
 	}
 
 	private void refactorClassInstanceCreation(
@@ -192,6 +192,11 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 			String invocation = getInvocationWithArguments( methodInvocation );
 			String classInstanceCreationString = observerString.substring( 0, observerString.length() - 1 );
 			observerString = classInstanceCreationString + "." + invocation;
+		}
+
+		if (referenceStatement.toString().indexOf("return") == 0)
+		{
+			observerString = "return " + observerString;
 		}
 
 		Statement observerStatement = ASTNodeFactory.createSingleStatementFromText( ast, observerString );

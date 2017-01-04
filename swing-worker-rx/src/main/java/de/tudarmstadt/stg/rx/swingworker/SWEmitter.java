@@ -43,6 +43,7 @@ public abstract class SWEmitter<ReturnType, ProcessType> implements Action1<Emit
 		try
 		{
 			this.dto = new SWDto<ReturnType, ProcessType>();
+			this.emitter.onNext( this.dto.setHandshake( true ) );
 			ReturnType asyncResult = doInBackground();
 			this.emitter.onNext( this.dto.setResult( asyncResult ) );
 			this.emitter.onCompleted();

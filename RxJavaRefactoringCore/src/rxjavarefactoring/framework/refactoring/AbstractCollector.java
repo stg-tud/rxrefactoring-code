@@ -45,6 +45,11 @@ public abstract class AbstractCollector extends ASTVisitor
 		return collectorName;
 	}
 
+	public String getError()
+	{
+		return "[ Error ]";
+	}
+
 	/**
 	 * Add or updates the list of a map given its key
 	 * 

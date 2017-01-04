@@ -74,28 +74,29 @@ public class VariableDeclStatementWorker extends GeneralWorker
 						String newIdentifier = RefactoringUtils.cleanSwingWorkerName( simpleName.getIdentifier() );
 						singleUnitWriter.replaceSimpleName( simpleName, newIdentifier );
 					}
-				}
-				else
+				} 
+				else if (initializer instanceof SimpleName)
 				{
-					// change type
-					Type type = varDeclStatement.getType();
-					if (type instanceof ParameterizedType)
-					{
-						type = ((ParameterizedType) type).getType();
-					}
-
-					if (ASTUtil.isClassOf(type, SwingWorkerInfo.getBinaryName()))
-					{
-						singleUnitWriter.replaceType((SimpleType) type, "SWSubscriber");
-					}
-
-					String newVarName = RefactoringUtils.cleanSwingWorkerName(fragment.getName().getIdentifier());
-					singleUnitWriter.replaceSimpleName(fragment.getName(), newVarName);
-
-					SimpleName assignedVarSimpleName = (SimpleName) fragment.getInitializer();
-					String newAssignedVarName = RefactoringUtils.cleanSwingWorkerName((assignedVarSimpleName).getIdentifier());
-					singleUnitWriter.replaceSimpleName(assignedVarSimpleName, newAssignedVarName);
+	                	SimpleName assignedVarSimpleName = (SimpleName) initializer;
+		                String newAssignedVarName = RefactoringUtils.cleanSwingWorkerName((assignedVarSimpleName).getIdentifier());
+		                singleUnitWriter.replaceSimpleName(assignedVarSimpleName, newAssignedVarName);
 				}
+
+                // change type
+                Type type = varDeclStatement.getType();
+                if (type instanceof ParameterizedType)
+                {
+                    type = ((ParameterizedType) type).getType();
+                }
+
+                if (ASTUtil.isClassOf(type, SwingWorkerInfo.getBinaryName()))
+                {
+					singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWSubscriber" );
+                    singleUnitWriter.replaceType((SimpleType) type, "SWSubscriber");
+                }
+
+                String newVarName = RefactoringUtils.cleanSwingWorkerName(fragment.getName().getIdentifier());
+                singleUnitWriter.replaceSimpleName(fragment.getName(), newVarName);
 
 				// Add changes to the multiple compilation units write object
 				RxLogger.info( this, "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );

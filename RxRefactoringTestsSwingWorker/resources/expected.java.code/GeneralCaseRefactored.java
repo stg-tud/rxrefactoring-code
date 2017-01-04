@@ -12,7 +12,6 @@ import de.tudarmstadt.stg.rx.swingworker.SWDto;
 import de.tudarmstadt.stg.rx.swingworker.SWEmitter;
 import de.tudarmstadt.stg.rx.swingworker.SWSubscriber;
 import rx.Emitter;
-import rx.Observable;
 
 /**
  * Description: Basic class for test purposes <br>
@@ -28,7 +27,7 @@ public class GeneralCase
 
 	public void someMethod()
 	{
-		Observable<SWDto<String, Integer>> rxObservable = Observable.fromEmitter(new SWEmitter<String, Integer>()
+		rx.Observable<SWDto<String, Integer>> rxObservable = rx.Observable.fromEmitter(new SWEmitter<String, Integer>()
 		{
 			@Override
 			protected String doInBackground() throws Exception
@@ -81,7 +80,7 @@ public class GeneralCase
 
 		doSomething(rxObserverRef);
 
-		Observable<SWDto<String, Integer>> rxObservable1 = Observable.fromEmitter(new SWEmitter<String, Integer>()
+		rx.Observable<SWDto<String, Integer>> rxObservable1 = rx.Observable.fromEmitter(new SWEmitter<String, Integer>()
 		{
 
 			@Override
@@ -93,7 +92,7 @@ public class GeneralCase
 
 		new SWSubscriber<String, Integer>(rxObservable1){};
 
-		Observable<SWDto<String, Integer>> rxObservable2 = Observable.fromEmitter(new SWEmitter<String, Integer>()
+		rx.Observable<SWDto<String, Integer>> rxObservable2 = rx.Observable.fromEmitter(new SWEmitter<String, Integer>()
 		{
 
 			@Override

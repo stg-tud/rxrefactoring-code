@@ -3,6 +3,7 @@ package de.tudarmstadt.stg.rx.swingworker;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -25,6 +26,7 @@ public final class SWDto<ReturnType, ProcessType>
 	private AtomicInteger progress;
 	private ReentrantLock processingLock;
 	private Object asyncResultLock;
+	private AtomicBoolean handshake;
 
 	SWDto()
 	{
@@ -57,7 +59,7 @@ public final class SWDto<ReturnType, ProcessType>
 	 * @param asyncResult
 	 *            result to be set
 	 * @return this object so that it can be used in {@link rx.Subscriber#onNext(Object)} }.
-	 *         See {@link SWEmitter#call(Subscriber)}, {@link SWEmitter#setProgress(int)}
+	 *         See {@link SWEmitter#setProgress(int)}
 	 *         and {@link SWEmitter#publish(Object[])}
 	 */
 	SWDto<ReturnType, ProcessType> setResult( ReturnType asyncResult )
@@ -159,5 +161,16 @@ public final class SWDto<ReturnType, ProcessType>
 	void unlockChunks()
 	{
 		processingLock.unlock();
+	}
+
+	boolean getHandshake()
+	{
+		return handshake.get();
+	}
+
+	SWDto<ReturnType, ProcessType> setHandshake(boolean handshake)
+	{
+		this.handshake.set(handshake);
+		return this;
 	}
 }

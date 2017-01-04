@@ -47,12 +47,13 @@ public class SimpleNameWorker extends AbstractRefactorWorker<RxCollector>
 				RxSwingWorkerWriter rxSwingWorkerWriter = new RxSwingWorkerWriter(icu, ast, getClass().getSimpleName());
 				RxSwingWorkerWriter singleUnitWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, rxSwingWorkerWriter );
 
+				String newIdentifier = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
 				MethodInvocation methodInvocation = ASTUtil.findParent( simpleName, MethodInvocation.class );
 				if ( methodInvocation != null )
 				{
 					ITypeBinding declaringClass = methodInvocation.resolveMethodBinding().getDeclaringClass();
 					boolean executor = ASTUtil.isTypeOf( declaringClass, "java.util.concurrent.ExecutorService" );
-					String newIdentifier = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
+
 					if ( executor && "submit".equals( methodInvocation.getName().toString() ) )
 					{
 						String executeObservableString = newIdentifier + ".executeObservable()";
@@ -61,16 +62,13 @@ public class SimpleNameWorker extends AbstractRefactorWorker<RxCollector>
 						singleUnitWriter.addBefore(executeObservableStatement, referenceStatement);
 						singleUnitWriter.removeStatement(simpleName);
 					}
-					else
-					{
-						RxLogger.info( this, "METHOD=refactor - Refactoring simple name in: " + icu.getElementName() );
-						singleUnitWriter.replaceSimpleName( simpleName, newIdentifier);
-					}
-
-					// Add changes to the multiple compilation units write object
-					RxLogger.info( this, "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );
-					rxMultipleUnitsWriter.addCompilationUnit( icu );
 				}
+				RxLogger.info( this, "METHOD=refactor - Refactoring simple name in: " + icu.getElementName() );
+				singleUnitWriter.replaceSimpleName( simpleName, newIdentifier);
+
+				// Add changes to the multiple compilation units write object
+				RxLogger.info( this, "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );
+				rxMultipleUnitsWriter.addCompilationUnit( icu );
 			}
 			monitor.worked( 1 );
 		}

@@ -53,9 +53,16 @@ public class RefactoringProcessor extends AbstractRefactoringProcessor
 			worker.setRxMultipleUnitsWriter( rxMultipleUnitsWriter );
 		}
 
-		startWorkers( workers );
-		executeChanges( monitor );
-		RxLogger.info( this, collector.getInfo() );
+		try
+		{
+			startWorkers( workers );
+			executeChanges( monitor );
+			RxLogger.showInConsole( this, collector.getInfo() );
+		}
+		catch ( Exception e )
+		{
+			RxLogger.showInConsole( this, collector.getError() );
+		}
 		return null;
 	}
 }

@@ -3,10 +3,12 @@ package workers;
 import java.util.List;
 import java.util.Map;
 
+import domain.SwingWorkerInfo;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
 
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
+import rxjavarefactoring.framework.utils.ASTUtil;
 import rxjavarefactoring.framework.utils.RxLogger;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriterMapHolder;
 import rxjavarefactoring.processor.WorkerStatus;
@@ -43,8 +45,12 @@ public class MethodInvocationWorker extends AbstractRefactorWorker<RxCollector>
 				Expression expression = methodInvocation.getExpression();
 				if ( expression instanceof ClassInstanceCreation )
 				{
-					// another worker will handle this case
-					continue;
+					ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) expression;
+					if (!ASTUtil.isSubclassOf(classInstanceCreation, SwingWorkerInfo.getBinaryName(), false))
+					{
+						// another worker will handle this case
+						continue;
+					}
 				}
 
 				// Get ast and writer

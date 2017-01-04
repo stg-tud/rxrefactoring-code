@@ -41,15 +41,15 @@ public final class RefactoringUtils
 		StringBuilder sb = new StringBuilder( text );
 		String searchableText = text.toUpperCase();
 
-		int indexFrom = 0;
-		while ( indexFrom != -1 )
+		int startIndex = 0;
+		while ( startIndex != -1 )
 		{
-			int swPosition = searchableText.indexOf( SWING_WORKER_UPPER, indexFrom );
+			int swPosition = searchableText.indexOf( SWING_WORKER_UPPER, startIndex );
 			if ( swPosition == -1 )
 			{
 				break;
 			}
-			int swStatePosition = text.indexOf( SWING_WORKER_STATE_VALUE, indexFrom );
+			int swStatePosition = text.indexOf( SWING_WORKER_STATE_VALUE, startIndex );
 			if ( swPosition != swStatePosition )
 			{
 				int endIndex = swPosition + SWING_WORKER_UPPER.length();
@@ -61,26 +61,26 @@ public final class RefactoringUtils
 				{
 					sb.replace( swPosition, endIndex, RX_OBSERVER_FIRST_UPPER );
 				}
-				indexFrom = swPosition + RX_OBSERVER_FIRST_LOWER.length();
+				startIndex = swPosition + RX_OBSERVER_FIRST_LOWER.length();
 				searchableText = sb.toString().toUpperCase();
 				text = sb.toString();
 			}
 			else
 			{
-				indexFrom = searchableText.indexOf( SWING_WORKER_UPPER, SWING_WORKER_STATE_VALUE.length() + 1 );
+				startIndex = searchableText.indexOf( SWING_WORKER_UPPER, SWING_WORKER_STATE_VALUE.length() + 1 );
 			}
 		}
 
-		indexFrom = 0;
+		startIndex = 0;
 		searchableText = sb.toString().toUpperCase();
-		while ( indexFrom != -1 )
+		while ( startIndex != -1 )
 		{
-			int swPosition = searchableText.indexOf( WORKER_UPPER, indexFrom );
+			int swPosition = searchableText.indexOf( WORKER_UPPER, startIndex );
 			if ( swPosition == -1 )
 			{
 				break;
 			}
-			int swStatePosition = text.indexOf( SWING_WORKER_STATE_VALUE, indexFrom );
+			int swStatePosition = text.indexOf( SWING_WORKER_STATE_VALUE, startIndex );
 			if ( swStatePosition != ( swPosition - SWING_WORKER_UPPER.length() + WORKER_UPPER.length() ) )
 			{
 				int endIndex = swPosition + WORKER_UPPER.length();
@@ -92,13 +92,13 @@ public final class RefactoringUtils
 				{
 					sb.replace( swPosition, endIndex, RX_OBSERVER_FIRST_UPPER );
 				}
-				indexFrom = swPosition + RX_OBSERVER_FIRST_LOWER.length();
+				startIndex = swPosition + RX_OBSERVER_FIRST_LOWER.length();
 				searchableText = sb.toString().toUpperCase();
 				text = sb.toString();
 			}
 			else
 			{
-				indexFrom = searchableText.indexOf( WORKER_UPPER, SWING_WORKER_STATE_VALUE.length() + 1 );
+				startIndex = searchableText.indexOf( WORKER_UPPER, SWING_WORKER_STATE_VALUE.length() + 1 );
 			}
 		}
 

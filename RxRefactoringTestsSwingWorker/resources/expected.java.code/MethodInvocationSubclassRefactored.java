@@ -6,7 +6,6 @@ import de.tudarmstadt.stg.rx.swingworker.SWDto;
 import de.tudarmstadt.stg.rx.swingworker.SWEmitter;
 import de.tudarmstadt.stg.rx.swingworker.SWSubscriber;
 import rx.Emitter;
-import rx.Observable;
 
 public class MethodInvocationSubclass
 {
@@ -23,9 +22,9 @@ public class MethodInvocationSubclass
 			setObservable( getRxObservable() );
 		}
 
-		private Observable<SWDto<Object, Object>> getRxObservable()
+		private rx.Observable<SWDto<Object, Object>> getRxObservable()
 		{
-			return Observable.fromEmitter( new SWEmitter<Object, Object>()
+			return rx.Observable.fromEmitter( new SWEmitter<Object, Object>()
 			{
 				@Override
 				protected Object doInBackground() throws Exception

@@ -40,6 +40,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	private AtomicBoolean cancelled;
 	private SwingWorker.StateValue currentState;
 	private CountDownLatch countDownLatch;
+	private SWDto<ResultType, ProcessType> dto;
 
 	/**
 	 * Constructor: each observer has a reference to the observable object
@@ -108,6 +109,13 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	@Override
 	public final void onNext( SWDto<ResultType, ProcessType> dto )
 	{
+		if (dto.getHandshake())
+		{
+			this.dto = dto;
+			dto.setHandshake(false);
+			return;
+		}
+
 		asyncResult = dto.getResult();
 		if ( dto.isProgressValueAvailable() )
 		{
@@ -394,6 +402,25 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 			propertyChangeSupport.firePropertyChange( "progress", oldProgress, progress );
 			this.progress.set( progress );
 		}
+	}
+
+	protected void publish( ProcessType... chunks )
+	{
+		this.dto.lockChunks();
+		try
+		{
+			this.onNext( this.dto.send( chunks ) );
+		}
+		finally
+		{
+			this.dto.unlockChunks();
+		}
+
+	}
+
+	void setDto(SWDto<ResultType, ProcessType> dto)
+	{
+		this.dto = dto;
 	}
 
 	// ### Private Methods ###
