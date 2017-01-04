@@ -35,6 +35,11 @@ public class SimpleName
 		
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 		executor.submit(swingWorker);
+
+		if ( swingWorker != null )
+		{
+			swingWorker.cancel( true );
+		}
 	}
 
 	private void doSomethingElse(SwingWorker swingWorker) 

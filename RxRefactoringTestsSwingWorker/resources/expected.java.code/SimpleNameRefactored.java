@@ -44,6 +44,11 @@ public class SimpleName
 
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 		rxObserver.executeObservable();
+
+		if ( rxObserver != null )
+		{
+			rxObserver.cancelObservable( true );
+		}
 	}
 
 	private void doSomethingElse(SWSubscriber rxObserver)

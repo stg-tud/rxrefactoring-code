@@ -32,13 +32,13 @@ public class StatefulClassInstanceCreation
 					@Override
 					protected String doInBackground() throws Exception
 					{
-						printInfo( "Entering doInBackground() method" );
-						for ( int i = 0; i < AMOUNT_OF_WORK * 2; i = i + 2 )
+						RxObserver.this.printInfo( "Entering doInBackground() method" );
+						for ( int i = 0; i < RxObserver.this.AMOUNT_OF_WORK * 2; i = i + 2 )
 						{
 							publish( i, i + 1 );
-							Thread.sleep( TIME_FOR_WORK_UNIT );
+							Thread.sleep( RxObserver.this.TIME_FOR_WORK_UNIT );
 						}
-						printInfo( "doInBackground() finished successfully" );
+						RxObserver.this.printInfo( "doInBackground() finished successfully" );
 						return "Async Result";
 					}
 				}, Emitter.BackpressureMode.BUFFER );
