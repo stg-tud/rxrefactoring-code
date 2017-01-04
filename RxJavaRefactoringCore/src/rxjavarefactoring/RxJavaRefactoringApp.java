@@ -1,15 +1,19 @@
 package rxjavarefactoring;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.ISafeRunnable;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SafeRunner;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 
 import rx.Observable;
 import rxjavarefactoring.framework.api.RxJavaRefactoringExtension;
@@ -32,7 +36,6 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 {
 	private static final String DEPENDENCIES_DIRECTORY = "all-deps";
 	private Set<String> targetClasses;
-	private static boolean runningForTests = false;
 	private String commandId;
 
 	@Override
@@ -70,14 +73,43 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 			return;
 		}
 
-		Observable
-				.from( units.values() )
-				// Filter using the boolean formula "runningForTest -> validateName"
-				.filter( unit -> !runningForTests || validateUnitName( unit ) )
-				.doOnNext( unit -> processUnitFromExtension( unit, this.extension, collector ) )
-				.doOnCompleted( () -> refactorUnits( collector ) )
-				.doOnError( t -> RxLogger.error( this, "METHOD=refactorCompilationUnits", t ) )
-				.subscribe();
+		ProgressMonitorDialog dialog = new ProgressMonitorDialog( activeShell );
+		try
+		{
+			dialog.run( true, false, new IRunnableWithProgress()
+			{
+				@Override
+				public void run( IProgressMonitor monitor ) throws InvocationTargetException, InterruptedException
+				{
+					beginTask(monitor);
+					Observable
+							.from( units.values() )
+							// Filter using the boolean formula "runningForTest -> validateName"
+							.filter( unit -> !runningForTests || validateUnitName( unit ) )
+							.doOnNext( unit -> {
+								processUnitFromExtension( unit, RxJavaRefactoringApp.this.extension, collector );
+								monitor.worked( 1 );
+							} )
+							.doOnCompleted( () -> refactorUnits( collector ) )
+							.doOnError( t -> RxLogger.error( this, "METHOD=refactorCompilationUnits", t ) )
+							.subscribe();
+					monitor.done();
+				}
+
+				private void beginTask(IProgressMonitor monitor)
+				{
+					int numberOfFiles = units.values().size();
+					String pluralForm = numberOfFiles == 1 ? "" : "s";
+					String message = "Project: " + project.getName()+ ". Analyzing "
+							+ numberOfFiles + " java file" + pluralForm + ".";
+					monitor.beginTask( message, numberOfFiles );
+				}
+			} );
+		}
+		catch ( Exception e )
+		{
+			RxLogger.error( this, "METHOD=refactorCompilationUnits, Project:" + project.getName() + " - FAILED", e );
+		}
 	}
 
 	public void refactorOnly( String... classNames )

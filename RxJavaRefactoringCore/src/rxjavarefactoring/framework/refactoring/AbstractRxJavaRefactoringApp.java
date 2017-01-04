@@ -2,6 +2,7 @@ package rxjavarefactoring.framework.refactoring;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.util.*;
 
 import org.apache.commons.io.FileUtils;
@@ -9,14 +10,19 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.*;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.jdt.core.*;
+import org.eclipse.jface.dialogs.ErrorDialog;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Display;
 
+import org.eclipse.swt.widgets.Shell;
 import rx.Observable;
+import rx.Subscription;
+import rx.schedulers.Schedulers;
+import rx.schedulers.SwingScheduler;
 import rxjavarefactoring.framework.api.RxJavaRefactoringExtension;
 import rxjavarefactoring.framework.utils.RxLogger;
 
@@ -31,9 +37,13 @@ import rxjavarefactoring.framework.utils.RxLogger;
  */
 public abstract class AbstractRxJavaRefactoringApp implements IApplication
 {
+	private static final String PLUGIN_ID = "de.tudarmstadt.stg.rxjava.refactoring.core";
+	private static Subscription subscription;
 	protected Map<ICompilationUnit, String> originalCompilationUnitVsNewSourceCodeMap;
 	protected Map<String, ICompilationUnit> compilationUnitsMap;
 	protected RxJavaRefactoringExtension extension;
+	protected Shell activeShell;
+	protected static boolean runningForTests = false;
 
 	private static final String PACKAGE_SEPARATOR = ".";
 
@@ -46,16 +56,61 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 	@Override
 	public Object start( IApplicationContext iApplicationContext ) throws Exception
 	{
-		// TODO: display window showing the preconditions to produce compilable code:
-		// dependencies in classpath or .jar files in "/all-deps"
 		IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-		Observable
-				.from( workspaceRoot.getProjects() )
-				.doOnSubscribe( () -> RxLogger.info( this, "Rx Refactoring Plugin Starting..." ) )
-				.filter( this::isJavaProjectOpen )
-				.doOnNext( this::refactorProject )
-				.doOnCompleted( () -> RxLogger.info( this, "Rx Refactoring Plugin Done!" ) )
-				.subscribe();
+		final String dialogTitle = "RxJavaRefactoring";
+
+		long startTime = System.currentTimeMillis();
+
+		activeShell = Display.getCurrent().getActiveShell();
+		if ( subscription == null || subscription.isUnsubscribed() )
+		{
+			boolean confirmed = true;
+			if (!runningForTests)
+			{
+				String confirmMessage = "Are you sure that you want to perform this refactoring?\n\n" +
+						"All opened java projects in the workspace will be refactored. " +
+						"If you would like to exclude some projects, then click on Cancel, close " +
+						"the corresponding projects and start the refactoring command again.";
+				confirmed = MessageDialog.openConfirm(activeShell, dialogTitle, confirmMessage);
+			}
+
+			if (confirmed)
+			{
+				subscription = Observable
+						.from(workspaceRoot.getProjects())
+						.doOnSubscribe(() -> RxLogger.info(AbstractRxJavaRefactoringApp.this, "Rx Refactoring Plugin Starting..."))
+						.filter(AbstractRxJavaRefactoringApp.this::isJavaProjectOpen)
+						.doOnNext(AbstractRxJavaRefactoringApp.this::refactorProject)
+						.doOnError(t ->
+						{
+							String message = "The refactoring action for one or more projects has failed";
+							Status status = new Status(IStatus.ERROR, PLUGIN_ID, message, t);
+							ErrorDialog.openError(activeShell, dialogTitle, message, status);
+						})
+						.doOnCompleted(() ->
+						{
+							RxLogger.info(AbstractRxJavaRefactoringApp.this, "Rx Refactoring Plugin Done!");
+							long endTime = System.currentTimeMillis();
+							long totalTime = endTime - startTime;
+							double minutes = totalTime / 1000.0 / 60.0;
+							DecimalFormat df = new DecimalFormat("#,##0.00");
+							RxLogger.showInConsole(AbstractRxJavaRefactoringApp.this,
+									"Total Time: " + df.format(minutes) + " min.");
+							if (!runningForTests)
+							{
+								String message = "The refactoring action has completed.";
+								MessageDialog.openInformation(activeShell, dialogTitle, message);
+							}
+						})
+						.subscribe();
+			}
+		}
+		else
+		{
+			String message = "Another refactoring is currently being performed. Please wait " +
+					"until it has completed.";
+			MessageDialog.openInformation(activeShell, dialogTitle, message);
+		}
 
 		return null;
 	}
@@ -90,7 +145,7 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 	 * @param project
 	 * @param units
 	 */
-	protected abstract void refactorCompilationUnits(IProject project, Map<String, ICompilationUnit> units);
+	protected abstract void refactorCompilationUnits( IProject project, Map<String, ICompilationUnit> units );
 
 	/**
 	 * returns the directory name that contains all necessary dependencies to perform

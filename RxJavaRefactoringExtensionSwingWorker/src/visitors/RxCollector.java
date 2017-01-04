@@ -166,7 +166,7 @@ public class RxCollector extends AbstractCollector
 
 	private String getDetails()
 	{
-		return "RxCollector: " + getNumberOfCompilationUnits() + " java file(s).\n" +
+		return "Nr. files: " + getNumberOfCompilationUnits() + "\n" +
 				"Project = " + project.getName() + "\n" +
 				"TypeDeclarations = " + typeDeclMap.values().size() + "\n" +
 				"FieldDeclarations = " + fieldDeclMap.values().size() + "\n" +
