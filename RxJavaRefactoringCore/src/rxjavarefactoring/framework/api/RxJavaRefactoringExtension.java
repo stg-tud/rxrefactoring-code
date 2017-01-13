@@ -9,6 +9,11 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import rxjavarefactoring.framework.refactoring.AbstractCollector;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 
+/**
+ * Description: Interface to be implemented by clients<br>
+ * Author: Grebiel Jose Ifill Brito<br>
+ * Created: 12/17/2016
+ */
 public interface RxJavaRefactoringExtension<CollectorType extends AbstractCollector>
 {
 

@@ -24,7 +24,6 @@ public final class SWChannel<ReturnType, ProcessType>
 	private AtomicInteger progress;
 	private ReentrantLock processingLock;
 	private Object asyncResultLock;
-	private AtomicBoolean handshake;
 
 	SWChannel()
 	{
@@ -159,16 +158,5 @@ public final class SWChannel<ReturnType, ProcessType>
 	void unlockChunks()
 	{
 		processingLock.unlock();
-	}
-
-	boolean getHandshake()
-	{
-		return handshake.get();
-	}
-
-	SWChannel<ReturnType, ProcessType> setHandshake(boolean handshake)
-	{
-		this.handshake.set(handshake);
-		return this;
 	}
 }

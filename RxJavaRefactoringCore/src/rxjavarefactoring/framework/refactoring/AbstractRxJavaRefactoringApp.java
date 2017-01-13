@@ -175,8 +175,8 @@ public abstract class AbstractRxJavaRefactoringApp implements IApplication
 	{
 		RxLogger.info( AbstractRxJavaRefactoringApp.this, "Rx Refactoring Plugin Done!" );
 		String projects = String.join( ", ", errorProjects );
-		String warningMessage = "The following projects could not be refactored:\n" +
-				projects + "\n. Make sure that the projects compile and try again.";
+		String warningMessage = "Check the following projects carefully. Exceptions were thrown" +
+				" during refactoring:\n\n" + projects + ".";
 		if ( !errorProjects.isEmpty() )
 		{
 			RxLogger.showInConsole( AbstractRxJavaRefactoringApp.this, warningMessage );

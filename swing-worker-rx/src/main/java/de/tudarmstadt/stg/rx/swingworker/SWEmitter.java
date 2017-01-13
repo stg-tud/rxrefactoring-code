@@ -43,7 +43,6 @@ public abstract class SWEmitter<ReturnType, ProcessType> implements Action1<Emit
 		try
 		{
 			this.channel = new SWChannel<ReturnType, ProcessType>();
-			this.emitter.onNext( this.channel.setHandshake( true ) );
 			ReturnType asyncResult = doInBackground();
 			this.emitter.onNext( this.channel.setResult( asyncResult ) );
 			this.emitter.onCompleted();
@@ -85,7 +84,6 @@ public abstract class SWEmitter<ReturnType, ProcessType> implements Action1<Emit
 		{
 			this.channel.unlockChunks();
 		}
-
 	}
 
 	/**

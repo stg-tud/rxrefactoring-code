@@ -5,8 +5,6 @@ import java.io.StringWriter;
 
 import org.eclipse.ui.console.*;
 
-import rxjavarefactoring.RxJavaRefactoringApp;
-
 /**
  * Description: This class is responsible for managing logging task<br>
  * Author: Grebiel Jose Ifill Brito<br>
@@ -24,68 +22,49 @@ public final class RxLogger
 	/**
 	 * Uses System.out.println(...) to log in the console
 	 *
-	 * @param currentClass class invoking the method
-	 * @param text         logging text
+	 * @param currentClass
+	 *            class invoking the method
+	 * @param text
+	 *            logging text
 	 */
-	public static void info(Object currentClass, String text)
+	public static void info( Object currentClass, String text )
 	{
-//		if ( !RxJavaRefactoringApp.isRunningForTests() )
-//		{
-//			MessageConsole myConsole = findConsole( CONSOLE_NAME );
-//			MessageConsoleStream out = myConsole.newMessageStream();
-//			out.println( "[ INFO ] " + currentClass.getClass().getSimpleName() + ": " + text );
-//		}
-//		else
-		{
-			System.out.println("[ INFO ] " + currentClass.getClass().getSimpleName() + ": " + text);
-		}
+		System.out.println( "[ INFO ] " + currentClass.getClass().getSimpleName() + ": " + text );
 	}
 
 	/**
 	 * Uses System.err.println(...) to log in the console and prints stack trace
 	 *
-	 * @param currentClass class invoking the method
-	 * @param text         logging text
-	 * @param throwable    exception
+	 * @param currentClass
+	 *            class invoking the method
+	 * @param text
+	 *            logging text
+	 * @param throwable
+	 *            exception
 	 */
-	public static void error(Object currentClass, String text, Throwable throwable)
+	public static void error( Object currentClass, String text, Throwable throwable )
 	{
-//		if ( !RxJavaRefactoringApp.isRunningForTests() )
-//		{
-//			String errorMessage = "[ ERROR ] " + currentClass.getClass().getSimpleName() + ": " + text;
-//			printErrorToConsole( errorMessage, throwable );
-//		}
-//		else
-		{
-			System.err.println("[ ERROR ] " + currentClass.getClass().getSimpleName() + ": " + text);
-			throwable.printStackTrace();
-		}
+		System.err.println( "[ ERROR ] " + currentClass.getClass().getSimpleName() + ": " + text );
+		throwable.printStackTrace();
 	}
 
 	/**
 	 * Logs exceptions occurred in client (extensions)
 	 *
-	 * @param throwable exception
+	 * @param throwable
+	 *            exception
 	 */
-	public static void notifyExceptionInClient(Throwable throwable)
+	public static void notifyExceptionInClient( Throwable throwable )
 	{
-//		if ( !RxJavaRefactoringApp.isRunningForTests() )
-//		{
-//			String errorMessage = "[ ERROR ] Exception in client";
-//			printErrorToConsole( errorMessage, throwable );
-//		}
-//		else
-		{
-			System.err.println("[ ERROR ] Exception in client");
-			throwable.printStackTrace();
-		}
+		System.err.println( "[ ERROR ] Exception in client" );
+		throwable.printStackTrace();
 	}
 
-	public static void showInConsole(Object currentClass, String text)
+	public static void showInConsole( Object currentClass, String text )
 	{
-			MessageConsole myConsole = findConsole( CONSOLE_NAME );
-			MessageConsoleStream out = myConsole.newMessageStream();
-			out.println( "[ INFO ] " + currentClass.getClass().getSimpleName() + ": " + text );
+		MessageConsole myConsole = findConsole( CONSOLE_NAME );
+		MessageConsoleStream out = myConsole.newMessageStream();
+		out.println( "[ INFO ] " + currentClass.getClass().getSimpleName() + ": " + text );
 	}
 
 	private static MessageConsole findConsole( String name )

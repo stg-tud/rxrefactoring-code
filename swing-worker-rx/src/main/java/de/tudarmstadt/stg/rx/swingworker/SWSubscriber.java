@@ -41,6 +41,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	private SwingWorker.StateValue currentState;
 	private CountDownLatch countDownLatch;
 	private SWChannel<ResultType, ProcessType> channel;
+	private boolean firstEmission;
 
 	/**
 	 * Constructor: each observer has a reference to the observable object
@@ -106,34 +107,34 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	 * @param channel
 	 *            Data transfer object for chunks and asyncResult
 	 */
-	@Override
-	public final void onNext( SWChannel<ResultType, ProcessType> channel )
-	{
-		if (channel.getHandshake())
-		{
-			this.channel = channel;
-			channel.setHandshake(false);
-			return;
-		}
+    @Override
+    public final void onNext( SWChannel<ResultType, ProcessType> channel )
+    {
+        if ( this.firstEmission )
+        {
+            this.channel = channel;
+            this.firstEmission = false;
+            return;
+        }
 
-		asyncResult = channel.getResult();
-		if ( channel.isProgressValueAvailable() )
-		{
-			setProgress( channel.getProgressAndReset() );
-		}
+        asyncResult = channel.getResult();
+        if ( channel.isProgressValueAvailable() )
+        {
+            setProgress( channel.getProgressAndReset() );
+        }
 
-		channel.lockChunks();
-		try
-		{
-			List<ProcessType> processedChunks = channel.getChunks();
-			process( processedChunks );
-			channel.removeChunks( processedChunks );
-		}
-		finally
-		{
-			channel.unlockChunks();
-		}
-	}
+        channel.lockChunks();
+        try
+        {
+            List<ProcessType> processedChunks = channel.getChunks();
+            process( processedChunks );
+            channel.removeChunks( processedChunks );
+        }
+        finally
+        {
+            channel.unlockChunks();
+        }
+    }
 
 	/**
 	 * Updates the {@link CountDownLatch} setting it to 0. Calls
@@ -418,7 +419,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 
 	}
 
-	void setChannel(SWChannel<ResultType, ProcessType> channel)
+	void setChannel( SWChannel<ResultType, ProcessType> channel )
 	{
 		this.channel = channel;
 	}
@@ -430,6 +431,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 		this.currentState = SwingWorker.StateValue.PENDING;
 		this.progress = new AtomicInteger( 0 );
 		this.cancelled = new AtomicBoolean( false );
+		firstEmission = true;
 	}
 
 	private boolean isSubscribed()

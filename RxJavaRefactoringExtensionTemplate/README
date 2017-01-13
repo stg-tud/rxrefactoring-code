@@ -31,8 +31,6 @@ Instructions to create an extension of the RxJavaRefactoring Plugin
 	   
 	b) Implement the interface. You can use RxJavaRefactoringExtesionSwingWorker 
 	   as guide.
-	   
-TODO: add reference to documentation
 
 ####################################################################
 
@@ -62,6 +60,4 @@ can be anywhere. See the documentation for examples.
 
 Notice that classes to be used in the unit tests must be exported in the 
 corresponding plugin. For example: In MANIFEST.MF Export-Package: rxjavarefactoring, to
-have access to the class Extension from RxJavaRefactoringExtensionTemplate
- 
-TODO: add reference to documentation
+have access to the class Extension from RxJavaRefactoringExtensionTemplates
