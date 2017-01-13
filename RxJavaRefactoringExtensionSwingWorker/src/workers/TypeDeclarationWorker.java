@@ -7,7 +7,7 @@ import java.util.Map;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
 
-import domain.RxObservableDto;
+import domain.RxObservableModel;
 import domain.SwingWorkerInfo;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.utils.ASTUtil;
@@ -101,12 +101,12 @@ public class TypeDeclarationWorker extends GeneralWorker
 		if ( doInBackgroundBlock != null )
 		{
 			String icuName = icu.getElementName();
-			RxObservableDto observableDto = createObservableDto( icuName, refactoringVisitor );
+			RxObservableModel observableDto = createObservableDto( icuName, refactoringVisitor );
 			observableDto.setProcessType( processType );
 			observableDto.setResultType( resultType );
 
 			Map<String, Object> observableData = new HashMap<>();
-			observableData.put( "dto", observableDto );
+			observableData.put( "model", observableDto );
 			String observableTemplate = "getRxObservable.ftl";
 
 			String observableString = TemplateUtils.processTemplate( observableTemplate, observableData );

@@ -7,9 +7,9 @@ import java.util.Map;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
 
-import domain.RxObservableDto;
-import domain.RxObserverDto;
-import domain.SWSubscriberDto;
+import domain.RxObservableModel;
+import domain.RxObserverModel;
+import domain.SWSubscriberModel;
 import domain.SwingWorkerInfo;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.utils.ASTUtil;
@@ -126,10 +126,10 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 	{
 		String icuName = icu.getElementName();
 		String rxSubscriberName = "rxSubscriber";
-		SWSubscriberDto subscriberDto = createSWSubscriberDto( rxSubscriberName, icuName, refactoringVisitor );
+		SWSubscriberModel subscriberDto = createSWSubscriberDto( rxSubscriberName, icuName, refactoringVisitor );
 
 		Map<String, Object> subscriberData = new HashMap<>();
-		subscriberData.put( "dto", subscriberDto );
+		subscriberData.put( "model", subscriberDto );
 		String subscriberTemplate = "subscriber.ftl";
 
 		String subscriberString = TemplateUtils.processTemplate( subscriberTemplate, subscriberData );
@@ -164,10 +164,10 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 			ClassInstanceCreation classInstanceCreation )
 	{
 		String icuName = icu.getElementName();
-		RxObservableDto observableDto = createObservableDto( icuName, refactoringVisitor );
+		RxObservableModel observableDto = createObservableDto( icuName, refactoringVisitor );
 
 		Map<String, Object> observableData = new HashMap<>();
-		observableData.put( "dto", observableDto );
+		observableData.put( "model", observableDto );
 		String observableTemplate = "observable.ftl";
 
 		String observableString = TemplateUtils.processTemplate( observableTemplate, observableData );
@@ -178,10 +178,10 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 		Statement referenceStatement = ASTUtil.findParent( classInstanceCreation, Statement.class );
 		singleUnitWriter.addBefore( observableStatement, referenceStatement );
 
-		RxObserverDto subscriberDto = createObserverDto( null, refactoringVisitor, observableDto );
+		RxObserverModel subscriberDto = createObserverDto( null, refactoringVisitor, observableDto );
 
 		Map<String, Object> observerData = new HashMap<>();
-		observerData.put( "dto", subscriberDto );
+		observerData.put( "model", subscriberDto );
 		String observerTemplate = "observer.ftl";
 
 		String observerString = TemplateUtils.processTemplate( observerTemplate, observerData );

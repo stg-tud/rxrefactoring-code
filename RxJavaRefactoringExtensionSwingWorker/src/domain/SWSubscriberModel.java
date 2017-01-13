@@ -8,7 +8,7 @@ import java.util.List;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/27/2016
  */
-public class SWSubscriberDto
+public class SWSubscriberModel
 {
     private String resultType;
     private String processType;
@@ -22,7 +22,7 @@ public class SWSubscriberDto
     private List<String> methods;
     private List<String> typeDeclarations;
 
-    public SWSubscriberDto()
+    public SWSubscriberModel()
     {
         fieldDeclarations = new ArrayList<>();
         methods = new ArrayList<>();

@@ -1,3 +1,3 @@
 @Override
-protected ${dto.resultType} doInBackground() throws Exception
-${dto.doInBackgroundBlock}
+protected ${model.resultType} doInBackground() throws Exception
+${model.doInBackgroundBlock}

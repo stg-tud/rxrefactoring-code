@@ -7,8 +7,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
-import rx.Subscriber;
-
 /**
  * Description: Data transfer object to allow the interaction
  * between {@link SWEmitter} and {@link SWSubscriber}
@@ -18,7 +16,7 @@ import rx.Subscriber;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/01/2016
  */
-public final class SWDto<ReturnType, ProcessType>
+public final class SWChannel<ReturnType, ProcessType>
 {
 	private static final int DEFAULT_PROGRESS = -1;
 	private ReturnType asyncResult;
@@ -28,7 +26,7 @@ public final class SWDto<ReturnType, ProcessType>
 	private Object asyncResultLock;
 	private AtomicBoolean handshake;
 
-	SWDto()
+	SWChannel()
 	{
 		this.progress = new AtomicInteger( DEFAULT_PROGRESS );
 		this.chunks = new ArrayList<ProcessType>();
@@ -44,7 +42,7 @@ public final class SWDto<ReturnType, ProcessType>
 	 *            chunks of data to be added
 	 * @return
 	 */
-	SWDto<ReturnType, ProcessType> send( ProcessType... chunks )
+	SWChannel<ReturnType, ProcessType> send(ProcessType... chunks )
 	{
 		synchronized ( this.chunks )
 		{
@@ -62,7 +60,7 @@ public final class SWDto<ReturnType, ProcessType>
 	 *         See {@link SWEmitter#setProgress(int)}
 	 *         and {@link SWEmitter#publish(Object[])}
 	 */
-	SWDto<ReturnType, ProcessType> setResult( ReturnType asyncResult )
+	SWChannel<ReturnType, ProcessType> setResult(ReturnType asyncResult )
 	{
 		synchronized ( asyncResultLock )
 		{
@@ -72,7 +70,7 @@ public final class SWDto<ReturnType, ProcessType>
 	}
 
 	/**
-	 * Getter to retrieve the chunks in {@link SWSubscriber#onNext(SWDto)}
+	 * Getter to retrieve the chunks in {@link SWSubscriber#onNext(SWChannel)}
 	 * 
 	 * @return the chunks as list
 	 */
@@ -88,7 +86,7 @@ public final class SWDto<ReturnType, ProcessType>
 
 	/**
 	 * To remove chunks after they have been processed.
-	 * See {@link SWSubscriber#onNext(SWDto)}
+	 * See {@link SWSubscriber#onNext(SWChannel)}
 	 * 
 	 * @param chunks
 	 */
@@ -101,8 +99,8 @@ public final class SWDto<ReturnType, ProcessType>
 	}
 
 	/**
-	 * Retrieves the async result cached in this Dto.
-	 * See {@link SWSubscriber#onNext(SWDto)}
+	 * Retrieves the async result from the channel.
+	 * See {@link SWSubscriber#onNext(SWChannel)}
 	 * 
 	 * @return
 	 */
@@ -122,7 +120,7 @@ public final class SWDto<ReturnType, ProcessType>
 	 * @param progress
 	 * @return
 	 */
-	SWDto<ReturnType, ProcessType> setProgress( int progress )
+	SWChannel<ReturnType, ProcessType> setProgress(int progress )
 	{
 		this.progress.set( progress );
 		return this;
@@ -130,7 +128,7 @@ public final class SWDto<ReturnType, ProcessType>
 
 	/**
 	 * To identify whether a progress value was sent and processed.
-	 * See {@link SWSubscriber#onNext(SWDto)}
+	 * See {@link SWSubscriber#onNext(SWChannel)}
 	 * 
 	 * @return
 	 */
@@ -142,7 +140,7 @@ public final class SWDto<ReturnType, ProcessType>
 	/**
 	 * To get the progress for processing and reset its value so it is
 	 * not processed multiple times.
-	 * See {@link SWSubscriber#onNext(SWDto)}
+	 * See {@link SWSubscriber#onNext(SWChannel)}
 	 * 
 	 * @return
 	 */
@@ -168,7 +166,7 @@ public final class SWDto<ReturnType, ProcessType>
 		return handshake.get();
 	}
 
-	SWDto<ReturnType, ProcessType> setHandshake(boolean handshake)
+	SWChannel<ReturnType, ProcessType> setHandshake(boolean handshake)
 	{
 		this.handshake.set(handshake);
 		return this;

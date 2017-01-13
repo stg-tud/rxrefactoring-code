@@ -1,7 +1,7 @@
-<#if dto.observerName??>
-    <#if dto.variableDecl>SWSubscriber<${dto.resultType}, ${dto.processType}></#if> ${dto.observerName} =
+<#if model.observerName??>
+    <#if model.variableDecl>SWSubscriber<${model.resultType}, ${model.processType}></#if> ${model.observerName} =
 </#if>
-    new SWSubscriber<${dto.resultType}, ${dto.processType}>( ${dto.observableName} ) {
+    new SWSubscriber<${model.resultType}, ${model.processType}>( ${model.observableName} ) {
 
 <#include "common/processBlock.ftl">
 

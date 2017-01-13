@@ -1,4 +1,4 @@
-rx.Observable <SWDto<${dto.resultType}, ${dto.processType}>> ${dto.varName} =
-    rx.Observable.fromEmitter(new SWEmitter<${dto.resultType}, ${dto.processType}>() {
+rx.Observable <SWChannel<${model.resultType}, ${model.processType}>> ${model.varName} =
+    rx.Observable.fromEmitter(new SWEmitter<${model.resultType}, ${model.processType}>() {
     <#include "common/doInBackgroundBlock.ftl">
 }, Emitter.BackpressureMode.BUFFER );

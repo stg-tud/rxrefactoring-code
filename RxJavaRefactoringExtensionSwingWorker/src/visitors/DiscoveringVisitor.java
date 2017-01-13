@@ -24,7 +24,6 @@ public class DiscoveringVisitor extends ASTVisitor
 	private final List<ClassInstanceCreation> classInstanceCreations;
 	private final List<SingleVariableDeclaration> singleVarDeclarations;
 	private final List<MethodDeclaration> methodDeclarations;
-
 	private final List<MethodInvocation> methodInvocations;
 
 	public DiscoveringVisitor( String classBinaryName )

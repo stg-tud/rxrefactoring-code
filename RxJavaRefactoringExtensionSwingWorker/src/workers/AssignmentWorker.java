@@ -7,9 +7,9 @@ import java.util.Map;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
 
-import domain.RxObservableDto;
-import domain.RxObserverDto;
-import domain.SWSubscriberDto;
+import domain.RxObservableModel;
+import domain.RxObserverModel;
+import domain.SWSubscriberModel;
 import domain.SwingWorkerInfo;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.utils.ASTUtil;
@@ -122,10 +122,10 @@ public class AssignmentWorker extends GeneralWorker
 		String icuName = icu.getElementName();
 		SimpleName swingWorkerName = (SimpleName) assignment.getLeftHandSide();
 		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.getIdentifier() );
-		SWSubscriberDto subscriberDto = createSWSubscriberDto( rxObserverName, icuName, refactoringVisitor );
+		SWSubscriberModel subscriberDto = createSWSubscriberDto( rxObserverName, icuName, refactoringVisitor );
 
 		Map<String, Object> subscriberData = new HashMap<>();
-		subscriberData.put( "dto", subscriberDto );
+		subscriberData.put( "model", subscriberDto );
 		String subscriberTemplate = "subscriber.ftl";
 
 		String subscriberString = TemplateUtils.processTemplate( subscriberTemplate, subscriberData );
@@ -150,10 +150,10 @@ public class AssignmentWorker extends GeneralWorker
 			Assignment assignment )
 	{
 		String icuName = icu.getElementName();
-		RxObservableDto observableDto = createObservableDto( icuName, refactoringVisitor );
+		RxObservableModel observableDto = createObservableDto( icuName, refactoringVisitor );
 
 		Map<String, Object> observableData = new HashMap<>();
-		observableData.put( "dto", observableDto );
+		observableData.put( "model", observableDto );
 		String observableTemplate = "observable.ftl";
 
 		String observableString = TemplateUtils.processTemplate( observableTemplate, observableData );
@@ -166,11 +166,11 @@ public class AssignmentWorker extends GeneralWorker
 
 		SimpleName swingWorkerName = (SimpleName) assignment.getLeftHandSide();
 		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.getIdentifier() );
-		RxObserverDto observerDto = createObserverDto( rxObserverName, refactoringVisitor, observableDto );
+		RxObserverModel observerDto = createObserverDto( rxObserverName, refactoringVisitor, observableDto );
 		observerDto.setVariableDecl( false );
 
 		Map<String, Object> observerData = new HashMap<>();
-		observerData.put( "dto", observerDto );
+		observerData.put( "model", observerDto );
 		String observerTemplate = "observer.ftl";
 
 		String observerString = TemplateUtils.processTemplate( observerTemplate, observerData );

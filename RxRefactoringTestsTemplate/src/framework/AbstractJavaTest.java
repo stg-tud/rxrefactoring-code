@@ -10,7 +10,7 @@ import org.junit.After;
 import org.junit.Before;
 
 /**
- * Description: Abstract test for android projects<br>
+ * Description: Abstract test for java projects<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/13/2016
  */

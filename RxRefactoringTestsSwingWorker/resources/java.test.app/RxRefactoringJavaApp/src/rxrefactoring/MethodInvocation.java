@@ -7,20 +7,22 @@ import java.util.concurrent.TimeoutException;
 
 import javax.swing.*;
 
+import de.tudarmstadt.stg.rx.swingworker.SWSubscriber;
+
 public class MethodInvocation
 {
-	private SwingWorker<String, Integer> swingWorker;
+	private SWSubscriber<String, Integer> rxObserver;
 
 	public void swingWorkerInvocations()
 	{
-		swingWorker.addPropertyChangeListener(null);
-		swingWorker.cancel(true);
-		swingWorker.execute();
-		swingWorker.firePropertyChange("propertyName", "oldValue", "newValue");
+		rxObserver.addPropertyChangeListener(null);
+		rxObserver.cancelObservable(true);
+		rxObserver.executeObservable();
+		rxObserver.firePropertyChange("propertyName", "oldValue", "newValue");
 
 		try
 		{
-			String asyncResult = swingWorker.get();
+			String asyncResult = rxObserver.get();
 		}
 		catch ( InterruptedException e )
 		{
@@ -33,7 +35,7 @@ public class MethodInvocation
 
 		try
 		{
-			String asyncResult = swingWorker.get(1000L, TimeUnit.SECONDS);
+			String asyncResult = rxObserver.get(1000L, TimeUnit.SECONDS);
 		}
 		catch ( InterruptedException e )
 		{
@@ -48,18 +50,18 @@ public class MethodInvocation
 			e.printStackTrace();
 		}
 
-		int progress = swingWorker.getProgress();
+		int progress = rxObserver.getProgress();
 
-		PropertyChangeSupport propertyChangeSupport = swingWorker.getPropertyChangeSupport();
+		PropertyChangeSupport propertyChangeSupport = rxObserver.getPropertyChangeSupport();
 
-		SwingWorker.StateValue state = swingWorker.getState();
+		SwingWorker.StateValue state = rxObserver.getState();
 
-		boolean cancelled = swingWorker.isCancelled();
+		boolean cancelled = rxObserver.isCancelled();
 
-		boolean done = swingWorker.isDone();
+		boolean done = rxObserver.isDone();
 
-		swingWorker.removePropertyChangeListener(null);
+		rxObserver.removePropertyChangeListener(null);
 
-		swingWorker.run();
+		rxObserver.runObservable();
 	}
 }

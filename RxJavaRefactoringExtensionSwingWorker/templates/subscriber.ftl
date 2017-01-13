@@ -1,10 +1,10 @@
-class ${dto.className} extends SWSubscriber<${dto.resultType}, ${dto.processType}>{
+class ${model.className} extends SWSubscriber<${model.resultType}, ${model.processType}>{
 
-<#list dto.fieldDeclarations as fieldDeclaration>
+<#list model.fieldDeclarations as fieldDeclaration>
     ${fieldDeclaration}
 </#list>
 
-${dto.className}() {
+${model.className}() {
     setObservable(getRxObservable());
 }
 
@@ -14,11 +14,11 @@ ${dto.className}() {
 
 <#include "common/doneBlock.ftl">
 
-<#list dto.methods as method>
+<#list model.methods as method>
     ${method}
 </#list>
 
-<#list dto.typeDeclarations as typeDeclaration>
+<#list model.typeDeclarations as typeDeclaration>
     ${typeDeclaration}
 </#list>
 }

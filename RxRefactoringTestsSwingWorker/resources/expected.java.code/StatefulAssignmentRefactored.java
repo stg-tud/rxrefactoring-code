@@ -5,7 +5,7 @@ import java.util.concurrent.ExecutionException;
 
 import javax.swing.*;
 
-import de.tudarmstadt.stg.rx.swingworker.SWDto;
+import de.tudarmstadt.stg.rx.swingworker.SWChannel;
 import de.tudarmstadt.stg.rx.swingworker.SWEmitter;
 import de.tudarmstadt.stg.rx.swingworker.SWSubscriber;
 import rx.Emitter;
@@ -27,7 +27,7 @@ public class StatefulAssignment
 				setObservable( getRxObservable() );
 			}
 
-			private rx.Observable<SWDto<String, Integer>> getRxObservable()
+			private rx.Observable<SWChannel<String, Integer>> getRxObservable()
 			{
 				return rx.Observable.fromEmitter( new SWEmitter<String, Integer>()
 				{

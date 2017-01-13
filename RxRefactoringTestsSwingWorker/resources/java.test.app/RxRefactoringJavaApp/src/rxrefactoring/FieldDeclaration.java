@@ -2,17 +2,31 @@ package rxrefactoring;
 
 import javax.swing.*;
 
+import de.tudarmstadt.stg.rx.swingworker.SWChannel;
+import de.tudarmstadt.stg.rx.swingworker.SWEmitter;
+import de.tudarmstadt.stg.rx.swingworker.SWSubscriber;
+import rx.Emitter;
+
 public class FieldDeclaration
 {
-	private SwingWorker<String, Integer> swingWorker;
+	private SWSubscriber<String, Integer> rxObserver;
 	
-	private SwingWorker<String, String> anotherWorker = new SwingWorker<String, String>(){
-		@Override
-		protected String doInBackground() throws Exception 
-		{
-			return "AsyncResult";
-		}
-	};
+	private SWSubscriber<String, String> anotherRxObserver = new RxObserver();
 
-	private static SwingWorker aThirdSwingWorker;
+	class RxObserver extends SWSubscriber<String, String> {
+		RxObserver() {
+			setObservable(getRxObservable());
+		}
+
+		private rx.Observable<SWChannel<String, String>> getRxObservable() {
+			return rx.Observable.fromEmitter(new SWEmitter<String, String>() {
+				@Override
+				protected String doInBackground() throws Exception {
+					return "AsyncResult";
+				}
+			}, Emitter.BackpressureMode.BUFFER);
+		}
+	}
+
+	private static SWSubscriber aThirdRxObserver;
 }

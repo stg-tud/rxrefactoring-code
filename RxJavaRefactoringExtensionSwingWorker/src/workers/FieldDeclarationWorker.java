@@ -7,7 +7,7 @@ import java.util.Map;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
 
-import domain.SWSubscriberDto;
+import domain.SWSubscriberModel;
 import domain.SwingWorkerInfo;
 import rxjavarefactoring.framework.codegenerators.ASTNodeFactory;
 import rxjavarefactoring.framework.utils.ASTUtil;
@@ -106,10 +106,10 @@ public class FieldDeclarationWorker extends GeneralWorker
 		VariableDeclarationFragment varDeclFrag = (VariableDeclarationFragment) fieldDeclaration.fragments().get( 0 );
 		String oldIdentifier = varDeclFrag.getName().getIdentifier();
 		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( oldIdentifier );
-		SWSubscriberDto subscriberDto = createSWSubscriberDto( rxObserverName, icuName, refactoringVisitor );
+		SWSubscriberModel subscriberDto = createSWSubscriberDto( rxObserverName, icuName, refactoringVisitor );
 
 		Map<String, Object> subscriberData = new HashMap<>();
-		subscriberData.put( "dto", subscriberDto );
+		subscriberData.put( "model", subscriberDto );
 		String subscriberTemplate = "subscriber.ftl";
 
 		String subscriberString = TemplateUtils.processTemplate( subscriberTemplate, subscriberData );

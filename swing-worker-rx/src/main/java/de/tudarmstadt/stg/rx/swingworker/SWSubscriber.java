@@ -28,11 +28,11 @@ import rx.schedulers.SwingScheduler;
  * Created: 12/01/2016
  */
 public abstract class SWSubscriber<ResultType, ProcessType>
-		extends Subscriber<SWDto<ResultType, ProcessType>>
+		extends Subscriber<SWChannel<ResultType, ProcessType>>
 		implements RxSwingWorkerAPI<ResultType>
 {
 
-	private Observable<SWDto<ResultType, ProcessType>> observable;
+	private Observable<SWChannel<ResultType, ProcessType>> observable;
 	private Subscription subscription;
 	private ResultType asyncResult;
 	private PropertyChangeSupport propertyChangeSupport;
@@ -40,14 +40,14 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	private AtomicBoolean cancelled;
 	private SwingWorker.StateValue currentState;
 	private CountDownLatch countDownLatch;
-	private SWDto<ResultType, ProcessType> dto;
+	private SWChannel<ResultType, ProcessType> channel;
 
 	/**
 	 * Constructor: each observer has a reference to the observable object
 	 *
 	 * @param observable
 	 */
-	public SWSubscriber( Observable<SWDto<ResultType, ProcessType>> observable )
+	public SWSubscriber( Observable<SWChannel<ResultType, ProcessType>> observable )
 	{
 		this.propertyChangeSupport = new PropertyChangeSupport( this );
 		this.observable = observable;
@@ -70,7 +70,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	 * @param observable
 	 *            observable
 	 */
-	public void setObservable( Observable<SWDto<ResultType, ProcessType>> observable )
+	public void setObservable( Observable<SWChannel<ResultType, ProcessType>> observable )
 	{
 		this.observable = observable;
 	}
@@ -103,35 +103,35 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	 * Used to process that items after a
 	 * {@link SwingWorker#publish(Object[])} has been invoked.
 	 *
-	 * @param dto
+	 * @param channel
 	 *            Data transfer object for chunks and asyncResult
 	 */
 	@Override
-	public final void onNext( SWDto<ResultType, ProcessType> dto )
+	public final void onNext( SWChannel<ResultType, ProcessType> channel )
 	{
-		if (dto.getHandshake())
+		if (channel.getHandshake())
 		{
-			this.dto = dto;
-			dto.setHandshake(false);
+			this.channel = channel;
+			channel.setHandshake(false);
 			return;
 		}
 
-		asyncResult = dto.getResult();
-		if ( dto.isProgressValueAvailable() )
+		asyncResult = channel.getResult();
+		if ( channel.isProgressValueAvailable() )
 		{
-			setProgress( dto.getProgressAndReset() );
+			setProgress( channel.getProgressAndReset() );
 		}
 
-		dto.lockChunks();
+		channel.lockChunks();
 		try
 		{
-			List<ProcessType> processedChunks = dto.getChunks();
+			List<ProcessType> processedChunks = channel.getChunks();
 			process( processedChunks );
-			dto.removeChunks( processedChunks );
+			channel.removeChunks( processedChunks );
 		}
 		finally
 		{
-			dto.unlockChunks();
+			channel.unlockChunks();
 		}
 	}
 
@@ -406,21 +406,21 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 
 	protected void publish( ProcessType... chunks )
 	{
-		this.dto.lockChunks();
+		this.channel.lockChunks();
 		try
 		{
-			this.onNext( this.dto.send( chunks ) );
+			this.onNext( this.channel.send( chunks ) );
 		}
 		finally
 		{
-			this.dto.unlockChunks();
+			this.channel.unlockChunks();
 		}
 
 	}
 
-	void setDto(SWDto<ResultType, ProcessType> dto)
+	void setChannel(SWChannel<ResultType, ProcessType> channel)
 	{
-		this.dto = dto;
+		this.channel = channel;
 	}
 
 	// ### Private Methods ###

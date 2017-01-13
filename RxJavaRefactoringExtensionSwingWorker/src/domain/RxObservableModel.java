@@ -7,7 +7,7 @@ import rxjavarefactoring.framework.codegenerators.DynamicIdsMapHolder;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016
  */
-public class RxObservableDto
+public class RxObservableModel
 {
 	private String resultType;
 	private String processType;
@@ -25,7 +25,7 @@ public class RxObservableDto
 	 * 
 	 * @param varName
 	 */
-	public RxObservableDto( String varName )
+	public RxObservableModel(String varName )
 	{
 		this.varName = varName;
 	}

@@ -5,9 +5,9 @@ import java.util.List;
 
 import org.eclipse.jdt.core.dom.*;
 
-import domain.RxObservableDto;
-import domain.RxObserverDto;
-import domain.SWSubscriberDto;
+import domain.RxObservableModel;
+import domain.RxObserverModel;
+import domain.SWSubscriberModel;
 import rxjavarefactoring.framework.codegenerators.DynamicIdsMapHolder;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.ASTUtil;
@@ -34,17 +34,16 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 
 	protected void updateImports( RxSwingWorkerWriter singleUnitWriter )
 	{
-//		singleUnitWriter.addImport( "rx.Observable" );
 		singleUnitWriter.addImport( "rx.Emitter" );
 		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWEmitter" );
 		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWSubscriber" );
-		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWDto" );
+		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWChannel" );
 	}
 
-	protected RxObservableDto createObservableDto( String icuName, RefactoringVisitor refactoringVisitor )
+	protected RxObservableModel createObservableDto(String icuName, RefactoringVisitor refactoringVisitor )
 	{
 		String varName = "rxObservable" + DynamicIdsMapHolder.getNextObservableId( icuName );
-		RxObservableDto observableDto = new RxObservableDto( varName );
+		RxObservableModel observableDto = new RxObservableModel( varName );
 		Type resultType = refactoringVisitor.getResultType();
 		if ( resultType != null )
 		{
@@ -73,9 +72,9 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		return observableDto;
 	}
 
-	protected RxObserverDto createObserverDto( String observerName, RefactoringVisitor refactoringVisitor, RxObservableDto observableDto )
+	protected RxObserverModel createObserverDto(String observerName, RefactoringVisitor refactoringVisitor, RxObservableModel observableDto )
 	{
-		RxObserverDto observerDto = new RxObserverDto();
+		RxObserverModel observerDto = new RxObserverModel();
 		observerDto.setObserverName( observerName );
 		Type resultType = refactoringVisitor.getResultType();
 		if ( resultType != null )
@@ -119,59 +118,59 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		}
 	}
 
-	protected SWSubscriberDto createSWSubscriberDto( String subscriberName, String icuName, RefactoringVisitor refactoringVisitor )
+	protected SWSubscriberModel createSWSubscriberDto(String subscriberName, String icuName, RefactoringVisitor refactoringVisitor )
 	{
 		String nextObserverId = DynamicIdsMapHolder.getNextObserverId( icuName );
 		String className = "RxObserver" + nextObserverId;
 		subscriberName = subscriberName + nextObserverId;
-		SWSubscriberDto dto = new SWSubscriberDto();
+		SWSubscriberModel model = new SWSubscriberModel();
 		Type resultType = refactoringVisitor.getResultType();
 		if ( resultType != null )
 		{
-			dto.setResultType( resultType.toString() );
+			model.setResultType( resultType.toString() );
 		}
 		else
 		{
-			dto.setResultType( OBJECT_TYPE_NAME );
+			model.setResultType( OBJECT_TYPE_NAME );
 		}
 		Type processType = refactoringVisitor.getProcessType();
 		if ( processType != null )
 		{
-			dto.setProcessType( processType.toString() );
+			model.setProcessType( processType.toString() );
 		}
 		else
 		{
-			dto.setProcessType( OBJECT_TYPE_NAME );
+			model.setProcessType( OBJECT_TYPE_NAME );
 		}
-		dto.setClassName( className );
-		dto.setSubscriberName( subscriberName );
-		dto.setChunksName( refactoringVisitor.getProcessVariableName() );
+		model.setClassName( className );
+		model.setSubscriberName( subscriberName );
+		model.setChunksName( refactoringVisitor.getProcessVariableName() );
 		Block processBlock = refactoringVisitor.getProcessBlock();
 		if ( processBlock != null )
 		{
-			dto.setProcessBlock( processBlock.toString() );
+			model.setProcessBlock( processBlock.toString() );
 		}
 		Block doneBlock = refactoringVisitor.getDoneBlock();
 		if ( doneBlock != null )
 		{
-			dto.setDoneBlock( doneBlock.toString() );
+			model.setDoneBlock( doneBlock.toString() );
 		}
 		String block = refactoringVisitor.getDoInBackgroundBlock().toString();
-		dto.setDoInBackgroundBlock( specifyClassOfKeywordThis( block, className ) );
+		model.setDoInBackgroundBlock( specifyClassOfKeywordThis( block, className ) );
 		for ( FieldDeclaration fieldDeclaration : refactoringVisitor.getFieldDeclarations() )
 		{
-			dto.getFieldDeclarations().add( fieldDeclaration.toString() );
+			model.getFieldDeclarations().add( fieldDeclaration.toString() );
 		}
 		for ( MethodDeclaration methodDeclaration : refactoringVisitor.getAdditionalMethodDeclarations() )
 		{
-			dto.getMethods().add( methodDeclaration.toString() );
+			model.getMethods().add( methodDeclaration.toString() );
 		}
 		for ( TypeDeclaration typeDeclaration : refactoringVisitor.getTypeDeclarations() )
 		{
-			dto.getTypeDeclarations().add( typeDeclaration.toString() );
+			model.getTypeDeclarations().add( typeDeclaration.toString() );
 		}
 
-		return dto;
+		return model;
 	}
 
 	private String specifyClassOfKeywordThis( String block, String replacement )

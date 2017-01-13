@@ -10,19 +10,19 @@ import rx.functions.Action1;
 /**
  * Description: This class should be use to create an observable.
  * The class interacts with {@link SWSubscriber} by using a
- * thread safe data transfer object {@link SWDto}<br>
+ * thread safe data transfer object {@link SWChannel}<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/02/2016
  */
-public abstract class SWEmitter<ReturnType, ProcessType> implements Action1<Emitter<SWDto<ReturnType, ProcessType>>>
+public abstract class SWEmitter<ReturnType, ProcessType> implements Action1<Emitter<SWChannel<ReturnType, ProcessType>>>
 {
-	private Emitter<? super SWDto<ReturnType, ProcessType>> emitter;
-	private SWDto<ReturnType, ProcessType> dto;
+	private Emitter<? super SWChannel<ReturnType, ProcessType>> emitter;
+	private SWChannel<ReturnType, ProcessType> channel;
 	private AtomicBoolean running = new AtomicBoolean( false );
 
 	/**
 	 * Manages the workflow of a SwingWorker by setting up the data
-	 * transfer object {@link SWDto}{@literal <}ReturnType, ProcessType{@literal >}
+	 * transfer object {@link SWChannel}{@literal <}ReturnType, ProcessType{@literal >}
 	 * that is used for sending progress, chunks of data and finally the async result
 	 * to the emitter.
 	 * 
@@ -30,7 +30,7 @@ public abstract class SWEmitter<ReturnType, ProcessType> implements Action1<Emit
 	 *            emitter
 	 */
 	@Override
-	public final void call( Emitter<SWDto<ReturnType, ProcessType>> emitter )
+	public final void call( Emitter<SWChannel<ReturnType, ProcessType>> emitter )
 	{
 
 		if ( running.get() )
@@ -42,10 +42,10 @@ public abstract class SWEmitter<ReturnType, ProcessType> implements Action1<Emit
 		this.emitter = emitter;
 		try
 		{
-			this.dto = new SWDto<ReturnType, ProcessType>();
-			this.emitter.onNext( this.dto.setHandshake( true ) );
+			this.channel = new SWChannel<ReturnType, ProcessType>();
+			this.emitter.onNext( this.channel.setHandshake( true ) );
 			ReturnType asyncResult = doInBackground();
-			this.emitter.onNext( this.dto.setResult( asyncResult ) );
+			this.emitter.onNext( this.channel.setResult( asyncResult ) );
 			this.emitter.onCompleted();
 		}
 		catch ( Exception throwable )
@@ -76,14 +76,14 @@ public abstract class SWEmitter<ReturnType, ProcessType> implements Action1<Emit
 	 */
 	protected void publish( ProcessType... chunks )
 	{
-		this.dto.lockChunks();
+		this.channel.lockChunks();
 		try
 		{
-			this.emitter.onNext( this.dto.send( chunks ) );
+			this.emitter.onNext( this.channel.send( chunks ) );
 		}
 		finally
 		{
-			this.dto.unlockChunks();
+			this.channel.unlockChunks();
 		}
 
 	}
@@ -96,6 +96,6 @@ public abstract class SWEmitter<ReturnType, ProcessType> implements Action1<Emit
 	 */
 	protected void setProgress( int progress )
 	{
-		this.emitter.onNext( this.dto.setProgress( progress ) );
+		this.emitter.onNext( this.channel.setProgress( progress ) );
 	}
 }

@@ -1,5 +1,5 @@
-<#if dto.doneBlock??>
+<#if model.doneBlock??>
     @Override
     protected void done()
-    ${dto.doneBlock}
+    ${model.doneBlock}
 </#if>

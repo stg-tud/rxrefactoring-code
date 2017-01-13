@@ -1,5 +1,5 @@
-<#if dto.processBlock??>
+<#if model.processBlock??>
     @Override
-    protected void process( List<${dto.processType}> ${dto.chunksName} )
-    ${dto.processBlock}
+    protected void process( List<${model.processType}> ${model.chunksName} )
+    ${model.processBlock}
 </#if>

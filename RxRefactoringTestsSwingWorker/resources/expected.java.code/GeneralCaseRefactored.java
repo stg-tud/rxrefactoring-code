@@ -8,7 +8,7 @@ import java.util.concurrent.TimeoutException;
 
 import javax.swing.*;
 
-import de.tudarmstadt.stg.rx.swingworker.SWDto;
+import de.tudarmstadt.stg.rx.swingworker.SWChannel;
 import de.tudarmstadt.stg.rx.swingworker.SWEmitter;
 import de.tudarmstadt.stg.rx.swingworker.SWSubscriber;
 import rx.Emitter;
@@ -27,7 +27,7 @@ public class GeneralCase
 
 	public void someMethod()
 	{
-		rx.Observable<SWDto<String, Integer>> rxObservable = rx.Observable.fromEmitter(new SWEmitter<String, Integer>()
+		rx.Observable<SWChannel<String, Integer>> rxObservable = rx.Observable.fromEmitter(new SWEmitter<String, Integer>()
 		{
 			@Override
 			protected String doInBackground() throws Exception
@@ -80,7 +80,7 @@ public class GeneralCase
 
 		doSomething(rxObserverRef);
 
-		rx.Observable<SWDto<String, Integer>> rxObservable1 = rx.Observable.fromEmitter(new SWEmitter<String, Integer>()
+		rx.Observable<SWChannel<String, Integer>> rxObservable1 = rx.Observable.fromEmitter(new SWEmitter<String, Integer>()
 		{
 
 			@Override
@@ -92,7 +92,7 @@ public class GeneralCase
 
 		new SWSubscriber<String, Integer>(rxObservable1){};
 
-		rx.Observable<SWDto<String, Integer>> rxObservable2 = rx.Observable.fromEmitter(new SWEmitter<String, Integer>()
+		rx.Observable<SWChannel<String, Integer>> rxObservable2 = rx.Observable.fromEmitter(new SWEmitter<String, Integer>()
 		{
 
 			@Override
