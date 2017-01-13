@@ -5,12 +5,7 @@ import java.util.concurrent.ExecutionException;
 
 import javax.swing.*;
 
-import de.tudarmstadt.stg.rx.swingworker.SWChannel;
-import de.tudarmstadt.stg.rx.swingworker.SWEmitter;
-import de.tudarmstadt.stg.rx.swingworker.SWSubscriber;
-import rx.Emitter;
-
-public class TypeDeclaration extends SWSubscriber<String, Integer>
+public class TypeDeclaration extends SwingWorker<String, Integer>
 {
 
 	private static final int AMOUNT_OF_WORK = 10;
@@ -24,21 +19,18 @@ public class TypeDeclaration extends SWSubscriber<String, Integer>
 		this.variable = 0;
 		this.resultLabel = resultLabel;
 		this.progressLabel = progressLabel;
-		setObservable(getRxObservable());
 	}
 
-	private rx.Observable<SWChannel<String, Integer>> getRxObservable() {
-		return rx.Observable.fromEmitter(new SWEmitter<String, Integer>() {
-			@Override
-			protected String doInBackground() throws Exception {
-				for (int i = 0; i < AMOUNT_OF_WORK; i++) {
-					publish(i);
-					doSomething();
-					Thread.sleep(1000L);
-				}
-				return "Async Result";
-			}
-		}, Emitter.BackpressureMode.BUFFER);
+	@Override
+	protected String doInBackground() throws Exception
+	{
+		for ( int i = 0; i < AMOUNT_OF_WORK; i++ )
+		{
+			publish( i );
+			doSomething();
+			Thread.sleep( 1000L );
+		}
+		return "Async Result";
 	}
 
 	@Override

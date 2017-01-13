@@ -7,60 +7,51 @@ import java.util.concurrent.Executors;
 
 import javax.swing.*;
 
-import de.tudarmstadt.stg.rx.swingworker.SWChannel;
-import de.tudarmstadt.stg.rx.swingworker.SWEmitter;
-import de.tudarmstadt.stg.rx.swingworker.SWSubscriber;
-import rx.Emitter;
-
 public class SimpleName
 {
 	public void doSomething()
 	{
-		rx.Observable<SWChannel<Object, Object>> rxObservable = rx.Observable
-				.fromEmitter(new SWEmitter<Object, Object>() {
-					@Override
-					protected Object doInBackground() throws Exception {
-						return null;
-					}
-				}, Emitter.BackpressureMode.BUFFER);
-		
-		SWSubscriber<Object, Object> rxObserver = new SWSubscriber<Object, Object>(rxObservable) {
+		SwingWorker swingWorker = new SwingWorker(){
+
+			@Override
+			protected Object doInBackground() throws Exception
+			{
+				return null;
+			}
 		};
-		
-		doSomethingElse(rxObserver);
-		
-		rx.Observable<SWChannel<String, Integer>> rxObservable1 = rx.Observable
-				.fromEmitter(new SWEmitter<String, Integer>() {
-					@Override
-					protected String doInBackground() throws Exception {
-						return null;
-					}
-				}, Emitter.BackpressureMode.BUFFER);
-		
-		SWSubscriber<String, Integer> rxObserver2 = new SWSubscriber<String, Integer>(rxObservable1) {
+
+		doSomethingElse(swingWorker);
+
+		SwingWorker<String, Integer> swingWorker2 = new SwingWorker<String, Integer>(){
+
+			@Override
+			protected String doInBackground() throws Exception
+			{
+				return null;
+			}
 		};
-		
-		doSomethingElseParameterized(rxObserver2);
-		
+
+		doSomethingElseParameterized(swingWorker2);
+
 		ExecutorService executor = Executors.newSingleThreadExecutor();
-		rxObserver.executeObservable();
-		
-		if ( rxObserver != null )
+		executor.submit(swingWorker);
+
+		if ( swingWorker != null )
 		{
-			rxObserver.cancelObservable( true );
+			swingWorker.cancel( true );
 		}
 	}
 
-	private void doSomethingElse(SWSubscriber rxObserver) 
+	private void doSomethingElse(SwingWorker swingWorker)
 	{
-		rxObserver.executeObservable();
+		swingWorker.execute();
 	}
-	
-	private void doSomethingElseParameterized(SWSubscriber<String, Integer> rxObserver) 
+
+	private void doSomethingElseParameterized(SwingWorker<String, Integer> swingWorker)
 	{
-		rxObserver.executeObservable();
+		swingWorker.execute();
 	}
-	
-	
-	
+
+
+
 }
