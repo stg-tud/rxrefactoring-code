@@ -18,7 +18,6 @@ import visitors.RxCollector;
 import writer.RxSwingWorkerWriter;
 
 /**
- * Description: <br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016
  */

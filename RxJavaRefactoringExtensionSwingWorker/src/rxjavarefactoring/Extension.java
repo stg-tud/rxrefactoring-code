@@ -56,7 +56,7 @@ public class Extension implements RxJavaRefactoringExtension<RxCollector>
 	{
 		CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( unit, true );
 
-		// Initialize Visitors
+		// Initialize Visitor
 		String className = SwingWorkerInfo.getBinaryName();
 		DiscoveringVisitor discoveringVisitor = new DiscoveringVisitor( className );
 

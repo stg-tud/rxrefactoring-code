@@ -6,7 +6,7 @@ import org.eclipse.jdt.core.dom.AST;
 import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
 
 /**
- * Description: <br>
+ * Description: Single Unit Writer to be used for this extension<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/30/2016
  */

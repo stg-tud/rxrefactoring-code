@@ -108,20 +108,6 @@ public class RefactoringVisitor extends ASTVisitor
 		return true;
 	}
 
-	private boolean isRelevant( TypeDeclaration parent )
-	{
-		boolean ignore = false;
-		for ( TypeDeclaration typeDeclaration : typeDeclarations )
-		{
-			if ( typeDeclaration.equals( parent ) )
-			{
-				ignore = true;
-				break;
-			}
-		}
-		return !ignore;
-	}
-
 	@Override
 	public boolean visit( MethodDeclaration node )
 	{
@@ -227,4 +213,18 @@ public class RefactoringVisitor extends ASTVisitor
 	}
 
 	// ### Private Methods ###
+
+	private boolean isRelevant( TypeDeclaration parent )
+	{
+		boolean ignore = false;
+		for ( TypeDeclaration typeDeclaration : typeDeclarations )
+		{
+			if ( typeDeclaration.equals( parent ) )
+			{
+				ignore = true;
+				break;
+			}
+		}
+		return !ignore;
+	}
 }

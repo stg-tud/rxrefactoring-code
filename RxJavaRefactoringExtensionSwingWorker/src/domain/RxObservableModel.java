@@ -15,7 +15,7 @@ public class RxObservableModel
 	private String doInBackgroundBlock;
 
 	/**
-	 * It generates the name automatically. Example:<br>
+	 * The name of the variable if any. Example:<br>
 	 * <ul>
 	 * <li>rxObservable</li>
 	 * <li>rxObservable1</li>

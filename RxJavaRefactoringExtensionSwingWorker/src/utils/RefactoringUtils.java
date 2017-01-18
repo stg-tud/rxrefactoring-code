@@ -105,6 +105,16 @@ public final class RefactoringUtils
 		return sb.toString();
 	}
 
+	/**
+	 * Uses {@link SwingWorkerInfo} to determine the method name to be used
+	 * after refactoring. If no name for methodName is found in {@link SwingWorkerInfo},
+	 * then it means, that the method belongs to a custom implementation and
+	 * therefore the same name is returned.
+	 * 
+	 * @param methodName
+	 *            original method name
+	 * @return method name to be used after refactoring
+	 */
 	public static String getNewMethodName( String methodName )
 	{
 		String newMethodName = SwingWorkerInfo.getPublicMethodsMap().get( methodName );
