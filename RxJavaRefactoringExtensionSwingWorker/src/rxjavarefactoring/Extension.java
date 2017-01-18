@@ -60,10 +60,10 @@ public class Extension implements RxJavaRefactoringExtension<RxCollector>
 		String className = SwingWorkerInfo.getBinaryName();
 		DiscoveringVisitor discoveringVisitor = new DiscoveringVisitor( className );
 
-		// Collect information using visitors
+		// Collect information using visitor
 		cu.accept( discoveringVisitor );
 
-		// Cache the collected information from visitors in one collector
+		// put the collected information into the collector
 		rxCollector.add( unit, discoveringVisitor.getTypeDeclarations() );
 		rxCollector.add( unit, discoveringVisitor.getFieldDeclarations() );
 		rxCollector.add( unit, discoveringVisitor.getAssignments() );

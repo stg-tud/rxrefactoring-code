@@ -8,6 +8,9 @@ import java.util.Set;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.ICompilationUnit;
 
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.internal.corext.refactoring.util.RefactoringASTParser;
 import rxjavarefactoring.framework.api.RxJavaRefactoringExtension;
 import rxjavarefactoring.framework.refactoring.AbstractRefactorWorker;
 import rxjavarefactoring.framework.utils.PluginUtils;
@@ -44,6 +47,8 @@ public class Extension implements RxJavaRefactoringExtension<ExtCollector>
 	@Override
 	public void processUnit( ICompilationUnit unit, ExtCollector collector )
 	{
+		CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( unit, true );
+
 		// TODO 6 - collect the information from each unit in the collector.
 		// I.e: use a class that extends ASTVisitor to iterate through the unit
 		// and save the relevant in the collector.

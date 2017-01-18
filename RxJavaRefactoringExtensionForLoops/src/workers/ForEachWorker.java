@@ -20,7 +20,12 @@ import writer.SingleUnitExtensionWriter;
 
 /**
  * Author: Ram<br>
+ * ##############
  * Modified by: Grebiel Jose Ifill Brito
+ * Ram's implementation was taken and refactored
+ * No logic regarding the refactoring algorithm
+ * was added neither removed
+ * ##############
  * Created: 01/18/2017
  */
 public class ForEachWorker extends AbstractRefactorWorker<ExtCollector>
