@@ -51,6 +51,6 @@ public class FirstWorker extends AbstractRefactorWorker<ExtCollector>
 				rxMultipleUnitsWriter.addCompilationUnit( compilationUnit );
 			}
 		}
-		return null;
+		return WorkerStatus.OK;
 	}
 }
