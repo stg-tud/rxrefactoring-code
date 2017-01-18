@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+    <extension
+            point="de.tudarmstadt.stg.rxjava.refactoring.extensionpoint">
+        <client
+                class="rxjavarefactoring.Extension">
+        </client>
+    </extension>
+
+    <extension
+            point="org.eclipse.ui.commands">
+        <category
+                name="Category"
+                id="rxRefactoring.commands.category">
+        </category>
+        <command
+                name="AsyncTask to RxJava"
+                categoryId="rxRefactoring.commands.classes"
+                id="rxRefactoring.commands.rxJavaRefactoringAsyncTask">
+        </command>
+    </extension>
+
+    <extension
+            point="org.eclipse.ui.handlers">
+        <handler
+                commandId="rxRefactoring.commands.rxJavaRefactoringAsyncTask"
+                class="handlers.Handler">
+        </handler>
+    </extension>
+
+    <extension
+            point="org.eclipse.ui.menus">
+        <menuContribution
+                locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+            <menu
+                    label="RxJava Refactorings"
+                    mnemonic="R"
+                    id="rxRefactoring.menus.rxJavaRefactorings">
+                <command
+                        commandId="rxRefactoring.commands.rxJavaRefactoringAsyncTask"
+                        mnemonic="1"
+                        id="rxRefactoring.menus.rxJavaRefactorings">
+                </command>
+            </menu>
+        </menuContribution>
+    </extension>
+
+</plugin>

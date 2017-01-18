@@ -40,8 +40,14 @@ public class RxRefactoringHandler extends AbstractHandler
 				if ( extension instanceof RxJavaRefactoringExtension )
 				{
 					// setup extension
-					rxJavaRefactoringApp.setExtension( (RxJavaRefactoringExtension) extension );
-					rxJavaRefactoringApp.setCommandId( commandId );
+					RxJavaRefactoringExtension rxJavaRefactoringExtension = (RxJavaRefactoringExtension) extension;
+					String currentId = rxJavaRefactoringExtension.getId();
+					if (currentId.equals( commandId )) 
+					{
+						rxJavaRefactoringApp.setExtension( (RxJavaRefactoringExtension) extension );
+						rxJavaRefactoringApp.setCommandId( commandId );
+						break;
+					}
 				}
 			}
 		}
