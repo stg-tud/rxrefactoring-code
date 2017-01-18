@@ -249,6 +249,14 @@ public class RxSingleUnitWriter
 		}
 	}
 
+	/**
+	 * Replaces a given type by another type specified as a string
+	 * 
+	 * @param oldType
+	 *            old type
+	 * @param newType
+	 *            new type
+	 */
 	public void replaceType( SimpleType oldType, String newType )
 	{
 		synchronized ( this )
@@ -259,6 +267,14 @@ public class RxSingleUnitWriter
 		}
 	}
 
+	/**
+	 * Replaces a given simple name by another name specified as a string
+	 * 
+	 * @param oldSimpleName
+	 *            old simple name
+	 * @param newName
+	 *            new simple name
+	 */
 	public void replaceSimpleName( SimpleName oldSimpleName, String newName )
 	{
 		synchronized ( this )
@@ -269,6 +285,14 @@ public class RxSingleUnitWriter
 		}
 	}
 
+	/**
+	 * Replaces a given node by another node
+	 * 
+	 * @param newNode
+	 *            new node
+	 * @param oldNode
+	 *            old node
+	 */
 	public void replaceNode( ASTNode newNode, ASTNode oldNode )
 	{
 		synchronized ( this )

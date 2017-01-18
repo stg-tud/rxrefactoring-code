@@ -27,6 +27,7 @@ public class RxRefactoringHandler extends AbstractHandler
 	{
 		RxJavaRefactoringApp rxJavaRefactoringApp = new RxJavaRefactoringApp();
 
+		// Identify the extension that triggers the event
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
 		String commandId = event.getCommand().getId();
 		IConfigurationElement[] config = registry.getConfigurationElementsFor( EXTENSION_ID );
@@ -38,6 +39,7 @@ public class RxRefactoringHandler extends AbstractHandler
 				final Object extension = e.createExecutableExtension( "class" );
 				if ( extension instanceof RxJavaRefactoringExtension )
 				{
+					// setup extension
 					rxJavaRefactoringApp.setExtension( (RxJavaRefactoringExtension) extension );
 					rxJavaRefactoringApp.setCommandId( commandId );
 				}

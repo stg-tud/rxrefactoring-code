@@ -38,6 +38,14 @@ public class RxMultipleUnitsWriter
 		compilationUnits = new HashSet<>();
 	}
 
+	/**
+	 * Only added compilation units will be refactored. If
+	 * a compilation unit is not added to this class by using
+	 * this method, then the changes will be ignored
+	 * 
+	 * @param icu
+	 *            unit to be refactored
+	 */
 	public void addCompilationUnit( ICompilationUnit icu )
 	{
 		synchronized ( this )
@@ -60,9 +68,9 @@ public class RxMultipleUnitsWriter
 			try
 			{
 				RxSingleUnitWriter singleUnitWriter = RxSingleUnitWriterMapHolder.findSingleUnitWriter( icu );
-				CompilationUnitChange compilationUnitChange = createCompilationUnitChange(icu, singleUnitWriter);
-				ImportRewrite importRewriter = createImportWriter(icu, singleUnitWriter);
-				applyChanges(icu, importRewriter, compilationUnitChange, progressMonitor);
+				CompilationUnitChange compilationUnitChange = createCompilationUnitChange( icu, singleUnitWriter );
+				ImportRewrite importRewriter = createImportWriter( icu, singleUnitWriter );
+				applyChanges( icu, importRewriter, compilationUnitChange, progressMonitor );
 			}
 			catch ( Exception e )
 			{
@@ -71,6 +79,11 @@ public class RxMultipleUnitsWriter
 		}
 	}
 
+	/**
+	 *
+	 * @return Map containing the compilation unit instances and the refactored source code as a string
+	 */
+
 	public Map<ICompilationUnit, String> getIcuVsNewSourceCodeMap()
 	{
 		return icuVsNewSourceCodeMap;
@@ -78,7 +91,7 @@ public class RxMultipleUnitsWriter
 
 	// ### Private Methods ###
 
-	private CompilationUnitChange createCompilationUnitChange(ICompilationUnit icu, RxSingleUnitWriter singleUnitWriter) throws JavaModelException
+	private CompilationUnitChange createCompilationUnitChange( ICompilationUnit icu, RxSingleUnitWriter singleUnitWriter ) throws JavaModelException
 	{
 		String name = icu.getElementName();
 		CompilationUnitChange compilationUnitChange = new CompilationUnitChange( name, icu );
@@ -87,7 +100,7 @@ public class RxMultipleUnitsWriter
 		return compilationUnitChange;
 	}
 
-	private ImportRewrite createImportWriter(ICompilationUnit icu, RxSingleUnitWriter singleUnitWriter) throws JavaModelException
+	private ImportRewrite createImportWriter( ICompilationUnit icu, RxSingleUnitWriter singleUnitWriter ) throws JavaModelException
 	{
 		ImportRewrite importRewriter = StubUtility.createImportRewrite( icu, true );
 		Observable
@@ -102,7 +115,7 @@ public class RxMultipleUnitsWriter
 		return importRewriter;
 	}
 
-	private void applyChanges(ICompilationUnit icu, ImportRewrite importRewriter, CompilationUnitChange compilationUnitChange, IProgressMonitor progressMonitor) throws BadLocationException, CoreException
+	private void applyChanges( ICompilationUnit icu, ImportRewrite importRewriter, CompilationUnitChange compilationUnitChange, IProgressMonitor progressMonitor ) throws BadLocationException, CoreException
 	{
 		// process source code
 		String sourceCode = compilationUnitChange.getCompilationUnit().getSource();

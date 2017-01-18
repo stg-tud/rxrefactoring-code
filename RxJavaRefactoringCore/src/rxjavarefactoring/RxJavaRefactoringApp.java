@@ -114,6 +114,15 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 		}
 	}
 
+	/**
+	 * Specify the binary name of the classes that should be refactored.
+	 * This method sets the flag runningForTests to true, which means
+	 * that the files will not be changed. Therefore this method can only
+	 * be used for unit tests.
+	 * 
+	 * @param classNames
+	 *            binary names of the target classes
+	 */
 	public void refactorOnly( String... classNames )
 	{
 		this.targetClasses = new HashSet<>();
@@ -121,6 +130,9 @@ public class RxJavaRefactoringApp extends AbstractRxJavaRefactoringApp
 		runningForTests = true;
 	}
 
+	/**
+	 * @return true if the app is being ran only for tests purposes
+	 */
 	public static boolean isRunningForTests()
 	{
 		return runningForTests;

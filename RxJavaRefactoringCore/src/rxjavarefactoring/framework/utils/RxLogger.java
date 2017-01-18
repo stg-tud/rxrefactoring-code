@@ -60,12 +60,23 @@ public final class RxLogger
 		throwable.printStackTrace();
 	}
 
+	/**
+	 * Shows text in the console of the Eclipse instance that's
+	 * running the plugin
+	 * 
+	 * @param currentClass
+	 *            current class
+	 * @param text
+	 *            message text
+	 */
 	public static void showInConsole( Object currentClass, String text )
 	{
 		MessageConsole myConsole = findConsole( CONSOLE_NAME );
 		MessageConsoleStream out = myConsole.newMessageStream();
 		out.println( "[ INFO ] " + currentClass.getClass().getSimpleName() + ": " + text );
 	}
+
+	// ### Private Methods ###
 
 	private static MessageConsole findConsole( String name )
 	{
