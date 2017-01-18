@@ -73,7 +73,7 @@ public final class SWChannel<ReturnType, ProcessType>
 	 * 
 	 * @return the chunks as list
 	 */
-	List<ProcessType> getChunks()
+	public List<ProcessType> getChunks()
 	{
 		synchronized ( this.chunks )
 		{
@@ -103,7 +103,7 @@ public final class SWChannel<ReturnType, ProcessType>
 	 * 
 	 * @return
 	 */
-	ReturnType getResult()
+	public ReturnType getResult()
 	{
 		synchronized ( asyncResultLock )
 		{

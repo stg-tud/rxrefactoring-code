@@ -114,7 +114,6 @@ public abstract class SWSubscriber<ResultType, ProcessType>
         {
             this.channel = channel;
             this.firstEmission = false;
-            return;
         }
 
         asyncResult = channel.getResult();
