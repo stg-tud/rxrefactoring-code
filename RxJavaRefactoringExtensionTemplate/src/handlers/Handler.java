@@ -6,6 +6,10 @@ import org.eclipse.core.commands.ExecutionException;
 
 import pluginhandlers.RxRefactoringHandler;
 
+/**
+ * Author: Template<br>
+ * Created: 01/18/2017
+ */
 public class Handler extends AbstractHandler
 {
 
