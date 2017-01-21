@@ -7,11 +7,7 @@ import java.util.concurrent.TimeoutException;
 
 import javax.swing.*;
 
-import de.tudarmstadt.stg.rx.swingworker.SWEmitter;
-import de.tudarmstadt.stg.rx.swingworker.SWPackage;
 import de.tudarmstadt.stg.rx.swingworker.SWSubscriber;
-
-import rx.Emitter;
 
 public class MethodInvocation
 {
@@ -67,25 +63,5 @@ public class MethodInvocation
 		rxObserver.removePropertyChangeListener( null );
 
 		rxObserver.runObservable();
-
-		rx.Observable<SWPackage<Object, Object>> rxObservable = rx.Observable.fromEmitter(new SWEmitter<Object, Object>()
-		{
-			@Override
-			protected Object doInBackground() throws Exception
-			{
-				return null;
-			}
-		}, Emitter.BackpressureMode.BUFFER );
-
-		new SWSubscriber<Object, Object>( rxObservable )
-		{
-			@Override
-			public void process(List chunks)
-			{
-				executeObservable();
-				cancelObservable(true);
-				runObservable();
-			}
-		};
 	}
 }

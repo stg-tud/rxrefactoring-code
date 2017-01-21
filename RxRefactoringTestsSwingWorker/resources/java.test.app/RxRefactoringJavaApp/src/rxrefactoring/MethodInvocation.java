@@ -62,22 +62,5 @@ public class MethodInvocation
 		swingWorker.removePropertyChangeListener(null);
 
 		swingWorker.run();
-		
-		new SwingWorker(){
-
-			@Override
-			protected Object doInBackground() throws Exception {
-				return null;
-			}
-			
-			@Override
-			public void process(List chunks)
-			{
-				execute();
-				cancel(true);
-				run();
-			}
-			
-		};
 	}
 }
