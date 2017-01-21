@@ -81,7 +81,12 @@ public final class ASTUtil
 		}
 		else if ( type instanceof FieldDeclaration )
 		{
-			superClass = ( (FieldDeclaration) type ).getType().resolveBinding().getSuperclass();
+			ITypeBinding subclass = ((FieldDeclaration) type).getType().resolveBinding();
+			if (subclass == null)
+			{
+				return false;
+			}
+			superClass = subclass.getSuperclass();
 		}
 		else if ( type instanceof Type )
 		{

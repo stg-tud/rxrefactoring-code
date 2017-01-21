@@ -11,12 +11,12 @@
     <extension
             point="org.eclipse.ui.commands">
         <category
-                name="Category"
-                id="rxRefactoring.commands.category">
+                name="Rx Refactoring"
+                id="rxRefactoring.commands.rxrefactoring">
         </category>
         <command
                 name="For-Loops to RxJava"
-                categoryId="rxRefactoring.commands.classes"
+                categoryId="rxRefactoring.commands.rxrefactoring"
                 id="rxRefactoring.commands.rxJavaRefactoringForLoops">
         </command>
     </extension>
