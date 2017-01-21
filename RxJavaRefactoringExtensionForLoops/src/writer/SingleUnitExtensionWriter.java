@@ -18,11 +18,8 @@ public class SingleUnitExtensionWriter extends RxSingleUnitWriter
 		super( icu, ast, refactoringDescription );
 	}
 
-	public void replaceStatement( Statement oldStatement, Statement newStatement )
+	public synchronized void replaceStatement( Statement oldStatement, Statement newStatement )
 	{
-		synchronized ( this )
-		{
-			astRewriter.replace( oldStatement, newStatement, null );
-		}
+		astRewriter.replace( oldStatement, newStatement, null );
 	}
 }

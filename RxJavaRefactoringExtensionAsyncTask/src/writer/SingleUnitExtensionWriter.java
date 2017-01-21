@@ -19,72 +19,51 @@ public class SingleUnitExtensionWriter extends RxSingleUnitWriter
 		super( icu, ast, refactoringDescription );
 	}
 
-	public void replace( ASTNode oldValue, ASTNode newValue )
+	public synchronized void replace( ASTNode oldValue, ASTNode newValue )
 	{
-		synchronized ( this )
+		astRewriter.replace( oldValue, newValue, null );
+	}
+
+	public synchronized void addStatementToClass( ASTNode newStatement, TypeDeclaration type )
+	{
+		ListRewrite statementsBlock = astRewriter.getListRewrite( type, TypeDeclaration.BODY_DECLARATIONS_PROPERTY );
+		statementsBlock.insertFirst( newStatement, null );
+	}
+
+	public synchronized void addStatementBefore( Statement newStatement, Statement referenceStatement )
+	{
+		if ( referenceStatement.getParent() instanceof Statement )
 		{
-			astRewriter.replace( oldValue, newValue, null );
+			astRewriter.replace( referenceStatement, newStatement, null );
+		}
+		else
+		{
+			Block parentBlock = ASTUtil.findParent( referenceStatement, Block.class );
+			ListRewrite statementsBlock = astRewriter.getListRewrite( parentBlock, Block.STATEMENTS_PROPERTY );
+			Statement placeHolder = (Statement) astRewriter.createStringPlaceholder( "", ASTNode.EMPTY_STATEMENT );
+			statementsBlock.insertBefore( newStatement, referenceStatement, null );
+			statementsBlock.insertAfter( placeHolder, newStatement, null );
 		}
 	}
 
-	public void addStatementToClass( ASTNode newStatement, TypeDeclaration type )
+	public synchronized void replaceStatement( Statement oldStatement, Statement newStatement )
 	{
-		synchronized ( this )
-		{
-			ListRewrite statementsBlock = astRewriter.getListRewrite( type, TypeDeclaration.BODY_DECLARATIONS_PROPERTY );
-			statementsBlock.insertFirst( newStatement, null );
-		}
+		astRewriter.replace( oldStatement, newStatement, null );
 	}
 
-	public void addStatementBefore( Statement newStatement, Statement referenceStatement )
+	public synchronized void replaceStatement( MethodDeclaration m, MethodDeclaration getAsyncMethod )
 	{
-		synchronized ( this )
-		{
-			if ( referenceStatement.getParent() instanceof Statement )
-			{
-				astRewriter.replace( referenceStatement, newStatement, null );
-			}
-			else
-			{
-				Block parentBlock = ASTUtil.findParent( referenceStatement, Block.class );
-				ListRewrite statementsBlock = astRewriter.getListRewrite( parentBlock, Block.STATEMENTS_PROPERTY );
-				Statement placeHolder = (Statement) astRewriter.createStringPlaceholder( "", ASTNode.EMPTY_STATEMENT );
-				statementsBlock.insertBefore( newStatement, referenceStatement, null );
-				statementsBlock.insertAfter( placeHolder, newStatement, null );
-			}
-		}
+		astRewriter.replace( m, getAsyncMethod, null );
 	}
 
-	public void replaceStatement( Statement oldStatement, Statement newStatement )
+	public synchronized void removeSuperClass( TypeDeclaration classRef )
 	{
-		synchronized ( this )
-		{
-			astRewriter.replace( oldStatement, newStatement, null );
-		}
+		astRewriter.remove( classRef.getSuperclassType(), null );
 	}
 
-	public void replaceStatement( MethodDeclaration m, MethodDeclaration getAsyncMethod )
+	public synchronized void removeMethod( ASTNode parent, TypeDeclaration className )
 	{
-		synchronized ( this )
-		{
-			astRewriter.replace( m, getAsyncMethod, null );
-		}
-	}
-
-	public void removeSuperClass( TypeDeclaration classRef )
-	{
-		synchronized ( this )
-		{
-			astRewriter.remove( classRef.getSuperclassType(), null );
-		}
-	}
-
-	public void removeMethod( ASTNode parent, TypeDeclaration className )
-	{
-		synchronized ( this )
-		{
-			ListRewrite listRewriter = astRewriter.getListRewrite( className, TypeDeclaration.BODY_DECLARATIONS_PROPERTY );
-			listRewriter.remove( parent, null );
-		}
+		ListRewrite listRewriter = astRewriter.getListRewrite( className, TypeDeclaration.BODY_DECLARATIONS_PROPERTY );
+		listRewriter.remove( parent, null );
 	}
 }

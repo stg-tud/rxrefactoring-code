@@ -12,8 +12,6 @@ import org.eclipse.jdt.core.ICompilationUnit;
  */
 public class RxSingleUnitWriterMapHolder
 {
-	private static Object lock = new Object();
-
 	private static Map<ICompilationUnit, RxSingleUnitWriter> rxSingleUnitWriterMap;
 
 	public static void initializeUnitWriters()
@@ -21,23 +19,19 @@ public class RxSingleUnitWriterMapHolder
 		rxSingleUnitWriterMap = new ConcurrentHashMap<>();
 	}
 
-	public static <Writer extends RxSingleUnitWriter> Writer getSingleUnitWriter( ICompilationUnit icu, Writer rxSingleUnitWriterInstance )
+	public synchronized static <Writer extends RxSingleUnitWriter> Writer getSingleUnitWriter( ICompilationUnit icu, Writer rxSingleUnitWriterInstance )
 	{
-		synchronized ( lock )
+		Writer rxSingleUnitWriter = (Writer) rxSingleUnitWriterMap.get( icu );
+		if ( rxSingleUnitWriter != null )
 		{
-
-			Writer rxSingleUnitWriter = (Writer) rxSingleUnitWriterMap.get( icu );
-			if ( rxSingleUnitWriter != null )
-			{
-				return rxSingleUnitWriter;
-			}
-
-			rxSingleUnitWriterMap.put( icu, rxSingleUnitWriterInstance );
-			return rxSingleUnitWriterInstance;
+			return rxSingleUnitWriter;
 		}
+
+		rxSingleUnitWriterMap.put( icu, rxSingleUnitWriterInstance );
+		return rxSingleUnitWriterInstance;
 	}
 
-	public static RxSingleUnitWriter findSingleUnitWriter( ICompilationUnit icu )
+	static RxSingleUnitWriter findSingleUnitWriter( ICompilationUnit icu )
 	{
 		return rxSingleUnitWriterMap.get( icu );
 	}

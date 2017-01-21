@@ -46,12 +46,9 @@ public class RxMultipleUnitsWriter
 	 * @param icu
 	 *            unit to be refactored
 	 */
-	public void addCompilationUnit( ICompilationUnit icu )
+	public synchronized void addCompilationUnit( ICompilationUnit icu )
 	{
-		synchronized ( this )
-		{
-			compilationUnits.add( icu );
-		}
+		compilationUnits.add( icu );
 	}
 
 	/**
