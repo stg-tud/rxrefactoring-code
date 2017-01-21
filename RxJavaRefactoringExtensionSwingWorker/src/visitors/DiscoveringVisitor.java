@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.*;
-
-import domain.SwingWorkerInfo;
 import rxjavarefactoring.framework.utils.ASTUtil;
 
 /**
@@ -133,13 +131,6 @@ public class DiscoveringVisitor extends ASTVisitor
 		ITypeBinding type = node.resolveMethodBinding().getDeclaringClass();
 		if ( ASTUtil.isTypeOf( type, classBinaryName ) )
 		{
-			SimpleName simpleName = node.getName();
-			String identifier = simpleName.getIdentifier();
-			String newName = SwingWorkerInfo.getPublicMethodsMap().get( identifier );
-			if ( newName != null )
-			{
-				simpleName.setIdentifier( newName );
-			}
 			methodInvocations.add( node );
 		}
 
