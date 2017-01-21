@@ -1,6 +1,7 @@
 package rxrefactoring;
 
 import java.beans.PropertyChangeSupport;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -61,5 +62,22 @@ public class MethodInvocation
 		swingWorker.removePropertyChangeListener(null);
 
 		swingWorker.run();
+		
+		new SwingWorker(){
+
+			@Override
+			protected Object doInBackground() throws Exception {
+				return null;
+			}
+			
+			@Override
+			public void process(List chunks)
+			{
+				execute();
+				cancel(true);
+				run();
+			}
+			
+		};
 	}
 }
