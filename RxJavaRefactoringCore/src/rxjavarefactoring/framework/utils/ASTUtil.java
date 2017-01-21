@@ -66,27 +66,46 @@ public final class ASTUtil
 	 */
 	public static boolean isSubclassOf( ASTNode type, String target, boolean isDirectChild )
 	{
+		if ( type == null )
+		{
+			return false;
+		}
 		ITypeBinding superClass = null;
 		if ( type instanceof TypeDeclaration )
 		{
-			superClass = ( (TypeDeclaration) type ).resolveBinding().getSuperclass();
-		}
-		else if ( type instanceof AnonymousClassDeclaration )
-		{
-			superClass = ( (AnonymousClassDeclaration) type ).resolveBinding().getSuperclass();
-		}
-		else if ( type instanceof ClassInstanceCreation )
-		{
-			superClass = ( (ClassInstanceCreation) type ).getType().resolveBinding().getSuperclass();
-		}
-		else if ( type instanceof FieldDeclaration )
-		{
-			ITypeBinding subclass = ((FieldDeclaration) type).getType().resolveBinding();
-			if (subclass == null)
+			ITypeBinding typeBinding = ( (TypeDeclaration) type ).resolveBinding();
+			if ( typeBinding == null )
 			{
 				return false;
 			}
-			superClass = subclass.getSuperclass();
+			superClass = typeBinding.getSuperclass();
+		}
+		else if ( type instanceof AnonymousClassDeclaration )
+		{
+			ITypeBinding typeBinding = ( (AnonymousClassDeclaration) type ).resolveBinding();
+			if ( typeBinding == null )
+			{
+				return false;
+			}
+			superClass = typeBinding.getSuperclass();
+		}
+		else if ( type instanceof ClassInstanceCreation )
+		{
+			ITypeBinding typeBinding = ( (ClassInstanceCreation) type ).getType().resolveBinding();
+			if ( typeBinding == null )
+			{
+				return false;
+			}
+			superClass = typeBinding.getSuperclass();
+		}
+		else if ( type instanceof FieldDeclaration )
+		{
+			ITypeBinding typeBinding = ( (FieldDeclaration) type ).getType().resolveBinding();
+			if ( typeBinding == null )
+			{
+				return false;
+			}
+			superClass = typeBinding.getSuperclass();
 		}
 		else if ( type instanceof Type )
 		{
@@ -156,6 +175,10 @@ public final class ASTUtil
 	 */
 	public static boolean isClassOf( ASTNode type, String target )
 	{
+		if ( type == null )
+		{
+			return false;
+		}
 		ITypeBinding classType = null;
 		if ( type instanceof TypeDeclaration )
 		{
@@ -194,6 +217,10 @@ public final class ASTUtil
 	 */
 	public static boolean isTypeOf( ASTNode type, String target )
 	{
+		if ( type == null )
+		{
+			return false;
+		}
 		return isSubclassOf( type, target, false ) || isClassOf( type, target );
 	}
 
@@ -249,6 +276,10 @@ public final class ASTUtil
 	 */
 	public static String getVariableName( MethodDeclaration methodDeclaration, int parameterIndex ) throws IndexOutOfBoundsException
 	{
+		if ( parameterIndex >= methodDeclaration.parameters().size() )
+		{
+			return null;
+		}
 		Object parameter = methodDeclaration.parameters().get( parameterIndex );
 		SingleVariableDeclaration variableDecl = (SingleVariableDeclaration) parameter;
 		return variableDecl.getName().toString();

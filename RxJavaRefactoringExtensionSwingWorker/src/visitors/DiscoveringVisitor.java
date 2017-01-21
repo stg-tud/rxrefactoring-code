@@ -116,11 +116,14 @@ public class DiscoveringVisitor extends ASTVisitor
 	public boolean visit( MethodDeclaration node )
 	{
 		IMethodBinding binding = node.resolveBinding();
-		ITypeBinding returnType = binding.getReturnType();
-
-		if ( ASTUtil.isTypeOf( returnType, classBinaryName ) )
+		if (binding != null) 
 		{
-			methodDeclarations.add( node );
+			ITypeBinding returnType = binding.getReturnType();
+	
+			if ( ASTUtil.isTypeOf( returnType, classBinaryName ) )
+			{
+				methodDeclarations.add( node );
+			}
 		}
 		return true;
 	}
@@ -128,10 +131,14 @@ public class DiscoveringVisitor extends ASTVisitor
 	@Override
 	public boolean visit( MethodInvocation node )
 	{
-		ITypeBinding type = node.resolveMethodBinding().getDeclaringClass();
-		if ( ASTUtil.isTypeOf( type, classBinaryName ) )
+		IMethodBinding binding = node.resolveMethodBinding();
+		if (binding != null )
 		{
-			methodInvocations.add( node );
+			ITypeBinding type = binding.getDeclaringClass();
+			if ( ASTUtil.isTypeOf(type, classBinaryName) )
+			{
+				methodInvocations.add(node);
+			}
 		}
 
 		for ( Object arg : node.arguments() )
