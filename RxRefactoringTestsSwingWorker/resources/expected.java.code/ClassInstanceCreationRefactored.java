@@ -5,8 +5,8 @@ import java.util.concurrent.ExecutionException;
 
 import javax.swing.*;
 
-import de.tudarmstadt.stg.rx.swingworker.SWChannel;
 import de.tudarmstadt.stg.rx.swingworker.SWEmitter;
+import de.tudarmstadt.stg.rx.swingworker.SWPackage;
 import de.tudarmstadt.stg.rx.swingworker.SWSubscriber;
 import rx.Emitter;
 
@@ -17,7 +17,7 @@ public class ClassInstanceCreation
 
 	public void someMethod()
 	{
-		rx.Observable<SWChannel<String, Integer>> rxObservable = rx.Observable.fromEmitter(new SWEmitter<String, Integer>()
+		rx.Observable<SWPackage<String, Integer>> rxObservable = rx.Observable.fromEmitter(new SWEmitter<String, Integer>()
 		{
 			@Override
 			protected String doInBackground() throws Exception
@@ -65,7 +65,7 @@ public class ClassInstanceCreation
 			}
 		};
 
-		rx.Observable<SWChannel<String, Integer>> rxObservable1 = rx.Observable.fromEmitter(new SWEmitter<String, Integer>()
+		rx.Observable<SWPackage<String, Integer>> rxObservable1 = rx.Observable.fromEmitter(new SWEmitter<String, Integer>()
 		{
 			@Override
 			protected String doInBackground() throws Exception

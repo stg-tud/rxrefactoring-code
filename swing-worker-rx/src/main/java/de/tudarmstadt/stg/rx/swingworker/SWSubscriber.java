@@ -12,10 +12,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.*;
 
-import rx.Observable;
-import rx.Scheduler;
-import rx.Subscriber;
-import rx.Subscription;
+import rx.*;
+import rx.functions.Action1;
+import rx.observables.ConnectableObservable;
 import rx.schedulers.Schedulers;
 import rx.schedulers.SwingScheduler;
 
@@ -28,11 +27,11 @@ import rx.schedulers.SwingScheduler;
  * Created: 12/01/2016
  */
 public abstract class SWSubscriber<ResultType, ProcessType>
-		extends Subscriber<SWChannel<ResultType, ProcessType>>
+		extends Subscriber<SWPackage<ResultType, ProcessType>>
 		implements RxSwingWorkerAPI<ResultType>
 {
 
-	private Observable<SWChannel<ResultType, ProcessType>> observable;
+	private Observable<SWPackage<ResultType, ProcessType>> observable;
 	private Subscription subscription;
 	private ResultType asyncResult;
 	private PropertyChangeSupport propertyChangeSupport;
@@ -40,15 +39,14 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	private AtomicBoolean cancelled;
 	private SwingWorker.StateValue currentState;
 	private CountDownLatch countDownLatch;
-	private SWChannel<ResultType, ProcessType> channel;
-	private boolean firstEmission;
+	private SWPackage<ResultType, ProcessType> lastChannel;
 
 	/**
 	 * Constructor: each observer has a reference to the observable object
 	 *
 	 * @param observable
 	 */
-	public SWSubscriber( Observable<SWChannel<ResultType, ProcessType>> observable )
+	public SWSubscriber( Observable<SWPackage<ResultType, ProcessType>> observable )
 	{
 		this.propertyChangeSupport = new PropertyChangeSupport( this );
 		this.observable = observable;
@@ -71,7 +69,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	 * @param observable
 	 *            observable
 	 */
-	public void setObservable( Observable<SWChannel<ResultType, ProcessType>> observable )
+	public void setObservable( Observable<SWPackage<ResultType, ProcessType>> observable )
 	{
 		this.observable = observable;
 	}
@@ -107,33 +105,19 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	 * @param channel
 	 *            Data transfer object for chunks and asyncResult
 	 */
-    @Override
-    public final void onNext( SWChannel<ResultType, ProcessType> channel )
-    {
-        if ( this.firstEmission )
-        {
-            this.channel = channel;
-            this.firstEmission = false;
-        }
+	@Override
+	public final void onNext( SWPackage<ResultType, ProcessType> channel )
+	{
+		this.lastChannel = channel;
 
-        asyncResult = channel.getResult();
-        if ( channel.isProgressValueAvailable() )
-        {
-            setProgress( channel.getProgressAndReset() );
-        }
+		asyncResult = channel.getResult();
+		if ( channel.isProgressValueAvailable() )
+		{
+			setProgress( channel.getProgressAndReset() );
+		}
 
-        channel.lockChunks();
-        try
-        {
-            List<ProcessType> processedChunks = channel.getChunks();
-            process( processedChunks );
-            channel.removeChunks( processedChunks );
-        }
-        finally
-        {
-            channel.unlockChunks();
-        }
-    }
+		process( channel.getChunks() );
+	}
 
 	/**
 	 * Updates the {@link CountDownLatch} setting it to 0. Calls
@@ -168,6 +152,26 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 		{
 			Scheduler scheduler = Schedulers.computation();
 			subscribeObservable( scheduler );
+		}
+	}
+
+	/**
+	 * The given connectable observable is connected if no subcription is already running.
+	 * {@link Observable#subscribeOn(Scheduler)} and {@link Observable#observeOn(Scheduler)}
+	 * must be already defined in the connectable observable.
+	 * 
+	 * @param connectableObservable
+	 *            connectable observable. Make sure to use the same
+	 *            observable object created with
+	 *            {@link Observable#fromEmitter(Action1, Emitter.BackpressureMode)}
+	 *            to generate it. i.e: <br>
+	 *            connectableObservable = Observable.fromEmitter(...).publish();
+	 */
+	public final void connectObservable( ConnectableObservable<SWPackage<ResultType, ProcessType>> connectableObservable )
+	{
+		if ( !isSubscribed() )
+		{
+			this.subscription = connectableObservable.connect();
 		}
 	}
 
@@ -406,21 +410,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 
 	protected void publish( ProcessType... chunks )
 	{
-		this.channel.lockChunks();
-		try
-		{
-			this.onNext( this.channel.send( chunks ) );
-		}
-		finally
-		{
-			this.channel.unlockChunks();
-		}
-
-	}
-
-	void setChannel( SWChannel<ResultType, ProcessType> channel )
-	{
-		this.channel = channel;
+		this.onNext( new SWPackage<ResultType, ProcessType>( lastChannel.getProcessingLock() ).setChunks( chunks ) );
 	}
 
 	// ### Private Methods ###
@@ -430,7 +420,6 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 		this.currentState = SwingWorker.StateValue.PENDING;
 		this.progress = new AtomicInteger( 0 );
 		this.cancelled = new AtomicBoolean( false );
-		firstEmission = true;
 	}
 
 	private boolean isSubscribed()
@@ -440,16 +429,20 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 
 	private void subscribeObservable( Scheduler scheduler )
 	{
+		validateObservableNotNull();
+		this.subscription = this.observable
+				.observeOn( SwingScheduler.getInstance() )
+				.subscribeOn( scheduler )
+				.subscribe( this );
+	}
+
+	private void validateObservableNotNull()
+	{
 		if ( this.observable == null )
 		{
 			throw new IllegalArgumentException( "observable must be set in the constructor or " +
 					"by using the method setObservable." );
 		}
-
-		this.subscription = this.observable
-				.observeOn( SwingScheduler.getInstance() )
-				.subscribeOn( scheduler )
-				.subscribe( this );
 	}
 
 	private void setState( SwingWorker.StateValue state )

@@ -5,8 +5,8 @@ import java.util.concurrent.ExecutionException;
 
 import javax.swing.*;
 
-import de.tudarmstadt.stg.rx.swingworker.SWChannel;
 import de.tudarmstadt.stg.rx.swingworker.SWEmitter;
+import de.tudarmstadt.stg.rx.swingworker.SWPackage;
 import de.tudarmstadt.stg.rx.swingworker.SWSubscriber;
 import rx.Emitter;
 
@@ -24,7 +24,7 @@ public class StatefulVariableDeclStatement
 				setObservable(getRxObservable());
 			}
 
-			private rx.Observable<SWChannel<String, Integer>> getRxObservable()
+			private rx.Observable<SWPackage<String, Integer>> getRxObservable()
 			{
 				return rx.Observable.fromEmitter(new SWEmitter<String, Integer>()
 											  {

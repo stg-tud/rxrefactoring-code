@@ -36,7 +36,7 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		singleUnitWriter.addImport( "rx.Emitter" );
 		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWEmitter" );
 		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWSubscriber" );
-		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWChannel" );
+		singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWPackage" );
 	}
 
 	protected RxObservableModel createObservableDto(String icuName, RefactoringVisitor refactoringVisitor )

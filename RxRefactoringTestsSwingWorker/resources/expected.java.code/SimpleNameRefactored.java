@@ -6,8 +6,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.swing.*;
 
-import de.tudarmstadt.stg.rx.swingworker.SWChannel;
 import de.tudarmstadt.stg.rx.swingworker.SWEmitter;
+import de.tudarmstadt.stg.rx.swingworker.SWPackage;
 import de.tudarmstadt.stg.rx.swingworker.SWSubscriber;
 import rx.Emitter;
 
@@ -15,7 +15,7 @@ public class SimpleName
 {
 	public void doSomething()
 	{
-		rx.Observable<SWChannel<Object, Object>> rxObservable = rx.Observable.fromEmitter(new SWEmitter<Object, Object>()
+		rx.Observable<SWPackage<Object, Object>> rxObservable = rx.Observable.fromEmitter(new SWEmitter<Object, Object>()
 		{
 			@Override
 			protected Object doInBackground() throws Exception
@@ -28,7 +28,7 @@ public class SimpleName
 
 		doSomethingElse(rxObserver);
 
-		rx.Observable<SWChannel<String, Integer>> rxObservable1 = rx.Observable.fromEmitter(new SWEmitter<String, Integer>()
+		rx.Observable<SWPackage<String, Integer>> rxObservable1 = rx.Observable.fromEmitter(new SWEmitter<String, Integer>()
 		{
 			@Override
 			protected String doInBackground() throws Exception

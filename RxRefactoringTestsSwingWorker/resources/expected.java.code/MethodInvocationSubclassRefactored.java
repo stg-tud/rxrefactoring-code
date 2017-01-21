@@ -2,8 +2,8 @@ package rxrefactoring;
 
 import javax.swing.*;
 
-import de.tudarmstadt.stg.rx.swingworker.SWChannel;
 import de.tudarmstadt.stg.rx.swingworker.SWEmitter;
+import de.tudarmstadt.stg.rx.swingworker.SWPackage;
 import de.tudarmstadt.stg.rx.swingworker.SWSubscriber;
 import rx.Emitter;
 
@@ -22,7 +22,7 @@ public class MethodInvocationSubclass
 			setObservable( getRxObservable() );
 		}
 
-		private rx.Observable<SWChannel<Object, Object>> getRxObservable()
+		private rx.Observable<SWPackage<Object, Object>> getRxObservable()
 		{
 			return rx.Observable.fromEmitter( new SWEmitter<Object, Object>()
 			{
