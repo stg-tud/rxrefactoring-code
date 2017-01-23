@@ -27,4 +27,4 @@ I haven't though yet evaluate if this extension is exactly doing what Ram's tool
 That's still on my TODOs.
 
 # WARNING!
-The tool does not support UNDO. Please do a backup of your projects before runnning the tool!
+The tool does not support UNDO. Please do a backup of your projects before starting the refactoring!
