@@ -93,17 +93,6 @@ public final class SWPackage<ReturnType, ProcessType>
 	}
 
 	/**
-	 * To remove chunks after they have been processed.
-	 * See {@link SWSubscriber#onNext(SWPackage)}
-	 * 
-	 * @param chunks
-	 */
-	void removeChunks( List<ProcessType> chunks )
-	{
-		this.chunks.removeAll( chunks );
-	}
-
-	/**
 	 * Retrieves the async result from the channel.
 	 * See {@link SWSubscriber#onNext(SWPackage)}
 	 * 

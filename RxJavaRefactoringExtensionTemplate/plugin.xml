@@ -37,7 +37,7 @@
         <menuContribution
                 locationURI="menu:org.eclipse.ui.main.menu?after=additions">
             <menu
-                    label="RxJava Refactorings"
+                    label="2Rx"
                     mnemonic="R"
                     id="rxRefactoring.menus.rxJavaRefactorings">
                 <command

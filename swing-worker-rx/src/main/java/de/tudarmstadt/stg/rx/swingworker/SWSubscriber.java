@@ -39,7 +39,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	private AtomicBoolean cancelled;
 	private SwingWorker.StateValue currentState;
 	private CountDownLatch countDownLatch;
-	private SWPackage<ResultType, ProcessType> lastChannel;
+	private SWPackage<ResultType, ProcessType> previousPackage;
 
 	/**
 	 * Constructor: each observer has a reference to the observable object
@@ -102,21 +102,24 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	 * Used to process that items after a
 	 * {@link SwingWorker#publish(Object[])} has been invoked.
 	 *
-	 * @param channel
+	 * @param swPackage
 	 *            Data transfer object for chunks and asyncResult
 	 */
 	@Override
-	public final void onNext( SWPackage<ResultType, ProcessType> channel )
+	public final void onNext( SWPackage<ResultType, ProcessType> swPackage )
 	{
-		this.lastChannel = channel;
+		this.previousPackage = swPackage;
 
-		asyncResult = channel.getResult();
-		if ( channel.isProgressValueAvailable() )
+		asyncResult = swPackage.getResult();
+		if ( swPackage.isProgressValueAvailable() )
 		{
-			setProgress( channel.getProgressAndReset() );
+			setProgress(swPackage.getProgressAndReset());
 		}
 
-		process( channel.getChunks() );
+		if ( !swPackage.getChunks().isEmpty() )
+		{
+			process(swPackage.getChunks());
+		}
 	}
 
 	/**
@@ -130,7 +133,6 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 		countDownLatch.countDown();
 		done();
 		setState( SwingWorker.StateValue.DONE );
-
 	}
 
 	@Override
@@ -410,7 +412,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 
 	protected void publish( ProcessType... chunks )
 	{
-		this.onNext( new SWPackage<ResultType, ProcessType>( lastChannel.getProcessingLock() ).setChunks( chunks ) );
+		this.onNext( new SWPackage<ResultType, ProcessType>( previousPackage.getProcessingLock() ).setChunks( chunks ) );
 	}
 
 	// ### Private Methods ###
