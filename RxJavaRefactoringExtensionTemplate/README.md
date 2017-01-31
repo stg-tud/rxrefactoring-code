@@ -41,4 +41,4 @@
 
 Notice that classes to be used in the unit tests must be exported in the 
 corresponding plugin. For example: In MANIFEST.MF Export-Package: rxjavarefactoring, to
-have access to the class Extension from __RxJavaRefactoringExtensionName__
+have access to the class Extension from RxJavaRefactoringExtension**Name**
