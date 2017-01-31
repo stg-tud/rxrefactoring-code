@@ -8,7 +8,7 @@
   - You will be asked to give the project a new name
 3. Open the file META-INF/MANIFEST.MF
   - Overview Section: Change the name and the id. For Example:
-    - RxJavaRefactoringExtension__Template__ -> RxJavaRefactoringExtension__SwingWorker__
+    - RxJavaRefactoringExtension**Template** -> RxJavaRefactoringExtension**SwingWorker**
   - plugin.xml Section:
     - Replace __[COMMAND_NAME]__ by the name that should appear in the
       RxJava Refactorings menu.
@@ -29,7 +29,7 @@
  - You will be asked to give the project a new name
 3. Open the file META-INF/MANIFEST.MF
  - Overview Section: Change the name and the id. For Example:
-   - RxRefactoringTests__Template__ -> RxRefactoringTests__SwingWorker__
+   - RxRefactoringTests**Template** -> RxRefactoringTests**SwingWorker**
  - Dependencies Section: Add a dependency to the extension of the plugin
    to be tested. For example: __RxJavaRefactoringExtensionSwingWorker__
 4. Implement tests: The plugin works only for Eclipse projects. Therefore all
