@@ -20,6 +20,10 @@
     symbols must be removed here as well.
   - Implement the interface. You can use __RxJavaRefactoringExtesionSwingWorker__ 
     as guide.
+5. Add the jar files required for the refactoring in the __resources__ directory. 
+   If you add jar files that end with *__-sources.jar__, the sources will be 
+   also added to the project after refactoring.
+  - i.e: stg-rxswingworker-1.0.0.jar and stg-rxswingworker-1.0.0-sources.jar
 
 ## Setup Project for UnitTests based on RxRefactoringTestsTemplate
 
