@@ -1,11 +1,6 @@
-Grebiel Jose Ifill Brito
-12/21/2016
+# 2Rx Extension Template
 
-####################################################################
-
-Instructions to create an extension of the RxJavaRefactoring Plugin
-
-####################################################################
+## Instructions to create an extension of the RxJavaRefactoring Plugin
 
 1.) Open Eclipse and import this project:
 	- File -> Import -> General\Existing Projects into Workspace
@@ -32,11 +27,7 @@ Instructions to create an extension of the RxJavaRefactoring Plugin
 	b) Implement the interface. You can use RxJavaRefactoringExtesionSwingWorker 
 	   as guide.
 
-####################################################################
-
-Project for UnitTests based on RxRefactoringTestsTemplate
-
-####################################################################
+# Project for UnitTests based on RxRefactoringTestsTemplate
 
 1.) Open Eclipse and import RxRefactoringTestsTemplate:
 	- File -> Import -> General\Existing Projects into Workspace

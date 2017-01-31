@@ -1,11 +1,6 @@
-Grebiel Jose Ifill Brito
-12/21/2016
+# 2Rx Extension Unit-Test Project Template
 
-####################################################################
-
-Project for UnitTests based on RxRefactoringTestsTemplate
-
-####################################################################
+## Project for UnitTests based on RxRefactoringTestsTemplate
 
 1.) Open Eclipse and import RxRefactoringTestsTemplate:
 	- File -> Import -> General\Existing Projects into Workspace
