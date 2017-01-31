@@ -1,6 +1,6 @@
 # 2Rx Extension Template
 
-## Instructions to create an extension of the RxJavaRefactoring Plugin
+## Create an extension for 2Rx
 
 1. Open Eclipse and import this project:
   - File -> Import -> General\Existing Projects into Workspace
@@ -21,7 +21,7 @@
   - Implement the interface. You can use __RxJavaRefactoringExtesionSwingWorker__ 
     as guide.
 
-# Project for UnitTests based on RxRefactoringTestsTemplate
+## Setup Project for UnitTests based on RxRefactoringTestsTemplate
 
 1. Open Eclipse and import RxRefactoringTestsTemplate:
  - File -> Import -> General\Existing Projects into Workspace
@@ -41,4 +41,4 @@
 
 Notice that classes to be used in the unit tests must be exported in the 
 corresponding plugin. For example: In MANIFEST.MF Export-Package: rxjavarefactoring, to
-have access to the class Extension from RxJavaRefactoringExtension__Name__
+have access to the class Extension from __RxJavaRefactoringExtensionName__
