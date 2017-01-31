@@ -2,7 +2,8 @@
 IMPL Project and Bachelor thesis Grebiel José Ifill Brito
 
 Automated Refactoring of Asynchronous Applications
-(SwingWorkers to RxJava)
+- SwingWorkers to RxJava
+- AsyncTask to RxJava (based on RxFactor's implementation)
 
 ## Overview
 
@@ -10,7 +11,7 @@ This repository contains the source code of __2Rx__, an Eclipse plugin
 that supports extension for automated refactoring of Java Projects.
 
 Furthermore, you find here the source code of __SwingWorker2Rx__. This
-is the extension of __2Rx__ responsible for refactoring __SwingWorker__s
+is the extension of __2Rx__ responsible for refactoring __SwingWorkers__
 into an implementation that uses the __ReactiveX API__ for Java (__RxJava__).
 
 Additionally, we took the implementation of __RxFactor__ and adapted to
@@ -53,7 +54,7 @@ be a client of __2Rx__ as well (__AsyncTask2Rx__).
 In order to test __2Rx__ and any of its extensions, you must import
 __2Rx__ and the corresponding extension(s) into the Eclipse workspace.
 
-I.e: RxJavaRefactoringCore and RxJavaRefactoringExtensionSwingWorker
+ - i.e: RxJavaRefactoringCore and RxJavaRefactoringExtensionSwingWorker
 
 Then you can click on the arrow next to the run or debug button, and
 select __Eclipse Application__. This should open a second instance of
