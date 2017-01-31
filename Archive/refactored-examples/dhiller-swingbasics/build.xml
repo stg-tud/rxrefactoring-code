@@ -1,0 +1,77 @@
+<project name="SwingBasics" default="run">
+	<description>
+		Build file for project SwingBasics
+		This is the demo code for the introduction to java swing
+		http://www.jug-muenster.de/swing-workshop-i-ii-999/
+	</description>
+
+	
+	<property name="api.dir" location="docs/api" />
+	<property name="src.dir" location="src" />
+	<property name="bin.dir" location="bin" />
+
+	
+	<target name="clean">
+		<description>
+			Clean all files that may been created by this build file
+		</description>
+		
+		<delete dir="${api.dir}" includeemptydirs="true" failonerror="false" />
+		<delete dir="${bin.dir}" includeemptydirs="true" failonerror="false" />
+		
+	</target>
+
+	
+	<target name="dist">
+		<description>
+			Build the project for execution
+			Compile source files to binary directory, copy required binaries to binary directory 
+		</description>
+
+		<mkdir dir="${bin.dir}" />
+
+		<javac srcdir="${src.dir}" destdir="${bin.dir}">
+			<include name="**/*.java" />
+		</javac>
+		
+		<copy todir="${bin.dir}">
+			 <fileset dir="${src.dir}">
+				<include name="**/*"/>
+				<exclude name="**/*.java"/>
+			</fileset>
+		</copy>
+		
+	</target>
+
+	
+	<target name="run" depends="dist">
+		<description>
+			Run the demo application
+			This is the entry point for the demos shown in the talk
+		</description>
+
+		<java 
+			classpath="${bin.dir}" 
+			classname="de.jugmuenster.swingbasics.StartDemos" 
+			fork="yes" 
+		/>
+
+	</target>
+
+	
+	<target name="doc">
+		<description>
+			Create the Javadocs
+		</description>
+
+		<mkdir dir="${api.dir}" />
+
+		<javadoc access="package" destdir="${api.dir}">
+			<fileset dir="${src.dir}">
+				<include name="**/*.java" />
+			</fileset>
+		</javadoc>
+
+	</target>
+	
+</project>
