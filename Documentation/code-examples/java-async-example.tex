@@ -1,0 +1,34 @@
+\begin{center}
+\begin{minipage}{0.42\textwidth}
+\begin{sourcecode}
+\begin{javacode}{}
+Runnable runnable = () -> performOpAsync();
+
+Thread thread = new Thread(runnable);
+thread.start();
+
+performOperation();
+// performOpAsync and performOperation run concurrently
+\end{javacode}
+\caption{Async Runnable (Fire \& Forget)}
+\label{code:asyncRunnableExample}
+\end{sourcecode}
+\end{minipage}\hspace{0.6cm}
+\begin{minipage}{0.53\textwidth}
+\begin{sourcecode}
+\begin{javacode}{}
+Callable<Integer> task = () -> computeResult();
+
+ExecutorService ex = Executors.newFixedThreadPool( 4 );
+Future<Integer> future = ex.submit( task );
+
+performOperation();
+// computeResult and performOperation run concurrently
+
+Integer asyncResult = future.get();// blocks until task has completed
+\end{javacode}
+\caption{Async Callable (Future)}
+\label{code:asyncFutureExample}
+\end{sourcecode}
+\end{minipage}
+\end{center}

@@ -1,0 +1,36 @@
+\begin{figure}[H]
+\begin{sourcecode}
+\begin{javacode}{4,10,16,23-25}
+...
+	public void load( File... files ) {
+		this.files = files;
+		// setup subject
+		ConnectableObservable<SWPackage<List<Document>, Document>> connectableObservable = getRxObservable()
+				.observeOn( SwingScheduler.getInstance() )
+				.subscribeOn( Schedulers.computation() )
+				.publish();
+				
+		// register subscribers
+		connectableObservable.subscribe( swPackage -> fetchResult( swPackage.getChunks() ));
+		connectableObservable.subscribe( swPackage -> printChunks( "1", swPackage ));
+		connectableObservable.subscribe( swPackage -> printChunks( "2", swPackage ));
+		connectableObservable.subscribe( swPackage -> printChunks( "3", swPackage ));
+		
+		// connect subject with subscribers
+		connectObservable( connectableObservable );
+	}
+	
+	private rx.Observable<SWPackage<List<Document>, Document>> getRxObservable() {
+		return rx.Observable.fromEmitter( new SWEmitter<List<Document>, Document>(){...
+		}, Emitter.BackpressureMode.BUFFER )
+				.filter( swPackage -> {
+					List<Document> docs = swPackage.getChunks();
+					return swPackage.getResult() == null && !docs.isEmpty() && docs.get(0).getName().contains( ".jpg" );
+				} );
+	}
+...
+\end{javacode}
+\caption{DocumentLoader Class manually modified after \toolextension{}-Refactoring}
+\label{code:example-edited}
+\end{sourcecode}
+\end{figure}

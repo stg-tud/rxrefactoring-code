@@ -1,0 +1,15 @@
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{|C{4cm}|C{4cm}|C{4cm}|}
+\hline
+\bf AsyncTask Method & \bf Rx Object & \bf Rx Equivalent Method\\\hline
+cancel(...) & rx.Subscription & unsubscribe()\\
+execute() & rx.Observable & subscribe()\\
+get(...) & rx.Observable & toBlocking().single()\\
+getStatus() & -- & --\\
+isCancelled() & -- & --\\\hline
+\end{tabular}
+\end{center}
+\caption{Match between AsyncTask and Rx Methods}
+\label{table:asynctask-rx-methods}
+\end{table}

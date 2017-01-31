@@ -1,0 +1,48 @@
+\begin{figure}[H]
+\begin{minipage}{0.48\textwidth}
+\begin{sourcecode}
+\begin{javacode}{1,2}
+private SwingWorker<String, Integer> anotherWorker 
+	= new SwingWorker<String, Integer>(){
+	@Override
+	protected String doInBackground() throws Exception
+	{
+		...
+	}
+	protected void process( List<Integer> chunks ) {...}
+	protected void done() {...}
+};
+\end{javacode}
+\caption{Field Declaration before Refactoring}
+\label{code:fd-before}
+\end{sourcecode}
+\end{minipage}\hspace{0.7cm}
+\begin{minipage}{0.48\textwidth}
+\begin{sourcecode}
+\begin{javacode}{1,2,4,5,7-10,16}
+private SWSubscriber<String,Integer> anotherRxObserver 
+	= new RxObserver();
+
+class RxObserver extends SWSubscriber<String,Integer>{
+	RxObserver(){ setObservable(getRxObservable()); }
+
+	private rx.Observable<SWPackage<String, Integer>> 
+		getRxObservable() {
+		return rx.Observable.fromEmitter( 
+			new SWEmitter<String, Integer>() {
+				@Override
+				protected String doInBackground() 
+				throws Exception {
+					...
+				}
+		}, Emitter.BackpressureMode.BUFFER );
+	}
+	protected void process( List<Integer> chunks ) {...}
+	protected void done() {...}
+}
+\end{javacode}
+\caption{Field Declaration after Refactoring}
+\label{code:fd-after}
+\end{sourcecode}
+\end{minipage}
+\end{figure}

@@ -1,0 +1,38 @@
+\begin{figure}[H]
+\begin{minipage}{0.48\textwidth}
+\begin{sourcecode}
+\begin{javacode}{2}
+public class ClassA 
+	extends SwingWorker<String, Integer> {
+	...
+	public ClassA(...) {
+		...	
+	}
+}
+\end{javacode}
+\caption{Type Declaration before Refactoring}
+\label{code:td-before}
+\end{sourcecode}
+\end{minipage}\hspace{0.7cm}
+\begin{minipage}{0.48\textwidth}
+\begin{sourcecode}
+\begin{javacode}{2,6,9-12}
+public class ClassA 
+	extends SWSubscriber<String, Integer> {
+	...
+	public ClassA(...) {
+		...
+		setObservable( getRxObservable() );
+	}
+	
+	private rx.Observable<SWPackage<String, Integer>> 
+		getRxObservable() {
+			return rx.Observable.fromEmitter( ... );
+	}
+}
+\end{javacode}
+\caption{Type Declaration after Refactoring}
+\label{code:td-after}
+\end{sourcecode}
+\end{minipage}
+\end{figure}

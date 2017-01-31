@@ -1,0 +1,42 @@
+\begin{figure}[H]
+\begin{minipage}{0.48\textwidth}
+\begin{sourcecode}
+\begin{javacode}{1-2}
+SwingWorker<String, Integer> swingWorker 
+	= new SwingWorker<String, Integer>() {
+	@Override
+	protected String doInBackground() throws Exception {
+		...
+	}
+	protected void process(List<Integer> chunks){...}
+	protected void done() {...}
+};
+\end{javacode}
+\caption{Class Instance Creation before Refactoring}
+\label{code:cic-before}
+\end{sourcecode}
+\end{minipage}\hspace{0.7cm}
+\begin{minipage}{0.48\textwidth}
+\begin{sourcecode}
+\begin{javacode}{1-3,9,11-12}
+rx.Observable<SWPackage<String, Integer>> rxObservable 
+	= rx.Observable
+		.fromEmitter(new SWEmitter<String, Integer>() {
+			@Override
+			protected String doInBackground() 
+			throws Exception {
+				...
+			}
+}, Emitter.BackpressureMode.BUFFER );
+
+SWSubscriber<String, Integer> rxObserver 
+	= new SWSubscriber<String, Integer>(rxObservable) {
+	protected void process(List<Integer> chunks){...}
+	protected void done() {...}
+};
+\end{javacode}
+\caption{Class Instance Creation after Refactoring}
+\label{code:cic-after}
+\end{sourcecode}
+\end{minipage}
+\end{figure}

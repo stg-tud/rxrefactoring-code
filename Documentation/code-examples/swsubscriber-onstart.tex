@@ -1,0 +1,13 @@
+\begin{figure}[h]
+\begin{sourcecode}
+\begin{javacode}{}
+public final void onStart() {
+	initialize(); // progress = 0; cancelled = false;
+	this.countDownLatch = new CountDownLatch( 1 );
+	setState( SwingWorker.StateValue.STARTED );
+}
+\end{javacode}
+\caption{SWSubscriber onStart}
+\label{code:swsubscriber-onstart}
+\end{sourcecode}
+\end{figure}

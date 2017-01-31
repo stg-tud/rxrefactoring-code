@@ -1,0 +1,35 @@
+\begin{figure}[H]
+\begin{minipage}{0.48\textwidth}
+\begin{sourcecode}
+\begin{javacode}{}
+Runnable runnable = () -> performOpAsync();
+
+Thread thread = new Thread( runnable );
+thread.start();
+
+performOperation();
+// performOpAsync and performOperation run concurrently
+\end{javacode}
+\caption{Runnable before Refactoring}
+\label{code:con-runnable-before}
+\end{sourcecode}
+\end{minipage}\hspace{0.7cm}
+\begin{minipage}{0.48\textwidth}
+\begin{sourcecode}
+\begin{javacode}{4-6}
+Observable
+        .fromCallable( () -> performOpAsync())
+        .subscribeOn(Schedulers.computation())
+        .filter(item -> validate(item))
+        .map(item -> transform(item))
+        .doOnNext(item -> execute(item))
+        .subscribe();
+
+performOperation();
+// performOpAsync and performOperation run concurrently
+\end{javacode}
+\caption{Runnable after Refactoring (Different Semantic)}
+\label{code:con-runnable-after}
+\end{sourcecode}
+\end{minipage}
+\end{figure}

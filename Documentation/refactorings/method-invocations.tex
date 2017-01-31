@@ -1,0 +1,24 @@
+\begin{figure}[H]
+\begin{minipage}{0.48\textwidth}
+\begin{sourcecode}
+\begin{javacode}{}
+swingWorker.cancel( true );
+swingWorker.execute();
+swingWorker.run();
+\end{javacode}
+\caption{Method Invocations before Refactoring}
+\label{code:mi-before}
+\end{sourcecode}
+\end{minipage}\hspace{0.7cm}
+\begin{minipage}{0.48\textwidth}
+\begin{sourcecode}
+\begin{javacode}{}
+rxObserver.cancelObservable( true );
+rxObserver.executeObservable();
+rxObserver.runObservable();
+\end{javacode}
+\caption{Method Invocations after Refactoring}
+\label{code:mi-after}
+\end{sourcecode}
+\end{minipage}
+\end{figure}

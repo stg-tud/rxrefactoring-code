@@ -1,0 +1,45 @@
+\begin{javacode}{2,3,4,18,20,21}
+...
+Observable<SWChannel<String, Integer>> rxObservable = 
+	Observable.fromEmitter(
+		new SWEmitter<String, Integer>()
+{
+	@Override
+	protected String doInBackground() throws Exception
+	{
+		StringBuilder sb = new StringBuilder();
+		for ( int id = 0; id <= MAX_ID; i++ )
+		{
+			sb.append(executeLongRunningOperation(id));
+			publish( id );
+			setProgress( id * 100 / MAX_ID );
+		}
+		return sb.toString();
+	}
+}, Emitter.BackpressureMode.BUFFER );
+
+SWSubscriber<String, Integer> rxObserver = 
+	new SWSubscriber<String, Integer>(rxObservable)
+{
+	@Override
+	protected void process( List<Integer> chunks )
+	{
+		int lastId = chunks.get(chunks.size() - 1);
+		updateUI( lastId ); // it must be executed in the UI Thread
+	}
+
+	@Override
+	protected void done( )
+	{
+		try
+		{
+			String result = get();
+			showResultInUI( result );  // it must be executed in the UI Thread
+		}
+		catch ( InterruptedException | ExecutionException e )
+		{
+			handleException( e );
+		}
+	}
+};
+\end{javacode}

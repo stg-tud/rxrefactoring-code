@@ -1,0 +1,41 @@
+\begin{figure}[h]
+\begin{minipage}{0.48\textwidth}
+\begin{sourcecode}
+\begin{javacode}{}
+productDao.getProducts().stream()
+        .filter(p ->
+                p.getPrice() > 50 &&
+                p.getStore().equals(STORE_A))
+        .map(p -> new Product(
+                p.getId(),
+                p.getPrice() * 1.10,
+                STORE_B))
+        .forEach(p -> productDao.save(p));
+\end{javacode}
+\caption{Java 8 - Functional Programming}
+\label{code:con-java8}
+\end{sourcecode}
+\end{minipage}\hspace{0.7cm}
+\begin{minipage}{0.48\textwidth}
+\begin{sourcecode}
+\begin{javacode}{9,12}
+Observable.from(productDao.getProducts())
+        .filter(p ->
+                p.getPrice() > 50 &&
+                p.getStore().equals(STORE_A))
+        .map(p -> new Product(
+                p.getId(),
+                p.getPrice() * 1.10,
+                STORE_B))
+        .subscribeOn(Schedulers.computation())
+        .doOnNext(p -> productDao.save(p))
+        .doOnError(t -> handleError(t))
+        .observeOn(SwingSchedulers.getInstance())
+        .doOnCompleted(() -> updateUI())
+        .subscribe();
+\end{javacode}
+\caption{Java 8 - Refactored to RxJava}
+\label{code:con-rxjava}
+\end{sourcecode}
+\end{minipage}
+\end{figure}

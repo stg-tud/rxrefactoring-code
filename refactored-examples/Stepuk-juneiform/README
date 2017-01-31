@@ -1,6 +1,0 @@
-Cuneiform is required:
-
-sudo apt-get install cuneiform
-
-Testing the app:
-You can use the document Document.jpg from the root folder.

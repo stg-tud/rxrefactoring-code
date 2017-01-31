@@ -1,4 +1,17 @@
 /backups/
 /.idea/
+/Documentation/_minted-ifill-brito-bsc-thesis
 */oracle-java-concurrency-tutorial.iml
 *.class
+*.svg
+*.log
+*.ods
+*.aux
+*.bbl
+*.blg
+*.lof
+*.lol
+*.lot
+*.out
+*.gz*
+*.toc

@@ -1,0 +1,34 @@
+\begin{center}
+\begin{minipage}{0.47\textwidth}
+\begin{sourcecode}
+\begin{javacode}{}
+List<Integer> numbers = 
+	Arrays.asList( 1, 3, 4, 5, 8, 13, 15 );
+List<String> evenNumbers = new ArrayList<>();
+for ( int i = 0; i < numbers.size() ; i++ ) {
+    Integer n = numbers.get(i);
+    if ( n % 2 == 0)
+        evenNumbers.add(String.valueOf(n));
+}
+doSomething(eventNumbers);
+\end{javacode}
+\caption{Imperative Programming (Java 8)}
+\label{code:imperative-pro}
+\end{sourcecode}
+\end{minipage}\hspace{0.6cm}
+\begin{minipage}{0.47\textwidth}
+\begin{sourcecode}
+\begin{javacode}{}
+List<Integer> numbers = 
+	Arrays.asList( 1, 3, 4, 5, 8, 13, 15 );
+List<String> eventNumbers = numbers.stream()
+        .filter(n -> n % 2 == 0)
+        .map(n -> String.valueOf(n))
+        .collect(Collectors.toList());
+doSomething(eventNumbers);
+\end{javacode}
+\caption{Functional Programming (Java 8)}
+\label{code:functional-pro}
+\end{sourcecode}
+\end{minipage}
+\end{center}

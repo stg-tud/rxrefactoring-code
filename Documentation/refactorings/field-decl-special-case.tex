@@ -1,0 +1,21 @@
+\begin{figure}[H]
+\begin{sourcecode}
+\begin{javacode}{2-9}
+private SWSubscriber<String, Integer> anotherRxObserver = new SWSubscriber<String, Integer>(
+			rx.Observable.fromEmitter( 
+				new SWEmitter<String, Integer>() {
+					@Override
+					protected String doInBackground() 
+					throws Exception {
+						...
+					}
+			}, Emitter.BackpressureMode.BUFFER )
+	) {
+	protected void process( List<Integer> chunks ) {...}
+	protected void done() {...}
+};	
+\end{javacode}
+\caption{Alternative Refactoring for Field Declaration}
+\label{code:fd-alternative}
+\end{sourcecode}
+\end{figure}

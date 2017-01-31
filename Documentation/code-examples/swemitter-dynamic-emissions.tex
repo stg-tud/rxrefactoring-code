@@ -1,0 +1,17 @@
+\begin{figure}[H]
+\begin{sourcecode}
+\begin{javacode}{}
+...
+	protected void publish( ProcessType... chunks ) {
+		this.emitter.onNext( createPackage().setChunks( chunks ) );
+	}
+...
+	protected void setProgress( int progress ) {
+		this.emitter.onNext( createPackage().setProgress( progress ) );
+	}
+...
+\end{javacode}
+\caption{SWEmitter Dynamic Emissions}
+\label{code:swemitter-dynamic-emissions}
+\end{sourcecode}
+\end{figure}

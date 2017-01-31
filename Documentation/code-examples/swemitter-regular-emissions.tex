@@ -1,0 +1,13 @@
+\begin{figure}[h]
+\begin{sourcecode}
+\begin{javacode}{}
+...
+	this.emitter.onNext( createPackage() ); // init
+	ReturnType asyncResult = doInBackground();
+	this.emitter.onNext( createPackage().setResult( asyncResult ) ); // result
+...
+\end{javacode}
+\caption{SWEmitter Standard Emissions}
+\label{code:swemitter-regular-emissions}
+\end{sourcecode}
+\end{figure}

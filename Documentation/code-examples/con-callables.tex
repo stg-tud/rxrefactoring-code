@@ -1,0 +1,42 @@
+\begin{figure}[H]
+\begin{minipage}{0.48\textwidth}
+\begin{sourcecode}
+\begin{javacode}{}
+Callable<Integer> task = () -> computeResult();
+ExecutorService executor = 
+	Executors.newFixedThreadPool( 4 );
+Future<Integer> future = executor.submit( task );
+
+performOperation();
+
+// blocks until task has completed
+Integer asyncResult = future.get();
+/*
+	Some code here that uses asyncResult
+ */
+\end{javacode}
+\caption{Callable Future before Refactoring}
+\label{code:callable-before}
+\end{sourcecode}
+\end{minipage}\hspace{0.7cm}
+\begin{minipage}{0.48\textwidth}
+\begin{sourcecode}
+\begin{javacode}{}
+Observable.fromCallable( () -> computeResult())
+		.subscribeOn(Schedulers.computation())
+		.observeOn(SwingScheduler.getInstance())
+		.doOnNext(asyncResult -> {
+			// enters here when computeResult() is done
+			/*
+				Some code here that uses asyncResult
+			 */
+		})
+		.subscribe();
+
+performOperation();
+\end{javacode}
+\caption{Callable Future Equivalent after Refactoring}
+\label{code:callable-after}
+\end{sourcecode}
+\end{minipage}
+\end{figure}

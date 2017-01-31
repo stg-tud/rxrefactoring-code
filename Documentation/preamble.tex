@@ -1,0 +1,96 @@
+%Change Bibliografy name to References
+\renewcommand\bibname{References}
+
+\newcommand{\inputjava}[2]{\inputminted[frame=lines,framesep=2mm,linenos,frame=single,fontsize=\small, breaklines=true,highlightcolor=\myMarkerColor, highlightlines={#1}]{java}{#2}}
+\newcommand{\inputcode}[2]{\inputminted[frame=lines,framesep=2mm,linenos,frame=single,fontsize=\small, breaklines=true,highlightcolor=\myMarkerColor, highlightlines={#1}]{text}{#2}}
+\newcommand{\inputftl}[2]{\inputminted[frame=lines,framesep=2mm,linenos,frame=single,fontsize=\small, breaklines=true,highlightcolor=\myMarkerColor, highlightlines={#1}]{text}{#2}}
+
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+\newcommand{\myMarkerColor}{yellow!30}
+\renewcommand{\theFancyVerbLine}{\sffamily\textcolor{black!20}{\scriptsize\oldstylenums{\arabic{FancyVerbLine}}}}
+
+% Command to add notes
+\newenvironment{note}
+{\begin{mdframed}[backgroundcolor=\myMarkerColor, linewidth=1pt]}
+{\end{mdframed}}
+\makeatother
+
+
+% Paper
+\newenvironment{sketch}
+{\begin{mdframed}[backgroundcolor=gray!30, linewidth=1pt]\itshape}
+{\end{mdframed}}
+\makeatother
+
+% Java
+\newcommand{\removeSpaces}[1]{%
+  \begingroup
+  \spaceskip=1sp
+  \xspaceskip=1sp
+  #1%
+  \endgroup}
+
+\newcommand{\java}[1]{\removeSpaces{\mintinline{java}{#1}}}
+%\newcommand{\code}[1]{\removeSpaces{\mintinline{text}{#1}}}
+\newcommand{\code}[1]{\lstinline[basicstyle=\ttfamily\color{black!65}]|#1|}
+
+\newenvironment{javacode}[1]{%
+  \VerbatimEnvironment
+  \begin{center}%
+  	\vspace{0mm}
+    \begin{minipage}{\textwidth}%
+      \begin{minted}[tabsize=2,frame=lines,framesep=2mm,rulecolor=\color{black!10},linenos,frame=single,fontsize=\footnotesize, breaklines=true,highlightcolor=\myMarkerColor, highlightlines={#1}]{java}}
+{%
+      \end{minted}%
+    \end{minipage}%
+  \end{center}}
+\makeatother
+
+\newenvironment{textcode}[1]{%
+  \VerbatimEnvironment
+  \begin{center}%
+  	\vspace{0mm}
+    \begin{minipage}{\textwidth}%
+      \begin{minted}[tabsize=2,frame=lines,framesep=2mm,rulecolor=\color{black!10},linenos,frame=single,fontsize=\footnotesize, breaklines=true,highlightcolor=\myMarkerColor, highlightlines={#1}]{text}}
+{%
+      \end{minted}%
+    \end{minipage}%
+  \end{center}}
+\makeatother
+
+\newenvironment{javacodemultipage}[1]{%
+  \VerbatimEnvironment
+  \begin{center}%
+	\begin{minted}[frame=lines,framesep=2mm,rulecolor=\color{black!10},linenos,frame=single,fontsize=\footnotesize, breaklines=true,highlightcolor=\myMarkerColor, highlightlines={#1}]{java}}
+{%
+	\end{minted}%
+  \end{center}}
+\makeatother
+
+\newenvironment{textcodemultipage}[1]{%
+  \VerbatimEnvironment
+  \begin{center}%
+  	\vspace{0mm}
+      \begin{minted}[frame=lines,framesep=2mm,rulecolor=\color{black!10},linenos,frame=single,fontsize=\footnotesize, breaklines=true,highlightcolor=\myMarkerColor, highlightlines={#1}]{text}}
+{%
+      \end{minted}%
+  \end{center}}
+\makeatother
+
+\newenvironment{jscode}[1]{%
+  \VerbatimEnvironment
+  \begin{center}%
+  	\vspace{0mm}
+    \begin{minipage}{\textwidth}%
+      \begin{minted}[tabsize=2,frame=lines,framesep=2mm,rulecolor=\color{black!10},linenos,frame=single,fontsize=\footnotesize, breaklines=true,highlightcolor=\myMarkerColor, highlightlines={#1}]{html}}
+{%
+      \end{minted}%
+    \end{minipage}%
+  \end{center}}
+\makeatother
+
+
+\newenvironment{sourcecode}{\captionsetup{type=lstlisting}}{}

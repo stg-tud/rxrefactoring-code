@@ -1,0 +1,21 @@
+\begin{figure}[H]
+\begin{sourcecode}
+\begin{javacode}{}
+map = collector.xyzMap // assignmentMap, classInstanceCreationMap, etc...
+
+for each map.entry entry
+	compilationUnit = entry.key
+	
+	for each entry.values node
+		ast = node.ast
+		singleUnitWriter = WriterHolder.getSingleUnitWriterInstance( ast, compilationUnit )
+		refactoringVisitor = new RefactoringVisitor
+		node.accept( refactoringVisitor )		
+		refactor( ast, compilationUnit, refactoringVisitor, singleUnitWriter, node )
+		multipleUnitsWriter.addCompilationUnit( icu )
+	
+\end{javacode}
+\caption{Worker's Pseudo Code}
+\label{code:workers-pseudo-code}
+\end{sourcecode}
+\end{figure}

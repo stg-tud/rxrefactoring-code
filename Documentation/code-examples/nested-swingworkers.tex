@@ -1,0 +1,19 @@
+\begin{figure}[H]
+\begin{sourcecode}
+\begin{javacode}{7}
+rx.Observable<SWChannel<Void, Void>> rxObservable = rx.Observable.fromEmitter(new SWEmitter<Void, Void>(){
+	@Override
+	protected Void doInBackground() throws Exception {
+		...
+					for (SCWRLrunner singleRun : SCWRLTasks) {
+						...
+						executorSC.submit(singleRun); // --> COMPILE ERROR
+					}
+		...
+	}
+}, Emitter.BackpressureMode.BUFFER);
+\end{javacode}
+\caption{Project: CrysHomModeling-master\\ Class: modellingTool.MainMenu}
+\label{code:nested-swingworkers}
+\end{sourcecode}
+\end{figure}

@@ -1,0 +1,22 @@
+\begin{figure}[H]
+\begin{minipage}{0.48\textwidth}
+\begin{sourcecode}
+\begin{javacode}{1}
+private SwingWorker<String, Integer> 
+	getSwingWorker(){ ... }
+\end{javacode}
+\caption{Method Declaration before Refactoring}
+\label{code:md-before}
+\end{sourcecode}
+\end{minipage}\hspace{0.7cm}
+\begin{minipage}{0.48\textwidth}
+\begin{sourcecode}
+\begin{javacode}{1}
+private SWSubscriber<String, Integer> 
+	getSwingWorker(){ ... }
+\end{javacode}
+\caption{Method Declaration after Refactoring}
+\label{code:md-after}
+\end{sourcecode}
+\end{minipage}
+\end{figure}

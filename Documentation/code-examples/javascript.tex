@@ -1,0 +1,35 @@
+\begin{minted}[tabsize=2,frame=lines,framesep=2mm,rulecolor=\color{black!10},linenos,frame=single,fontsize=\small, breaklines=true,highlightcolor=\myMarkerColor, highlightlines={5,22,27,31}]{html}
+<html>
+<head>
+<title>JavaScript</title>
+<script type="text/javascript">
+function validateNumber() {
+    var x, text;
+    x = document.getElementById("numb").value;
+    if ( x == ""){
+            text = "";
+    } else if (isNaN(x)) {
+        text = "Not a number";
+    } else if (x < 1 || x > 10) {
+        text = "Number out of Range";
+    } else {
+        text = "Valid number";
+    }
+    document.getElementById("validationMessage")
+    	.innerHTML = text;
+}
+function startValidation(){
+  validation = 
+  		setInterval("validateNumber()",  200);
+}
+</script>
+</head>
+
+<body onload="startValidation()">
+<h1>Number Validator (JavaScript)</h1>
+<p>Please input a number between 1 and 10:</p>
+<input id="numb">
+<p id="validationMessage"></p>
+</body>
+</html>
+\end{minted}

@@ -1,0 +1,22 @@
+\begin{figure}[h]
+\begin{sourcecode}
+\begin{javacode}{}
+public final class SWPackage<ReturnType, ProcessType> {
+	...
+	private ReturnType asyncResult;
+	private List<ProcessType> chunks;
+	private AtomicInteger progress;
+	private ReentrantLock processingLock;
+	private Object asyncResultLock;
+
+	SWPackage(ReentrantLock processingLock ) {
+		this.processingLock = processingLock;
+		...
+	}
+	...
+}
+\end{javacode}
+\caption{SWPackage Contents}
+\label{code:swpackage-contain}
+\end{sourcecode}
+\end{figure}

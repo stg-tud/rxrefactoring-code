@@ -1,0 +1,15 @@
+\begin{figure}[H]
+\begin{sourcecode}
+\begin{javacode}{}
+public interface RxJavaRefactoringExtension<CollectorType extends AbstractCollector> {
+	CollectorType getASTNodesCollectorInstance(IProject project);
+	void processUnit( ICompilationUnit unit, CollectorType collector );
+	Set<AbstractRefactorWorker<CollectorType>> getRefactoringWorkers( CollectorType collector );
+	String getId();
+	default String getJarFilesPath() { return null;}
+}
+\end{javacode}
+\caption{Extension Interface}
+\label{code:extension-interface}
+\end{sourcecode}
+\end{figure}

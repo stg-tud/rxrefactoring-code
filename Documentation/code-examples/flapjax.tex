@@ -1,0 +1,34 @@
+\begin{minted}[tabsize=2,frame=lines,framesep=2mm,rulecolor=\color{black!10},linenos,frame=single,fontsize=\footnotesize, breaklines=true,highlightcolor=\myMarkerColor, highlightlines={2,7-8,20,26,30}]{html}
+<html>
+<script type="text/javascript" src="flapjaxLibrary.js"></script>
+<title>Flapjax</title>
+<script type="text/javascript">
+
+function loader() {
+  var valB = extractValueB('numb', 'value');
+  var validationStrB = valB.liftB(
+    function (s) {
+      if ( s == ""){
+          return "";
+      } else if (isNaN(s)) {
+          return "Not a number";
+      } else if (s < 1 || s > 10) {
+          return "Number out of Range";
+      } else {
+          return "Valid number";
+      }
+    });
+  insertDomB(validationStrB, 'validationMessage');
+}
+
+</script>
+</head>
+
+<body onload="loader()">
+<h1>Number Validator (Flapjax)</h1>
+<p>Please input a number between 1 and 10:</p>
+<input id="numb">
+<p id="validationMessage"></p>
+</body>
+</html>
+\end{minted}

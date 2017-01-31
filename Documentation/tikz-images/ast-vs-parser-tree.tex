@@ -1,0 +1,56 @@
+\begin{figure}[H]
+%\begin{center}
+\begin{subfigure}[]{0.4\textwidth}
+\begin{tikzpicture}[scale=0.5,>=triangle 60,node distance=2cm,thick,
+	Edge/.style={-,black,thick},
+	ASTNode/.style={rectangle,fill=white,draw=black,font=\sffamily\bfseries,minimum height=0.8cm},
+]	
+	\node[ASTNode] (A){if-statement};
+	\node[ASTNode] (B)[below of=A]{statement};
+	\node[ASTNode] (C)[left of=B]{expression};
+	\node[ASTNode] (D)[right of=B]{statement};
+	
+	\path[Edge]
+	(A) edge node{}(B)
+	(A) edge node{}(C)
+	(A) edge node{}(D)
+	;
+\end{tikzpicture}
+\caption{Abstract Syntax Tree}
+\label{fig:ast}
+\end{subfigure}
+%\end{center}
+%\begin{center}
+\begin{subfigure}[]{0.6\textwidth}
+\begin{tikzpicture}[scale=0.5,>=triangle 60,node distance=2cm,thick,
+	Edge/.style={-,black,thick},
+	ASTNode/.style={rectangle,fill=white,draw=black,font=\sffamily\bfseries,minimum height=0.8cm},
+	Symbol/.style={diamond,fill=\myMarkerColor,draw=black,font=\sffamily\bfseries},	
+]	
+	%\draw[help lines,step=5mm,gray!20] (0,0) grid (18,5);
+	\node[ASTNode] (A) at (9,5){if-statement};
+	\node[ASTNode] (B) at (11,0){statement};
+	\node[Symbol] (C) at (8,0) {)};
+	\node[ASTNode] (D)at (5,0) {expression};
+	\node[Symbol] (E) at (2,0) {(};
+	\node[Symbol] (F) at (0,0) {if};
+	\node[Symbol] (G) at (14.5,0) {else};
+	\node[ASTNode] (H) at (18,0) {statement};
+	
+	\path[Edge]
+	(A) edge node{}(B)
+	(A) edge node{}(C)
+	(A) edge node{}(D)
+	(A) edge node{}(E)
+	(A) edge node{}(F)
+	(A) edge node{}(G)
+	(A) edge node{}(H)
+	;
+\end{tikzpicture}
+\caption{Parser Tree}
+\label{fig:parser-tree}
+\end{subfigure}
+%\end{center}
+\caption{Abstract Syntax Tree vs. Parser Tree ~\cite[p. 216]{bookAST}}
+\label{fig:ast-vs-parser-tree}
+\end{figure}
