@@ -80,3 +80,12 @@ In order to run the Tests, right-click on the test project, i.e:
 RxRefactoringTestsSwingWorker, and select run or debug as
 __JUnit Plug-in Test__. After having done that one time, you
 will see this option in the toolbar too.
+
+## Evaluation
+
+Original Projects: https://drive.google.com/file/d/0BxYOUQMV4CztX2JYRlNRQUp5TXM/view?usp=drivesdk
+
+Refactored Projects:
+https://drive.google.com/file/d/0BxYOUQMV4CztbnJMSDlYQnJhNHc/view?usp=drivesdk
+
+Notice that two of the refactored projects have compilation errors. See the limitations of the tool described in the PDF file (Documentation) to see how to fix this errors manually. Each zip file has about 1.5GB.
