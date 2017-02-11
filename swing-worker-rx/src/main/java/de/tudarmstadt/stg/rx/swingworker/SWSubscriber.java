@@ -169,7 +169,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	 *            to generate it. i.e: <br>
 	 *            connectableObservable = Observable.fromEmitter(...).publish();
 	 */
-	public final void connectObservable( ConnectableObservable<SWPackage<ResultType, ProcessType>> connectableObservable )
+	public final void connectObservable( ConnectableObservable connectableObservable )
 	{
 		if ( !isSubscribed() )
 		{
