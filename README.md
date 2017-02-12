@@ -31,6 +31,8 @@ be a client of __2Rx__ as well (__AsyncTask2Rx__).
   SwingWorker2Rx plus details about the design and implementation of
   the system. This document also contains the evaluation details and its
   results and some suggestions for future research.
+  
+- __RefactoringExample__: Refactoring example of a real-world application
 
 - __RxJavaRefactoringCore__: 2Rx Project
 
