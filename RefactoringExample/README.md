@@ -12,7 +12,7 @@ Install Cuneiform
 You can use the file _Document.jpg_ from the root folder to test the OCR
 
 ## Projects
-This repository contains 4 versios of Juneiform.
+This repository contains 4 versions of Juneiform.
 - **Juneiform_1_Original**: original code
 - **Juneiform_2_Modified**: DocumentLoader was slightly modified in order to
 load the images into the application as soon as they are available rather
