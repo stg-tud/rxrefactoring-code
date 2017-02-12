@@ -1,0 +1,52 @@
+\begin{figure}[H]
+\begin{minipage}{0.45\textwidth}
+\begin{sourcecode}
+\begin{javacode}{2,3,15}
+...
+SwingWorker<String, Void> worker = 
+	new SwingWorker<String, Void>() {
+
+    @Override
+    protected String doInBackground() {
+        ... // OCR Logic
+    }
+
+    @Override
+    protected void done() {
+		... // Update UI
+    }
+};
+worker.execute();
+...
+\end{javacode}
+\caption{Editor - Original Code}
+\label{code:example-editor-original}
+\end{sourcecode}
+\end{minipage}\hspace{0.7cm}
+\begin{minipage}{0.51\textwidth}
+\begin{sourcecode}
+\begin{javacode}{2,3,8,10,11,17}
+...
+rx.Observable<SWPackage<String, Void>> rxObservable = 
+	rx.Observable.fromEmitter(new SWEmitter<String, Void>(){
+	@Override
+	protected String doInBackground() throws Exception {
+		... // OCR Logic
+	}
+}, Emitter.BackpressureMode.BUFFER);
+
+SWSubscriber<String, Void> rxObserver = 
+	new SWSubscriber<String, Void>(rxObservable) {
+	@Override
+	protected void done() {
+		... // Update UI
+	}
+};
+rxObserver.executeObservable();
+...
+\end{javacode}
+\caption{Editor - Automatically Refactored Code}
+\label{code:example-editor-refactored}
+\end{sourcecode}
+\end{minipage}
+\end{figure}

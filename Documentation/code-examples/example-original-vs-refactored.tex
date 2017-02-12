@@ -3,7 +3,7 @@
 \begin{sourcecode}
 \begin{javacode}{2,6}
 public abstract class DocumentLoader 
-	extends SwingWorker<List<Document>, Void> {
+	extends SwingWorker<List<Document>, Document> {
     ...
     public void load(File... files) {
         this.files = files;
@@ -13,10 +13,8 @@ public abstract class DocumentLoader
     protected List<Document> doInBackground() 
     	throws Exception {
         ...
-        for (File file : files) {
-            publish(createDocument(file));
-        }
-        return result;
+        publish(new Document(...
+        ...
     }
 
     protected void process(List<Document> chunks){
@@ -24,15 +22,15 @@ public abstract class DocumentLoader
     }
     ...
 \end{javacode}
-\caption{DocumentLoader Class\\Original Code (Slightly Modified)}
+\caption{DocumentLoader - Modified Code}
 \label{code:example-original}
 \end{sourcecode}
 \end{minipage}\hspace{0.7cm}
 \begin{minipage}{0.51\textwidth}
 \begin{sourcecode}
-\begin{javacode}{2,6,9-12,21}
+\begin{javacode}{2,6,9-12,19}
 public abstract class DocumentLoader 
-	extends SWSubscriber<List<Document>, Void> {
+	extends SWSubscriber<List<Document>, Document> {
     ... 
     public void load(File... files) {
         this.files = files;
@@ -45,11 +43,9 @@ public abstract class DocumentLoader
 				new SWEmitter<List<Document>, Void>() {
 				protected List<Document> doInBackground() 
 					throws Exception {
-					...
-					for (File file : files) {
-						publish(createDocument(file));
-					}
-					return result;
+				        ...
+				        publish(new Document(...
+				        ...
 				}
 			}, Emitter.BackpressureMode.BUFFER);
 	}
@@ -58,7 +54,7 @@ public abstract class DocumentLoader
 	}
 	...
 \end{javacode}
-\caption{DocumentLoader Class\\Refactored Code}
+\caption{DocumentLoader - Automatically Refactored Code}
 \label{code:example-refactored}
 \end{sourcecode}
 \end{minipage}

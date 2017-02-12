@@ -1,0 +1,75 @@
+\begin{figure}[H]
+\begin{minipage}{0.48\textwidth}
+\begin{sourcecode}
+\begin{javacode}{2,9,22-28}
+public abstract class DocumentLoader 
+	extends SwingWorker<List<Document>, Void> { //3$\label{codeline:DocumentLoader-3a}$
+    ...
+    @Override
+    protected List<Document> doInBackground() throws Exception {
+        List<Document> result = new ArrayList<Document>();
+        for (File file : files) {
+            try {
+                result.add(new Document(//1$\label{codeline:DocumentLoader-1a}$
+                        file.getName(),
+                        file.getAbsolutePath(),
+                        ..., // LANGUAGE
+                        ImageIO.read(file)));
+            } catch (IOException ex) {
+                ...
+            }
+        }
+        return result;
+    }
+
+    @Override
+    protected void done() {
+        try {
+            fetchResult(get());//2$\label{codeline:DocumentLoader-2a}$
+        } catch (Exception ex) {
+            log.warn("SwingWorker error");
+        }
+    }
+    ...
+}
+\end{javacode}
+\caption{DocumentLoader Class - Original Code}
+\label{code:example-original-v1}
+\end{sourcecode}
+\end{minipage}\hspace{0.7cm}
+\begin{minipage}{0.48\textwidth}
+\begin{sourcecode}
+\begin{javacode}{2,9,22-24}
+public abstract class DocumentLoader 
+	extends SwingWorker<List<Document>, Document> { //3$\label{codeline:DocumentLoader-3b}$
+	...
+    @Override
+    protected List<Document> doInBackground() throws Exception {
+        List<Document> result = new ArrayList<Document>();
+        for (File file : files) {
+            try {
+                publish(new Document( //1$\label{codeline:DocumentLoader-1b}$
+                        file.getName(),
+                        file.getAbsolutePath(),
+                        ..., // LANGUAGE
+                        ImageIO.read(file)));
+            } catch (IOException ex) {
+                ...
+            }
+        }
+        return result;
+    }
+
+    @Override
+    protected void process(List<Document> chunks){ //2$\label{codeline:DocumentLoader-2b}$
+        fetchResult(chunks);
+    }
+
+    ...
+}
+\end{javacode}
+\caption{DocumentLoader Class - Pre-Processing}
+\label{code:example-pre-processing}
+\end{sourcecode}
+\end{minipage}
+\end{figure}

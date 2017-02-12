@@ -19,7 +19,7 @@
 \usepackage[normalem]{ulem}
 \usetikzlibrary{arrows,shapes,positioning,shadows,trees} % x-y Diagrams
 
-\newcommand{\framework}[1]{\textcolor{black!65}{#1}}
+\newcommand{\framework}[1]{\textcolor{black}{#1}}
 \usemintedstyle{trac}
 \input{preamble.tex}
 \newcommand{\toolcore}{\textsc{2Rx}}
@@ -41,24 +41,20 @@
 \author{Grebiel José Ifill Brito}
 \birthplace{Caracas, Venezuela}
 \date{February 2017}
-\referee{Prof. Dr. Guido Salvaneschi}{xyz}
+\referee{Prof. Dr. Guido Salvaneschi}{}
 \department{Computer Science}
-\group{Software Technology Group}
+\group{Reactive Programming Technology}
 
 \makethesistitle
 
-\chapter*{Summary}
-Modern languages are replacing the traditional callback-based approach with method chaining. Some of these languages are using event-driven and reactive programming models~\cite{agera, reactiveX, paperFlapjax}. According to previous studies, these programming paradigms improve code writing and code comprehension~\cite{promises, paperReactiveComprehension}.
+\chapter*{Abstract}
+Modern languages are replacing the traditional callback-based approach with method chaining. Some of these languages are using event-driven, reactive and functional programming models~\cite{agera, reactiveX, paperFlapjax}. According to previous studies, these programming paradigms improve code writing and code comprehension~\cite{promises, paperReactiveComprehension}.
 
-Motivated by these facts, we propose an approach that facilitates introducing reactive programming concepts in existing \framework{Java} applications. In order to do that, we transform the source code, so that it uses the \framework{ReactiveX} API. 
+Motivated by these facts, we propose a refactoring approach that facilitates introducing reactive and functional programming concepts in existing asynchronous \framework{Java} applications. This thesis focuses on the refactoring of \code{SwingWorker}s. However, one can adapt this approach to make it applicable to other async constructs.
 
-We divide the transformation into two steps. First, we modify the source code automatically into an implementation based on the \framework{ReactiveX} API. This transformation does not change the behavior of the program. The second step consists in introducing the reactive programming model into the source code. This part depends on specific requirements. Therefore, one must apply these changes by hand. However, since \framework{ReactiveX} is optimized for the implementation of reactive models~\cite{reactiveX}, adding such concepts in this step is more intuitive for developers. This thesis focuses on the transformation of \code{SwingWorker}s. However, one can extrapolate this approach to other constructs. 
+We developed a system to perform the mentioned refactoring automatically. This system consists of a core and an extension called \toolcore{} and \toolextension{} respectively.
 
-In this work we also present \toolcore{} and \toolextension{}. We developed these tools for the automated modification of the source code. \toolcore{} is the core of the system and \toolextension{} is the extension in charge of converting \code{SwingWorker}s into an implementation that uses \framework{ReactiveX}. 
-
-We evaluate the accuracy of \toolextension{} using 58 projects. The results show that the tool is highly accurate. The limitations of \toolextension{} correspond to particular implementations of \code{SwingWorker}s. Furthermore, we evaluate the flexibility of \toolcore{} to support extensions by adapting \textsc{RxFactor}~\cite{thesisRxFactor} to be its client (extension). \textsc{RxFactor} is a similar tool which goal is to transform \code{AsyncTask}s into an implementation that uses \framework{ReactiveX} as well.
-
-\code{SwingWorker}s and \code{AsyncTask}s are not the only types of constructs available for asynchronous programming. One can implement operations that do not require any synchronization between threads by simply using the \framework{Java} classes \code{Thread} and \code{Runnable}. We suggest the evaluation of these constructs in further research in order identify implementation patterns and design algorithms to transform the code, so it uses \framework{ReactiveX} instead. Moreover, other constructs which are not necessarily related to asynchronous execution could also benefit from the \framework{ReactiveX} API. Since \framework{ReactiveX} supports working with data streams, \code{for-} and \code{while-}loops are also good candidates for this transformation. We encourage future work not only identifying patterns and designing the algorithms but also implementing the corresponding extensions for \toolcore{}, in order to have a single tool which is able to refactor several constructs to \framework{ReactiveX}.
+We evaluate the accuracy of \toolextension{} using 58 projects. The results show that the tool is highly accurate. Furthermore, we evaluate the flexibility of \toolcore{} to support extensions by adapting \textsc{RxFactor}~\cite{thesisRxFactor} to be its client (extension). \textsc{RxFactor} is a similar tool which goal is to transform \code{AsyncTask}s into an implementation that uses \framework{ReactiveX} as well.
 
 \tableofcontents
 \listoffigures
@@ -68,36 +64,35 @@ We evaluate the accuracy of \toolextension{} using 58 projects. The results show
 
 \chapter{Introduction}
 \label{chapter:introduction}
-Most UI frameworks are single threaded ~\cite{uiSingleThreaded}. When a long-running operation is executed in the UI thread, then the user interface freezes until the operation has completed. To avoid this blocking behavior, developers use a background thread for these operations.
+Asynchronous programming refers to the execution of program code in multiple threads. These threads run concurrently. Synchronous programming, on the contrary, refers to the sequential execution of program code in a single thread. Most UI frameworks are single threaded~\cite{uiSingleThreaded}. When a long-running operation is executed in the UI thread, then the user interface freezes until the operation has completed. This happens because all commands in the UI thread are executed sequentially. To avoid this blocking behavior, developers use asynchronous programming, which allows them to execute the long-running operation in a background thread. Since the background and the UI thread run concurrently, the UI thread remains responsive.
 
-Several tools have been developed in the last years to automatically modify the source code of asynchronous applications without changing the semantic of the program. This transformation is called refactoring. \textsc{Asynchronizer}~\cite{paperRetrofittingConcurrency}, \textsc{AsyncDroid}~\cite{paperStudyRefactoring}, \textsc{Asyncifier}~\cite{paperAsyncMobile}, \textsc{AsyncFixer}~\cite{paperAsyncMobile}, \textsc{PromisesLand}~\cite{thesisJavaScript} and \textsc{RxFactor}~\cite{thesisRxFactor} are some of these tools. Each of them try to solve different problems. \textsc{Asynchronizer} and \textsc{AsyncDroid} focus on performance improvement in \framework{Android} applications, while \textsc{Asyncfier} and \textsc{PromissesLand} aim increasing the code readability in \framework{C\#} and \framework{JavaScript} respectively. \textsc{AsyncFixer} helps finding and correcting anti patterns of async constructs in \framework{C\#}. Finally \textsc{RxFactor} is a refactoring tool that converts \code{AsyncTask}s into an implementation that uses the \framework{ReactiveX} API. \textsc{RxFactor} was developed parallel to this thesis by another author.
+Several tools have been developed in the last years to automatically refactor the source code of asynchronous applications. \textsc{Asynchronizer}~\cite{paperRetrofittingConcurrency}, \textsc{AsyncDroid}~\cite{paperStudyRefactoring}, \textsc{Asyncifier}~\cite{paperAsyncMobile}, \textsc{AsyncFixer}~\cite{paperAsyncMobile}, \textsc{PromisesLand}~\cite{thesisJavaScript} and \textsc{RxFactor}~\cite{thesisRxFactor} are some of these tools. Each of them solves different problems. \textsc{Asynchronizer} and \textsc{AsyncDroid} focus on performance improvement in \framework{Android} applications, while \textsc{Asyncfier} and \textsc{PromissesLand} aim increasing the code readability in \framework{C\#} and \framework{JavaScript} respectively. \textsc{AsyncFixer} helps finding and correcting anti patterns of async constructs in \framework{C\#}. Finally \textsc{RxFactor} is a refactoring tool that converts \code{AsyncTask}s into an implementation that uses the \framework{ReactiveX} API. \textsc{RxFactor} was developed parallel to this thesis by another author.
 
-Furthermore, functional programming has been gaining popularity in the last years. \framework{Java 8}, for example, offers several classes to support working with data streams in a functional fashion~\cite{bookJava8Streams}. Other technologies such as \framework{Flapjax}, \framework{ReactiveX} and \framework{Agera} are not only using functional concepts but also focusing on the reactive programming paradigm. \framework{Flapjax} is a programming language that introduces event-driven reactivity as the natural programming model for web applications~\cite{paperFlapjax}. \framework{ReactiveX} is a library based on the observer pattern that supports data streams and functional programming~\cite{reactiveX}. \framework{Agera} also offers classes for functional, asynchronous and reactive programming in \framework{Android} applications~\cite{agera}.
+On the other hand, functional programming has been gaining popularity in the last years. \framework{Java 8}, for example, offers several classes to support working with data streams in a functional fashion~\cite{bookJava8Streams}. Other technologies such as \framework{Flapjax}, \framework{ReactiveX} and \framework{Agera} are not only using functional concepts but also focusing on the reactive programming paradigm. \framework{Flapjax} is a programming language that introduces event-driven reactivity as the natural programming model for web applications~\cite{paperFlapjax}. \framework{ReactiveX} is a library based on the observer pattern that supports data streams and functional programming~\cite{reactiveX}. \framework{Agera} also offers classes for functional, asynchronous and reactive programming in \framework{Android} applications~\cite{agera}.
 
-Since reactive and functional programming paradigms facilitate code writing and code comprehension~\cite{promises, paperReactiveComprehension}, it makes sense to refactor existing applications to make the implementation of these programming models easier. We present a refactoring approach to achieve that by using the \framework{ReactiveX} API extension for \framework{Java} called \framework{RxJava}. To decrease the effort required to perform such a refactoring, we developed \toolcore{} and an extension for it \toolextension{}. These tools work together to automatically refactor \code{SwingWorker}s.
-
-The combination of \toolcore{} and \toolextension{} produces a tool which is very similar to \textsc{RxFactor}. The objective of both is to enable functional and reactive programming constructs in existing applications. However, the refactoring approaches and the architectures of these tools are different. In contrast to \textsc{RxFactor}, which is not able to refactor all method invocations available in \code{AsyncTask}s, \toolextension{} supports all methods specified in the \code{SwingWorker} API. The architecture of \toolcore{}, core and extensions, facilitates extending the tool. As a proof of that, \textsc{RxFactor} have been adapted to be an extension of \toolcore{}.
-
-We evaluate \toolcore{} using 58 projects. The results show that the refactoring is accurate. Only 2 out of 14,930 modified lines report compiling errors after refactoring ($\approx 0.0001\%$). These errors are however easy to fix manually.
-
-We suggest that future research consider implementing extensions for \toolcore{} to support further constructs. So far, the tool is able to refactor \code{SwingWorker}s and \code{AsyncTask}s to \framework{RxJava}, but there are other constructs that would benefit from such a refactoring. Async \code{Runnable}s for example which are by nature fire and forget could easily be synchronized with other threads if refactored to \framework{RxJava}. \framework{RxJava} does not only supports asynchronous programming but also manipulating data streams in a declarative way. The traditional constructs \code{for} and \code{while} used for loops sometimes describe well-defined sequences, which are easy to express using functional concepts. Therefore, we suggest considering these constructs for future work.
-
-Our refactoring approach in \toolextension{} solves the well-known backpressure problem~\cite{rxJavaBackpressure} through a blocking mechanism. We encourage researchers evaluating the possibility of implementing a mechanism which offers a better performance. For example by implementing a buffer to minimize the number of blocking operations.
-
-Regarding the architecture of the \toolcore{}, there are still possibilities of improving the user experience. Currently, there is no ``UNDO'' feature, which means that developers must have a backup of their files before starting the automated refactoring if they do not want to loose information. Once the refactoring has started, it is not possible to stop it.  This behavior can also be improved. Furthermore, a settings section would improve the user experience as well. Features such as statistics and code analysis without actually performing the refactoring would be an example of it.
+According to previous researches, reactive and functional programming models improve code writing and code comprehension~\cite{promises, paperReactiveComprehension}. One can refactor existing applications in other to facilitate the implementation of these models. Depending on the size of the projects and the amount, the refactoring task can demand a lot of effort. Implementing tools to perform the refactorings automatically minimizes this effort and allows developers focusing on new features which can be added using reactive and functional programming concepts.
 
 \section{Contribution}
 
-In this thesis we show how a traditional callback-based async construct can be refactored into \framework{RxJava} in order to enable language constructs that support the implementation of reactive and functional programming models. 
+In this thesis, we show how a traditional callback-based async construct can be refactored into another construct that facilitates the implementation of reactive and functional programming models. Since performing these refactorings by hand in multiple or large projects demands a lot of time, we designed a tool to accomplish this task.
 
-It is easy to imagine that performing these refactorings by hand in multiple or large projects demands a lot of time. Motivated by this, we developed a refactoring tool called \toolcore{}. One can easily add extensions to this tool. We implemented \toolextension{}, which can convert \code{SwingWorker}s to \framework{RxJava}. Additionally, we adapted \textsc{RxFactor}, a tool that converts \code{AsyncTask}s into \framework{RxJava}, to make it a client of \toolcore{} as well.
+We focus on refactoring \code{SwingWorker}s into an implementation that uses the \framework{ReactiveX} API for \framework{Java} (\framework{RxJava}). To perform the refactorings automatically, we developed a tool called \toolcore{}. One can easily add extensions to this tool. We implemented \toolextension{}, which can convert \code{SwingWorker}s to \framework{RxJava}. Additionally, we adapted \textsc{RxFactor}, a similar tool that converts \code{AsyncTask}s into \framework{RxJava}, to make it a client of \toolcore{} as well. Although \textsc{RxFactor} and \toolextension{} are very similar, the refactoring approaches are different. The approach proposed in this thesis overcomes the following weaknesses of \textsc{RxFactor}: Not supporting all methods available in the \code{AsyncTask} API; Vulnerable to backpressure problems.
+
+Contribution summary:
+\begin{itemize}
+	\item A refactoring approach to convert \code{SwingWorker}s into \framework{RxJava}
+	\item A system to host refactoring tools (\toolcore{})
+	\item A client of \toolcore{} responsible for refactoring \code{SwingWorker}s into \framework{RxJava} (\toolextension{})
+	\item A client of \toolcore{} responsible for refactoring \code{AsyncTask} into \framework{RxJava} based on the implementation of \textsc{RxFactor}
+\end{itemize}
+
 
 \section{Structure}
 The thesis is structured as follows: Chapter~\ref{chapter:stateOfTheArt} provides some background about refactoring, asynchronous programming, the observer pattern, and functional and reactive programming. In this chapter we explain the \code{SwingWorker} API, followed by the state of the art in automated refactoring for asynchronous applications. Finally, we talk about modern technologies that use event-driven, reactive and/or functional programming concepts. We show the design of the refactoring approach and \toolcore{} in Chapter~\ref{chapter:design}. The implementation details are explained in Chapter~\ref{chapter:implementation}. In Chapter~\ref{chapter:evaluation} we present the evaluation and its results and in Chapter~\ref{chapter:conclusion} we summarize the work, present our conclusion and recommendations for future research on this topic.
 
 \chapter{State of the Art}
 \label{chapter:stateOfTheArt}
-Asynchrony refers to the execution of program code independently of the main thread. Asynchrony is mostly important in order to improve the responsiveness of the UI. This improvement is accomplished by executing long-running operations on a background thread ~\cite{paperAsyncMobile, asyncProgramming}.
+Asynchronous programming refers to the execution of program code in multiple threads. Since most UI frameworks are single threaded~\cite{uiSingleThreaded}, developers use asynchronous programming to improve the responsiveness of the UI. This improvement is accomplished by executing long-running operations on a background thread ~\cite{paperAsyncMobile, asyncProgramming}.
 
 In Figure~\ref{fig:sync-vs-async} we illustrate how asynchronous programming is used in order to avoid that a long-running operation blocks the user interface. In the diagram, we compare the synchronous and asynchronous execution of three operations. The first operation requires more time than the other two. In Figure~\ref{fig:sync} the longest operation is executed first. After that, \code{operation2} and \code{operation3} are triggered. As we can see, \code{operation2} and \code{operation3} cannot be executed immediately because the UI thread is busy. These operations can be anything, for example, UI events. Since the thread cannot process these events, the system is said to be unresponsive. Figure~\ref{fig:async} shows how we can solve this problem by using a background thread. Basically, long-running operations are passed to a different thread. As we can see in the diagram, while \code{operation1} is performed in the background thread, the UI thread remains free and can execute other operations. Eventually, when the long-running operation has completed, the result is sent to the main thread. It is important to consider that delegating operations to background threads generates overhead. This overhead is represented with two small black rectangles.
 
@@ -118,7 +113,7 @@ In Figure~\ref{fig:sync-vs-async} we illustrate how asynchronous programming is 
 \label{fig:sync-vs-async}
 \end{figure}
 
-Listings~\ref{code:asyncRunnableExample} and~\ref{code:asyncFutureExample} are two basic examples of asynchronous implementations in \framework{Java}. The implementation of Listing~\ref{code:asyncRunnableExample} is fire and forget, which means, that no result is expected. The asynchronous operation starts in line 4 and the rest of the code keeps running sequentially, regardless of the amount of time required to finish the asynchronous operation. The implementation of Listing~\ref{code:asyncFutureExample} does return a result. The asynchronous operation starts in line 4 and the result is retrieved in line 9. These examples are used in the next sections to explain the concepts of data races and promises, also called futures.
+Listings~\ref{code:asyncRunnableExample} and~\ref{code:asyncFutureExample} are two examples of asynchronous programming in \framework{Java}. The implementation of Listing~\ref{code:asyncRunnableExample} is fire and forget, which means, that no result is expected. The asynchronous operation starts in Line 4 and the rest of the code keeps running sequentially, regardless of the amount of time required to finish the asynchronous operation. The implementation of Listing~\ref{code:asyncFutureExample} does return a result. The asynchronous operation starts in Line 4 and the result is retrieved in Line 9. These examples are used in the next sections to explain the concepts of data races and promises, also called futures.
 
 \input{code-examples/java-async-example.tex}
 
@@ -143,7 +138,7 @@ Many IDEs already offer refactoring tools. Some of the common refactoring comman
 On the other hand, researchers have been developing tools to refactor asynchronous applications. Some of the tools convert synchronous into asynchronous code. Other tools refactor asynchronous code that uses the traditional callback-based approach into method chaining~\cite{paperAsyncMobile, paperStudyRefactoring, thesisJavaScript, paperRetrofittingConcurrency}. We explain these tools in Section~\ref{sec:refactoring-tools}.
 
 \subsection{Abstract Syntax Trees}
-Abstract syntax trees (AST), also called syntax trees, are data structures that only contain the essential information about the source code. Parse trees contain additionally the symbols required to compile the code~\cite{bookAST}. Figure~\ref{fig:ast-vs-parser-tree} shows the difference between both types of trees.
+Abstract syntax trees (AST) are data structures that only contain the essential information about the source code. Each node corresponds to a construct of the specific language. Some examples of these constructs in Java are: assignment, field declaration, variable declaration, method declaration, class instance creation, type declaration, if-statement, try-statement, anonymous class declaration, body declaration, catch clause, among others. In contrast to parse trees, ASTs does not contain the symbols required to compile the code, such as "\{", "\}", ";", among others~\cite{bookAST}. Figure~\ref{fig:ast-vs-parser-tree} shows the difference between both types of trees.
 
 \input{tikz-images/ast-vs-parser-tree.tex}
 
@@ -157,10 +152,10 @@ In Listings~\ref{code:imperative-pro} and~\ref{code:functional-pro} we compare i
 \input{code-examples/functional-vs-imperative.tex}
 
 \section{Event Driven Programming}
-Event driven programming consists of pieces of code that get executed when an event occurs. Most Windows programs are a good example of this since they are written using event-driven models. If an event never occurs, then the piece of code associated with that event will never be executed. If there is no piece of code associated with an event, then the event will be ignored.~\cite{bookEventDrivenProgramming}.
+Event driven programming consists of program code that gets executed when an event occurs. Most Windows programs are a good example of this since they are written using event-driven models. If an event never occurs, then the piece of code associated with that event will never be executed. If there is no piece of code associated with an event, then the event will be ignored.~\cite{bookEventDrivenProgramming}.
 
 \subsection{Reactive Programming}
-Reactive programming is a programming paradigm that consists in the propagation of change. This programming model is considered a special case of the event-driven paradigm. The events refer mostly to data changes~\cite{bookLearningReactive}. In reactive programming, there is a data-flow graph that indicates how the changes are propagated.
+Reactive programming is a programming paradigm that bases in the propagation of change. This programming model is considered a special case of the event-driven paradigm. The events refer mostly to data changes~\cite{bookLearningReactive}. In reactive programming, there is a data-flow graph that indicates how the changes are propagated.
  
 Figure~\ref{fig:dataflow} illustrates how reactive programming works. The operation~$a + b$ produces the result~$r$. The first state is: $a=10$, $b=5$, $r=15$. In imperative programming, changing the values of~$a$ and/or~$b$ does not automatically affect the result~$r$, but in reactive programming that is not the case. If the value of~$a$~or~$b$ changes, the operation $+$ is performed and $r$ is updated. 
 
@@ -173,7 +168,7 @@ The idea of the observer pattern is to establish a one-to-many relationship betw
 
 The usage of the observer pattern in asynchronous applications can cause backpressure problems when the subject notifies changes faster than the observer's capacity to process them. There are several solutions to tackle this problem. One of them is to have a buffer to accumulate the data received from the subject. Since the buffer can get full, this solution does not work for every case. An alternative solution is to block the notifications from the subject until the data has been processed by the observer~\cite{rxJavaBackpressure}. The disadvantage of the last approach is that the subject is as fast as the slowest observer. A combination of both approaches is also possible.
 
-\section{New Technologies}
+\section{Reactive and/or Functional Technologies}
 Empirical studies have shown that reactive programming increases the correctness of program comprehension without requiring neither more time to analyze the program nor advance programming skills~\cite{paperReactiveComprehension}. Furthermore, there are new technologies that are based on event-driven programming models and reactivity. \framework{Flapjax}, \framework{ReactiveX} and \framework{Agera} are some of them. These technologies also agree that reactive and event-driven approaches simplify code writing and comprehension~\cite{agera, reactiveX, paperFlapjax}.
 
 \subsection{Flapjax}
@@ -182,9 +177,9 @@ It can also be used as a library if developers do not want to use the Flapjax-to
 
 \framework{Flapjax} introduces two new data types, \code{Behavior}s and \code{Event-Stream}s. \code{Behavior}s are values that change over time  (i.e: a variable). Changes in \code{Behavior}s propagate automatically, facilitating developers consistency in their applications. \code{Event-Stream}s represent the input sources.~\cite{paperFlapjax}.
 
-Listing~\ref{code:javaScript} shows a basic \framework{JavaScript} example where a string value \code{id="validationMessage"} (line~31) is updated when an event \code{"onChange"} is triggered. Since there is no native \framework{JavaScript} call to determine if an input have changed, a possible (trivial) implementation could be for example triggering the \code{validateNumber} function every $200ms$ (line~22). We chose this time interval because we consider it small enough to be perceived as an immediate change. Notice that the function \code{startValidation} must be called on load (line~27). The validation logic is implemented in the function \code{validateNumber} (line~5).
+Listing~\ref{code:javaScript} shows a basic \framework{JavaScript} example where a string value \code{id="validationMessage"} (Line~31) is updated when an event \code{"onChange"} is triggered. Since there is no native \framework{JavaScript} call to determine if an input have changed, a possible (trivial) implementation could be for example triggering the \code{validateNumber} function every $200ms$ (Line~22). We chose this time interval because we consider it small enough to be perceived as an immediate change. Notice that the function \code{startValidation} must be called on load (Line~27). The validation logic is implemented in the function \code{validateNumber} (Line~5).
 
-Listing~\ref{code:flapjax} shows the same example using \framework{Flapjax}. In this case, \framework{Flapjax} was downloaded and used as a library (line~2). The implementation basically defines a behavior for the input \code{numb} (line~7). The function \code{liftB} (line~8) creates a time varying value which is used for updating the \code{validationMessage}. The function \code{loader} defines the events (line~8) and their reaction (line~20). This function is also called on load (line~26). This example shows how \framework{Flapjax} allows keeping the UI consistency without having to implement a mechanism for updating a particular field. Instead, events and reaction to those events are defined.
+Listing~\ref{code:flapjax} shows the same example using \framework{Flapjax}. In this case, \framework{Flapjax} was downloaded and used as a library (Line~2). The implementation basically defines a behavior for the input \code{numb} (Line~7). The function \code{liftB} (Line~8) creates a time varying value which is used for updating the \code{validationMessage}. The function \code{loader} defines the events (Line~8) and their reaction (Line~20). This function is also called on load (Line~26). This example shows how \framework{Flapjax} allows keeping the UI consistency without having to implement a mechanism for updating a particular field. Instead, events and reaction to those events are defined.
 
 More interactive examples can be found at \framework{Flapjax}'s official site~\cite{urlFlapjaxDemo}.
 
@@ -223,7 +218,7 @@ These functions are also available in \framework{ReactiveX}~\cite{reactiveX}.
 
 The API of \framework{ReactiveX} for \framework{Java} programs is called \framework{RxJava}. By using \framework{RxJava} it is possible to write asynchronous programs in a functional fashion. Additionally, since \framework{RxJava} is based on the observer pattern, it is also possible to implement reactive models.
 
-Listing~\ref{code:rxJava-streams} shows an example where we use \framework{RxJava} to select some items, transform them and save the newly generated items. We use a background thread for the operations and update the UI when done. The process is as follows: First, we create a \code{rx.Observable} object using the method \code{Observable.from} (line~4). Then, we invoke further methods to modify the data stream (\code{filter}, \code{map}). After that, we specify in which thread the operation must be executed (line~12). RxJava offers several \code{Scheduluer}s for that purpose. However, one can also use custom executors. Next, we define the save operation using \code{doOnNext} (line~13). Since in this example the \code{doOnCompleted} operation must be executed in the UI thread, we place the \code{observeOn} declaration before \code{doOnCompleted} (line~15). Finally, we subscribe the observable. This subscription starts executing the async operation.
+Listing~\ref{code:rxJava-streams} shows an example where we use \framework{RxJava} to select some items, transform them and save the newly generated items. We use a background thread for the operations and update the UI when done. The process is as follows: First, we create a \code{rx.Observable} object using the method \code{Observable.from} (Line~4). Then, we invoke further methods to modify the data stream (\code{filter}, \code{map}). After that, we specify in which thread the operation must be executed (Line~12). RxJava offers several \code{Scheduluer}s for that purpose. However, one can also use custom executors. Next, we define the save operation using \code{doOnNext} (Line~13). Since in this example the \code{doOnCompleted} operation must be executed in the UI thread, we place the \code{observeOn} declaration before \code{doOnCompleted} (Line~15). Finally, we subscribe the observable. This subscription starts executing the async operation.
 
 \begin{figure}[t]
 \begin{sourcecode}
@@ -233,7 +228,7 @@ Listing~\ref{code:rxJava-streams} shows an example where we use \framework{RxJav
 \end{sourcecode}
 \end{figure}
 
-Listing~\ref{code:rxJava-reactive-code} shows an example where we use \framework{RxJava} to implement two reactive operations (addition and multiplication). The first step is to define the subjects (lines 2-3). Then, we declare the subscribers (lines 4-5), also called observers. Finally, we define the behavior (lines 6-7). We do this by creating an observable that combines both subjects and defines the result. Then we subscribe the corresponding subscriber to each observable. Lines 11 and 14 show how we manipulate the subjects, so the changes are propagated to the subscribers.
+Listing~\ref{code:rxJava-reactive-code} shows an example where we use \framework{RxJava} to implement two reactive operations (addition and multiplication). The first step is to define the subjects (Lines 2-3). Then, we declare the subscribers (Lines 4-5), also called observers. Finally, we define the behavior (Lines 6-7). We do this by creating an observable that combines both subjects and defines the result. Then we subscribe the corresponding subscriber to each observable. Lines 11 and 14 show how we manipulate the subjects, so the changes are propagated to the subscribers.
 
 \framework{RxJava} offers many other classes and methods for building asynchronous reactive models. Explaining all of them does not belong to the scope of this thesis. More information and examples about this library can be found at~\cite{bookLearningReactive}.
 
@@ -242,10 +237,10 @@ Listing~\ref{code:rxJava-reactive-code} shows an example where we use \framework
 
 \input{code-examples/rxJava-vs-Java8.tex}
 
-Listings~\ref{code:rxJava-compared} and~\ref{code:java8-compared} show a comparison between \framework{RxJava} and \framework{Java 8}. There are two method invocations that are identical and one invocation that is similar but not completely equivalent. Using functions such as \code{filter} and \code{map} can be done with both, \framework{RxJava} and \framework{Java 8}, in the same way. The call \code{doOnNext} is similar to \code{forEach} in the sense of iterating through all items and doing some operations with them. The big difference is that \code{forEach} actually starts executing the operation while \code{doOnNext} only defines it. In the second case the operation starts when the observable is subscribed (Listing~\ref{code:java8-compared}, line 14). Also, \code{forEach} does not not allow chaining futher methods. Methods such as \code{subscribeOn}, \code{doOnError}, \code{observeOn}, \code{doOnCompleted}, among others have no equivalent in \framework{Java 8}.
+Listings~\ref{code:rxJava-compared} and~\ref{code:java8-compared} show a comparison between \framework{RxJava} and \framework{Java 8}. There are two method invocations that are identical and one invocation that is similar but not completely equivalent. Using functions such as \code{filter} and \code{map} can be done with both, \framework{RxJava} and \framework{Java 8}, in the same way. The call \code{doOnNext} is similar to \code{forEach} in the sense of iterating through all items and doing some operations with them. The big difference is that \code{forEach} actually starts executing the operation while \code{doOnNext} only defines it. In the second case the operation starts when the observable is subscribed (Listing~\ref{code:java8-compared}, Line 14). Also, \code{forEach} does not not allow chaining futher methods. Methods such as \code{subscribeOn}, \code{doOnError}, \code{observeOn}, \code{doOnCompleted}, among others have no equivalent in \framework{Java 8}.
 
 \section{Async Constructs}
-There are several async constructs in many different frameworks and platforms. We want to focus particularly in \code{SwingWorker}s because that is the construct that we analyze in this thesis. Additionally, we want to explain the basics about \code{AsyncTask}s because previous research has been analyzing them and developing refactoring tools for different purposes.
+There are several async constructs in many different programming languages and libraries. We want to focus particularly in \code{SwingWorker}s because that is the construct that we analyze in this thesis. Additionally, we want to explain the basics about \code{AsyncTask}s because previous research has been analyzing them and developing refactoring tools for different purposes.
 
 Figure~\ref{fig:asynctask-execution} illustrates in which threads the methods of an \code{AsyncTask} are executed. In this example, the \code{AsyncTask} starts with the invocation of \code{execute}. Then \code{onPreExecute} is invoked in the UI thread. As soon as this method finishes, \code{doInBackground} is invoked on a background thread. While the asynchronous operation is running, data can be sent to UI thread throw the invocation of \code{publish}. This data is processed in the UI thread using the logic specified in \code{onProgressUpdate}. The \code{publish} method can be invoked multiple times. Finally, when the asynchronous operation has completed, the result is processed in the UI thread using the \code{onPostExecute} method.
 
@@ -337,9 +332,9 @@ Refactoring asynchronous applications is not trivial. Therefore researchers have
 \end{enumerate}
 
 \subsection{Synchronous $\rightarrow$ Asynchronous}
-Refactoring synchronous \framework{Android} applications to be asynchronous is not an easy task. According to a previous research, the reason of this might be that most documentation focuses on the design from scratch rather than on the process of converting existing synchronous code into asynchronous. They also state that there are not enough methods neither tools for this kind of refactoring~\cite{paperAsyncMobile}.
+According to a previous research, refactoring synchronous \framework{Android} applications to be asynchronous is not an easy task~\cite{paperAsyncMobile}. The author of this work, Danny Dig, mentions two main reasons that difficulties this refactoring task. The first one is that most documentation focuses on the design from scratch, rather than on the process of converting synchronous code into asynchronous and the second one is that there are not enough methods neither tools to perform this kind of refactoring.
 
-Motivated by these facts, they developed \textsc{Asynchronizer}. \textsc{Asynchronizer} targets \framework{Android} applications. It can be used to convert synchronous code into asynchronous by using an \code{AsyncTask}~\cite{paperRetrofittingConcurrency}. \textsc{Asynchronizer} basically moves the synchronous code into the \code{doInBackground} method of the \code{AsyncTask}. Then it analyzes the rest of the code in order to determine which part can be placed into the \code{onPostExecute} handler. Finally, it creates an instance of the class in the main thread and calls its \code{execute} method.
+Motivated by these facts, the author developed \textsc{Asynchronizer}. \textsc{Asynchronizer} targets \framework{Android} applications. It can be used to convert synchronous code into asynchronous by using an \code{AsyncTask}~\cite{paperRetrofittingConcurrency}. \textsc{Asynchronizer} basically moves the synchronous code into the \code{doInBackground} method of the \code{AsyncTask}. Then it analyzes the rest of the code in order to determine which part can be placed into the \code{onPostExecute} handler. Finally, it creates an instance of the class in the main thread and calls its \code{execute} method.
 
 Converting synchronous code into asynchronous might produce data races. To make sure that there are no data races after refactoring, they implemented an extension of the \textsc{IteRace} detector. This component is included with \textsc{Asynchronizer}. It is important to mention that this check does not run automatically. Developers have to explicitly check for data races after refactoring the code. Reported data races should be analyzed by developers to determine whether they are real or fake. To do that, developers must consider the application's workflow. Some methods in \framework{Android} are by design never called concurrently (.i.e \code{onCreateView} and \code{onDestroyView})~\cite{paperRetrofittingConcurrency}.
 
@@ -358,11 +353,13 @@ In the last months, \textsc{RxFactor} was developed. As we mentioned before, thi
 \chapter{Design of the System}
 \label{chapter:design}
 
-Previous studies show that functional and reactive programming models improve code writing and code comprehension~\cite{promises, paperReactiveComprehension}. In this thesis, we propose an approach to refactor \code{SwingWorker}s into \framework{RxJava}. This refactoring enables a series of methods that can be used to implement reactive models in a functional fashion. Basically, the process starts by using \toolextension{}, a tool that we developed to perform the \code{SwingWorker} to \framework{RxJava} transformation automatically. Then developers can use the methods available in \framework{RxJava} to build their reactive models.
+Previous studies show that functional and reactive programming models improve code writing and code comprehension~\cite{promises, paperReactiveComprehension}. In this thesis, we propose an approach to refactor \code{SwingWorker}s into \framework{RxJava}. This refactoring enables constructs that facilitate the implementation of the previously mentioned models. To minimize the effort required to perform the refactoring task, we developed a tool, \toolextension{}, that refactors \code{SwingWorker}s automatically. Once the automated refactoring has completed, one can use the constructs available in \framework{RxJava} to introduce reactive and functional programming concepts into the existing project.
+
+This Chapter starts by presenting a practical example that shows how one can use \toolextension{} to refactor a real-world application and add new features to it using \framework{RxJava}. Then we explain the refactoring approach. Finally, we present the design of \toolcore{} and \toolextension{}.
 
 \section{Use Case Example}
 
-The next example illustrates how the process works. The example bases on \framework{Juneiform} (Figure~\ref{fig:juneiform}), an application with OCR that extracts text from images.
+The next example illustrates how the refactoring works. The example bases on \framework{Juneiform} (Figure~\ref{fig:juneiform}), an application with OCR that extracts text from images.
 
 \begin{figure}[h]
 \begin{center}
@@ -372,60 +369,98 @@ The next example illustrates how the process works. The example bases on \framew
 \end{center}
 \end{figure}
 
-In this example we focus on two classes, \code{DocumentLoader} and \code{Editor}. The \code{DocumentLoader} is the class in charge of importing the images into \framework{Juneiform}. Here we want to extend the functionality to add four observers to the event ``load document''. The \code{Editor} class is in charge of performing the OCR. Here we want to display a loading spinner and close it after the optical character recognition has completed. Furthermore, the output text is copied automatically to the clipboard.
+In this example we focus on two classes, \code{DocumentLoader} and \code{Editor}. The \code{DocumentLoader} is the class in charge of importing the images into \framework{Juneiform}. Here we want to extend the functionality to add four observers to the event ``load document''. The \code{Editor} class is responsible for performing the OCR. Here we want to display a loading spinner and close it after the optical character recognition has completed. Furthermore, we want to automatically copy the output text to the clipboard.
 
 \subsection{DocumentLoader}
-The original implementation of \code{DocumentLoader} waits until all images are loaded before showing them in the UI. Since we want to work with streams, we slightly modified the original source code, so that the images are displayed one by one, as soon as they are available.
 
-Listings~\ref{code:example-original} and~\ref{code:example-refactored} show the source code before and after refactoring  the class \code{DocumentLoader} with \toolextension{}. The differences in both code snippets are highlighted. We modified the source code in these snippets to spare a few lines. The method \code{createDocument} does not exist in the original code, but it allows us to write the same logic using fewer lines. As one can see, the code did not change much, but now we are using subscribers and observables. 
+The user can import images into Juneiform by clicking on the icon ``open Images'' \includegraphics[height=0.4cm]{juneiform/open-icon.png} (Figure~\ref{fig:loadDocs}). This action opens a file chooser dialog. After the user has selected the source images and clicked ``Open'', the class \code{DocumentLoader} (Listing~\ref{code:example-original-v1}) starts loading the images into Juneiform. Notice that \code{DocumentLoader} is a subclass of \code{SwingWorker}. The loading process consists of adding all images into a list (Listing~\ref{code:example-original-v1}:~Line~\ref{codeline:DocumentLoader-1a}). This list is used to display the selected images in the UI (Listing~\ref{code:example-original-v1}:~Line~\ref{codeline:DocumentLoader-2a}).
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[height=6cm]{juneiform/DocumentLoader.png}
+\caption{Load Documents in Juneiform}
+\label{fig:loadDocs}
+\end{center}
+\end{figure}
+
+\input{code-examples/preprocessing.tex}
+
+We slightly modified the original implementation of \code{DocumentLoader} in order to show the images in the UI as soon as they are available (Listing~\ref{code:example-pre-processing}). The purpose of this modification is to show that our approach can handle dynamically generated items. These items are generated every time the method \code{publish} is invoked (Listing~\ref{code:example-pre-processing}:~Line~\ref{codeline:DocumentLoader-1b}). In order to load the images one by one, the method \code{process} must be implemented (Listing~\ref{code:example-pre-processing}:~Line~\ref{codeline:DocumentLoader-2b}). The logic in this method is similar to the one in \code{done}. The \code{Try-Catch} block is not necessary because the method \code{get} is no longer used and therefore no \code{Exception} can be thrown. Notice that we also have to change the second parameter of the \code{SwingWorker} from \code{Void} (Listing~\ref{code:example-original-v1}:~Line~\ref{codeline:DocumentLoader-3a}) to \code{Document} (Listing~\ref{code:example-pre-processing}:~Line~\ref{codeline:DocumentLoader-3b}).
 
 \input{code-examples/example-original-vs-refactored.tex}
 
-Listings~\ref{code:example-edited} shows how the refactored code can be manually modified to change the behavior of the program using functional and reactive paradigms. In this example, we specify through a filter that only \code{jpg} files should be considered (lines~23-24). Notice that we use functional programming for this. Then we built a reactive model for the files to be imported. Lines~5~to~8 shows how to initialize the \code{Observable}. We want to have a \code{ConnectableObservable} that is executed in the background (\code{Schedulers.computation}) and which observers are executed on the UI thread (\code{SwingScheduler.getInstance}). Then we can register the subscribers (lines 11-14), also called observers. The first observer is in charge of loading the images into \framework{Juneiform}. The next 3 observers only print a string to the console (Listing~\ref{code:example-console}). Notice that these operations are executed in the UI thread. In \framework{Swing} applications the UI thread is called \framework{AWT-EventQueue}. Finally, the \code{ConnectableObservable} must be connected. As a result, we obtain the reactive model described in lines 4 to 17.
+After modifying the class \code{DocumentLoader}, as shown in Listing~\ref{code:example-pre-processing}, we used \toolextension{} to refactor Juneiform. Listings~\ref{code:example-original} and~\ref{code:example-refactored} show the source code of \code{DocumentLoader} before and after refactoring. The differences in both code snippets are highlighted. Basically, the logic of the \code{SwingWorker} was separated into two objects, a \code{Subscriber} and an \code{Observable}. The \code{Observable} is responsible for the asynchronous operation, while the \code{Subscriber} handles the synchronous ones. The logic contained in the methods \code{doInBackground} and \code{process} did not change. The most relevant relevant part of the code for now is the \code{publish} invocation (Listing~\ref{code:example-refactored}~Line~16). This method generates the items of the \code{Observable} that can be manipulated using the \framework{RxJava} functional programming constructs.
 
-\input{code-examples/example-console-output.tex}
+Listings~\ref{code:example-edited} shows how we manually modified the refactored code to change the behavior of the program using functional and reactive paradigms. In the new implementation, we added a filter to select the images in jpg format. Additionally, we changed the display name of the image within Juneiform to uppercase and remove the extension of the file from the name. Next, we subscribe four \code{Observer}s to the \code{ConnectableObservable}. Finally, we connect the \code{ConnectableObservable} to start the emissions. The code snippet showed in Listing~\ref{code:example-edited} works as follows:
+\begin{itemize}
+	\item Line 6: it specifies that the operations that follow must be executed in a background thread.
+	\item Line 7: the \code{publish} invocation uses the type \code{List<Document>}. Since it is more comfortable to work directly with \code{Document}s, we use \code{flapMap} to extract the \code{Document} objects from the lists sent through \code{publish}.
+	\item Line 8: it filters the \code{Document}s to consider only jpg files.
+	\item Line 9 - 13: it transforms the items in order to change the display name to uppercase and simultaneously remove the file extension from it.
+	\item Line 14: it specifies that the operations that follow must be executed in the UI thread.
+	\item Line 17 - 20: it registers an \code{Observer} that updates the UI and prints the name of the file (Listing~\ref{code:example-console})
+	\item Line 21 - 23: it registers further \code{Observer}s. For simplicity, these \code{Observer}s only print the name of the file  (Listing~\ref{code:example-console}), but they could be anything.
+	\item Line 25: it connects the \code{ConnectableObservable} to start the emissions.
+\end{itemize}
 
 \input{code-examples/example-manually-refactored.tex}
 
+\input{code-examples/example-console-output.tex}
+
 \subsection{Editor}
 
-Similarly, \toolextension{} refactored the class \code{Editor}. After performing the refactoring, one can modify the source code manually to add new features. In this case, we implemented a \code{Util} class for showing and closing a loading spinner. Additionally, we added a method to copy the result of the OCR to the clipboard. Once we have implemented these methods, we can add to the new observable in a functional fashion, as shown in Listing~\ref{code:example-editor} (Lines 6-8). When the observable is subscribed, the loading spinner is shown (\code{doOnSubscribed}). The last emission corresponds to the result. This result is copied to the clipboard using \code{doOnNext}. Finally, the loading spinner is hidden \code{doOnCompleted}. This time we added events using a functional notation.
+Similarly, \toolextension{} refactored the class \code{Editor}. Listings~\ref{code:example-editor-original} and~\ref{code:example-editor-refactored} show the source code of \code{Editor} before and after refactoring. As one can see, the logic contained in the methods \code{doInBackground} and \code{done} dit not change here either.
+
+\input{code-examples/example-editor-before-after.tex}
+
+After performing the refactoring, one can modify the source code manually to add new features. In this case, we implemented a \code{Utils} class for showing and closing a loading spinner. Additionally, we added a method to copy the result of the OCR to the clipboard. Once we had implemented these methods, we added features to the \code{Observable} using a functional notation, as shown in Listing~\ref{code:example-editor} (Lines 6-8). The new features were declared as follows:
+\begin{itemize}
+	\item when the observable is subscribed, the loading spinner is shown by using the \code{Utils} class in the \code{doOnSubscribed} call.
+	\item the last emission corresponds to the result. This result is copied to the clipboard using \code{doOnNext}
+	\item finally, the loading spinner is hidden in the \code{doOnCompleted} call.
+\end{itemize}
 
 \input{code-examples/example-editor.tex}
 
+\newpage
 \section{Refactoring Approach}
 As we mentioned before \textsc{RxFactor} and \toolextension{} refactor similar asynchronous constructs. In this section, we show the general idea of the refactoring approach of \textsc{RxFactor} and explain the reason why we decided to use a different one. After that, we present the approach used by our tool.
 
 \subsection{RxFactor Approach}
-Listings~\ref{code:rxfactor-before} and~\ref{code:rxfactor-after} summarize how \textsc{RxFactor} refactors \code{AsyncTask}s into \framework{RxJava}. First an \code{Observable} is created by using \code{Observable.fromCallable} (L~\ref{code:rxfactor-after}:~line~14). The argument of this method is a \code{Callable} object, which defines the asynchronous operation. Therefore the routine from \code{doInBackground} (L~\ref{code:rxfactor-before}:~lines~5-7) is written here. 
+Listings~\ref{code:rxfactor-before} and~\ref{code:rxfactor-after} summarize how \textsc{RxFactor} refactors \code{AsyncTask}s into \framework{RxJava}. First an \code{Observable} is created by using \code{Observable.fromCallable} (Listing~\ref{code:rxfactor-after}:~Line~14). The argument of this method is a \code{Callable} object, which defines the asynchronous operation. Therefore the routine from \code{doInBackground} (Listing~\ref{code:rxfactor-before}:~Lines~5-7) is written here. 
 
-The \code{publish} (L~\ref{code:rxfactor-before}:~line~7) method cannot be copied inside of \code{fromCallable}, because this method is not defined in objects of type \code{Callable}. To be able to refactor \code{publish} invocations, a \code{Subscriber} is needed. This \code{Subscriber} is obtained from the method \code{getRxUpdateSubscriber} (L~\ref{code:rxfactor-after}:~line 1), where \code{onNext} (L~\ref{code:rxfactor-after}:~line 5) is implemented. As we can see, \code{Subscriber.onNext} and \code{onProgressUpdate} (L~\ref{code:rxfactor-before}:~line 13) are equivalent. 
+The \code{publish} (Listing~\ref{code:rxfactor-before}:~Line~7) method cannot be copied inside of \code{fromCallable}, because this method is not defined in objects of type \code{Callable}. To be able to refactor \code{publish} invocations, a \code{Subscriber} is needed. This \code{Subscriber} is obtained from the method \code{getRxUpdateSubscriber} (Listing~\ref{code:rxfactor-after}:~Line 1), where \code{onNext} (Listing~\ref{code:rxfactor-after}:~Line 5) is implemented. As we can see, \code{Subscriber.onNext} and \code{onProgressUpdate} (Listing~\ref{code:rxfactor-before}:~Line 13) are equivalent. 
 
-Since \code{fromCallable} returns a single result, \code{doOnNext} (L~\ref{code:rxfactor-after}:~line~27) is used to read the only and therefore final emission of the observable, which corresponds to the result from \code{doInBackground}. The \code{AsyncTask} processes this result in \code{onPostExecute} (L~\ref{code:rxfactor-before}:~line 19), which is why we find the same piece of code in \code{doOnNext}.
+Since \code{fromCallable} returns a single result, \code{doOnNext} (Listing~\ref{code:rxfactor-after}:~Line~27) is used to read the only and therefore final emission of the observable, which corresponds to the result from \code{doInBackground}. The \code{AsyncTask} processes this result in \code{onPostExecute} (Listing~\ref{code:rxfactor-before}:~Line 19), which is why we find the same piece of code in \code{doOnNext}.
 
 
 \input{code-examples/rxfactor-before-vs-after.tex}
 
-This refactoring approach is able to transform \code{AsyncTask}s into \framework{RxJava}, as long as the methods \code{getStatus} and \code{isCancelled} are not invoked. The method \code{getStatus} cannot be adapted, because this requires keeping track of the current state, which is not possible in this implementation without adding a helper class or a similar structure. Due to the same reason, the method \code{isCancelled} can also not be refactored. \framework{RxJava} offers a call to determine whether a \code{Subscription} is subscribed or not (\code{isSubscribed}), but this method returns \code{false} if the \code{Observable} has not been subscribed yet, while \code{isCancelled} returns true, when the \code{AsyncTask}s has not started. 
+This refactoring approach is able to transform \code{AsyncTask}s into \framework{RxJava}, as long as the methods \code{getStatus} and \code{isCancelled} are not invoked.  \textsc{RxFactor} cannot refactor these methods because it does not have a mechanism to keep track of the state of the asynchronous operation. In order to refactor these methods, it is necessary to know whether the asynchronous operation is Pending, Started, Done or Canceled. Neither flags nor methods are available in \framework{RxJava} for this purpose. A possible solution to this problem is to use a wrapper class. However, there is a drawback to this solution as well. The wrapper class would have to manage all method invocations of the \code{Subscriber} and the \code{Observable} in order to determine whether the status should be updated or not. If developers bypass the wrapper by for example subscribing an \code{Observable} directly, then the wrapper would not have any knowledge about his operation, and the status would remain unknown. Another alternative is to extend \framework{RxJava} to replicate the workflow of \code{AsyncTask}s. This is the solution that we used for \code{SwingWorker}s. We explain how this solution looks like in Section~\ref{sec:2rx-approach}.
 
-This approach is not suitable for \code{SwingWorker}s because nine out of eighteen methods available in the \code{SwingWorker} API require knowledge of the current state. This was the main reason for us to not use this approach.
+According to the evaluation done in the research of \textsc{RxFactor}~\cite{thesisRxFactor}, the approach used by this tool is acceptable because the methods \code{getStatus} and \code{isCancelled} are not often used. However, that is not the case for \code{SwingWorker}s. Nine out of eighteen methods from the \code{SwingWorker} API require knowledge of the current state. In contrast to \code{AsyncTask}s, most \code{SwingWorker} instances use state related methods. This was the main reason for us to not use the approach of \textsc{RxFactor}.
 
-There are also other drawbacks about the approach used in \textsc{RxFactor}. Since \code{Observable.fromCallable} is used, only one item is generated by the \code{Observable}. This item is the result of the asynchronous operation. If we connect the \code{Observable} to multiple \code{Subscriber}s, then these observers will only get the final result. Information about the data that was originally processed in the \code{AsyncTask} through \code{onProgressUpdate} will still depend on the \code{Subscriber} that is directly specified in the \code{Observable} (L~\ref{code:rxfactor-after}:~line~21).
+There are also other drawbacks about the approach used in \textsc{RxFactor}. Since \code{Observable.fromCallable} is used, only one item is generated by the \code{Observable}. This item is the result of the asynchronous operation. If we connect the \code{Observable} to multiple \code{Subscriber}s, then these observers will only get the final result. Information about the data that was originally processed in the \code{AsyncTask} through \code{onProgressUpdate} will still depend on the \code{Subscriber} that is directly specified in the \code{Observable} (Listing~\ref{code:rxfactor-after}:~Line~21).
 
-Another problem of \textsc{RxFactor} is backpressure. The \code{Subscriber} (L~\ref{code:rxfactor-after}:~lines 5-9) used for publishing intermediate results and the \code{Observable} are totally independent. If the algorithm defined by the \code{Callable} object of the \code{Observable} generates items faster than the time required by the \code{Subscriber} to consume them, then some of these items will be lost and remain unprocessed.
+The current implementation of \textsc{RxFactor} can lead to out of memory exceptions. Listing~\ref{code:rxfactor-after} shows that the \code{Observable} creates an instance of \code{Subscriber<PublishT>} every time that Line 20 is reached. This line is responsible for generating items and send them to the \code{Subscriber} so that they are processed in the UI thread. If the \code{Observable} generates too many items and the \code{Subscriber}s require much time to process them, then there will be eventually too many instances of \code{Subscriber<PublishT>}. If the number of instances keeps increasing, then an out of memory exception will be thrown at some point. 
 
-The last disadvantage that we found about the approach used in \textsc{RxFactor} is that two objects from \framework{RxJava} are needed to refactor the public method invocations from the \code{AsyncTask}. Table~\ref{table:asynctask-rx-methods} shows these objects. Basically, most methods can be refactored using \code{rx.Observable}. However, if \code{cancel} is invoked, then one needs to generate a \code{Subscription} from the \code{Observable} and call \code{unsubscribe}.
+Rewriting the approach to have a single instance of \code{Subscriber<PublishT>} would solve the out of memory exception issue, but then backpressure problems could occur. Although \code{Observable.fromCallable} is backpressure friendly, the way that this construct is combined with the \code{Subscriber} (Line 20) would make the implementation vulnerable to backpressure problems. These problems occur when the \code{Observable} produces items faster than the capacity of the \code{Subscriber} to consume them. \framework{RxJava} takes care of this problem when the \code{Observable} and the \code{Subscriber} are linked by using the \code{subscribe} method. However, this is not the case in \textsc{RxFactor}. In Listing~\ref{code:rxfactor-after} one can see that the \code{Observable} has no knowledge about the \code{Subscriber}. If the \code{Callable} object used in \code{Observable.fromCallable} (Line 14) generates items too fast, then the buffer of the \code{Subscriber} will eventually be full. After that happens, the next items will be lost and therefore remain unprocessed. A possible solution to this problem is to use Java locks in the \code{Observable} and \code{Subscriber} in order to synchronize both objects and stop generating items in the \code{Observable}, in case that the \code{Subscriber} is busy and has no space in its buffer. 
+
+Notice that out of memory and backpressure problems only occur under very specific circumstances. However, we consider important to be aware of these issues.
+
+The last disadvantage that we found about the approach used in \textsc{RxFactor} is that two objects from \framework{RxJava} are needed to refactor the public method invocations from \code{AsyncTask}s. Table~\ref{table:asynctask-rx-methods} shows these objects. The first column of this table contains the public methods of the \code{AsyncTask} API. The column ``Rx Class'' corresponds to the \framework{RxJava} class that must be used to refactor the \code{AsyncTask} method, while the column ``Rx Equivalent Method'' shows the name of the method of the corresponding \framework{RxJava} class. As we already explained, \code{getStatus} and \code{isCancelled} cannot be refactored without a wrapper class or similar structure. Basically, most methods can be refactored using \code{rx.Observable}. However, if \code{cancel} is invoked, then one needs to generate a \code{Subscription} from the \code{Observable} and call \code{unsubscribe}.
 
 \input{design/asynctask-rxjava-method-match.tex}
 
-Listings~\ref{code:rxfactor-cancel-before} and ~\ref{code:rxfactor-cancel-after} show an example where refactoring the \code{cancel} invocation automatically is not trivial. In this example the \code{AsyncTask} is executed in a class and canceled in a different class when an event is triggered. Here we can see that a naive implementation of replacing \code{AsyncTask} objects by \code{rx.Observables} does not work, because the \code{Observable} does not posses the \code{unsubscribe} method. The \code{Subscription} is obtained when the \code{Observable is subscribed} (L~\ref{code:rxfactor-cancel-after}:~line 6). This \code{Subscription} must be passed to the class \code{EventListener} so that it can be canceled. However, if \code{EventListener} does not use the \code{cancel} method from the \code{AsyncTask}, then it is not necessary to pass the reference to the \code{Subscription} to it. The fact of having to work with two objects to refactor all methods from \code{AsyncTask}s into \framework{RxJava} makes the static analysis and automated refactoring more complicated and error prone.
+Listings~\ref{code:rxfactor-cancel-before} and ~\ref{code:rxfactor-cancel-after} show an example where refactoring the \code{cancel} invocation automatically is not trivial. In this example the \code{AsyncTask} is executed in a class and canceled in a different class when an event is triggered. Here we can see that a naive implementation of replacing \code{AsyncTask} objects by \code{rx.Observables} does not work, because the \code{Observable} does not posses the \code{unsubscribe} method. The \code{Subscription} is obtained when the \code{Observable is subscribed} (Listing~\ref{code:rxfactor-cancel-after}:~Line 6). This \code{Subscription} must be passed to the class \code{EventListener} so that it can be canceled. However, if \code{EventListener} does not use the \code{cancel} method from the \code{AsyncTask}, then it is not necessary to pass the reference to the \code{Subscription} to it. The fact of having to work with two objects to refactor all methods from \code{AsyncTask}s into \framework{RxJava} makes the static analysis and automated refactoring more complicated and error prone.
 
 \input{code-examples/rxfactor-cancel.tex}
 
-Due to these reasons, we use a different approach to overcome these disadvantages.
+Due to these reasons, we decided to use a different approach to overcome these disadvantages.
 \newpage
 
 \subsection{\toolextension{} Approach}
+\label{sec:2rx-approach}
 There were three important aspects that we considered while developing the refactoring approach:
 \begin{enumerate}
 	\item Generate emissions on each \code{publish} invocation rather than only on the result, so that we can add several \code{Subscriber}s to an \code{Observable} without modifying it. The \code{Subscriber}s are then reactive to each emission of the \code{Observable}.
@@ -520,22 +555,6 @@ Currently \toolcore{} does not support either interrupting the operation nor ``U
 \input{code-examples/extension-interface.tex}
 
 Additionally, we created a template project facilitate the implementation of extensions. This project contains a \code{README} file that explains how to setup the template. The template contains a default package structure. The action handler in the extension is already implemented. This handler is in charge of forwarding the action event to \toolcore{}. \toolcore{} reads the command id from the event to identify which extension triggered operation. There is also a default implementation of the \code{RxJavaRefactoringExtension} interface. This file contains placeholders in string values that must be replaced and TODOs in methods that must be implemented.
-
-\subsection{Test-Driven Development}
-We also developed a third project for test-driven development. This project only contains tests. The main idea is to have a basic project containing the cases to be tested. Each file contains a single case (Figure~\ref{fig:unit-test-results}). Additionally, there is a second folder containing all expected \framework{Java} classes, which are used for the assertions.
-
-When the tests are executed, the basic project is refactored without writing the changes to the files. In this way, we guarantee that the input files never change and can always be reused. The resulting code of each compilation unit is saved in a map. For the comparison, we generate an AST for output and expected file. Then the trees are compared. The purpose of doing this is to ignore irrelevant differences such as spaces, empty lines, comments, etc.
-
-Similar to the extensions, there is a template to facilitate setting up the project for the unit tests. This template contains abstract tests classes that can be used to load \framework{Android} or \framework{Java} projects, create \framework{Java} projects and assert source code based on string values.
-
-\begin{figure}[H]
-\begin{center}
-\includegraphics[height=5cm]{unit-tests/unit-tests-results1.png}
-\includegraphics[height=5cm]{unit-tests/unit-tests-results2.png}
-\end{center}
-\caption{Unit Test Results}
-\label{fig:unit-test-results}
-\end{figure}
 
 \chapter{Implementation of the System}
 \label{chapter:implementation}
@@ -665,7 +684,7 @@ In order to refactor \code{TypeDeclaration} nodes, it is necessary to change the
 \input{refactorings/type-decl.tex}
 
 \section{\toolcore{} and \toolextension{}}
-\toolcore{} and \toolextension{} work together to perform the automated refactoring of \code{SwingWorker}s to \code{RxJava}. The first step to implement an extension of \toolcore{} is to define its id, name and the location of its resources (i.e. required jar files). After that, the object responsible for collecting all relevant AST nodes for the refactoring must be implemented. To refactor \code{SwingWorker}s it is necessary to collect the following AST nodes: \code{TypeDeclaration}, \code{FieldDeclarations}, \code{Assignment}, \code{VariableDeclarationStatement}, \code{SimpleName}, \code{ClassIntanceCreation}, \code{SingleVariableDeclaration}, \code{MethodInvocation} and \code{MethodDeclaration}.
+\toolcore{} and \toolextension{} work together to perform the automated refactoring of \code{SwingWorker}s to \framework{RxJava}. The first step to implement an extension of \toolcore{} is to define its id, name and the location of its resources (i.e. required jar files). After that, the object responsible for collecting all relevant AST nodes for the refactoring must be implemented. To refactor \code{SwingWorker}s it is necessary to collect the following AST nodes: \code{TypeDeclaration}, \code{FieldDeclarations}, \code{Assignment}, \code{VariableDeclarationStatement}, \code{SimpleName}, \code{ClassIntanceCreation}, \code{SingleVariableDeclaration}, \code{MethodInvocation} and \code{Me}- \code{thodDeclaration}.
 
 
 \subsection{Collectors}
@@ -702,6 +721,22 @@ It is possible to extend the \code{RxSingleUnitWriter}, explained in Section~\re
 \toolcore{} provides a couple of methods that can be used to generate code from a string (source code). By using these methods and \framework{FreeMarker}~\cite{freeMarker} templates, we generate source code without having to specify all nodes using JDT. Listing~\ref{code:subscriber-ftl} shows the template used for generating inner class \code{RxSubscriber} shown in Listing~\ref{code:cic-after}. Basically, there is a \framework{Java} object called \code{model} that contains all necessary information for filling up the templates. This object is passed to the \framework{FreeMarker} processor in order to produce the source code.
 
 \input{code-examples/subscriber-ftl.tex}
+
+\subsection{Test-Driven Development}
+We also developed a third project for test-driven development. This project only contains tests. The main idea is to have a basic project containing the cases to be tested. Each file contains a single case (Figure~\ref{fig:unit-test-results}). Additionally, there is a second folder containing all expected \framework{Java} classes, which are used for the assertions.
+
+When the tests are executed, the basic project is refactored without writing the changes to the files. In this way, we guarantee that the input files never change and can always be reused. The resulting code of each compilation unit is saved in a map. For the comparison, we generate an AST for output and expected file. Then the trees are compared. The purpose of doing this is to ignore irrelevant differences such as spaces, empty lines, comments, etc.
+
+Similar to the extensions, there is a template to facilitate setting up the project for the unit tests. This template contains abstract tests classes that can be used to load \framework{Android} or \framework{Java} projects, create \framework{Java} projects and assert source code based on string values.
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[height=5cm]{unit-tests/unit-tests-results1.png}
+\includegraphics[height=5cm]{unit-tests/unit-tests-results2.png}
+\end{center}
+\caption{Unit Test Results}
+\label{fig:unit-test-results}
+\end{figure}
 
 \section{Templates}
 We developed two templates, to facilitate developing and testing extensions for \toolcore{}.
@@ -824,7 +859,7 @@ Another limitation found during the evaluation of the projects was conflicts bet
 
 Listing~\ref{code:method-name-conflict} shows an example of this problem. Since \code{SwingWorker}s do not have any method matching the name ``\code{add}'', the original code compiles. However the new subclass of \java{rx.Subscriber} does have an ``\code{add}'' method and therefore, the code does not compile. 
 
-The solution is to replace line 6 by ``\java{AsyncPanel.this.add(targetComponent,}~\java{BorderLayout.CENTER);}'', since \code{AsyncPanel} is the name of the class containing the target method.
+The solution is to replace Line 6 by ``\java{AsyncPanel.this.add(targetComponent,}~\java{BorderLayout.CENTER);}'', since \code{AsyncPanel} is the name of the class containing the target method.
 
 \input{code-examples/method-name-conflict.tex}
 

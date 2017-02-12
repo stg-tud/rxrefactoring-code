@@ -32,17 +32,18 @@
   \xspaceskip=1sp
   #1%
   \endgroup}
-
+  
+\newcommand*{\ttfamilywithbold}{\fontfamily{pcr}\selectfont}
 \newcommand{\java}[1]{\removeSpaces{\mintinline{java}{#1}}}
 %\newcommand{\code}[1]{\removeSpaces{\mintinline{text}{#1}}}
-\newcommand{\code}[1]{\lstinline[basicstyle=\ttfamily\color{black!65}]|#1|}
+\newcommand{\code}[1]{\lstinline[basicstyle=\ttfamilywithbold\color{black!100}]|#1|}
 
 \newenvironment{javacode}[1]{%
   \VerbatimEnvironment
   \begin{center}%
   	\vspace{0mm}
     \begin{minipage}{\textwidth}%
-      \begin{minted}[tabsize=2,frame=lines,framesep=2mm,rulecolor=\color{black!10},linenos,frame=single,fontsize=\footnotesize, breaklines=true,highlightcolor=\myMarkerColor, highlightlines={#1}]{java}}
+      \begin{minted}[tabsize=2,frame=lines,framesep=2mm,rulecolor=\color{black!10},linenos,frame=single,fontsize=\footnotesize, breaklines=true,highlightcolor=\myMarkerColor, highlightlines={#1},mathescape]{java}}
 {%
       \end{minted}%
     \end{minipage}%
@@ -54,7 +55,7 @@
   \begin{center}%
   	\vspace{0mm}
     \begin{minipage}{\textwidth}%
-      \begin{minted}[tabsize=2,frame=lines,framesep=2mm,rulecolor=\color{black!10},linenos,frame=single,fontsize=\footnotesize, breaklines=true,highlightcolor=\myMarkerColor, highlightlines={#1}]{text}}
+      \begin{minted}[tabsize=2,frame=lines,framesep=2mm,rulecolor=\color{black!10},linenos,frame=single,fontsize=\footnotesize, breaklines=true,highlightcolor=\myMarkerColor, highlightlines={#1},mathescape]{text}}
 {%
       \end{minted}%
     \end{minipage}%
@@ -64,7 +65,7 @@
 \newenvironment{javacodemultipage}[1]{%
   \VerbatimEnvironment
   \begin{center}%
-	\begin{minted}[frame=lines,framesep=2mm,rulecolor=\color{black!10},linenos,frame=single,fontsize=\footnotesize, breaklines=true,highlightcolor=\myMarkerColor, highlightlines={#1}]{java}}
+	\begin{minted}[frame=lines,framesep=2mm,rulecolor=\color{black!10},linenos,frame=single,fontsize=\footnotesize, breaklines=true,highlightcolor=\myMarkerColor, highlightlines={#1},mathescape]{java}}
 {%
 	\end{minted}%
   \end{center}}
@@ -74,7 +75,7 @@
   \VerbatimEnvironment
   \begin{center}%
   	\vspace{0mm}
-      \begin{minted}[frame=lines,framesep=2mm,rulecolor=\color{black!10},linenos,frame=single,fontsize=\footnotesize, breaklines=true,highlightcolor=\myMarkerColor, highlightlines={#1}]{text}}
+      \begin{minted}[frame=lines,framesep=2mm,rulecolor=\color{black!10},linenos,frame=single,fontsize=\footnotesize, breaklines=true,highlightcolor=\myMarkerColor, highlightlines={#1},mathescape]{text}}
 {%
       \end{minted}%
   \end{center}}
@@ -85,7 +86,7 @@
   \begin{center}%
   	\vspace{0mm}
     \begin{minipage}{\textwidth}%
-      \begin{minted}[tabsize=2,frame=lines,framesep=2mm,rulecolor=\color{black!10},linenos,frame=single,fontsize=\footnotesize, breaklines=true,highlightcolor=\myMarkerColor, highlightlines={#1}]{html}}
+      \begin{minted}[tabsize=2,frame=lines,framesep=2mm,rulecolor=\color{black!10},linenos,frame=single,fontsize=\footnotesize, breaklines=true,highlightcolor=\myMarkerColor, highlightlines={#1},mathescape]{html}}
 {%
       \end{minted}%
     \end{minipage}%
