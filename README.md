@@ -87,7 +87,9 @@ will see this option in the toolbar too.
 
 Original Projects: https://drive.google.com/file/d/0BxYOUQMV4CztX2JYRlNRQUp5TXM/view?usp=drivesdk
 
-Refactored Projects:
-https://drive.google.com/file/d/0BxYOUQMV4CztbnJMSDlYQnJhNHc/view?usp=drivesdk
+~~Refactored Projects (v1- out of date):
+https://drive.google.com/file/d/0BxYOUQMV4CztbnJMSDlYQnJhNHc/view?usp=drivesdk~~
+
+Refactored Projects (v2): https://drive.google.com/open?id=0BxYOUQMV4CztTTViOXI4SHY3blU
 
 Notice that two of the refactored projects have compilation errors. See the limitations of the tool described in the PDF file (Documentation) to see how to fix this errors manually. Each zip file has about 1.5GB.
