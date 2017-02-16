@@ -1,16 +1,20 @@
 \begin{figure}[H]
 \begin{minipage}{0.48\textwidth}
 \begin{sourcecode}
-\begin{javacode}{2,9,22-28}
+\begin{javacode}{2,13,25-31}
 public abstract class DocumentLoader 
-	extends SwingWorker<List<Document>, Void> { //3$\label{codeline:DocumentLoader-3a}$
+	extends SwingWorker<List<Document>, Void> { //1$\label{codeline:DocumentLoader-1a}$
     ...
-    @Override
+    public void load(File... files) {
+        this.files = files;
+        execute();
+    }
+    
     protected List<Document> doInBackground() throws Exception {
         List<Document> result = new ArrayList<Document>();
         for (File file : files) {
             try {
-                result.add(new Document(//1$\label{codeline:DocumentLoader-1a}$
+                result.add(new Document(//2$\label{codeline:DocumentLoader-2a}$
                         file.getName(),
                         file.getAbsolutePath(),
                         ..., // LANGUAGE
@@ -22,10 +26,9 @@ public abstract class DocumentLoader
         return result;
     }
 
-    @Override
     protected void done() {
         try {
-            fetchResult(get());//2$\label{codeline:DocumentLoader-2a}$
+            fetchResult(get());//3$\label{codeline:DocumentLoader-3a}$
         } catch (Exception ex) {
             log.warn("SwingWorker error");
         }
@@ -39,16 +42,21 @@ public abstract class DocumentLoader
 \end{minipage}\hspace{0.7cm}
 \begin{minipage}{0.48\textwidth}
 \begin{sourcecode}
-\begin{javacode}{2,9,22-24}
+\begin{javacode}{2,14,27-29}
 public abstract class DocumentLoader 
-	extends SwingWorker<List<Document>, Document> { //3$\label{codeline:DocumentLoader-3b}$
+	extends SwingWorker<List<Document>, Document> { //1$\label{codeline:DocumentLoader-1b}$
 	...
+    public void load(File... files) {
+        this.files = files;
+        execute();
+    }
+    
     @Override
     protected List<Document> doInBackground() throws Exception {
         List<Document> result = new ArrayList<Document>();
         for (File file : files) {
             try {
-                publish(new Document( //1$\label{codeline:DocumentLoader-1b}$
+                publish(new Document( //2$\label{codeline:DocumentLoader-2b}$
                         file.getName(),
                         file.getAbsolutePath(),
                         ..., // LANGUAGE
@@ -61,8 +69,8 @@ public abstract class DocumentLoader
     }
 
     @Override
-    protected void process(List<Document> chunks){ //2$\label{codeline:DocumentLoader-2b}$
-        fetchResult(chunks);
+    protected void process(List<Document> chunks){
+        fetchResult(chunks); //3$\label{codeline:DocumentLoader-3b}$
     }
 
     ...

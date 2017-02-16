@@ -24,6 +24,7 @@
 \input{preamble.tex}
 \newcommand{\toolcore}{\textsc{2Rx}}
 \newcommand{\toolextension}{\textsc{SwingWorker2Rx}}
+\newcommand{\toolrxfactor}{\textsc{AsyncTask2Rx}}
 
 
 \begin{document}
@@ -41,20 +42,20 @@
 \author{Grebiel José Ifill Brito}
 \birthplace{Caracas, Venezuela}
 \date{February 2017}
-\referee{Prof. Dr. Guido Salvaneschi}{}
+\referee{Prof. Dr. Guido Salvaneschi}{Pascal Weisenburger, M.Sc.}
 \department{Computer Science}
 \group{Reactive Programming Technology}
 
 \makethesistitle
 
 \chapter*{Abstract}
-Modern languages are replacing the traditional callback-based approach with method chaining. Some of these languages are using event-driven, reactive and functional programming models~\cite{agera, reactiveX, paperFlapjax}. According to previous studies, these programming paradigms improve code writing and code comprehension~\cite{promises, paperReactiveComprehension}.
+Modern languages are replacing the traditional callback-based approach with method chaining. Some of these languages are using event-driven, reactive and functional programming models. According to previous studies, these programming paradigms improve code writing and code comprehension.
 
-Motivated by these facts, we propose a refactoring approach that facilitates introducing reactive and functional programming concepts in existing asynchronous \framework{Java} applications. This thesis focuses on the refactoring of \code{SwingWorker}s. However, one can adapt this approach to make it applicable to other async constructs.
+Motivated by these facts, we propose a refactoring approach to convert a callback-based async construct into another construct that facilitates introducing reactive and functional programming concepts in existing asynchronous \framework{Java} applications. This thesis focuses on refactoring a particular construct. However, one can adapt this approach to make it applicable to other async constructs.
 
 We developed a system to perform the mentioned refactoring automatically. This system consists of a core and an extension called \toolcore{} and \toolextension{} respectively.
 
-We evaluate the accuracy of \toolextension{} using 58 projects. The results show that the tool is highly accurate. Furthermore, we evaluate the flexibility of \toolcore{} to support extensions by adapting \textsc{RxFactor}~\cite{thesisRxFactor} to be its client (extension). \textsc{RxFactor} is a similar tool which goal is to transform \code{AsyncTask}s into an implementation that uses \framework{ReactiveX} as well.
+We evaluate the accuracy of \toolextension{} using 58 projects. In these projects there are 678 elements (declarations, instances, invocations, methods, variables, fields, among others) that contained the target async construct. Our tool successfully refactored 676 of these elements, which represents approximately 99.7\%. These results show that the tool is highly accurate. Furthermore, we demonstrate the extensibility of \toolcore{} by supporting the refactoring performed by another tool that targets Android applications.
 
 \tableofcontents
 \listoffigures
@@ -373,7 +374,7 @@ In this example we focus on two classes, \code{DocumentLoader} and \code{Editor}
 
 \subsection{DocumentLoader}
 
-The user can import images into Juneiform by clicking on the icon ``open Images'' \includegraphics[height=0.4cm]{juneiform/open-icon.png} (Figure~\ref{fig:loadDocs}). This action opens a file chooser dialog. After the user has selected the source images and clicked ``Open'', the class \code{DocumentLoader} (Listing~\ref{code:example-original-v1}) starts loading the images into Juneiform. Notice that \code{DocumentLoader} is a subclass of \code{SwingWorker}. The loading process consists of adding all images into a list (Listing~\ref{code:example-original-v1}:~Line~\ref{codeline:DocumentLoader-1a}). This list is used to display the selected images in the UI (Listing~\ref{code:example-original-v1}:~Line~\ref{codeline:DocumentLoader-2a}).
+The user can import images into Juneiform by clicking on the icon ``open Images'' \includegraphics[height=0.4cm]{juneiform/open-icon.png} (Figure~\ref{fig:loadDocs}). This action opens a file chooser dialog. After the user has selected the source images and clicked ``Open'', the application starts fetching the images. As soon as the fetching has completed, all images are displayed.
 
 \begin{figure}[H]
 \begin{center}
@@ -383,46 +384,56 @@ The user can import images into Juneiform by clicking on the icon ``open Images'
 \end{center}
 \end{figure}
 
-\input{code-examples/preprocessing.tex}
+The class responsible for loading the images into Juneiform is \code{DocumentLoader} (Listing~\ref{code:example-original-v1}). When the user selects the images from the file chooser dialog (Figure~\ref{fig:loadDocs}) and clicks ``Open'', the \code{load} (Listing~\ref{code:example-original-v1}:~Line~4) method of \code{DocumentLoader} is invoked using the previously selected files as argument. The files are then cached into a private field called \code{files}~(Listing~\ref{code:example-original-v1}:~Line~5). After that, \code{execute} is invoked (Listing~\ref{code:example-original-v1}:~Line~6). Since \code{DocumentLoader} is a subclass of the async construct \code{SwingWorker}, the next invocation is \code{doInBackground} (Listing~\ref{code:example-original-v1}:~Line~9) which logic corresponds to the asynchronous operation. The asynchronous operation consists in iterating through all \code{files} (Listing~\ref{code:example-original-v1}:~Line~11) and adding them one by one to a list \code{result} of type \code{Document} (Listing~\ref{code:example-original-v1}:~Line~13). The type \code{Document} is implemented in Juneiform and holds relevant information about a file such as its name, absolute path, image, among others. When the algorithm has iterated through all \code{files}, then the list \code{result} contains the previously selected images. The asynchronous operation ends when the method \code{doInBackground} returns (Listing~\ref{code:example-original-v1}:~Line~22). After the asynchronous operation has completed, the \code{done} (Listing~\ref{code:example-original-v1}:~Line~25) method is invoked by the \code{SwingWorker}. Notice that \code{doInBackground} returns a list of type \code{Document}. The return value of \code{doInBackground} (in this example: \code{result}) can be accessed from the method \code{done} by using \code{get} (Listing~\ref{code:example-original-v1}:~Line~27). Since \code{get} can throw whether an \code{InterruptedException} or an \code{ExecutionException}, a \code{try-catch} block is needed. Finally, if no exceptions are thrown, the \code{fetchResult} method is called using the returned value of the asynchronous operation as argument (all files). This method displays the selected images in the UI.
 
-We slightly modified the original implementation of \code{DocumentLoader} in order to show the images in the UI as soon as they are available (Listing~\ref{code:example-pre-processing}). The purpose of this modification is to show that our approach can handle dynamically generated items. These items are generated every time the method \code{publish} is invoked (Listing~\ref{code:example-pre-processing}:~Line~\ref{codeline:DocumentLoader-1b}). In order to load the images one by one, the method \code{process} must be implemented (Listing~\ref{code:example-pre-processing}:~Line~\ref{codeline:DocumentLoader-2b}). The logic in this method is similar to the one in \code{done}. The \code{Try-Catch} block is not necessary because the method \code{get} is no longer used and therefore no \code{Exception} can be thrown. Notice that we also have to change the second parameter of the \code{SwingWorker} from \code{Void} (Listing~\ref{code:example-original-v1}:~Line~\ref{codeline:DocumentLoader-3a}) to \code{Document} (Listing~\ref{code:example-pre-processing}:~Line~\ref{codeline:DocumentLoader-3b}).
+Before applying the automated refactoring, we slightly manually refactored the original implementation of \code{DocumentLoader} so that we can show the images in the UI as soon as they are available. The purpose of this refactoring is to show that our approach can handle dynamically generated items. These items are generated every time the method \code{publish} is invoked. Basically, we applied three changes. First, we changed the second parameter of the \code{SwingWorker} from \code{Void} (Listing~\ref{code:example-original-v1}:~Line~\ref{codeline:DocumentLoader-1a}) to \code{Document} (Listing~\ref{code:example-pre-processing}:~Line~\ref{codeline:DocumentLoader-1b}). The second parameter corresponds to the data type of the intermediate results. Second, we generate intermediate results by using \code{publish} (Listing~\ref{code:example-pre-processing}:~Line~\ref{codeline:DocumentLoader-2b}), instead of accumulating all \code{Document}s in a list (Listing~\ref{code:example-original-v1}:~Line~\ref{codeline:DocumentLoader-2a}). Intermediate results are processed by using the method \code{process} (Listing~\ref{code:example-pre-processing}:~Line~27) of the \code{SwingWorker}. Therefore the third step was to implement \code{process}. The logic of \code{process} is similar to the one in \code{done}. The only difference is that \code{process} receives a list \code{chunks} (Listing~\ref{code:example-original-v1}:~Line~27) of type \code{Document} (See the second parameter of \code{SwingWorker} in Listing~\ref{code:example-pre-processing}:~Line~\ref{codeline:DocumentLoader-1b}) which can directly be used in \code{fetchResult} to update the images displayed in the UI. Since \code{chunks} is a variable and \code{fetchResult} does not throw any exception, there is no \code{try-catch} block in \code{process}.
+
+\input{code-examples/preprocessing.tex}
 
 \input{code-examples/example-original-vs-refactored.tex}
 
-After modifying the class \code{DocumentLoader}, as shown in Listing~\ref{code:example-pre-processing}, we used \toolextension{} to refactor Juneiform. Listings~\ref{code:example-original} and~\ref{code:example-refactored} show the source code of \code{DocumentLoader} before and after refactoring. The differences in both code snippets are highlighted. Basically, the logic of the \code{SwingWorker} was separated into two objects, a \code{Subscriber} and an \code{Observable}. The \code{Observable} is responsible for the asynchronous operation, while the \code{Subscriber} handles the synchronous ones. The logic contained in the methods \code{doInBackground} and \code{process} did not change. The most relevant relevant part of the code for now is the \code{publish} invocation (Listing~\ref{code:example-refactored}~Line~16). This method generates the items of the \code{Observable} that can be manipulated using the \framework{RxJava} functional programming constructs.
+After having manually refactored the class \code{DocumentLoader}, as showed in Listing~\ref{code:example-pre-processing}, we used \toolextension{} to refactor Juneiform. Listings~\ref{code:example-original} and~\ref{code:example-refactored} show the source code of \code{DocumentLoader} before and after refactoring. The differences in both code snippets are highlighted. Notice that the code snippet presented in Listings~\ref{code:example-original} is an abstraction of the one showed in Listings~\ref{code:example-pre-processing}.
 
-Listings~\ref{code:example-edited} shows how we manually modified the refactored code to change the behavior of the program using functional and reactive paradigms. In the new implementation, we added a filter to select the images in jpg format. Additionally, we changed the display name of the image within Juneiform to uppercase and remove the extension of the file from the name. Next, we subscribe four \code{Observer}s to the \code{ConnectableObservable}. Finally, we connect the \code{ConnectableObservable} to start the emissions. The code snippet showed in Listing~\ref{code:example-edited} works as follows:
-\begin{itemize}
-	\item Line 6: it specifies that the operations that follow must be executed in a background thread.
-	\item Line 7: the \code{publish} invocation uses the type \code{List<Document>}. Since it is more comfortable to work directly with \code{Document}s, we use \code{flapMap} to extract the \code{Document} objects from the lists sent through \code{publish}.
-	\item Line 8: it filters the \code{Document}s to consider only jpg files.
-	\item Line 9 - 13: it transforms the items in order to change the display name to uppercase and simultaneously remove the file extension from it.
-	\item Line 14: it specifies that the operations that follow must be executed in the UI thread.
-	\item Line 17 - 20: it registers an \code{Observer} that updates the UI and prints the name of the file (Listing~\ref{code:example-console})
-	\item Line 21 - 23: it registers further \code{Observer}s. For simplicity, these \code{Observer}s only print the name of the file  (Listing~\ref{code:example-console}), but they could be anything.
-	\item Line 25: it connects the \code{ConnectableObservable} to start the emissions.
-\end{itemize}
+As showed in Figure~\ref{fig:swingWorker-execution}, the code contained in a \code{SwingWorker} can be executed whether on a background or on the UI thread. Everything that is called from \code{doInBackground} is executed in the background. The rest, methods \code{process} and \code{done}, is executed in the UI thread. Our refactoring separates this logic into two objects. The \code{Observable} (Listing~\ref{code:example-refactored}:~Lines~9-19) is responsible for the asynchronous operation (\code{doInBackground}) (Listing~\ref{code:example-refactored}:~Line~13), while the \code{Subscriber} (See Listing~\ref{code:example-refactored}:~Line~2) handles the synchronous ones (\code{process} and/or \code{done}). Our refactoring does not change the logic contained in any of these three methods. Instead, these methods are wrapped in a \code{rx.Observable} or a \code{rx.Subscriber}, which are later use for introducing functional and reactive programming concepts into the existing application. The complete refactoring approach is explained in Section~\ref{sec:2rx-approach}. For now, the relevant part of the code is the \code{publish} invocation (Listing~\ref{code:example-refactored}:~Line~16) because this is the one responsible for generating the items of the \code{Observable} that can be manipulated using \framework{RxJava} functional programming constructs. The logic in charge of processing these items is in the method \code{process} (Listing~\ref{code:example-refactored}:~Line~21).
+
+\subsubsection{Functional and Reactive Programming in \code{DocumentLoader}}
+
+So far, we have shown how our tool can refactor a \code{SwingWorker} into a \code{rx.Observable} and a \code{rx.Subscriber}. This refactoring enables \framework{RxJava} constructs that facilitate introducing functional and reactive programming concepts in Juneiform. 
 
 \input{code-examples/example-manually-refactored.tex}
+
+Listings~\ref{code:example-edited} shows an example where we change the functionality of \code{DocumentLoader} in a functional fashion. In the new implementation, we add a filter to select only the images which format is jpg. Additionally, we change the display name of the image within Juneiform to uppercase and remove the extension of the file from the name. On the other hand, we implement a reactive model by using four \code{Subscriber}s. The code snippet showed in Listing~\ref{code:example-edited} works as follows:
+
+\begin{itemize}
+	\item {\bf Line 6}: we specify the thread in which the \code{Observable} operates. The scheduler \code{Schedulers.computation} corresponds to a background thread.
+	\item {\bf Line 7}: the \code{publish} invocation uses the type \code{List<Document>}. Since it is more comfortable to work directly with \code{Document}s, rather than a list of this type, we use \code{flapMap} to extract the \code{Document} objects from the lists received from \code{publish}.
+	\item {\bf Line 8}: at this point we have a stream of \code{Document}s. We filter these \code{Document}s to consider only jpg files.
+	\item {\bf Line 9 - 13}: we transform the items by changing their display name to uppercase and simultaneously removing the file extension from them. In functional programming using state should be avoid~\cite{bookFunctionalProgramming}, therefore, we generate a new instance for each \code{Document} rather than changing the name directly in the current instance. 
+	\item {\bf Line 14}: we specify that the operations that follow must be executed in the UI thread.
+	\item {\bf Line 17 - 20}: we register a \code{Subscriber} using lambda notation that updates the UI and prints the name of the file (Listing~\ref{code:example-console})
+	\item {\bf Line 21 - 23}: we register further \code{Subscriber}s using lambda notation as well. For simplicity, these \code{Subscriber}s only print the name of the file  (Listing~\ref{code:example-console}), but these actions could be anything.
+	\item {\bf Line 25}: we connect the \code{ConnectableObservable} to start the emissions.
+\end{itemize}
 
 \input{code-examples/example-console-output.tex}
 
 \subsection{Editor}
 
-Similarly, \toolextension{} refactored the class \code{Editor}. Listings~\ref{code:example-editor-original} and~\ref{code:example-editor-refactored} show the source code of \code{Editor} before and after refactoring. As one can see, the logic contained in the methods \code{doInBackground} and \code{done} dit not change here either.
+Similarly, \toolextension{} refactored the class \code{Editor}. Listing~\ref{code:example-editor-original} shows the original source code. Here, there is a \code{SwingWorker} which is responsible for performing the optical character recognition in the background (Listings~\ref{code:example-editor-original}:~Line~7) and updating the user interface by executing some code in the UI thread (Listings~\ref{code:example-editor-original}:~Line~12). The specific implementations for these two actions are not relevant for this example. When the user clicks on the icon ``Perform OCR'' \includegraphics[height=0.4cm]{juneiform/ocr-icon.png} (Figure~\ref{fig:juneiform}), the method containing the code snippet from Listings~\ref{code:example-editor-original} gets executed. As soon as \code{execute} is reached (Listings~\ref{code:example-editor-original}:~Line~15), the \code{SwingWorker} execution starts as described in Figure~\ref{fig:swingWorker-execution}. 
 
 \input{code-examples/example-editor-before-after.tex}
 
-After performing the refactoring, one can modify the source code manually to add new features. In this case, we implemented a \code{Utils} class for showing and closing a loading spinner. Additionally, we added a method to copy the result of the OCR to the clipboard. Once we had implemented these methods, we added features to the \code{Observable} using a functional notation, as shown in Listing~\ref{code:example-editor} (Lines 6-8). The new features were declared as follows:
-\begin{itemize}
-	\item when the observable is subscribed, the loading spinner is shown by using the \code{Utils} class in the \code{doOnSubscribed} call.
-	\item the last emission corresponds to the result. This result is copied to the clipboard using \code{doOnNext}
-	\item finally, the loading spinner is hidden in the \code{doOnCompleted} call.
-\end{itemize}
+Listing~\ref{code:example-editor-refactored} shows the refactored code of the class \code{Editor}. The logic contained in the methods \code{doInBackground} (Listing~\ref{code:example-editor-refactored}:~Line~6) and \code{done} (Listing~\ref{code:example-editor-refactored}:~Line~14) did not change. However, the structure of the code did change. Now we have an \code{Observable} (Listing~\ref{code:example-editor-refactored}:~Lines~2-8) containing the asynchronous operation (\code{doInBackground}) and a \code{Subscriber} (Listing~\ref{code:example-editor-refactored}:~Lines~10-16) responsible for the synchronous one (\code{done}). In this case, the \code{Observable} starts the emissions as soon as the \code{executeObservable} invocation is reached (Listing~\ref{code:example-editor-refactored}:~Line~17). The complete refactoring approach is explained in Section~\ref{sec:2rx-approach}. For now, we only focus on the fact, that we have a \code{rx.Observable} (Listing~\ref{code:example-editor-refactored}:~Lines~2-8) that allows us to add features in a functional fashion.
 
 \input{code-examples/example-editor.tex}
 
-\newpage
+After performing the refactoring, we modify the source code manually to add new features. In this case, we implement a \code{Utils} class for showing and closing a loading spinner. Additionally, we add a method to copy the result of the OCR to the clipboard. The implementation details of the \code{Util} class and the \code{copyToClipboard} method are not relevant for this example. The important aspect here is that we can add features to the \code{Observable} using a functional notation, as showed in Listing~\ref{code:example-editor} (Lines 6-8). We declare the new features as follows:
+\begin{itemize}
+	\item {\bf Line 6:} we show a loading spinner when the observable is subscribed.
+	\item {\bf Line 7:} the last emission corresponds to the result. We copy the result to the clipboard.
+	\item {\bf Line 8:} we hide the loading spinner.
+\end{itemize}
+
 \section{Refactoring Approach}
 As we mentioned before \textsc{RxFactor} and \toolextension{} refactor similar asynchronous constructs. In this section, we show the general idea of the refactoring approach of \textsc{RxFactor} and explain the reason why we decided to use a different one. After that, we present the approach used by our tool.
 
@@ -621,13 +632,15 @@ The \code{SWSubscriber} implements all methods available in the \code{SwingWorke
 
 
 \section{Refactoring Approach}
+\label{sec:refactoring-approach}
 In this thesis, we propose a refactoring approach that allows transforming \code{SwingWorker}s to \framework{RxJava} by modifying a few lines of the source code. This is possible because the \code{SwingWorker} workflow is imitated through the interaction between \code{SWEmitter}, \code{SWPackage} and \code{SWSubscriber}.
 
-In the following subsections, we explain how we refactore different AST nodes. These code snippets can be compared to the example shown at the beginning of Chapter~\ref{chapter:design}, to understand how the transformations in the Juneiform application were performed (Listings~\ref{code:example-original},~\ref{code:example-refactored}).
+In the following subsections, we explain how we refactore different AST nodes. These code snippets can be compared to the example showed at the beginning of Chapter~\ref{chapter:design}, to understand how the transformations in the Juneiform application were performed (Listings~\ref{code:example-original},~\ref{code:example-refactored}).
 
 On the left side we present the original source code and on the right side the refactored one.
 
 \subsection{Assignments}
+\label{sec:imp-assigments}
 The usage of the AST node \code{Assignment} involves working with variables. We observed that often the variable names contain the substrings ``swingWorker'' or     ``worker''. Since we are refactoring this construct, we replace these substrings by ``rxObserver''.
 
 \input{refactorings/assignment.tex}
@@ -635,6 +648,7 @@ The usage of the AST node \code{Assignment} involves working with variables. We 
 There are also cases where a variable can be directly assigned to a class instance creation. The refactoring of class instance creations is shown in subsection~\ref{sec:imp-class-instance-creations}.
 
 \subsection{Variable Declaration Statements}
+\label{sec:imp-variableDeclStatement}
 Similar to \code{Assignment}s, \code{SingleVariableDeclaration}s involve variable names that must be adjusted. Additionally, the data type \code{SwingWorker} must be changed to \code{SWSubscriber} (Listings~\ref{code:vds-before} and ~\ref{code:vds-after}).
 
 \input{refactorings/variable-decl-statement.tex}
@@ -648,6 +662,7 @@ It is also possible to have \code{ClassInstanceCreation}s in \code{VariableDecla
 \input{refactorings/class-instance-creation.tex}
 
 \subsection{Field Declarations}
+\label{sec:imp-fieldDeclaration}
 \code{FieldDeclaration}s are very similar to \code{VariableDeclarationStatement}s. Normally, it is only necessary to adjust the variable name and change the data type from \code{SwingWorker} to \code{SWSubscriber}. However, we do have an important special case for \code{FieldDeclaration}s. Our approach creates two objects out of a \code{SwingWorker} and the constructor of the \code{SWSubscriber} requires an \code{Observable}. To make the code more readable, we decided to create an inner class that extends \code{SWSubscriber} and generate the \code{Observable} there (Listings~\ref{code:fd-before} and~\ref{code:fd-after}).
 
 \input{refactorings/field-decl.tex}
@@ -656,29 +671,34 @@ Another alternative for refactoring this kind of \code{FieldDeclaration}s is to 
 
 \input{refactorings/field-decl-special-case.tex}
 
-\code{SwingWorker}s can also contain custom fields and/or methods. In these cases, we also use an inner class such as \code{RxObserver}, shown in Listing~\ref{code:fd-after}, that contains all of the custom fields and methods. By doing that we guarantee, that the pieces of code contained in the \code{Observable} and the \code{SWSubscriber} still have access to those elements.
+\code{SwingWorker}s can also contain custom fields and/or methods. In these cases, we also use an inner class such as \code{RxObserver}, showed in Listing~\ref{code:fd-after}, that contains all of the custom fields and methods. By doing that we guarantee, that the pieces of code contained in the \code{Observable} and the \code{SWSubscriber} still have access to those elements.
 
 \subsection{Method Declaration}
+\label{sec:imp-methodDecl}
 We also modify \code{MethodDeclaration}s to adjust the return value from \code{SwingWorker} to \code{SWSubscriber} (Listings~\ref{code:md-before} and~\ref{code:md-after}).
 
 \input{refactorings/method-declaration.tex}
 
 \subsection{Method Invocations}
+\label{sec:imp-methodInvocation}
 Only three methods out of eighteen were renamed in the \code{SWSubscriber}. The refactoring of \code{MethodInvocation} nodes also involves checking the name of the invokers and adjusting them if necessary. The substrings ``swingWorker'' and ``worker'' are replaced by ``rxObserver''. Listings~\ref{code:mi-before} and~\ref{code:mi-after} shows the refactoring of the only methods that were renamed.
 
 \input{refactorings/method-invocations.tex}
 
 \subsection{Simple Names}
+\label{sec:imp-simpleName}
 We refactor \code{SimpleName}s to adjust the argument name of \code{SwingWorker} types in invocations (Listings~\ref{code:sn-before} and~\ref{code:sn-after}).
 
 \input{refactorings/simplename.tex}
 
 \subsection{Single Variable Declarations}
+\label{sec:imp-singleVarDeclaration}
 \code{SwingWorker}s can also be parameters of methods. The variables defined in a \code{MethodDeclaration} are called \code{SingleVariableDeclaration}. We use this AST node to refactor refactor these \code{SwingWorker}s into \code{SWSubscriber}s (Listings~\ref{code:svd-before} and~\ref{code:svd-after}).
 
 \input{refactorings/single-variable-decl.tex}
 
 \subsection{Type Declarations}
+\label{sec:imp-typeDecl}
 In order to refactor \code{TypeDeclaration} nodes, it is necessary to change the superclass of the target node from \code{SwingWorker} to \code{SWSubscriber}. Furthermore, we need to set the \code{Observable} in the constructor. Listings~\ref{code:td-before} and~\ref{code:td-after} illustrate how this is done. Notice that the method \code{getRxObservable} is the same that we use for the special case of \code{FieldDeclaration}s (Listing~\ref{code:fd-after}).
 
 \input{refactorings/type-decl.tex}
@@ -718,11 +738,12 @@ It is possible to extend the \code{RxSingleUnitWriter}, explained in Section~\re
 \input{code-examples/writer-example.tex}
 
 \subsection{Source Code Generation}
-\toolcore{} provides a couple of methods that can be used to generate code from a string (source code). By using these methods and \framework{FreeMarker}~\cite{freeMarker} templates, we generate source code without having to specify all nodes using JDT. Listing~\ref{code:subscriber-ftl} shows the template used for generating inner class \code{RxSubscriber} shown in Listing~\ref{code:cic-after}. Basically, there is a \framework{Java} object called \code{model} that contains all necessary information for filling up the templates. This object is passed to the \framework{FreeMarker} processor in order to produce the source code.
+\toolcore{} provides a couple of methods that can be used to generate code from a string (source code). By using these methods and \framework{FreeMarker}~\cite{freeMarker} templates, we generate source code without having to specify all nodes using JDT. Listing~\ref{code:subscriber-ftl} shows the template used for generating inner class \code{RxSubscriber} showed in Listing~\ref{code:cic-after}. Basically, there is a \framework{Java} object called \code{model} that contains all necessary information for filling up the templates. This object is passed to the \framework{FreeMarker} processor in order to produce the source code.
 
 \input{code-examples/subscriber-ftl.tex}
 
 \subsection{Test-Driven Development}
+\label{sec:test-driven-dev}
 We also developed a third project for test-driven development. This project only contains tests. The main idea is to have a basic project containing the cases to be tested. Each file contains a single case (Figure~\ref{fig:unit-test-results}). Additionally, there is a second folder containing all expected \framework{Java} classes, which are used for the assertions.
 
 When the tests are executed, the basic project is refactored without writing the changes to the files. In this way, we guarantee that the input files never change and can always be reused. The resulting code of each compilation unit is saved in a map. For the comparison, we generate an AST for output and expected file. Then the trees are compared. The purpose of doing this is to ignore irrelevant differences such as spaces, empty lines, comments, etc.
@@ -767,28 +788,58 @@ Similarly, Figure~\ref{fig:template-test} shows the package structure of the tem
 
 \chapter{Evaluation}
 \label{chapter:evaluation}
-We divided the evaluation into two parts. The first one corresponds to the accuracy of the refactoring approach, while the second one focuses on flexibility of the refactoring tool to support extensions.
+We divided the evaluation into two parts. The first one corresponds to the accuracy of the refactoring approach and the second one focuses on the extensibility of the \toolcore{}.
 
 \section{Refactoring Approach}
-For the evaluation of the refactoring approach, we used 58 projects. One of these projects was developed for unit test. Ten projects were used for UI tests and the remaining 47 projects were used to analyze the original code versus the refactored code and check that there are no compilation errors.
+We used 58 projects for the evaluation of the refactoring approach:
+\begin{itemize}
+	\item 1 project for unit tests (Section~\ref{sec:eval-unit-test})
+	\item 10 projects for UI tests (Section~\ref{sec:eval-ui-test})
+	\item 47 projects to analyze the original code versus the refactored one. The analysis consist of code inspections and making sure that there are no compilation errors after refactoring. (Section~\ref{sec:eval-src-analysis})
+\end{itemize}
 
 \subsection{Dataset for Unit Tests}
-We developed the project for unit tests the implementation phase following the test-driven development technique. Each unit tests is responsible for testing a specific refactoring worker. Therefore this project has at least one test file for each worker. The project contains also the refactored code, which is used to make sure that the output from \toolextension{} matches the expected file.
+\label{sec:eval-unit-test}
+In the implementation phase, we developed a project for unit tests following the test-driven development technique (Section~\ref{sec:test-driven-dev}). The test cases in this project were designed considering \code{SwingWorker} relevant \code{ASTNode}s. In order to identify these nodes, we used the AST view from Eclipse. The AST view is an Eclipse plugin that allows one to determine which \code{ASTNode} type corresponds to a particular construct in the source code. Figure~\ref{fig:ast-view} shows the ASTView panel on the left side and Editor on the right. If the option ``Link with Editor'' \includegraphics[height=0.35cm]{unit-tests/link-to-editor.png} is enabled, then any selection on the ASTView panel will move the cursor in the Editor (source code) to the corresponding \code{ASTNode}. Similarly, any selection in the Editor highlights the corresponding node in the ASTView panel. In this example, the cursor in the Editor points to \code{new}~\code{SwingWorker} and therefore the node \code{ClassInstanceCreation} is highlighted in the ASTView.
 
-We did not only use this project for the implementation phase but also added to the final set of projects to be evaluated.
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=17cm]{unit-tests/ASTView-vs-SrcCode.png}
+\end{center}
+\caption{AST View}
+\label{fig:ast-view}
+\end{figure}
+
+In order to design the test cases, we went through the source code of several projects and used the ASTView panel to identify the \code{ASTNode}s that are involved with \code{SwingWorker}s. During this inspection we found 9 \code{ASTNode}s. We show an example of each of these nodes in Section~\ref{sec:refactoring-approach}:
+\begin{itemize}
+	\item Section~\ref{sec:imp-assigments}: \code{Assignment}
+	\item Section~\ref{sec:imp-variableDeclStatement}: \code{VariableDeclarationStatement}
+	\item Section~\ref{sec:imp-class-instance-creations}: \code{ClassInstanceCreation}
+	\item Section~\ref{sec:imp-fieldDeclaration}: \code{FieldDeclaration}
+	\item Section~\ref{sec:imp-methodDecl}: \code{MethodDeclaration}
+	\item Section~\ref{sec:imp-methodInvocation}: \code{MethodInvocation}
+	\item Section~\ref{sec:imp-simpleName}: \code{SimpleName}
+	\item Section~\ref{sec:imp-singleVarDeclaration}: \code{SingleVariableDeclaration}
+	\item Section~\ref{sec:imp-typeDecl}: \code{TypeDeclaration}
+\end{itemize}
+
+We then proceeded to design test cases for each of these \code{ASTNode}s.
 
 \subsection{Dataset for UI Tests}
+\label{sec:eval-ui-test}
 We chose the projects for UI tests from Bitbucket according to the following criteria: small projects (less than 50 \framework{Java} files) that compile without having to setup a server, database, etc. We did not select these projects randomly because our goal was to be able to evaluate them at runtime and make sure that the behavior of the applications did not change. Randomly chosen applications are often not compilable due to missing files, complex setups, etc.
 
 \subsection{Dataset for Source Code Analysis}
+\label{sec:eval-src-analysis}
 We used the remaining 47 projects to evaluate the refactoring tool by analyzing its output. We downloaded these projects randomly from Github. The search was performed using the Search site from Github ``\url{https://github.com/search}''. We used the following search parameters, Query: ``\code{SwingWorker}'', Language: \framework{Java}, Sort: Recently indexed. The equivalent search URL is: 
 \begin{itemize}
-	\item \url{https://github.com/search?l=Java&o=desc&q=SwingWorker&ref=searchresults&s=indexed&type=Code&utf8=\%E2\%9C\%93}
+	\item {\footnotesize \url{https://github.com/search?l=Java&o=desc&q=SwingWorker&ref=searchresults&s=indexed&type=Code&utf8=\%E2\%9C\%93}}
 \end{itemize}
 
-We did not consider further search parameters such as the number of stars or forks because the number of results was not representative. Table~\ref{table:results-starts-forks} shows an overview of the search results when using starts and/or forks as search parameters.
+We did not consider further search parameters such as the number of stars or forks because the number of projects found was too small. Table~\ref{table:results-starts-forks} shows an overview of the search results when using starts and/or forks as search parameters.
 
 \begin{table}[h]
+{\footnotesize
 \begin{center}
 \begin{tabular}{|p{5cm}|C{3cm}|}
 \hline
@@ -800,18 +851,18 @@ Stars $>$ 0 or Forks > 0 & 7\\
 \hline
 \end{tabular}
 \end{center}
+}
 \caption{Search Results using Nr. of Starts and Forks}
 \label{table:results-starts-forks}
 \end{table}
 
-From the result's list, we downloaded the first 50 Eclipse or Maven projects. Then we imported them into the Eclipse workspace to make sure that they compile. We analyzed projects that did not compile in order to determined whether the noncompilable source code was \code{SwingWorker} relevant or not. If the piece of code was not \code{SwingWorker} relevant, then we commented it out to hide the compilation errors shown in the IDE. Commenting out few lines of code does not affect the integrity of the evaluation because the projects were not meant to be tested at runtime. Three out of the fifty projects could not be properly setup to avoid compilation errors before refactoring. Therefore, we removed these projects from the final lists of projects to be evaluated.
+From the list of results, we downloaded the first 50 Eclipse or Maven projects. Then we imported them into the Eclipse workspace to make sure that they compile. We analyzed projects that did not compile in order to determined whether the noncompilable source code was \code{SwingWorker} relevant or not. If the noncompilable code was not \code{SwingWorker} relevant, then we commented it out to hide the compilation errors showed in the IDE. Commenting out few lines of code does not affect the integrity of the evaluation because these projects were not meant to be tested at runtime. Three out of the fifty projects could not be properly setup to avoid compilation errors before refactoring. Therefore, we removed these projects from the final lists of projects to be evaluated.
 
 \subsection{Results}
-On the left side of Table~\ref{table:results} we show an overview of the results obtained after running \toolextension{} in the 58 projects. In total 14,930 lines of code were modified. This number includes the changes applied in the \code{.classpath} file, which are necessary to add the corresponding \code{.jar} files to the target project. From those 14,930 lines, two lines of code did not compile. These lines are explained in the next section. Appendix~\ref{appendix:eval-results-overview} shows the results of each project.
+Once we finished the implementation of \toolextension{}, including the unit tests, we proceeded to test the tool using 58 projects. Approximately 10\% of the projects (6/58) presented errors. We analyzed these errors, identified the missing test cases and added them to the unit tests. Table~\ref{table:results} shows an overview of the final results. The 58 projects contain over 10,000 Java files. From these files, \toolextension{} refactored 180 files and a total of 678 \code{ASTNode}s. 676 \code{ASTNode}s were refactored successfully, while 2 \code{ASTNode}s presented errors. In Section~\ref{sec:eval-limitations} we show the limitations of \toolextension{}. On the right side of Table~\ref{table:results} we show which kind of AST nodes containing \code{SwingWorker} were refactored. Appendix~\ref{appendix:eval-details} shows the results of each project.
 
-On the right side of Table~\ref{table:results} we show how many AST nodes containing \code{SwingWorker} were modified. \toolextension{} refactored 678 AST nodes in total. Appendix~\ref{appendix:eval-details} shows the results of each project.
-
-\begin{table}[h]
+\begin{table}[H]
+{\footnotesize
 \begin{center}
 \begin{tabular}{|p{5cm}|C{2cm}|}
 \hline
@@ -819,9 +870,9 @@ On the right side of Table~\ref{table:results} we show how many AST nodes contai
 Projects & 58\\
 Java Files & 10,055\\
 Refactored Java Files & 180\\
-Refactored Lines & 14,930\\
-Lines with compile errors & 2\\
-AST nodes & 678\\
+Refactored ASTNodes & 678\\
+Refactored ASTNodes (Successful) & 676\\
+Refactored ASTNodes (Failed) & 2\\
 Time & 5 min 17 s\\
 \hline
 \end{tabular}\hspace{1cm}
@@ -842,44 +893,59 @@ MethodDeclaration & 5\\
 \hline
 \end{tabular}
 \end{center}
+}
 \caption{Refactoring Results}
 \label{table:results}
 \end{table}
 
-The results presented above show that the refactoring approach presented in this thesis and the tool \toolextension{} are accurate. Only approximately 0.0001\% of the refactored lines showed compilation errors after refactoring. This lines, however, are not difficult to fix manually after the refactoring has completed.
+We performed a runtime evaluation and code inspections. We used 10 projects for the runtime evaluation (Appendix~\ref{appendix:eval-details} - Projects 2-11). This evaluation consisted of running the applications before and after refactoring and making sure that the behavior of the program did not change. For the code inspections, we used 48 projects (Appendix~\ref{appendix:eval-details} - Projects 1, 12-58). In this case, we randomly took about 10\% of the refactored \code{ASTNode}s and verified that the output corresponds to the expected source code. We computed the 10\% based on the total number of refactored \code{ASTNode}s in each project, which can be read from the Eclipse console.
+
+The results presented above show that the refactoring approach presented in this thesis and the tool \toolextension{} are accurate. Approximately 99,7\% of the \code{SwingWorker} relevant \code{ASTNode}s were refactored successfully.
 
 \subsubsection{Limitations}
-The current implementation of \toolextension{} makes impossible to refactor \code{SwingWorker} nodes found inside another \code{SwingWorker}. One of the two lines of code presenting compilation errors after refactoring corresponds to this case. 
+\label{sec:eval-limitations}
 
-Listing~\ref{code:nested-swingworkers} shows an example of this problem. Originally an \code{ExecutorService} submitted the instance \code{singleRun} by invoking \code{executorSC.submit(singleRun)}. Notice that \code{singleRun} is an instance of \code{SCWRLrunner}, which is a subclass of \code{SwingWorker}. This line was not refactored because the command is already within a \code{SwingWorker}. To fix this compilation error the line must be replaced by ``\java{singleRun.executeObservable()}''.
+The limitations of \toolextension{} are not linked to the refactoring approach, but to the implementation of the tool. Listings~\ref{code:limitation-original} and~\ref{code:limitation-refactored} show the refactoring of a \code{SwingWorker} instance creation. From the developer's point of view, the refactoring consists of changing one line (Listing~\ref{code:limitation-original}: Line~1 by Listing~\ref{code:limitation-refactored}: Line~1) and adding three new lines (Listing~\ref{code:limitation-refactored}: Lines~2,7,9). However, what \toolextension{} actually does is to read the whole \code{SwingWorker} as showed in Listing~\ref{code:limitation-original}, and use that source code to generate the complete code showed in Listing~\ref{code:limitation-refactored}. This implementation makes impossible to refactore nested \code{SwingWorker}s because only the outer \code{SwingWorker} is considered. In order to support refactoring nested \code{SwingWorker}s, the implementation of \toolextension{} have to be modified, so that the tool only refactors the lines highlighted in Listing~\ref{code:limitation-refactored}. This way, the tool would also be able to refactor the code inside \code{doInBackground}, \code{process}, \code{done} and any other method inside of a \code{SwingWorker}.
+
+\input{code-examples/limitation-intro.tex}
+
+Listing~\ref{code:nested-swingworkers} shows an example of nested \code{SwingWorker}s. Originally an \code{ExecutorService} submits the instance \code{singleRun} by invoking \code{executorSC.submit(singleRun)}. The variable \code{singleRun} is an instance of \code{SCWRLrunner}, which is a subclass of \code{SwingWorker}. In order to fix this compilation error manually, one must replace the error line by ``\java{singleRun.executeObservable()}''. Notice that the manual fix is not necessary if \toolextension{} is modified as described above.
 
 \input{code-examples/nested-swingworkers.tex}
 
-Another limitation found during the evaluation of the projects was conflicts between method names. Not all method names that can be used in \code{SwingWorker} subclasses, can also be used in \code{rx.Subscriber} subclasses. The second compilation error found corresponds to this case. 
+Another limitation found during the evaluation of the projects was method names clashes. Not all method names that can be used in \code{SwingWorker} subclasses, can also be used in \code{rx.Subscriber} subclasses. Listing~\ref{code:method-name-conflict} shows an example of this problem. Since \code{SwingWorker}s do not have any method matching the name ``\code{add}'', the original code compiles. However the new subclass of \code{rx.Subscriber} does have an ``\code{add}'' method and therefore, the code does not compile. 
 
-Listing~\ref{code:method-name-conflict} shows an example of this problem. Since \code{SwingWorker}s do not have any method matching the name ``\code{add}'', the original code compiles. However the new subclass of \java{rx.Subscriber} does have an ``\code{add}'' method and therefore, the code does not compile. 
+The solution is to replace Line 6 (Listing~\ref{code:method-name-conflict}) by ``\java{AsyncPanel.this.add(targetComponent,}~\java{BorderLayout.CENTER);}'' because \code{AsyncPanel} is the name of the class containing the target method. One could implement an analyzer to check the validity of method names while performing the refactoring. In case that conflicts are found, then one could change the method invocation to \code{<ClassName>.this.<MethodName>(<arguments>)}.
 
-The solution is to replace Line 6 by ``\java{AsyncPanel.this.add(targetComponent,}~\java{BorderLayout.CENTER);}'', since \code{AsyncPanel} is the name of the class containing the target method.
+Due to time limitations we did not adjust \toolextension{} to support nested \code{SwingWorker}s, neither to avoid method clashes.
 
 \input{code-examples/method-name-conflict.tex}
 
-\section{Generalization of the Tool}
-In order to evaluate the flexibility of \toolcore{}, we refactored the implementation \textsc{RxFactor} to make it a client of \toolcore{}. This transformation did not require applying any modifications in \toolcore{}.
+\section{Extensibility of \toolcore{}}
+In order to evaluate the extensibility of \toolcore{}, we refactored the implementation of \textsc{RxFactor} to make it a client of \toolcore{}. We call this extension \toolrxfactor{}. This refactoring did not require applying any changes in \toolcore{}.
 
 \subsection{Experimental Setup}
-We took the same dataset used in \textsc{RxFactor} for the evaluation and compare the outputs of both tools, \textsc{RxFactor} and the extension of it for \toolcore{}.
+We evaluated the extensibility of \toolcore{} using 34 projects. These projects were taken from \url{https://github.com/vogellacompany/codeexamples-android/tree/ae69e4c9a89b577659185381eef7dce206afc2cd}, a public repository in Github that contains 257 Android projects. We downloaded all projects and selected the ones that use \code{AsyncTask}s.
+
+The validation consists of performing the automated refactoring of the 34 projects using \textsc{RxFactor} and \toolrxfactor{} and comparing the outputs of both tools.
 
 \subsection{Validation Approach}
-To validate that the extension of \textsc{RxFactor} and the original tool generate the same exact result, we refactored the \framework{Android} projects two times. The first time using \textsc{RxFactor} and the second time using the extension. We placed the output projects in different directories and ran the following Linux command to compare the directories, their files, and the contents of each file:
+To validate that \toolrxfactor{} and \textsc{RxFactor} produce the same exact result, we refactored the \framework{Android} projects two times. The first time using \textsc{RxFactor} and the second time using \toolrxfactor{}. We placed the output from both tools in different directories and ran the following Linux command to compare the directories, their files, and the contents of each file:
 
 \begin{textcode}{}
-diff -r rxfactor-original rxfactor-modified -x *.classpath -x *.project -x *.jar -x *.class
+diff -r RxFactor/ AsyncTask2Rx/ -x *.classpath -x *.project -x *.jar -x *.class -x *.cache -x gen
 \end{textcode}
 
-The argument \code{r} is used to specify that the command must be executed recursively (includes all subdirectories). The arguments \code{rxfactor-original} and \code{rxfactor-modified} correspond to the directories where we saved the outputs locally. Finally, we used the argument \code{x} to exclude the files with extensions \code{classpath}, \code{project}, \code{jar} and \code{class} in order to compare only \framework{Java} files.
+The argument \code{r} is used to specify that the command must be executed recursively (includes all subdirectories). The arguments \code{RxFactor} and \code{AsyncTask2Rx} correspond to the directories where we saved the outputs locally. Finally, in order to compare only \framework{Java} files, we used the argument \code{x} to exclude the files with extensions \code{classpath}, \code{project}, \code{jar}, \code{class} and \code{cache}. Additionally we also excluded the directory \code{gen}. The files contained in this directory are automatically generated when the project is built.
 
 \subsection{Results}
-The ``diff'' command did not find any differences. That shows that the \textsc{RxFactor} was successfully adapted into an extension of \toolcore{}.
+The refactoring was applied to 24 \code{ASTNode}s. The ``diff'' operation found a difference in both folders (Listing~\ref{code:eval-diff}). However, one can see that there are no semantic changes in the source code. Due to this result, we inspected both files and found that they differ because of the position of the method \code{getRxUpdateSubscriber}. While \textsc{RxFactor} places the method \code{getRxUpdateSubscriber} in Line 54, \toolcore{} places it in Line 24. When we refactored \textsc{RxFactor}, we used several methods from a class of \toolcore{} called \code{RxSingleUnitWriter}. Specifically, we used the method \code{addMethod} for inserting \code{getRxUpdateSubscriber} into the source code. \textsc{RxFactor} has a similar method for this purpose. Listings~\ref{code:2rx-addMethod} and~\ref{code:rxFactor-addMethod} show the implementation of \code{addMethod} in \textsc{RxFactor} and \toolcore{} respectively. In both code snippets, one can see that Line 3 defines the position of the method to be inserted. \textsc{RxFactor} uses \code{insertLast} and \toolcore{} uses \code{insertFirst}. Therefore, the Java files obtained after refactoring the class \code{AsyncLoadingActivity} with both tools (See Listing~\ref{code:eval-diff}) are not equal. However, they are semantic equivalent.
+
+These results show that the \textsc{RxFactor} was successfully adapted into an extension of \toolcore{}.
+
+\input{code-examples/eval-diff.tex}
+
+\input{code-examples/save-addMethod.tex}
 
 \chapter{Conclusion}
 \label{chapter:conclusion}
@@ -898,20 +964,20 @@ Asynchrony can improve the responsiveness of applications. Since refactoring asy
 
 Previous studies have shown that these tools are needed, highly applicable and accurate~\cite{paperAsyncMobile, paperStudyRefactoring, thesisJavaScript}.
 
-Furthermore, other studies agree that functional and reactive programming models improve code writing and code comprehension~\cite{promises, paperReactiveComprehension}. In this thesis, we show how to automatically refactor \code{SwingWorker}s into \framework{RxJava} in order to facilitate introducing reactive programming concepts in \framework{Java} applications that use this async construct. The results show that the developed tool is reliable. Only around $0.0001\%$ of the modified lines reported compile errors after the refactoring task has completed. One can, however, easily fix these errors manually.
+Furthermore, other studies agree that functional and reactive programming models improve code writing and code comprehension~\cite{promises, paperReactiveComprehension}. In this thesis, we show how to automatically refactor \code{SwingWorker}s into \framework{RxJava} in order to facilitate introducing reactive programming concepts in \framework{Java} applications that use this async construct. The results show that the developed tool is reliable. From 678 AST nodes (declarations, instances, invocations, methods, variables, fields, among others) that contained \code{SwingWorker}s, \toolextension{} successfully refactored 676, which represents approximately 99.7\%.
 
 \section{Future Work}
 
 Since the plugin was divided into core (\toolcore{}) and extension (\toolextension{}), it is possible to use \toolcore{} in future research to develop further extensions. The core could also be refactored to improve the user experience, adding settings and/or a help section, and implementing a ``UNDO'' feature would be some examples of where to start.
 
 \subsection{Further Async Constructs}
-In this thesis, we focused on refactoring \code{SwingWorker}s. There are also other async constructs that can be refactored to \framework{RxJava}. As shown in Listing~\ref{code:con-runnable-before}, fire and forget operations are usually implemented using the standard \framework{Java} classes \code{Runnable} and \code{Thread}. This construct can be refactored to \framework{RxJava} in order to modify the behavior of the program using functional programming concepts (Listing~\ref{code:con-runnable-after}).
+In this thesis, we focused on refactoring \code{SwingWorker}s. There are also other async constructs that can be refactored to \framework{RxJava}. As showed in Listing~\ref{code:con-runnable-before}, fire and forget operations are usually implemented using the standard \framework{Java} classes \code{Runnable} and \code{Thread}. This construct can be refactored to \framework{RxJava} in order to facilitate modifying the behavior of the program using functional programming (Listing~\ref{code:con-runnable-after}).
 
-Since \code{Runnable}s are fire and forget, they do not return any value. Assuming that we refactor the original code into \code{RxJava} and then modify the method \code{peformOpAsync} so that it returns a list, then the semantic of the program can be modified easily to filter and transform the items of the list. Finally, we could execute an operation based on these items. Furthermore, the \code{Observable} object can be used to create reactive programming models in the existing code (See Listing~\ref{code:rxJava-reactive-code}).
+Since \code{Runnable}s are fire and forget, they do not return any value. Assuming that we refactor the original code into \code{RxJava} and then modify the method \code{peformOpAsync} so that it returns a list, then the semantic of the program can be easily modified to filter and transform the items of the list. Finally, we could execute an operation based on these items. Furthermore, the \code{Observable} object can be used to create reactive programming models in the existing code (See Listing~\ref{code:rxJava-reactive-code}).
 
 \input{code-examples/con-runnables.tex}
 
-\code{Callable}s can also be used in \framework{Java} for implementing asynchronous operations. Listing~\ref{code:callable-before} presents a basic example where a \code{Callable} is used to perform the operation \code{computeResult}. In contrast to \code{Runnable}s, \code{Callable}s does return a result. This result can be obtained by using the reference to the corresponding \code{Future}. Listing~\ref{code:callable-after} shows how the original code can be refactored to \code{RxJava}.
+\code{Callable}s can also be used in \framework{Java} for implementing asynchronous operations. Listing~\ref{code:callable-before} presents an example where a \code{Callable} is used to perform the operation \code{computeResult}. In contrast to \code{Runnable}s, \code{Callable}s does return a result. This result can be obtained by using the reference to the corresponding \code{Future}. Listing~\ref{code:callable-after} shows how the original code can be refactored to \code{RxJava}.
 
 \input{code-examples/con-callables.tex}
 

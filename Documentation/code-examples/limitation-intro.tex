@@ -1,0 +1,37 @@
+\begin{figure}[H]
+\begin{minipage}{0.48\textwidth}
+\begin{sourcecode}
+\begin{javacode}{1}
+SwingWorker<String, Integer> swingWorker = new SwingWorker<String, Integer>() {
+	protected String doInBackground() throws Exception {
+		...
+	}
+	protected void process(List<Integer> chunks){...}
+	protected void done() {...}
+};
+\end{javacode}
+\caption{Original Code}
+\label{code:limitation-original}
+\end{sourcecode}
+\end{minipage}\hspace{0.7cm}
+\begin{minipage}{0.48\textwidth}
+\begin{sourcecode}
+\begin{javacode}{1-2,7,9}
+rx.Observable<SWPackage<String, Integer>> rxObservable = rx.Observable
+		.fromEmitter(new SWEmitter<String, Integer>() {
+			protected String doInBackground() 
+			throws Exception {
+				...
+			}
+}, Emitter.BackpressureMode.BUFFER );
+
+SWSubscriber<String, Integer> rxObserver = new SWSubscriber<String, Integer>(rxObservable) {
+	protected void process(List<Integer> chunks){...}
+	protected void done() {...}
+};
+\end{javacode}
+\caption{Refactored Code}
+\label{code:limitation-refactored}
+\end{sourcecode}
+\end{minipage}
+\end{figure}
