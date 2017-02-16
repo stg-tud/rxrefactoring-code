@@ -85,11 +85,17 @@ will see this option in the toolbar too.
 
 ## Evaluation
 
-Original Projects: https://drive.google.com/file/d/0BxYOUQMV4CztX2JYRlNRQUp5TXM/view?usp=drivesdk
+### Accuracy
+
+Original Projects: https://drive.google.com/file/d/0BxYOUQMV4CztX2JYRlNRQUp5TXM/view?usp=drivesdk (1.5GB)
 
 ~~Refactored Projects (v1- out of date):
-https://drive.google.com/file/d/0BxYOUQMV4CztbnJMSDlYQnJhNHc/view?usp=drivesdk~~
+https://drive.google.com/file/d/0BxYOUQMV4CztbnJMSDlYQnJhNHc/view?usp=drivesdk (1.5GB)~~
 
-Refactored Projects (v2): https://drive.google.com/open?id=0BxYOUQMV4CztTTViOXI4SHY3blU
+Refactored Projects (v2): https://drive.google.com/open?id=0BxYOUQMV4CztTTViOXI4SHY3blU (1.5GB)
 
-Notice that two of the refactored projects have compilation errors. See the limitations of the tool described in the PDF file (Documentation) to see how to fix this errors manually. Each zip file has about 1.5GB.
+Notice that two of the refactored projects have compilation errors. See the limitations of the tool described in the PDF file (Documentation) to see how to fix this errors manually.
+
+### Extensibility
+
+Original and Refactored Projects: https://drive.google.com/open?id=0BxYOUQMV4CztdENGWEZkUmhhaUk (210MB) 
