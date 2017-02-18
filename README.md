@@ -87,7 +87,12 @@ will see this option in the toolbar too.
 
 ### Accuracy
 
-Original Projects: https://drive.google.com/file/d/0BxYOUQMV4CztX2JYRlNRQUp5TXM/view?usp=drivesdk (1.5GB)
+Input Projects: https://drive.google.com/file/d/0BxYOUQMV4CztX2JYRlNRQUp5TXM/view?usp=drivesdk (1.5GB)
+In order to be able to test 2Rx the projects must compile. Therefore,
+we analyzed the compiation errors of the original projects and commented
+them out if the code was not relevant for SwingWorkers. The compilation
+errors where due to missing files or libraries.
+
 
 ~~Refactored Projects (v1- out of date):
 https://drive.google.com/file/d/0BxYOUQMV4CztbnJMSDlYQnJhNHc/view?usp=drivesdk (1.5GB)~~
