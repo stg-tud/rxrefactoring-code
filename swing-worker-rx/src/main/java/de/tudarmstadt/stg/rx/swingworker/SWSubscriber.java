@@ -410,7 +410,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 		}
 	}
 
-	protected void publish( ProcessType... chunks )
+	protected final void publish( ProcessType... chunks )
 	{
 		this.onNext( new SWPackage<ResultType, ProcessType>( previousPackage.getProcessingLock() ).setChunks( chunks ) );
 	}

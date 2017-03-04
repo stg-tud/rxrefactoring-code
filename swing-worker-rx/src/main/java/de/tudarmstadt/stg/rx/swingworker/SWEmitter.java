@@ -75,7 +75,7 @@ public abstract class SWEmitter<ReturnType, ProcessType> implements Action1<Emit
 	 * @param chunks
 	 *            data chunks
 	 */
-	protected void publish( ProcessType... chunks )
+	protected final void publish( ProcessType... chunks )
 	{
 		this.emitter.onNext( createPackage().setChunks( chunks ) );
 	}
@@ -86,7 +86,7 @@ public abstract class SWEmitter<ReturnType, ProcessType> implements Action1<Emit
 	 * @param progress
 	 *            progress
 	 */
-	protected void setProgress( int progress )
+	protected final void setProgress( int progress )
 	{
 		this.emitter.onNext( createPackage().setProgress( progress ) );
 	}

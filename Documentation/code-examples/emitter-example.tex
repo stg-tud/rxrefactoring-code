@@ -1,0 +1,50 @@
+\begin{figure}[H]
+\begin{minipage}{0.65\textwidth}
+\begin{sourcecode}
+\begin{javacode}{5,7,9,13,16,19}
+Observable.fromEmitter(new Action1<Emitter<Integer>>() {
+    public void call(Emitter<Integer> emitter) {
+        try {
+            for (int i = 1; i < 10; i++) {
+                emitter.onNext(i);
+            }
+            emitter.onCompleted();
+        } catch (Exception e) {
+            emitter.onError(e);
+        }
+    }
+}, Emitter.BackpressureMode.BUFFER ).subscribe(new Subscriber<Integer>() {
+    public void onNext(Integer item) {
+        System.out.println("DOUBLE VALUE = " + item.doubleValue());
+    }
+    public void onError(Throwable error) {
+        System.err.println("ERROR = " + error.getMessage());
+    }
+    public void onCompleted() {
+        System.out.println("RESULT = done");
+    }
+});
+\end{javacode}
+\caption{Emitter Example}
+\label{code:emitter-example}
+\end{sourcecode}
+\end{minipage}\hspace{0.7cm}
+\begin{minipage}{0.30\textwidth}
+\begin{sourcecode}
+\begin{javacode}{}
+DOUBLE VALUE = 1.0
+DOUBLE VALUE = 2.0
+DOUBLE VALUE = 3.0
+DOUBLE VALUE = 4.0
+DOUBLE VALUE = 5.0
+DOUBLE VALUE = 6.0
+DOUBLE VALUE = 7.0
+DOUBLE VALUE = 8.0
+DOUBLE VALUE = 9.0
+RESULT = done
+\end{javacode}
+\caption{Emitter Example Output}
+\label{code:emitter-example-output}
+\end{sourcecode}
+\end{minipage}
+\end{figure}

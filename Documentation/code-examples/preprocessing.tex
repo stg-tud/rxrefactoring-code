@@ -1,10 +1,12 @@
 \begin{figure}[H]
 \begin{minipage}{0.48\textwidth}
 \begin{sourcecode}
-\begin{javacode}{2,13,25-31}
+\begin{javacode}{2,15,27-33}
 public abstract class DocumentLoader 
 	extends SwingWorker<List<Document>, Void> { //1$\label{codeline:DocumentLoader-1a}$
-    ...
+    ... // field declarations
+    private File[] files;
+    ... // field declarations
     public void load(File... files) {
         this.files = files;
         execute();
@@ -20,7 +22,7 @@ public abstract class DocumentLoader
                         ..., // LANGUAGE
                         ImageIO.read(file)));
             } catch (IOException ex) {
-                ...
+                ... // handle exception
             }
         }
         return result;
@@ -33,7 +35,14 @@ public abstract class DocumentLoader
             log.warn("SwingWorker error");
         }
     }
-    ...
+
+	/* This method is implemented in the class 
+	 * "Controller". The the implementation 
+	 * consist of loading all images into 
+	 * Juneiform
+	*/
+    public abstract void fetchResult(
+    	List<Document> result);
 }
 \end{javacode}
 \caption{DocumentLoader Class - Original Code}
@@ -42,16 +51,17 @@ public abstract class DocumentLoader
 \end{minipage}\hspace{0.7cm}
 \begin{minipage}{0.48\textwidth}
 \begin{sourcecode}
-\begin{javacode}{2,14,27-29}
+\begin{javacode}{2,15,27-29}
 public abstract class DocumentLoader 
 	extends SwingWorker<List<Document>, Document> { //1$\label{codeline:DocumentLoader-1b}$
-	...
+    ... // field declarations
+    private File[] files;
+    ... // field declarations
     public void load(File... files) {
         this.files = files;
         execute();
     }
     
-    @Override
     protected List<Document> doInBackground() throws Exception {
         List<Document> result = new ArrayList<Document>();
         for (File file : files) {
@@ -62,18 +72,23 @@ public abstract class DocumentLoader
                         ..., // LANGUAGE
                         ImageIO.read(file)));
             } catch (IOException ex) {
-                ...
+                ... // handle exception
             }
         }
         return result;
     }
 
-    @Override
     protected void process(List<Document> chunks){
         fetchResult(chunks); //3$\label{codeline:DocumentLoader-3b}$
     }
 
-    ...
+	/* This method is implemented in the class 
+	 * "Controller". The the implementation 
+	 * consist of loading all images into 
+	 * Juneiform
+	*/
+    public abstract void fetchResult(
+    	List<Document> result);
 }
 \end{javacode}
 \caption{DocumentLoader Class - Pre-Processing}

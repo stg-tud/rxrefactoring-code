@@ -1,0 +1,64 @@
+\begin{figure}[H]
+\begin{minipage}{0.65\textwidth}
+\begin{sourcecode}
+\begin{javacode}{9,13,23,28,7,12}
+Observable.fromEmitter(new Action1<Emitter<SWPackage<Integer,String>>>() {
+    @Override
+    public void call(Emitter<SWPackage<Integer,String>> emitter) {
+        try {
+            int accum = 0;
+            for (int i = 0; i < 10; i++) {
+                SWPackage<Integer, String> pkg = new SWPackage<>();
+                String text = new Character((char)(65+i)).toString();
+                emitter.onNext(pkg.setChunks(text));
+                accum += i;
+            }
+            SWPackage<Integer, String> pkg = new SWPackage<>();
+            emitter.onNext(pkg.setResult(accum));
+            emitter.onCompleted();
+        } catch (Exception e) {
+            emitter.onError(e);
+        }
+    }
+}, Emitter.BackpressureMode.BUFFER )
+.subscribe(new Subscriber<SWPackage<Integer,String>>() {
+    @Override
+    public void onNext(SWPackage<Integer,String> item) {
+        List<String> intermediateResults = item.getChunks();
+        if (!intermediateResults.isEmpty()) {
+            String intermediateResult = intermediateResults.get(0);
+            System.out.println("INTERMEDIATE = " + intermediateResult);
+        }
+        Integer result = item.getResult();
+        if (result != null) {
+            System.out.println("FINAL RESULT = " + result);
+        }
+    }
+	... // Implementation of onError and onCompleted
+});
+\end{javacode}
+\caption{Emitter Example (Two Data Types)}
+\label{code:emitter-two-types-example}
+\end{sourcecode}
+\end{minipage}\hspace{0.7cm}
+\begin{minipage}{0.30\textwidth}
+\begin{sourcecode}
+\begin{javacode}{}
+INTERMEDIATE = A
+INTERMEDIATE = B
+INTERMEDIATE = C
+INTERMEDIATE = D
+INTERMEDIATE = E
+INTERMEDIATE = F
+INTERMEDIATE = G
+INTERMEDIATE = H
+INTERMEDIATE = I
+INTERMEDIATE = J
+FINAL RESULT = 45
+RESULT = done
+\end{javacode}
+\caption{Emitter Example Output (Two Data Types)}
+\label{code:emitter-two-types-output}
+\end{sourcecode}
+\end{minipage}
+\end{figure}

@@ -18,6 +18,7 @@
 \usepackage[doublespacing]{setspace}
 \usepackage[normalem]{ulem}
 \usetikzlibrary{arrows,shapes,positioning,shadows,trees} % x-y Diagrams
+\usepackage{tikz-uml}
 
 \newcommand{\framework}[1]{\textcolor{black}{#1}}
 \usemintedstyle{trac}
@@ -49,13 +50,13 @@
 \makethesistitle
 
 \chapter*{Abstract}
-Modern languages are replacing the traditional callback-based approach with method chaining. Some of these languages are using event-driven, reactive and functional programming models. According to previous studies, these programming paradigms improve code writing and code comprehension.
+Modern languages are replacing the traditional callback-based approach with event-driven, reactive and functional programming models. According to previous studies, these programming paradigms improve code writing and code comprehension.
 
-Motivated by these facts, we propose a refactoring approach to convert a callback-based async construct into another construct that facilitates introducing reactive and functional programming concepts in existing asynchronous \framework{Java} applications. This thesis focuses on refactoring a particular construct. However, one can adapt this approach to make it applicable to other async constructs.
+Motivated by these facts, we propose a refactoring approach to convert a callback-based async construct into functional reactive programming code. This thesis focuses on refactoring the \code{SwingWorker} \framework{Java} Swing construct.
 
-We developed a system to perform the mentioned refactoring automatically. This system consists of a core and an extension called \toolcore{} and \toolextension{} respectively.
+We developed \toolextension{}, a system to perform the mentioned refactoring automatically.
 
-We evaluate the accuracy of \toolextension{} using 58 projects. In these projects there are 678 elements (declarations, instances, invocations, methods, variables, fields, among others) that contained the target async construct. Our tool successfully refactored 676 of these elements, which represents approximately 99.7\%. These results show that the tool is highly accurate. Furthermore, we demonstrate the extensibility of \toolcore{} by supporting the refactoring performed by another tool that targets Android applications.
+We evaluate the accuracy of \toolextension{} using 58 projects. In these projects there are 678 elements (declarations, instances, invocations, methods, variables, fields, among others) that contained the target async construct. Our tool successfully refactored 676 of these elements, which represents approximately 99.7\%. These results show that the tool is highly accurate.
 
 \tableofcontents
 \listoffigures
@@ -384,39 +385,45 @@ The user can import images into Juneiform by clicking on the icon ``open Images'
 \end{center}
 \end{figure}
 
-The class responsible for loading the images into Juneiform is \code{DocumentLoader} (Listing~\ref{code:example-original-v1}). When the user selects the images from the file chooser dialog (Figure~\ref{fig:loadDocs}) and clicks ``Open'', the \code{load} (Listing~\ref{code:example-original-v1}:~Line~4) method of \code{DocumentLoader} is invoked using the previously selected files as argument. The files are then cached into a private field called \code{files}~(Listing~\ref{code:example-original-v1}:~Line~5). After that, \code{execute} is invoked (Listing~\ref{code:example-original-v1}:~Line~6). Since \code{DocumentLoader} is a subclass of the async construct \code{SwingWorker}, the next invocation is \code{doInBackground} (Listing~\ref{code:example-original-v1}:~Line~9) which logic corresponds to the asynchronous operation. The asynchronous operation consists in iterating through all \code{files} (Listing~\ref{code:example-original-v1}:~Line~11) and adding them one by one to a list \code{result} of type \code{Document} (Listing~\ref{code:example-original-v1}:~Line~13). The type \code{Document} is implemented in Juneiform and holds relevant information about a file such as its name, absolute path, image, among others. When the algorithm has iterated through all \code{files}, then the list \code{result} contains the previously selected images. The asynchronous operation ends when the method \code{doInBackground} returns (Listing~\ref{code:example-original-v1}:~Line~22). After the asynchronous operation has completed, the \code{done} (Listing~\ref{code:example-original-v1}:~Line~25) method is invoked by the \code{SwingWorker}. Notice that \code{doInBackground} returns a list of type \code{Document}. The return value of \code{doInBackground} (in this example: \code{result}) can be accessed from the method \code{done} by using \code{get} (Listing~\ref{code:example-original-v1}:~Line~27). Since \code{get} can throw whether an \code{InterruptedException} or an \code{ExecutionException}, a \code{try-catch} block is needed. Finally, if no exceptions are thrown, the \code{fetchResult} method is called using the returned value of the asynchronous operation as argument (all files). This method displays the selected images in the UI.
+The class responsible for loading the images into Juneiform is \code{DocumentLoader} (Listing~\ref{code:example-original-v1}). When the user selects the images from the file chooser dialog (Figure~\ref{fig:loadDocs}) and clicks ``Open'', the \code{load} (Listing~\ref{code:example-original-v1}:~Line~4) method of \code{DocumentLoader} is invoked using the previously selected files as argument. The files are then cached into a private field called \code{files}~(Listing~\ref{code:example-original-v1}:~Line~7). After that, \code{execute} is invoked (Listing~\ref{code:example-original-v1}:~Line~8). Since \code{DocumentLoader} is a subclass of the async construct \code{SwingWorker}, the next invocation is \code{doInBackground} (Listing~\ref{code:example-original-v1}:~Line~11) which logic corresponds to the asynchronous operation. The asynchronous operation consists in iterating through all \code{files} (Listing~\ref{code:example-original-v1}:~Line~13) and adding them one by one to a list \code{result} of type \code{Document} (Listing~\ref{code:example-original-v1}:~Line~15). The type \code{Document} is implemented in Juneiform and holds relevant information about a file such as its name, absolute path, image, among others. When the algorithm has iterated through all \code{files}, then the list \code{result} contains the previously selected images. The asynchronous operation ends when the method \code{doInBackground} returns (Listing~\ref{code:example-original-v1}:~Line~24). After the asynchronous operation has completed, the \code{done} (Listing~\ref{code:example-original-v1}:~Line~27) method is invoked by the \code{SwingWorker}. Notice that \code{doInBackground} returns a list of type \code{Document}. The return value of \code{doInBackground} (in this example: \code{result}) can be accessed from the method \code{done} by using \code{get} (Listing~\ref{code:example-original-v1}:~Line~29). The method \code{get} is declared in the superclass of \code{DocumentLoader} (Appendix~\ref{swingworkerapi}). Since \code{get} can throw whether an \code{InterruptedException} or an \code{ExecutionException}, a \code{try-catch} block is needed. Finally, if no exceptions are thrown, the \code{fetchResult} method is called using the returned value of the asynchronous operation as argument (all files). This method displays the selected images in the UI.
 
-Before applying the automated refactoring, we slightly manually refactored the original implementation of \code{DocumentLoader} so that we can show the images in the UI as soon as they are available. The purpose of this refactoring is to show that our approach can handle dynamically generated items. These items are generated every time the method \code{publish} is invoked. Basically, we applied three changes. First, we changed the second parameter of the \code{SwingWorker} from \code{Void} (Listing~\ref{code:example-original-v1}:~Line~\ref{codeline:DocumentLoader-1a}) to \code{Document} (Listing~\ref{code:example-pre-processing}:~Line~\ref{codeline:DocumentLoader-1b}). The second parameter corresponds to the data type of the intermediate results. Second, we generate intermediate results by using \code{publish} (Listing~\ref{code:example-pre-processing}:~Line~\ref{codeline:DocumentLoader-2b}), instead of accumulating all \code{Document}s in a list (Listing~\ref{code:example-original-v1}:~Line~\ref{codeline:DocumentLoader-2a}). Intermediate results are processed by using the method \code{process} (Listing~\ref{code:example-pre-processing}:~Line~27) of the \code{SwingWorker}. Therefore the third step was to implement \code{process}. The logic of \code{process} is similar to the one in \code{done}. The only difference is that \code{process} receives a list \code{chunks} (Listing~\ref{code:example-original-v1}:~Line~27) of type \code{Document} (See the second parameter of \code{SwingWorker} in Listing~\ref{code:example-pre-processing}:~Line~\ref{codeline:DocumentLoader-1b}) which can directly be used in \code{fetchResult} to update the images displayed in the UI. Since \code{chunks} is a variable and \code{fetchResult} does not throw any exception, there is no \code{try-catch} block in \code{process}.
+Before applying the automated refactoring, we manually refactored eight lines in the original implementation of \code{DocumentLoader} so that we can show the images in the UI as soon as they are available. The purpose of this refactoring is to show that our approach can handle dynamically generated items. These items are generated every time the method \code{publish} is invoked. Basically, we applied three changes:
+\begin{enumerate}
+	\item We changed the second parameter of the \code{SwingWorker} from \code{Void} (Listing~\ref{code:example-original-v1}:~Line~\ref{codeline:DocumentLoader-1a}) to \code{Document} (Listing~\ref{code:example-pre-processing}:~Line~\ref{codeline:DocumentLoader-1b}). The second parameter corresponds to the data type of the intermediate results. 
+	\item We generated intermediate results by using \code{publish} (Listing~\ref{code:example-pre-processing}:~Line~\ref{codeline:DocumentLoader-2b}), instead of accumulating all \code{Document}s in a list (Listing~\ref{code:example-original-v1}:~Line~\ref{codeline:DocumentLoader-2a}). Every time this method is invoked, the \code{SwingWorker} starts the execution of the method \code{process} using the intermediate results as arguments (Listing~\ref{code:example-pre-processing}:~Line~27). The methods \code{publish} and \code{process} are declared in the superclass of \code{DocumentLoader} (Appendix~\ref{swingworkerapi}).
+	\item We implemented \code{process}. The logic of \code{process} is similar to the one in \code{done}. The only difference is that \code{process} receives a list \code{chunks} (Listing~\ref{code:example-original-v1}:~Line~27) of type \code{Document} (See the second parameter of \code{SwingWorker} in Listing~\ref{code:example-pre-processing}:~Line~\ref{codeline:DocumentLoader-1b}) which can directly be used in \code{fetchResult} to update the images displayed in the UI. Since \code{chunks} is a variable and \code{fetchResult} does not throw any exception, there is no \code{try-catch} block in \code{process}.
+\end{enumerate}
 
 \input{code-examples/preprocessing.tex}
 
-\input{code-examples/example-original-vs-refactored.tex}
-
 After having manually refactored the class \code{DocumentLoader}, as showed in Listing~\ref{code:example-pre-processing}, we used \toolextension{} to refactor Juneiform. Listings~\ref{code:example-original} and~\ref{code:example-refactored} show the source code of \code{DocumentLoader} before and after refactoring. The differences in both code snippets are highlighted. Notice that the code snippet presented in Listings~\ref{code:example-original} is an abstraction of the one showed in Listings~\ref{code:example-pre-processing}.
 
-As showed in Figure~\ref{fig:swingWorker-execution}, the code contained in a \code{SwingWorker} can be executed whether on a background or on the UI thread. Everything that is called from \code{doInBackground} is executed in the background. The rest, methods \code{process} and \code{done}, is executed in the UI thread. Our refactoring separates this logic into two objects. The \code{Observable} (Listing~\ref{code:example-refactored}:~Lines~9-19) is responsible for the asynchronous operation (\code{doInBackground}) (Listing~\ref{code:example-refactored}:~Line~13), while the \code{Subscriber} (See Listing~\ref{code:example-refactored}:~Line~2) handles the synchronous ones (\code{process} and/or \code{done}). Our refactoring does not change the logic contained in any of these three methods. Instead, these methods are wrapped in a \code{rx.Observable} or a \code{rx.Subscriber}, which are later use for introducing functional and reactive programming concepts into the existing application. The complete refactoring approach is explained in Section~\ref{sec:2rx-approach}. For now, the relevant part of the code is the \code{publish} invocation (Listing~\ref{code:example-refactored}:~Line~16) because this is the one responsible for generating the items of the \code{Observable} that can be manipulated using \framework{RxJava} functional programming constructs. The logic in charge of processing these items is in the method \code{process} (Listing~\ref{code:example-refactored}:~Line~21).
+As showed in Figure~\ref{fig:swingWorker-execution}, the code contained in a \code{SwingWorker} can be executed whether on a background or on the UI thread. Everything that is called from \code{doInBackground} is executed in the background. The rest, methods \code{process} and \code{done}, is executed in the UI thread. In Juneiform, the background operation consists of reading the selected \code{File}s and converting them into \code{Document}s that can be manipulated by the application. The method \code{process} displays the \code{Document}s in the UI. Our refactoring separates this logic into two objects. The \code{Observable} (Listing~\ref{code:example-refactored}:~Lines~11-21) is responsible for the asynchronous operation (\code{doInBackground}) (Listing~\ref{code:example-refactored}:~Line~15), while the \code{Subscriber} (See Listing~\ref{code:example-refactored}:~Line~2) handles the synchronous ones (\code{process} and/or \code{done}). Our refactoring does not change the logic contained in any of these three methods. Instead, these methods are wrapped in a \code{rx.Observable} or a \code{rx.Subscriber}, which are later use for introducing functional and reactive programming concepts into the existing application. The complete refactoring approach is explained in Section~\ref{sec:2rx-approach}. For now, the relevant part of the code is the \code{publish} invocation (Listing~\ref{code:example-refactored}:~Line~18) because this is the one responsible for generating the items of the \code{Observable} that can be manipulated using \framework{RxJava} functional programming constructs. The logic in charge of processing these items is in the method \code{process} (Listing~\ref{code:example-refactored}:~Line~23).
+
+\input{code-examples/example-original-vs-refactored.tex}
 
 \subsubsection{Functional and Reactive Programming in \code{DocumentLoader}}
 
 So far, we have shown how our tool can refactor a \code{SwingWorker} into a \code{rx.Observable} and a \code{rx.Subscriber}. This refactoring enables \framework{RxJava} constructs that facilitate introducing functional and reactive programming concepts in Juneiform. 
 
-\input{code-examples/example-manually-refactored.tex}
-
 Listings~\ref{code:example-edited} shows an example where we change the functionality of \code{DocumentLoader} in a functional fashion. In the new implementation, we add a filter to select only the images which format is jpg. Additionally, we change the display name of the image within Juneiform to uppercase and remove the extension of the file from the name. On the other hand, we implement a reactive model by using four \code{Subscriber}s. The code snippet showed in Listing~\ref{code:example-edited} works as follows:
 
 \begin{itemize}
-	\item {\bf Line 6}: we specify the thread in which the \code{Observable} operates. The scheduler \code{Schedulers.computation} corresponds to a background thread.
-	\item {\bf Line 7}: the \code{publish} invocation uses the type \code{List<Document>}. Since it is more comfortable to work directly with \code{Document}s, rather than a list of this type, we use \code{flapMap} to extract the \code{Document} objects from the lists received from \code{publish}.
-	\item {\bf Line 8}: at this point we have a stream of \code{Document}s. We filter these \code{Document}s to consider only jpg files.
-	\item {\bf Line 9 - 13}: we transform the items by changing their display name to uppercase and simultaneously removing the file extension from them. In functional programming using state should be avoid~\cite{bookFunctionalProgramming}, therefore, we generate a new instance for each \code{Document} rather than changing the name directly in the current instance. 
-	\item {\bf Line 14}: we specify that the operations that follow must be executed in the UI thread.
-	\item {\bf Line 17 - 20}: we register a \code{Subscriber} using lambda notation that updates the UI and prints the name of the file (Listing~\ref{code:example-console})
-	\item {\bf Line 21 - 23}: we register further \code{Subscriber}s using lambda notation as well. For simplicity, these \code{Subscriber}s only print the name of the file  (Listing~\ref{code:example-console}), but these actions could be anything.
-	\item {\bf Line 25}: we connect the \code{ConnectableObservable} to start the emissions.
+	\item {\bf Line 10}: we specify the thread in which the \code{Observable} operates. The scheduler \code{Schedulers.computation} corresponds to a background thread.
+	\item {\bf Line 11}: the \code{publish} invocation uses the type \code{List<Document>}. Since it is more comfortable to work directly with \code{Document}s, rather than a list of this type, we use \code{flapMap} to extract the \code{Document} objects from the lists received from \code{publish}.
+	\item {\bf Line 12}: at this point we have a stream of \code{Document}s. We filter these \code{Document}s to consider only jpg files.
+	\item {\bf Line 13 - 17}: we transform the items by changing their display name to uppercase and simultaneously removing the file extension from them. In functional programming using state should be avoid~\cite{bookFunctionalProgramming}, therefore, we generate a new instance for each \code{Document} rather than changing the name directly in the current instance. 
+	\item {\bf Line 18}: we specify that the operations that follow must be executed in the UI thread.
+	\item {\bf Line 21 - 24}: we register a \code{Subscriber} using lambda notation that updates the UI and prints the name of the file. Listing~\ref{code:example-console} shows the console output. One can see that the \code{Subscriber} 0 prints the following to the console for each file: \code{ Updating UI: <FileName>}
+	\item {\bf Line 25 - 27}: we register further \code{Subscriber}s using lambda notation as well. Each of these \code{Subscriber}s prints the name of the file to the console. Listing~\ref{code:example-console} shows the console output for \code{Subscriber}s 1 to 3. Notice that the \code{Subscriber}s could perform more complex operations. We used the method \code{print} (Listing~\ref{code:example-edited}~Line:~34) to keep the example simple.
+	\item {\bf Line 29}: we connect the \code{ConnectableObservable} to start the emissions.
 \end{itemize}
+
+\input{code-examples/example-manually-refactored.tex}
 
 \input{code-examples/example-console-output.tex}
 
+\newpage
 \subsection{Editor}
 
 Similarly, \toolextension{} refactored the class \code{Editor}. Listing~\ref{code:example-editor-original} shows the original source code. Here, there is a \code{SwingWorker} which is responsible for performing the optical character recognition in the background (Listings~\ref{code:example-editor-original}:~Line~7) and updating the user interface by executing some code in the UI thread (Listings~\ref{code:example-editor-original}:~Line~12). The specific implementations for these two actions are not relevant for this example. When the user clicks on the icon ``Perform OCR'' \includegraphics[height=0.4cm]{juneiform/ocr-icon.png} (Figure~\ref{fig:juneiform}), the method containing the code snippet from Listings~\ref{code:example-editor-original} gets executed. As soon as \code{execute} is reached (Listings~\ref{code:example-editor-original}:~Line~15), the \code{SwingWorker} execution starts as described in Figure~\ref{fig:swingWorker-execution}. 
@@ -479,17 +486,22 @@ There were three important aspects that we considered while developing the refac
 	\item The \code{Observable} must stop sending items to the \code{Subscriber} if the second one has not finished processing the last emission.
 \end{enumerate}
 
-In order to fulfill these requirements, we extended \code{RxJava}. Instead of using \code{Observable.fromCallable}, we use \code{Observable.fromEmitter}. We implemented an \code{Emitter} that produces an emission on each \code{publish} and one at the end containing the \code{result}. We also use a data structure that is shared by the \code{Emitter} and the \code{Subscriber}. This structure allows us to implement a lock that is used to avoid backpressure problems. Finally, we have the \code{Subscriber}, which implements the methods available in the \code{SwingWorker} API and contains the state of the operation. The \code{Subscriber} can handle all methods of the \code{SwingWorker} API.
+In order to fulfill these requirements, we extended RxJava. Instead of using \code{Observable.fromCallable}, we use \code{Observable.fromEmitter}. The RxJava Extension is based on three classes: \code{SWEmitter}, \code{SWPackage} and \code{SWSubscriber}. 
+\begin{itemize}
+	\item The \code{SWEmitter} produces an emission on each \code{publish} and one at the end containing the async result.
+	\item The \code{SWSubscriber} is responsible for processing the emissions. This class implements the methods available in the \code{SwingWorker} API and holds the state of the operation.
+	\item The \code{SWPackage} is shared by the \code{SWEmitter} and the \code{SWSubscriber}. This structure allows us to send data from the \code{SWEmitter} to the \code{SWSubscriber}. This class uses a lock to avoid backpressure problems.
+\end{itemize}
 
 We base our refactoring on these three classes. Basically, we generate a \code{jar} file and add a dependency to this file in each project by updating the classpath. These classes can be modified post-refactoring, which is good for maintenance and improvements.
 
-\subsubsection{Package (Emission)}
-The class that allows the communication between \code{Emitter} and \code{Subscriber} is called \code{SWPackage}. This structure contains dedicated fields for data chunks, which are sent on \code{publish}, the result, and a \code{ReentrantLock} that is used to stop the emissions from the \code{Observable} if the \code{Subscriber} is still processing the last one. See Section~\ref{sec:imp-package} for implementation details.
+\subsubsection{SWPackage (Emission)}
+The class that allows the communication between \code{SWEmitter} and \code{SWSubscriber} is called \code{SWPackage}. This structure contains dedicated fields for data chunks, which are sent on \code{publish}, the result, and a \code{ReentrantLock} that is used to stop the emissions from the \code{Observable} if the \code{Subscriber} is still processing the last one. See Section~\ref{sec:imp-package} for implementation details.
 
-\subsubsection{Emitter}
-The class responsible for generating the sequence is called \code{SWEmitter}. The \code{SWEmitter} starts by sending an initialization package to the \code{Subscriber}. Then the asynchronous operation starts. Inside of this operation, the method \code{publish} can be invoked multiple times. The invocation of \code{publish} generates an emission, which corresponds to a \code{SWPackage} that contains chunks of data. Finally, the \code{Subscriber} processes the emission. While it is being processed, the asynchronous operation responsible for generating emissions continues. However, if the \code{Emitter} reaches a \code{publish} invocation before the \code{Subscriber} finishes processing the last one, then the \code{SWEmitter} blocks, until the \code{Subscriber} is done. See Section~\ref{sec:imp-emitter}  for implementation details.
+\subsubsection{SWEmitter}
+The class responsible for generating the sequence is called \code{SWEmitter}. The \code{SWEmitter} starts by sending an initialization \code{SWPackage} to the \code{SWSubscriber}. Then the asynchronous operation starts. Inside of this operation, the method \code{publish} can be invoked multiple times. The invocation of \code{publish} generates an emission, which corresponds to a \code{SWPackage} that contains chunks of data. Finally, the \code{SWSubscriber} processes the emission. While it is being processed, the asynchronous operation responsible for generating emissions continues. However, if the \code{SWEmitter} reaches a \code{publish} invocation before the \code{SWSubscriber} finishes processing the last one, then the \code{SWEmitter} blocks, until the \code{SWSubscriber} is done. See Section~\ref{sec:imp-emitter}  for implementation details.
 
-\subsubsection{Subscriber}
+\subsubsection{SWSubscriber}
 The class that manages all operations available in the \code{SwingWorker} API is called \code{SWSubscriber}. This class is reactive to the emissions generated by the \code{Observable} and contains all information about the state of the operation. The \code{SwingWorker} API holds three methods that directly influence the async operation. These methods are \code{execute}, \code{run} and \code{cancel}. Since after refactoring, these methods are called from the \code{SWSubscriber}, it might not be clear what these operations actually do. Therefore, we rename these methods to make them more clear. Table~\ref{table:origNamesVsNewNames} shows how we change the names after refactoring. All other method names remained the same. As we can see, the \code{SWSubscriber} must keep a reference to the \code{Observable} to be able to subscribe (execute or run) and cancel it. See Section~\ref{sec:imp-subscriber} for implementation details.
 
 \begin{table}[H]
@@ -573,19 +585,94 @@ The refactoring approach used by \toolextension{} is based on the implementation
 
 \section{RxJava Extension}
 
-We developed an extension to support the \code{SwingWorker} API in \framework{RxJava}. This extension consist of an \code{Emitter}, a \code{Package} and a \code{Subscriber} class. To identify these classes we added the prefix \code{SW} to their names. 
+We developed an extension to support the \code{SwingWorker} API in \framework{RxJava}. The purpose of this extension is to refactor \code{SwingWorker}s into \framework{RxJava} considering the observer pattern. To accomplish that, we separate the target \code{SwingWorker} into a subject and an observer. The subject is responsible for executing the asynchronous operation (\code{doInBackground} method) while the observer is in charge of processing the intermediate results (\code{process} method) and the final result (\code{done} method) in the main thread. Intermediate results are generated on each \code{publish} invocation, while the final result corresponds to the return value of the method \code{doInBackground}. In general terms, the goal of the refactoring is to have a subject capable of generating the intermediate and final results and an observer to process them. Subjects and observers can also be called observables and subscribers respectively.
+
+\subsection{Class Diagram}
+
+Figure~\ref{fig:umlrxjava-extension} shows an UML Class Diagram of the \framework{RxJava} extension for \code{SwingWorker}s. The package \code{rx} contains classes from \framework{RxJava} while the package \code{de.tudarmstadt.stg.rx.swingworker} contains the classes that we implemented. In the rest of this section, we explain the interaction between the classes showed in the UML Class Diagram (Figure~\ref{fig:umlrxjava-extension}). The \framework{RxJava} classes are \code{Observable}, \code{Emitter}, \code{Observer}, \code{Subscriber}, \code{Action1}, and the ones implemented by us are \code{SWEmitter}, \code{SWPackage}, \code{SWSubscriber}, \code{RxSwingWorkerAPI}. It is recommended to look at the Class Diagram while reading to facilitate comprehension.
+
+There are several ways of creating observables in \framework{RxJava}. One of them is using the class \code{Observable} which offers different methods to create an \code{Observable} instance. One can use the method \code{Observable.fromEmitter} to implement algorithms that define when to generate items. In order to create an \code{Observable} using this method, one needs an \code{Action1} of type \code{Emitter}. The \code{Action1} interface has only a void method with one argument. The \code{Emitter} is an interface that extends \code{Observer}.
+
+\input{code-examples/emitter-example.tex}
+
+Listings~\ref{code:emitter-example} shows how to create an \code{Observable} using the method \code{fromEmitter} and how the \code{Emitter} and the \code{Subscriber} interact with each other. The algorithm responsible for generating the items is implemented in the \code{call} method of the instance \code{Action1} (Listings~\ref{code:emitter-example}:~Line~1). The item generation is done using the class \code{Emitter} (Listing~\ref{code:emitter-example}:~Lines~2~to~11). On the other hand, the \code{Subscriber} contains the logic to process the generated items (Listings~\ref{code:emitter-example}:~Lines~12~to~21).
+
+The algorithm consists of a \code{for}-loop (Listings~\ref{code:emitter-example}:~Line~4). On each iteration the method \code{Emitter.onNext(i)} is called (Listings~\ref{code:emitter-example}:~Line~5). This method generates an item with the integer value \code{i} which is processed by the \code{Subscriber} (Listings~\ref{code:emitter-example}:~Line~13). After nine iterations, the method \code{Emitter.onCompleted} is invoked (Listings~\ref{code:emitter-example}:~Line~7) which triggers the \code{onCompleted} method from the \code{Subscriber} (Listings~\ref{code:emitter-example}:~Line~19). If there are any exceptions during the execution, then the \code{Emitter.onError(e)} method is invoked (Listings~\ref{code:emitter-example}:~Line~9). This error is handled in the \code{Subscriber} as well (Listings~\ref{code:emitter-example}:~Line~16). Listings~\ref{code:emitter-example-output} shows the console output produced by Listings~\ref{code:emitter-example}. Summarizing, the \code{Action1} implements an algorithm that specifies when items should be generated (\code{onNext}), when the operation has completed (\code{onCompleted}) and when to handle an exception (\code{onError}). This signals are received and processed by the \code{Subscriber}.
+
+Due to the following reasons, the example showed in Listing~\ref{code:emitter-example} cannot be used as it is to replicate the behavior of \code{SwingWorker}s: 
+\begin{enumerate}
+	\item \code{SwingWorker}s allow using a data type for the final result and a different one for intermediate results. \code{Emitter}s on the contrary allow using only a single data type.
+	\item \code{SwingWorker}s have state flags that are not available neither in \code{Subscriber}s nor in \code{Observable}s. \code{Subscriber}s have only one state related method called \code{isUnsubscribed}. Other state queries available in \code{SwingWorker}s such as \code{getState}, which return \code{PENDING}, \code{STARTED} or \code{DONE}, or queries such as \code{isCancelled}, \code{isDone}, \code{getProgress} have no equivalent in \code{Subscriber}s. Other methods such as \code{addPropertyChangeListener}, \code{removePropertyChangeListener}, \code{firePropertyChange} and \code{getPropertyChange} are also not available in \code{Subscriber}s. These last four methods require the object \code{PropertyChangeSupport} in order to be implemented.
+\end{enumerate}
+
+In order to tackle the first problem, we implemented \code{SWPackage}, a generic data structure that accepts two parameters. The first parameter \code{R} is for the result of the asynchronous operation and the second parameter \code{P} is for the intermediate results. Listing~\ref{code:emitter-two-types-example} shows how one can create an \code{Observable} based on an \code{Emitter} of type \code{SWPackage}. In this example, we set the parameters \code{R} and \code{P} of the \code{SWPackage} to be \code{Integer} and \code{String} respectively. The code snippet showed in Listing~\ref{code:emitter-two-types-example} works as follows:
+\begin{itemize}
+	\item {\bf Line 1}: We create the \code{Observable} from a \code{Emitter} of type \code{SWPackage<Integer,String>>}.
+	\item {\bf Lines 4-17}: We define the algorithm to generate the items. The algorithm consists of iterating from zero to ten and sending a \code{String} to the \code{Subscriber} on each iteration. The indexes \code{i} used for the iteration are accumulated in the variable \code{accum} and returned at the end of the operation as \code{Integer}.
+	\begin{itemize}
+		\item {\bf Line 7}: We create the \code{SWPackage} instance that is used to generate the next item in the current iteration.
+		\item {\bf Line 8}: We create the \code{String} value for the next item based on the iteration index \code{i}.
+		\item {\bf Line 9}: We add the intermediate result \code{text} to the \code{SWPackage} by using the method \code{setChunks}. This method accepts multiple arguments of type \code{String} and returns a \code{SWPackage}. After that, we invoke the \code{onNext} method of the \code{emitter} using the \code{SWPackage} as argument to finally generate the item.
+		\item {\bf Line 10}: We update the \code{accum} variable.
+		\item {\bf Line 12}: Once the iterations has completed, we create another \code{SWPackage} to generate the item that contains the final result.
+		\item {\bf Line 13}: Similar to Line 9, we put the result of the operation into the \code{SWPackage}. This time, we use \code{setResult} which accepts a single argument of type \code{Integer} and returns a \code{SWPackage} as well. The final result item is then generated by calling \code{onNext} on the \code{emitter} using the \code{SWPackage}.
+		\item {\bf Lines 14-17}: Same as in Listing~\ref{code:emitter-example}
+		\end{itemize}
+	\item {\bf Lines 20-34}: We implemented the methods of the \code{Subscriber} responsible for handling the events \code{onNext}, \code{onCompleted}, \code{onError}.
+		\begin{itemize}
+			\item {\bf Lines 23}: We retrieve the intermediate results from the \code{item} using \code{getChunks}.
+			\item {\bf Lines 24-27}: If there are intermediate results, we take the first one and print it to the console. Notice that this value corresponds to a \code{String}.
+			\item {\bf Line 28}: We retrieve the final result from the \code{item} using \code{getResult}.
+			\item {\bf Lines 29-31}: If there is a result, then we print it to the console. Notice that the data type of this value is \code{Integer}.
+			\item {\bf Line 33}: Commented out. Same implementation as in Listing~\ref{code:emitter-example}
+		\end{itemize}
+\end{itemize}
+
+\input{design/umlrxjava-extension.tex}
+
+In order to tackle the second problem, we extended the class \code{Subscriber} from \framework{RxJava}. The extension of this class, \code{SWSubscriber}, consists of adding fields that allow us to implement the missing methods. One of these fields is \code{currentState}. The value of this field is returned when the method \code{SWSubscriber.getState()} is invoked. Initially, the value of the field is \code{PENDING}. We overrode the method \code{onStart} so that the field \code{currentState} is changed to \code{STARTED} as soon as the method is invoked (Listing~\ref{code:swsubscriber-onstart}). The method \code{onStart} is triggered when the \code{SWSubscribed} is subscribed. Additionally, we also overrode the method \code{onCompleted} to make this field change to \code{DONE} (Listing~\ref{code:swsubscriber-oncompleted}). Similarly we used the rest of the fields to replicate the state related behavior of \code{SwingWorker}s using RxJava.
+
+\input{code-examples/emitter-two-types.tex}
+
+The classes \code{SWPackage} and \code{SWSubscriber} are enough to refactor \code{SwingWorker}s into \framework{RxJava}. With \code{SWPackage} we can define different data types for intermediate and final results. \code{SWSubscriber} implements all methods of the \code{SwingWorker} API. The refactoring can be done manually in 15 steps:
+\begin{enumerate}
+	\item Copy the \code{doInBackground} implementation of the \code{SwingWorker} into the \code{call} method of \code{Action1}.
+	\item Identify all \code{publish} invocations
+	\item Create a \code{SWPackage} for each \code{publish} invocation
+	\item Use the method \code{setChunks} from \code{SWPackage} and use the arguments specified in \code{publish}
+	\item Generate the item by using \code{Emitter.onNext(SWPackage pkg)}
+	\item Identify all \code{setProgress} invocations
+	\item Create a \code{SWPackage} for each \code{setProgress} invocation
+	\item Use the method \code{setProgress} from \code{SWPackage} and use the same progress as argument
+	\item Repeat step 5
+	\item Identify the \code{return} statements
+	\item Create a \code{SWPackage} for each \code{return} statement
+	\item Use the method \code{setResult} from \code{SWPackage} and use the \code{return} value as argument
+	\item Repeat step 5
+	\item At the end of the \code{call} method, add \code{Emitter.onCompleted} to signal that the asynchronous operation has completed.
+	\item Finally, surround everything with a \code{try-catch} block and use \code{Emitter.onError} in the catch clause to trigger the \code{onError} method of the \code{SWSubscriber} in case that an exception is thrown
+\end{enumerate}
+
+One can see that this refactoring is not trivial. Even though the refactoring can be performed automatically, developers might have trouble understanding the output code if they are not familiar with \framework{RxJava}. Notice that we only need to consider two methods (\code{publish} and \code{setProgress}) and the return value for the refactoring. The rest of the algorithm remains the same, regardless of the implementation of \code{doInBackground}. In order to hide this abstraction from developers and make the refactoring easier and more comprehensible, we implemented \code{SWEmitter} and \code{SWSubscriber} using the template method pattern. 
+
+In the class \code{SWEmitter}, we specify that the method \code{doInBackground} must be implemented by the subclass. The methods \code{publish} and \code{setProgress} of the \code{SWEmitter} take care of the steps 2 to 9 that were mentioned above. Similarly, in the class \code{SWSubscriber}, we specify that the methods \code{process} and \code{done} must be implemented by the subclass. By doing this, developers need not to reason about \code{Emitter}s, \code{onNext}, \code{onCompleted}, \code{onError} and \code{SWPackage}. See Sections~\ref{sec:imp-seq-diagram},~\ref{sec:imp-package},~\ref{sec:imp-emitter}~and~\ref{sec:imp-subscriber} for more details about the implementation of these three classes.
+
+\subsection{Sequence Diagram}
+\label{sec:imp-seq-diagram}
+
+Figure~\ref{fig:rxjava-extension} shows the interactions between \code{SWEmitter}, \code{SWPackage} and \code{SWSubscriber}. In general, the \code{SWEmitter} produces items of type \code{SWPackage}. Then, \framework{RxJava} internally sends these items to the \code{SWSubscriber}. In the diagram, we use the term ``Emissions Pool'' to represent this interaction. For the explanation, we can assume that the \code{SWEmitter} places the items into a pool and the \code{SWSubcriber} takes them from there.
 
 \begin{figure}[h]
 \begin{center}
-\includegraphics[width=17cm]{design/rxjava-extension.png}
+\includegraphics[width=15.5cm]{design/rxjava-extension.png}
 \end{center}
 \caption{RxJava Extension for SwingWorkers}
 \label{fig:rxjava-extension}
 \end{figure}
 
-Figure~\ref{fig:rxjava-extension} shows the interactions between these three classes. In general, the \code{SWEmitter} produces \code{SWPackage}s that go into an ``Emissions Pool'', then the \code{SWSubscriber} takes those packages and process them. The \code{SWPackage} has two functions. The first one is to manage synchronization to avoid backpressure problems. The second one is to encapsulate the data into a single data structure. This is necessary because \code{Subscriber}s in \framework{RxJava} only accept one type, but the \code{SWEmitter} produces \code{Integer}s for reporting progress, another type for intermediate results and it can use a different one for the final result. The method \code{doInBackground} from the \code{SWEmitter} is an abstract method, while the methods \code{process} and \code{done} from the \code{SWSubscriber} possess a default implementation that can be overridden by subclasses. The default implementation does not possess any logic, it only avoids forcing developers to declare this method in the subclass.
+The class \code{SWPackage} has two functions. The first one is to support items of different data types and the second one is manage the synchronization between \code{SWEmitter} and \code{SWSubscriber} in order to avoid backpressure problems. 
 
-The process starts by initializing a \code{lock} in the \code{SWEmitter}. This \code{lock} is used for all \code{SWPackage}s. Then an initialization \code{SWPackage} is created and sent to the emissions pool. After that, the asynchronous operation starts (\code{doInBackground}). While this operation is running, the methods \code{publish} or \code{setProgress} can be invoked multiple times. This invocations also generate \code{SWPackage}s that are pushed into the emissions pool, where they are taken and processed from the \code{SWSubscriber}. If the emission was generated by a \code{publish} invocation then the \code{process} method of the \code{SWSubscriber} will be invoked. When the asynchronous operations finishes, a final \code{SWPackage} containing the result is sent to the emissions pool again. Finally, the \code{onCompleted} method of the \code{SWSubscriber} is invoked. This method triggers the piece of code contained in the \code{done} method of the \code{SWSubscriber}.
+The asynchronous operation starts by initializing a \code{lock} in the \code{SWEmitter}. This \code{lock} is used for all \code{SWPackage}s. Then an initialization \code{SWPackage} is created and sent to the emissions pool. After that, the asynchronous operation starts (\code{doInBackground}). While this operation is running, the methods \code{publish} or \code{setProgress} can be invoked multiple times. This invocations also generate \code{SWPackage}s that are pushed into the emissions pool, where they are taken and processed from the \code{SWSubscriber}. If the emission was generated by a \code{publish} invocation then the \code{process} method of the \code{SWSubscriber} will be invoked. When the asynchronous operations finishes, a final \code{SWPackage} containing the result is sent to the emissions pool again. Finally, the \code{onCompleted} method of the \code{SWSubscriber} is invoked. This method triggers the piece of code contained in the \code{done} method of the \code{SWSubscriber}.
 
 While the \code{SWPackage}s are being processed, the \code{SWSubscriber} updates the state of the operation (\code{PENDING}, \code{STARTED}, \code{DONE}). The \code{SWSubscriber} contains all methods available in the \code{SwingWorker} API including the state relevant ones.
 
@@ -597,34 +684,23 @@ The main purpose of the \code{SWPackage} is to manage synchronization and encaps
 
 \subsection{Emitter}
 \label{sec:imp-emitter}
-The \code{SWEmitter} generates the packages that are going to be processed by the \code{SWSubscriber}. Listings~\ref{code:swemitter-regular-emissions} shows the implementation of the standard emissions in a \code{SWEmitter}. We call them standards because they are always produced. There are two emissions of this kind, initialization and result. Notice that \code{setResult} returns an \code{SWPackage} as well, otherwise, it would not be possible to use this call as a parameter for \code{onNext}.
+The \code{SWEmitter} generates the \code{SWPackage}s that are going to be processed by the \code{SWSubscriber}. Listings~\ref{code:swemitter-regular-emissions} shows the implementation of the standard emissions in a \code{SWEmitter}. We call them standards because they are always produced. There are two emissions of this kind, initialization (Listing~\ref{code:swemitter-regular-emissions}:~Line~3) and result (Listing~\ref{code:swemitter-regular-emissions}:~Line~5). Notice that \code{setResult} returns an \code{SWPackage} as well, otherwise, it would not be possible to use this call as a parameter for \code{onNext} (Listing~\ref{code:swemitter-regular-emissions}:~Line~4).
 
 \input{code-examples/swemitter-regular-emissions.tex}
 
-The \code{doInBackground} method is abstract and must therefore be implemented in the subclass. This implementation can invoke the \code{publish} and/or the \code{setProgress} method multiple times. If these methods are invoked, then they are forward to the \code{SWSubscriber} using a \code{SWPackage} as well. Listings~\ref{code:swemitter-dynamic-emissions} shows how the forwarding was implemented. Notice that \code{setChunks} and \code{setProgress} return an \code{SWPackage} as well.
+The \code{doInBackground} method is abstract and must therefore be implemented in the subclass. This implementation can invoke the \code{publish} (Listing~\ref{code:swemitter-dynamic-emissions}:~Line~11) and/or the \code{setProgress} (Listing~\ref{code:swemitter-dynamic-emissions}:~Line~15) method multiple times. If these methods are invoked, then they are forwarded to the \code{SWSubscriber} using a \code{SWPackage} as well. Listings~\ref{code:swemitter-dynamic-emissions} (Lines 12, 16) shows how the forwarding was implemented. Notice that \code{setChunks} and \code{setProgress} return an \code{SWPackage} as well.
 
 \input{code-examples/swemitter-dynamic-emissions.tex}
 
 \subsection{Subscriber}
 \label{sec:imp-subscriber}
-The \code{SWSubscriber} is the class responsible for managing state related operations that were present in the \code{SwingWorker}. In order to manage stateful operations, it is necessary to have private fields that can be updated on specific events. Listings~\ref{code:swsubscriber-state-relevant-fields} shows the fields required to implement all methods available in the \code{SwingWorker} API. These fields allow the implementation of the following methods:
-
-\begin{itemize}
-	\item \code{propertyChangeSupport}: \java{addPropertyChangeListener}, \java{firePropertyChange}, \java{getPropertyChangeSupport} and \java{removeProperyChangeListener}
-	\item \code{progress}: \java{setProgress} and \java{getProgress}
-	\item \code{cancelled}: \java{isCancelled}
-	\item \code{currentState}: \java{getState} and \java{isDone}
-\end{itemize}
-
-\input{code-examples/swsubscriber-state-relevant-fields.tex}
-
-At the beginning, the state of the \code{SWSubscriber} is \code{PENDING}. When the operation starts, the method \code{onStart} from the \code{SWSubscriber} is invoked, making the status change to \code{STARTED} (Listing~\ref{code:swsubscriber-onstart}). We use the \code{countDownLatch} to be able to wait for the asynchronous result when the \code{get} method is invoked. This is necessary because the \code{SwingWorker} API specifies that \code{get} is blocking.
+The \code{SWSubscriber} is the class responsible for managing state related operations that are available in the \code{SwingWorker}. In order to manage stateful operations, it is necessary to have private fields that can be updated on specific events. For example: The state of the \code{SwingWorker} depends on the field \code{currentState}. At the beginning of the asynchronous operation, this field has the value \code{PENDING}. When the operation starts, the method \code{onStart} from the \code{SWSubscriber} is invoked, making the status change to \code{STARTED} (Listing~\ref{code:swsubscriber-onstart}:~Line~4). We use the \code{countDownLatch} to be able to wait for the asynchronous result when the \code{get} method is invoked(Listing~\ref{code:swsubscriber-onstart}:~Line~3). This is necessary because the \code{SwingWorker} API specifies that \code{get} is blocking.
 
 \input{code-examples/swsubscriber-onstart.tex}
 
-Listing~\ref{code:swsubscriber-onnext} shows how the \code{SWSubscriber} processes the \code{SWPackage}. First, it updates the async result. If no result is present, then the value remains \code{null}. Then it checks whether a progress value was sent and if so, it updates the \code{progress} field. Finally, if the \code{publish} method in the \code{SWEmitter} was invoked, the data is taken and processed in the \code{process} method.
+Listing~\ref{code:swsubscriber-onnext} shows how the \code{SWSubscriber} processes the \code{SWPackage}. First, it updates the async result. If no result is present, then the value remains \code{null} (Listing~\ref{code:swsubscriber-onnext}~Line~3). Then it checks whether a progress value was sent and if so, it updates the \code{progress} field (Listing~\ref{code:swsubscriber-onnext}~Lines~4-5). Finally, if the \code{publish} method in the \code{SWEmitter} was invoked, the data is taken and processed in the \code{process} method (Listing~\ref{code:swsubscriber-onnext}~Lines~7-8).
 
-Listings~\ref{code:swsubscriber-oncompleted} shows the termination of emissions. At the end, the \code{onCompleted} method of the \code{SWSubscriber} is invoked. Here the \code{countDownLatch} is decrease by one to report that the asynchronous operation has finished. Then the \code{done} method of the \code{SWSubscriber} is invoked and finally the state is set to \code{DONE}.
+Listings~\ref{code:swsubscriber-oncompleted} shows the termination of emissions. At the end, the \code{onCompleted} method of the \code{SWSubscriber} is invoked. Here the \code{countDownLatch} is decrease by one to report that the asynchronous operation has finished (Listings~\ref{code:swsubscriber-oncompleted}:~Line~2). Then the \code{done} method of the \code{SWSubscriber} is invoked (Listings~\ref{code:swsubscriber-oncompleted}:~Line~3) and finally the state is set to \code{DONE} (Listings~\ref{code:swsubscriber-oncompleted}:~Line~4).
 
 \input{code-examples/swsubscriber-onnext-oncompleted.tex}
 
@@ -971,20 +1047,38 @@ Furthermore, other studies agree that functional and reactive programming models
 Since the plugin was divided into core (\toolcore{}) and extension (\toolextension{}), it is possible to use \toolcore{} in future research to develop further extensions. The core could also be refactored to improve the user experience, adding settings and/or a help section, and implementing a ``UNDO'' feature would be some examples of where to start.
 
 \subsection{Further Async Constructs}
-In this thesis, we focused on refactoring \code{SwingWorker}s. There are also other async constructs that can be refactored to \framework{RxJava}. As showed in Listing~\ref{code:con-runnable-before}, fire and forget operations are usually implemented using the standard \framework{Java} classes \code{Runnable} and \code{Thread}. This construct can be refactored to \framework{RxJava} in order to facilitate modifying the behavior of the program using functional programming (Listing~\ref{code:con-runnable-after}).
-
-Since \code{Runnable}s are fire and forget, they do not return any value. Assuming that we refactor the original code into \code{RxJava} and then modify the method \code{peformOpAsync} so that it returns a list, then the semantic of the program can be easily modified to filter and transform the items of the list. Finally, we could execute an operation based on these items. Furthermore, the \code{Observable} object can be used to create reactive programming models in the existing code (See Listing~\ref{code:rxJava-reactive-code}).
+In this thesis, we focused on refactoring \code{SwingWorker}s. There are also other async constructs that can be refactored to \framework{RxJava}. As showed in Listing~\ref{code:con-runnable-before}, fire and forget operations are usually implemented using the standard \framework{Java} classes \code{Runnable} and \code{Thread}. This construct can be refactored to \framework{RxJava} in order to facilitate modifying the behavior of the program using functional programming (Listing~\ref{code:con-runnable-after}). Notice that the method \code{performOpAsync} changed from being a \code{void} method (Listing~\ref{code:con-runnable-before}:~Line~11) to return an object of type \code{Void} (Listing~\ref{code:con-runnable-after}:~Line~11). This change is mandatory because an object is needed for the method \code{fromCallable} (Listing~\ref{code:con-runnable-after}:~Line~3).
 
 \input{code-examples/con-runnables.tex}
 
-\code{Callable}s can also be used in \framework{Java} for implementing asynchronous operations. Listing~\ref{code:callable-before} presents an example where a \code{Callable} is used to perform the operation \code{computeResult}. In contrast to \code{Runnable}s, \code{Callable}s does return a result. This result can be obtained by using the reference to the corresponding \code{Future}. Listing~\ref{code:callable-after} shows how the original code can be refactored to \code{RxJava}.
+Since \code{Runnable}s are fire and forget, they do not return any value. Assuming that we modify the method \code{performOpAsync} after refactoring, so that it returns a list, then it is possible to use \framework{RxJava} methods to filter~(Listing~\ref{code:con-enabled-methods-runnable}:~Line~5) and transform (Listing~\ref{code:con-enabled-methods-runnable}:~Line~5) the items of the list. Additionally, we could execute an operation based on each of these items (Listing~\ref{code:con-enabled-methods-runnable}:~Line~7). Furthermore, the \code{Observable} object can be used to create reactive programming models in the existing code (See Listing~\ref{code:rxJava-reactive-code}).
+
+\input{code-examples/con-enabled-methods-runnable.tex}
+
+\code{Callable}s can also be used in \framework{Java} for implementing asynchronous operations. Listing~\ref{code:callable-before} presents an example where a \code{Callable} is used to perform the operation \code{computeResult} (Listing~\ref{code:callable-before}:~Line~1). In contrast to \code{Runnable}s, \code{Callable}s does return a result. This result can be obtained by using the reference to the corresponding \code{Future} (Listing~\ref{code:callable-before}:~Line~4). Listing~\ref{code:callable-after} shows how the original code can be refactored to \code{RxJava}. In this case the \code{Callable} can be directly used in the \code{fromCallable} method (Listing~\ref{code:callable-after}:~Line~1). The result of the asynchronous operation can be accessed through \code{doOnNext} (Listing~\ref{code:callable-after}:~Line~4).
 
 \input{code-examples/con-callables.tex}
 
 \subsection{Java 8 and Functional Programming}
-\framework{Java 8} introduces a series of classes to work with data streams. However, \framework{Java 8} does not offer methods to specify in which thread an operation should be performed. Refactoring these constructs to \framework{RxJava} would facilitate introducing asynchrony in functional models implemented in \framework{Java 8}. This refactoring would also enable methods such as \code{doOnError}, \code{doOnCompleted}, among others.
+\framework{Java 8} introduces a series of classes to work with data streams. However, \framework{Java 8} does not offer methods to specify in which thread an operation should be performed. Refactoring these constructs to \framework{RxJava} would facilitate introducing asynchrony in functional models implemented in \framework{Java 8}. 
+
+Listing~\ref{code:con-java8} shows how data streams can be manipulated in \framework{Java 8}. First, we filter the products which price is greater than 50 and which store is \code{STORE_A} (Listing~\ref{code:con-java8}:~Lines~2-4). Then, we create new products which price is 10\% higher than originally (Listing~\ref{code:con-java8}:~Lines~5-7). These products are also assigned to \code{STORE_B} (Listing~\ref{code:con-java8}:~Line~8). Finally, we save the new products using a data access object (Listing~\ref{code:con-java8}:~Line~9).
+
+Listing~\ref{code:con-rxjava} shows how the previous example looks after refactoring. Instead of creating a stream of data (Listing~\ref{code:con-java8}:~Line~1), it is necessary to create an \code{Observable} that contains the products (Listing~\ref{code:con-rxjava}:~Line~1). The functions \code{filter} and \code{map} are identical. Then, we need to specify the operation that should be perform on each item (Listing~\ref{code:con-rxjava}:~Line~9). Since \code{doOnNext} only declares the function, it is necessary to subscribe the \code{Observable} in order to actually perform the operation (Listing~\ref{code:con-rxjava}:~Line~10).
+
 
 \input{code-examples/con-java8-rxjava.tex}
+
+This refactoring enables methods such as:
+\begin{itemize}
+	\item {\bf Listing~\ref{code:con-enabled-methods-java8} Line 9} (\code{subscribeOn}): to specify in which thread the operations should be executed (i.e.~a background thread)
+	\item {\bf Listing~\ref{code:con-enabled-methods-java8} Line 11} (\code{doOnError}): to handle errors that might occur while processing the items
+	\item {\bf Listing~\ref{code:con-enabled-methods-java8} Line 12} (\code{observeOn}): to specify in which thread the following operations should be executed (i.e.~main thread)
+	\item {\bf Listing~\ref{code:con-enabled-methods-java8} Line 13} (\code{doOnCompleted}): to execute an action after the data processing has completed (i.e.~updating the UI)
+	\item among others...
+\end{itemize}
+
+\input{code-examples/con-enabled-methods-java8.tex}
 
 \subsection{RxJava Extension}
 We developed an \framework{RxJava} extension targeting \code{SwingWorkers}. We suggest that future research considers analyzing this extension to evaluate the potential of improvement. One of the improvements involves refactoring the communication between the emitter \code{SWEmitter} and the subscriber \code{SWSubscriber} in order to avoid blocking the \code{publish} method of the \code{Observable} when the \code{SWSubscriber} is processing the previous \code{SWPackage}. A possible solution would be to implement a buffer and block only when the buffer is full.

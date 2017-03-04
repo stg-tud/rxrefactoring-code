@@ -1,7 +1,7 @@
-\begin{figure}[h]
+\begin{figure}[H]
 \begin{minipage}{0.48\textwidth}
 \begin{sourcecode}
-\begin{javacode}{}
+\begin{javacode}{1,9}
 productDao.getProducts().stream()
         .filter(p ->
                 p.getPrice() > 50 &&
@@ -18,7 +18,7 @@ productDao.getProducts().stream()
 \end{minipage}\hspace{0.7cm}
 \begin{minipage}{0.48\textwidth}
 \begin{sourcecode}
-\begin{javacode}{9,12}
+\begin{javacode}{1,9,10}
 Observable.from(productDao.getProducts())
         .filter(p ->
                 p.getPrice() > 50 &&
@@ -27,11 +27,7 @@ Observable.from(productDao.getProducts())
                 p.getId(),
                 p.getPrice() * 1.10,
                 STORE_B))
-        .subscribeOn(Schedulers.computation())
         .doOnNext(p -> productDao.save(p))
-        .doOnError(t -> handleError(t))
-        .observeOn(SwingSchedulers.getInstance())
-        .doOnCompleted(() -> updateUI())
         .subscribe();
 \end{javacode}
 \caption{Java 8 - Refactored to RxJava}

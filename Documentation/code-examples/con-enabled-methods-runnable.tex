@@ -1,0 +1,26 @@
+\begin{figure}[H]
+\begin{sourcecode}
+\begin{javacode}{5-6}
+void execute() {
+	Observable
+        	.fromCallable( () -> performOpAsync())
+        	.subscribeOn(Schedulers.computation())
+        	.filter(item -> validate(item))
+        	.map(item -> transform(item))
+        	.doOnNext(item -> execute(item))
+        	.subscribe();
+
+	performOperation();
+	// performOpAsync and performOperation run concurrently
+}
+
+List performOpAsync() {
+	List list;
+	... // fill list
+	return list;
+}
+\end{javacode}
+\caption{Enabled Methods after Refactoring (Runnable)}
+\label{code:con-enabled-methods-runnable}
+\end{sourcecode}
+\end{figure}

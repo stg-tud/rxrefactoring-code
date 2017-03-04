@@ -1,14 +1,12 @@
 \begin{figure}[H]
 \begin{sourcecode}
-\begin{javacode}{2-9}
+\begin{javacode}{2-7}
 private SWSubscriber<String, Integer> anotherRxObserver = new SWSubscriber<String, Integer>(
 			rx.Observable.fromEmitter( 
 				new SWEmitter<String, Integer>() {
 					@Override
 					protected String doInBackground() 
-					throws Exception {
-						...
-					}
+					throws Exception {...}
 			}, Emitter.BackpressureMode.BUFFER )
 	) {
 	protected void process( List<Integer> chunks ) {...}

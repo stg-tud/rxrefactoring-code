@@ -1,0 +1,104 @@
+\tikzumlset{font=\footnotesize\ttfamily}
+\begin{figure}[H]
+\begin{center}
+\begin{tikzpicture}[scale=0.95]
+
+	\begin{umlpackage}{rx}
+		\begin{umlpackage}{functions}
+		\umlclass[x=2, type=interface, template={T}]{Action1}%
+		{}{+ call(T t) : void}
+		\end{umlpackage}
+	
+		\umlclass[x=2, y=7.5, type=interface, template=T]{Observable}{}
+		{fromEmitter(Action1<Emitter<T> > emitter, Emitter.BackpressureMode backpressure) : Observable<T>\\
+		...}
+				
+		\umlclass[x=-4, y=4.0, type=interface, template=T]{Emitter}{}{...}
+		
+		\umlclass[x=1.5, y=4.0, type=interface, template=T]{Observer}
+		{}{\textasciitilde~onCompleted(): void\\
+		\textasciitilde~onError(Throwable e) : void\\
+		\textasciitilde~onNext(T t) void}
+		
+		\umlclass[x=7.5, y=4.0, type=abstract, template=T]{Subscriber}{...}{
+		+ unsubscribe : void\\
+		+ isUnsubscribed : boolean\\
+		+ onStart : void\\
+		...
+		}
+		
+	\end{umlpackage}
+	
+	\begin{umlpackage}{de/tudarmstadt/stg/rx/swingworker}
+	 
+	 \umlclass[x=-3, y=-5, type=abstract, template={R, P}]{SWEmitter}%
+	{- emitter : Emitter<? super SWPackage<R, P> >\\
+	- running : AtomicBoolean\\
+	- processingLock : ReentrantLock
+	}%
+	{\umlvirt{\# doInBackground : ReturnType}\\
+	\umlstatic{\# publish(ProcesssType ... chunks) : void}\\
+	\umlstatic{\# setProgress( int progress ) : void}\\
+	- createPackage() : SWPackage<R, P>
+	}
+	
+    \umlclass[x=-3, y=-11, template={R, P}]{SWPackage}%
+    {- asyncResult : R\\
+    - chunks : List<P>\\
+    - progress : AtomicInteger\\
+    - processingLock : ReentrantLock\\
+    ...
+    }
+    {\textasciitilde~SWPackage(ReentrantLock processingLock)\\
+    \textasciitilde~setChunks(P... chunks) : SWPackage<R, P>\\
+    \textasciitilde~setResult(R asyncResult) : SWPackage<R, P>\\
+    \textasciitilde~setProgress(int progress) : SWPackage<R, P>\\
+    + getChunks : List<P>\\
+    + getResult : R\\
+    ...
+    }
+    
+	\umlclass[x=6, y=-11, type=abstract, template={R, P}]{SWSubscriber}
+	{
+	- observable : Observable<SWPackage<R, P> >\\
+	- subscription : Subscription\\
+	- asyncResult : R\\
+	- propertyChangeSupport : PropertyChangeSupport\\
+	- progress : AtomicInteger\\
+	- cancelled : AtomicBoolean\\
+	- currentState : SwingWorker.StateValue\\
+	- countDownLatch : countDownLatch\\
+	...
+	}
+	{
+	\umlvirt{\# done : void}\\
+	\umlvirt{\# process(List<ProcessType> chunks) : void}\\
+	\umlstatic{\# publish(ProcesssType ... chunks) : void}\\
+	\umlstatic{\# setProgress( int progress ) : void}\\
+	...
+	}
+
+	\umlclass[x=5, y=-5, type=interface, template={R}]{RxSwingWorkerAPI}
+	{}
+	{
+	SwingWorker API methods:\\
+	See Appendix:~\ref{swingworkerapi}
+	}	
+	
+	\end{umlpackage}	
+	
+	 
+	\umlinherit[geometry=-|, stereo={T$\rightarrow$Emitter<SWPackage<R, P> >}, pos stereo=1.8]{SWEmitter}{Action1}
+	\umlinherit{Emitter}{Observer}
+	\umlimpl{Subscriber}{Observer}
+	\umlinherit[geometry=-|]{SWSubscriber}{Subscriber}
+	\umlinherit[geometry=-|]{SWSubscriber}{RxSwingWorkerAPI}
+	\umldep[geometry=-|]{SWEmitter}{Emitter}
+	\umldep[geometry=-|]{Observable}{Emitter}
+	\umldep[]{SWSubscriber}{SWPackage}
+	\umldep[stereo=create]{SWEmitter}{SWPackage}
+\end{tikzpicture}
+\end{center}
+\caption{UML: RxJava SwingWorker Extension}
+\label{fig:umlrxjava-extension}
+\end{figure}

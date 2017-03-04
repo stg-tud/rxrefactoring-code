@@ -1,7 +1,11 @@
 \begin{figure}[H]
 \begin{sourcecode}
 \begin{javacode}{}
-...
+public abstract class DocumentLoader 
+	extends SWSubscriber<List<Document>, Document> {
+	
+    ... // field declarations
+
 	public void load( File... files ) {
 		this.files = files;
 		// setup subject
@@ -18,16 +22,23 @@
 				.publish();
 		// register subscribers
 		connectableObservable.subscribe( document -> {
-			print( "0 - Updating UI: ", document );
+			print( "Subscriber  0 - Updating UI: ", document );
 			fetchResult( Arrays.asList( document ) );
 		} );
-		connectableObservable.subscribe( doc -> print( "1 - ", doc ) );
-		connectableObservable.subscribe( doc -> print( "2 - ", doc ) );
-		connectableObservable.subscribe( doc -> print( "3 - ", doc ) );
+		connectableObservable.subscribe( doc -> print( "Subscriber 1 - ", doc ) );
+		connectableObservable.subscribe( doc -> print( "Subscriber 2 - ", doc ) );
+		connectableObservable.subscribe( doc -> print( "Subscriber 3 - ", doc ) );
 		// connect subject with subscribers
 		connectObservable( connectableObservable );
 	}
+	
+	... // methods: getRxObservable, process and fetchResult
+	
+	private void print(String id, Document document ) {
+		System.out.println( "[ " + Thread.currentThread().getName() + " ] " + id + document.getName() );
+	}
 ...
+}
 \end{javacode}
 \caption{DocumentLoader Class manually modified after \toolextension{}-Refactoring}
 \label{code:example-edited}

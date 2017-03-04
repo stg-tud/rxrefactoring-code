@@ -1,14 +1,20 @@
 \begin{figure}[H]
 \begin{minipage}{0.48\textwidth}
 \begin{sourcecode}
-\begin{javacode}{}
-Runnable runnable = () -> performOpAsync();
+\begin{javacode}{2,11}
+void execute() {
+	Runnable runnable = () -> performOpAsync();
 
-Thread thread = new Thread( runnable );
-thread.start();
+	Thread thread = new Thread( runnable );
+	thread.start();
 
-performOperation();
-// performOpAsync and performOperation run concurrently
+	performOperation();
+	// performOpAsync and performOperation run concurrently
+}
+
+void performOpAsync() {
+	...// no return statement here
+}
 \end{javacode}
 \caption{Runnable before Refactoring}
 \label{code:con-runnable-before}
@@ -16,19 +22,23 @@ performOperation();
 \end{minipage}\hspace{0.7cm}
 \begin{minipage}{0.48\textwidth}
 \begin{sourcecode}
-\begin{javacode}{4-6}
-Observable
-        .fromCallable( () -> performOpAsync())
-        .subscribeOn(Schedulers.computation())
-        .filter(item -> validate(item))
-        .map(item -> transform(item))
-        .doOnNext(item -> execute(item))
-        .subscribe();
+\begin{javacode}{3,11,13}
+void execute() {
+	Observable
+    	    .fromCallable( () -> performOpAsync())
+        	.subscribeOn(Schedulers.computation())
+	        .subscribe();
 
-performOperation();
-// performOpAsync and performOperation run concurrently
+	performOperation();
+	// performOpAsync and performOperation run concurrently
+}
+
+Void performOpAsync() {
+	...
+	return null;
+}
 \end{javacode}
-\caption{Runnable after Refactoring (Different Semantic)}
+\caption{Runnable after Refactoring}
 \label{code:con-runnable-after}
 \end{sourcecode}
 \end{minipage}

@@ -1,10 +1,12 @@
 \begin{figure}[H]
 \begin{minipage}{0.45\textwidth}
 \begin{sourcecode}
-\begin{javacode}{2,6}
+\begin{javacode}{2,8}
 public abstract class DocumentLoader 
 	extends SwingWorker<List<Document>, Document> {
-    ...
+    ... // field declarations
+    private File[] files;
+    ... // field declarations
     public void load(File... files) {
         this.files = files;
         execute();
@@ -12,7 +14,7 @@ public abstract class DocumentLoader
 
     protected List<Document> doInBackground() 
     	throws Exception {
-        ...
+        ... // for each file in this.files
         publish(new Document(...
         ...
     }
@@ -20,7 +22,15 @@ public abstract class DocumentLoader
     protected void process(List<Document> chunks){
         fetchResult( chunks );
     }
-    ...
+
+	/* This method is implemented in the class 
+	 * "Controller". The the implementation 
+	 * consist of loading all images into 
+	 * Juneiform
+	*/
+    public abstract void fetchResult(
+    	List<Document> result);
+}
 \end{javacode}
 \caption{DocumentLoader - Modified Code}
 \label{code:example-original}
@@ -28,22 +38,24 @@ public abstract class DocumentLoader
 \end{minipage}\hspace{0.7cm}
 \begin{minipage}{0.51\textwidth}
 \begin{sourcecode}
-\begin{javacode}{2,6,9-12,19}
+\begin{javacode}{2,8,11-13,21}
 public abstract class DocumentLoader 
 	extends SWSubscriber<List<Document>, Document> {
-    ... 
+    ... // field declarations
+    private File[] files;
+    ... // field declarations
     public void load(File... files) {
         this.files = files;
         executeObservable();
     }
 
-    private rx.Observable<SWChannel<List<Document>, Void>> 
+    private rx.Observable<SWPackage<List<Document>, Void>> 
     	getRxObservable() {
 				return rx.Observable.fromEmitter(
 				new SWEmitter<List<Document>, Void>() {
 				protected List<Document> doInBackground() 
 					throws Exception {
-				        ...
+				        ... // for each file in this.files
 				        publish(new Document(...
 				        ...
 				}
@@ -52,7 +64,15 @@ public abstract class DocumentLoader
 	protected void process( List<Document> chunks ){
 		fetchResult( chunks );
 	}
-	...
+
+	/* This method is implemented in the class 
+	 * "Controller". The the implementation 
+	 * consist of loading all images into 
+	 * Juneiform
+	*/
+    public abstract void fetchResult(
+    	List<Document> result);
+}
 \end{javacode}
 \caption{DocumentLoader - Automatically Refactored Code}
 \label{code:example-refactored}

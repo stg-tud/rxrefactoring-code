@@ -1,15 +1,24 @@
 \begin{figure}[H]
 \begin{sourcecode}
 \begin{javacode}{}
-...
+public abstract class SWEmitter<ReturnType, ProcessType> 
+	implements Action1<Emitter<SWPackage<ReturnType, ProcessType>>>
+	...
+	@Override
+	public final void call( Emitter<SWPackage<ReturnType, ProcessType>> emitter ) {
+		... 
+		// Template Method Pattern:
+		// The doInBackground method (implemented in the subclass) is invoked here
+	}
+	
 	protected void publish( ProcessType... chunks ) {
 		this.emitter.onNext( createPackage().setChunks( chunks ) );
 	}
-...
+	...
 	protected void setProgress( int progress ) {
 		this.emitter.onNext( createPackage().setProgress( progress ) );
 	}
-...
+	...
 \end{javacode}
 \caption{SWEmitter Dynamic Emissions}
 \label{code:swemitter-dynamic-emissions}
