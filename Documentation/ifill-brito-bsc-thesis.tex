@@ -44,7 +44,7 @@
 \birthplace{Caracas, Venezuela}
 \date{February 2017}
 \referee{Prof. Dr. Guido Salvaneschi}{M.Sc. Pascal Weisenburger}
-\department{Computer Science}
+\department{Fachbereich Informatik}
 \group{Reactive Programming Technology}
 
 \makethesistitle
@@ -266,22 +266,22 @@ Figure~\ref{fig:swingWorker-execution} shows which methods of a \code{SwingWorke
 \caption{AsyncTask vs. SwingWorker}
 \end{figure}
 
-\code{SwingWorker}s and \code{AsyncTask}s also have some similar methods. We match these methods in Table~\ref{table:worker-task-equivalent}. Methods written in {\bf bold} depend on the state of the \code{SwingWorker} and/or \code{AsyncTask}.
+\code{SwingWorker}s and \code{AsyncTask}s also have some similar methods. We match these methods in Table~\ref{table:worker-task-equivalent}. Methods written in {\bfseries bold} depend on the state of the \code{SwingWorker} and/or \code{AsyncTask}.
 
 \begin{table}[h]
 {\small
 \begin{center}
 \begin{tabular}{|C{6cm} | C{6cm}|}
 \hline
-\bf SwingWorker~\cite{swingworkerapi} & \bf AsyncTask~\cite{ulrAndroidAsyncTask}\\\hline
+\bfseries SwingWorker~\cite{swingworkerapi} & \bfseries AsyncTask~\cite{ulrAndroidAsyncTask}\\\hline
 doInBackground() & doInBackground(...)\\
 process(...) & onProgressUpdate(...)\\
 publish(...) & publishProgress(...)\\
 done() & onPostExecute(...)\\\hline
 cancel(...) & cancel(...)\\
 execute() & execute(...)\\
-\bf getState() & \bf getStatus()\\
-\bf isCancelled() & \bf isCancelled()\\
+\bfseries getState() & \bfseries getStatus()\\
+\bfseries isCancelled() & \bfseries isCancelled()\\
 get() & get() \\
 get(...) & get(...)\\\hline
 \end{tabular}
@@ -291,22 +291,22 @@ get(...) & get(...)\\\hline
 }
 \end{table}
 
-However, not all methods have an equivalent. Table~\ref{table:worker-task-non-equivalent} shows all methods that do not have a match. Again, methods written in {\bf bold} depend on the state of the class. As we can see, \code{SwingWorker}s have more methods that depend on the state than \code{AsyncTask}s. This point will be discussed again in Chapter~\ref{chapter:design}, when we talk about the refactoring approach that we use to convert \code{SwingWorker}s into \framework{RxJava}.
+However, not all methods have an equivalent. Table~\ref{table:worker-task-non-equivalent} shows all methods that do not have a match. Again, methods written in {\bfseries bold} depend on the state of the class. As we can see, \code{SwingWorker}s have more methods that depend on the state than \code{AsyncTask}s. This point will be discussed again in Chapter~\ref{chapter:design}, when we talk about the refactoring approach that we use to convert \code{SwingWorker}s into \framework{RxJava}.
 
 \begin{table}[h]
 {\small
 \begin{center}
 \begin{tabular}{|C{6cm} | C{6cm}|}
 \hline
-\bf SwingWorker~\cite{swingworkerapi} & \bf AsyncTask~\cite{ulrAndroidAsyncTask}\\\hline
-\bf addPropertyChangeListener(...) & --\\
-\bf firePropertyChange(...) & --\\
-\bf getProgress() & --\\
-\bf getPropertyChangeSupport() & --\\
-\bf isDone() & --\\
-\bf removePropertyChangeListener(...)& --\\
+\bfseries SwingWorker~\cite{swingworkerapi} & \bfseries AsyncTask~\cite{ulrAndroidAsyncTask}\\\hline
+\bfseries addPropertyChangeListener(...) & --\\
+\bfseries firePropertyChange(...) & --\\
+\bfseries getProgress() & --\\
+\bfseries getPropertyChangeSupport() & --\\
+\bfseries isDone() & --\\
+\bfseries removePropertyChangeListener(...)& --\\
 run()& --\\
-\bf setProgress(...)& --\\\hline
+\bfseries setProgress(...)& --\\\hline
 -- & onPreExecute() \\
 -- & executeOnExecutor(...)\\
 -- & onCancelled()\\\hline
@@ -409,14 +409,14 @@ So far, we have shown how our tool can refactor a \code{SwingWorker} into a \cod
 Listings~\ref{code:example-edited} shows an example where we change the functionality of \code{DocumentLoader} in a functional fashion. In the new implementation, we add a filter to select only the images which format is jpg. Additionally, we change the display name of the image within Juneiform to uppercase and remove the extension of the file from the name. On the other hand, we implement a reactive model by using four \code{Subscriber}s. The code snippet showed in Listing~\ref{code:example-edited} works as follows:
 
 \begin{itemize}
-	\item {\bf Line 10}: we specify the thread in which the \code{Observable} operates. The scheduler \code{Schedulers.computation} corresponds to a background thread.
-	\item {\bf Line 11}: the \code{publish} invocation uses the type \code{List<Document>}. Since it is more comfortable to work directly with \code{Document}s, rather than a list of this type, we use \code{flapMap} to extract the \code{Document} objects from the lists received from \code{publish}.
-	\item {\bf Line 12}: at this point we have a stream of \code{Document}s. We filter these \code{Document}s to consider only jpg files.
-	\item {\bf Line 13 - 17}: we transform the items by changing their display name to uppercase and simultaneously removing the file extension from them. In functional programming using state should be avoid~\cite{bookFunctionalProgramming}, therefore, we generate a new instance for each \code{Document} rather than changing the name directly in the current instance. 
-	\item {\bf Line 18}: we specify that the operations that follow must be executed in the UI thread.
-	\item {\bf Line 21 - 24}: we register a \code{Subscriber} using lambda notation that updates the UI and prints the name of the file. Listing~\ref{code:example-console} shows the console output. One can see that the \code{Subscriber} 0 prints the following text to the console for each file: \code{ Updating UI: <FileName>}
-	\item {\bf Line 25 - 27}: we register further \code{Subscriber}s using lambda notation as well. Each of these \code{Subscriber}s prints the name of the file to the console. Listing~\ref{code:example-console} shows the console output for \code{Subscriber}s 1 to 3. Notice that the \code{Subscriber}s could perform more complex operations. We used the method \code{print} (Listing~\ref{code:example-edited}~Line:~34) to keep the example simple.
-	\item {\bf Line 29}: we connect the \code{ConnectableObservable} to start the emissions.
+	\item {\bfseries Line 10}: we specify the thread in which the \code{Observable} operates. The scheduler \code{Schedulers.computation} corresponds to a background thread.
+	\item {\bfseries Line 11}: the \code{publish} invocation uses the type \code{List<Document>}. Since it is more comfortable to work directly with \code{Document}s, rather than a list of this type, we use \code{flapMap} to extract the \code{Document} objects from the lists received from \code{publish}.
+	\item {\bfseries Line 12}: at this point we have a stream of \code{Document}s. We filter these \code{Document}s to consider only jpg files.
+	\item {\bfseries Line 13 - 17}: we transform the items by changing their display name to uppercase and simultaneously removing the file extension from them. In functional programming using state should be avoid~\cite{bookFunctionalProgramming}, therefore, we generate a new instance for each \code{Document} rather than changing the name directly in the current instance. 
+	\item {\bfseries Line 18}: we specify that the operations that follow must be executed in the UI thread.
+	\item {\bfseries Line 21 - 24}: we register a \code{Subscriber} using lambda notation that updates the UI and prints the name of the file. Listing~\ref{code:example-console} shows the console output. One can see that the \code{Subscriber} 0 prints the following text to the console for each file: \code{ Updating UI: <FileName>}
+	\item {\bfseries Line 25 - 27}: we register further \code{Subscriber}s using lambda notation as well. Each of these \code{Subscriber}s prints the name of the file to the console. Listing~\ref{code:example-console} shows the console output for \code{Subscriber}s 1 to 3. Notice that the \code{Subscriber}s could perform more complex operations. We used the method \code{print} (Listing~\ref{code:example-edited}~Line:~34) to keep the example simple.
+	\item {\bfseries Line 29}: we connect the \code{ConnectableObservable} to start the emissions.
 \end{itemize}
 
 \input{code-examples/example-manually-refactored.tex}
@@ -436,9 +436,9 @@ Listing~\ref{code:example-editor-refactored} shows the refactored code of the cl
 
 After performing the refactoring, we modify the source code manually to add new features. In this case, we implement a \code{Utils} class for showing and closing a loading spinner. Additionally, we add a method to copy the result of the OCR to the clipboard. The implementation details of the \code{Util} class and the \code{copyToClipboard} method are not relevant for this example. The important aspect here is that we can add features to the \code{Observable} using a functional notation, as showed in Listing~\ref{code:example-editor} (Lines 6-8). We declare the new features as follows:
 \begin{itemize}
-	\item {\bf Line 6:} we show a loading spinner when the observable is subscribed.
-	\item {\bf Line 7:} the last emission corresponds to the result. We copy the result to the clipboard.
-	\item {\bf Line 8:} we hide the loading spinner.
+	\item {\bfseries Line 6:} we show a loading spinner when the observable is subscribed.
+	\item {\bfseries Line 7:} the last emission corresponds to the result. We copy the result to the clipboard.
+	\item {\bfseries Line 8:} we hide the loading spinner.
 \end{itemize}
 
 \section{Refactoring Approach}
@@ -478,7 +478,7 @@ The class that manages all operations available in the \code{SwingWorker} API is
 \begin{center}
 \begin{tabular}{|C{5cm}|C{5cm}|}
 \hline
-\bf SwingWorker Name & \bf SWSubscriber Name\\\hline
+\bfseries SwingWorker Name & \bfseries SWSubscriber Name\\\hline
 execute & executeObservable\\\hline
 run & runObservable\\\hline
 cancel & cancelObservable\\\hline
@@ -609,24 +609,24 @@ Due to the following reasons, the example showed in Listing~\ref{code:emitter-ex
 
 In order to tackle the first problem, we implemented \code{SWPackage}, a generic data structure that accepts two parameters. The first parameter \code{R} is for the result of the asynchronous operation and the second parameter \code{P} is for the intermediate results. Listing~\ref{code:emitter-two-types-example} shows how one can create an \code{Observable} based on an \code{Emitter} of type \code{SWPackage}. In this example, we set the parameters \code{R} and \code{P} of the \code{SWPackage} to be \code{Integer} and \code{String} respectively. The code snippet showed in Listing~\ref{code:emitter-two-types-example} works as follows:
 \begin{itemize}
-	\item {\bf Line 1}: We create the \code{Observable} from an \code{Emitter} of type \code{SWPackage<Integer,String>>}.
-	\item {\bf Lines 4-17}: We define the algorithm to generate the items. The algorithm consists of iterating from zero to ten and sending a \code{String} to the \code{Subscriber} on each iteration. The indexes \code{i} used for the iteration are accumulated in the variable \code{accum} and returned at the end of the operation as \code{Integer}.
+	\item {\bfseries Line 1}: We create the \code{Observable} from an \code{Emitter} of type \code{SWPackage<Integer,String>>}.
+	\item {\bfseries Lines 4-17}: We define the algorithm to generate the items. The algorithm consists of iterating from zero to ten and sending a \code{String} to the \code{Subscriber} on each iteration. The indexes \code{i} used for the iteration are accumulated in the variable \code{accum} and returned at the end of the operation as \code{Integer}.
 	\begin{itemize}
-		\item {\bf Line 7}: We create the \code{SWPackage} instance that is used to generate the next item in the current iteration.
-		\item {\bf Line 8}: We create the \code{String} value for the next item based on the iteration index \code{i}.
-		\item {\bf Line 9}: We add the intermediate result \code{text} to the \code{SWPackage} by using the method \code{setChunks}. This method accepts multiple arguments of type \code{String} and returns a \code{SWPackage}. After that, we invoke the \code{onNext} method of the \code{emitter} using the \code{SWPackage} as argument to finally generate the item.
-		\item {\bf Line 10}: We update the \code{accum} variable.
-		\item {\bf Line 12}: Once the iterations has completed, we create another \code{SWPackage} to generate the item that contains the final result.
-		\item {\bf Line 13}: Similar to Line 9, we put the result of the operation into the \code{SWPackage}. This time, we use \code{setResult} which accepts a single argument of type \code{Integer} and returns a \code{SWPackage} as well. The final result item is then generated by calling \code{onNext} on the \code{emitter} using the \code{SWPackage}.
-		\item {\bf Lines 14-17}: Same as in Listing~\ref{code:emitter-example}
+		\item {\bfseries Line 7}: We create the \code{SWPackage} instance that is used to generate the next item in the current iteration.
+		\item {\bfseries Line 8}: We create the \code{String} value for the next item based on the iteration index \code{i}.
+		\item {\bfseries Line 9}: We add the intermediate result \code{text} to the \code{SWPackage} by using the method \code{setChunks}. This method accepts multiple arguments of type \code{String} and returns a \code{SWPackage}. After that, we invoke the \code{onNext} method of the \code{emitter} using the \code{SWPackage} as argument to finally generate the item.
+		\item {\bfseries Line 10}: We update the \code{accum} variable.
+		\item {\bfseries Line 12}: Once the iterations has completed, we create another \code{SWPackage} to generate the item that contains the final result.
+		\item {\bfseries Line 13}: Similar to Line 9, we put the result of the operation into the \code{SWPackage}. This time, we use \code{setResult} which accepts a single argument of type \code{Integer} and returns a \code{SWPackage} as well. The final result item is then generated by calling \code{onNext} on the \code{emitter} using the \code{SWPackage}.
+		\item {\bfseries Lines 14-17}: Same as in Listing~\ref{code:emitter-example}
 		\end{itemize}
-	\item {\bf Lines 20-34}: We implemented the methods of the \code{Subscriber} responsible for handling the events \code{onNext}, \code{onCompleted}, \code{onError}.
+	\item {\bfseries Lines 20-34}: We implemented the methods of the \code{Subscriber} responsible for handling the events \code{onNext}, \code{onCompleted}, \code{onError}.
 		\begin{itemize}
-			\item {\bf Lines 23}: We retrieve the intermediate results from the \code{item} using \code{getChunks}.
-			\item {\bf Lines 24-27}: If there are intermediate results, we take the first one and print it to the console. Notice that this value corresponds to a \code{String}.
-			\item {\bf Line 28}: We retrieve the final result from the \code{item} using \code{getResult}.
-			\item {\bf Lines 29-31}: If there is a result, then we print it to the console. Notice that the data type of this value is \code{Integer}.
-			\item {\bf Line 33}: Commented out. Same implementation as in Listing~\ref{code:emitter-example}
+			\item {\bfseries Lines 23}: We retrieve the intermediate results from the \code{item} using \code{getChunks}.
+			\item {\bfseries Lines 24-27}: If there are intermediate results, we take the first one and print it to the console. Notice that this value corresponds to a \code{String}.
+			\item {\bfseries Line 28}: We retrieve the final result from the \code{item} using \code{getResult}.
+			\item {\bfseries Lines 29-31}: If there is a result, then we print it to the console. Notice that the data type of this value is \code{Integer}.
+			\item {\bfseries Line 33}: Commented out. Same implementation as in Listing~\ref{code:emitter-example}
 		\end{itemize}
 \end{itemize}
 
@@ -921,7 +921,7 @@ We did not consider further search parameters such as the number of stars or for
 \begin{center}
 \begin{tabular}{|p{5cm}|C{3cm}|}
 \hline
-\bf Criteria & \bf Nr. Results\\\hline
+\bfseries Criteria & \bfseries Nr. Results\\\hline
 Stars $>$ 0 and Forks > 0 & 0\\
 Stars $>$ 0 & 4\\
 Forks $>$ 0 & 3\\
@@ -944,7 +944,7 @@ Once we finished the implementation of \toolextension{}, including the unit test
 \begin{center}
 \begin{tabular}{|p{5cm}|C{2cm}|}
 \hline
-& \bf Total \\\hline
+& \bfseries Total \\\hline
 Projects & 58\\
 Java Files & 10,055\\
 Refactored Java Files & 180\\
@@ -956,7 +956,7 @@ Time & 5 min 17 s\\
 \end{tabular}\hspace{1cm}
 \begin{tabular}{|p{5cm}|C{2cm}|}
 \hline
-ASTNode & \bf Total\\\hline
+ASTNode & \bfseries Total\\\hline
 TypeDeclaration & 78\\
 FieldDeclaration & 42\\
 Assignment & 41\\
@@ -967,7 +967,7 @@ SingleVariableDeclaration & 9\\
 MethodInvocation & 171\\
 MethodDeclaration & 5\\
 \hline\hline
-\bf Total & \bf 678\\
+\bfseries Total & \bfseries 678\\
 \hline
 \end{tabular}
 \end{center}
@@ -1073,10 +1073,10 @@ Listing~\ref{code:con-rxjava} shows how the previous example looks after refacto
 
 Listing~\ref{code:con-enabled-methods-java8} shows some of the methods that were enabled thanks to this refactoring:
 \begin{itemize}
-	\item {\bf Line 9} (\code{subscribeOn}): to specify in which thread the operations should be executed (i.e.~a background thread)
-	\item {\bf Line 11} (\code{doOnError}): to handle errors that might occur while processing the items
-	\item {\bf Line 12} (\code{observeOn}): to specify in which thread the following operations should be executed (i.e.~main thread)
-	\item {\bf Line 13} (\code{doOnCompleted}): to execute an action after the data processing has completed (i.e.~updating the UI)
+	\item {\bfseries Line 9} (\code{subscribeOn}): to specify in which thread the operations should be executed (i.e.~a background thread)
+	\item {\bfseries Line 11} (\code{doOnError}): to handle errors that might occur while processing the items
+	\item {\bfseries Line 12} (\code{observeOn}): to specify in which thread the following operations should be executed (i.e.~main thread)
+	\item {\bfseries Line 13} (\code{doOnCompleted}): to execute an action after the data processing has completed (i.e.~updating the UI)
 \end{itemize}
 
 \input{code-examples/con-enabled-methods-java8.tex}
