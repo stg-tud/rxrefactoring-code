@@ -260,6 +260,19 @@ public class RxSingleUnitWriter
 	}
 
 	/**
+	 * Replaces a given statement by another statement
+	 * 
+	 * @param newStmnt
+	 *            new Statement
+	 * @param oldStmnt
+	 *            old Statement
+	 */
+	public synchronized void replaceStatement(Statement oldStmnt, Statement newStmnt)
+	{
+		astRewriter.replace(oldStmnt, newStmnt, null);
+	}
+	
+	/**
 	 * Used by {@link RxMultipleUnitsWriter}
 	 * 
 	 * @return writer

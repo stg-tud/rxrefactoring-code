@@ -1,11 +1,25 @@
 package visitors;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.SuperMethodInvocation;
+import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import domain.SwingWorkerInfo;
+import rx.Subscriber;
 import rxjavarefactoring.framework.utils.ASTUtil;
 
 /**
@@ -26,7 +40,8 @@ public class RefactoringVisitor extends ASTVisitor
 	private static final String DO_IN_BACKGROUND = "doInBackground";
 	private static final String DONE = "done";
 	private static final String PROCESS = "process";
-
+	private Class subscriberClass = Subscriber.class;
+	private final Map<String, Method> methodsOfSubscriber = new HashMap<String, Method>();
 	private Block doInBackgroundBlock;
 	private Block doneBlock;
 	private Block processBlock;
@@ -40,6 +55,7 @@ public class RefactoringVisitor extends ASTVisitor
 	private List<FieldDeclaration> fieldDeclarations;
 	private List<MethodDeclaration> additionalMethodDeclarations;
 	private List<MethodDeclaration> allMethodDeclarations;
+	private List<MethodInvocation> allMethodInvocations;
 	private List<TypeDeclaration> typeDeclarations;
 
 	public RefactoringVisitor()
@@ -47,8 +63,13 @@ public class RefactoringVisitor extends ASTVisitor
 		fieldDeclarations = new ArrayList<>();
 		additionalMethodDeclarations = new ArrayList<>();
 		allMethodDeclarations = new ArrayList<>();
+		allMethodInvocations = new ArrayList<>();
 		superMethodInvocationsToRemove = new ArrayList<>();
 		typeDeclarations = new ArrayList<>();
+		for (Method method : subscriberClass.getDeclaredMethods()) {
+			methodsOfSubscriber.put(method.getName(), method);
+		  //return result.toArray(new Method[result.size()]);
+		}
 	}
 
 	@Override
@@ -133,7 +154,14 @@ public class RefactoringVisitor extends ASTVisitor
 		}
 		return true;
 	}
-
+	
+	@Override
+	public boolean visit(MethodInvocation node) {
+		
+		allMethodInvocations.add( node );
+		return true;
+	}
+	
 	@Override
 	public boolean visit( SuperMethodInvocation node )
 	{
@@ -195,6 +223,10 @@ public class RefactoringVisitor extends ASTVisitor
 		return typeDeclarations;
 	}
 
+	public Map<String, Method> getMethodsofsubscriber() {
+		return methodsOfSubscriber;
+	}
+
 	public MethodDeclaration getConstructor()
 	{
 		return constructor;
@@ -204,7 +236,12 @@ public class RefactoringVisitor extends ASTVisitor
 	{
 		return allMethodDeclarations;
 	}
-
+	
+	public List<MethodInvocation> getAllMethodInvocations()
+	{
+		return allMethodInvocations;
+	}
+	
 	public boolean hasAdditionalFieldsOrMethods()
 	{
 		return !fieldDeclarations.isEmpty() ||

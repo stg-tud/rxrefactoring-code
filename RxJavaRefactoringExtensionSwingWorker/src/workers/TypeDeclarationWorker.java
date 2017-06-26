@@ -5,7 +5,17 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ExpressionStatement;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import domain.RxObservableModel;
 import domain.SwingWorkerInfo;
@@ -115,6 +125,33 @@ public class TypeDeclarationWorker extends GeneralWorker
 
 			MethodDeclaration doInBackgroundDecl = ASTUtil.findParent( doInBackgroundBlock, MethodDeclaration.class );
 			singleUnitWriter.removeElement( doInBackgroundDecl );
+		}
+		methodInvocCheck(ast, singleUnitWriter, refactoringVisitor, typeDeclaration);
+	}
+	
+	/**
+	 * Check to avoid clashing of method names (with any method presents in RX Java Stream API Classes) 
+	 * 
+	 * @param ast
+	 * @param singleUnitWriter
+	 * @param refactoringVisitor
+	 * @param typeDeclaration
+	 * 
+	 */
+	private void methodInvocCheck(AST ast, RxSingleUnitWriter singleUnitWriter, RefactoringVisitor refactoringVisitor, TypeDeclaration typeDeclaration) {
+		String className = "";
+		if(typeDeclaration.getParent() instanceof CompilationUnit) {
+			className = typeDeclaration.getName().toString();
+		} else if(typeDeclaration.getParent() instanceof TypeDeclaration) {
+			className = ((TypeDeclaration)typeDeclaration.getParent()).getName().toString();
+		}
+		for(MethodInvocation methodInvocation : refactoringVisitor.getAllMethodInvocations()) {
+			if(!(refactoringVisitor.getMethodsofsubscriber().get(methodInvocation.getName().getIdentifier()) == null)) {
+				ExpressionStatement exprstmnt = (ExpressionStatement)methodInvocation.getParent();
+				String methodNameString = className + ".this." + exprstmnt;
+				Statement newStatement = ASTNodeFactory.createSingleStatementFromText(ast, methodNameString);
+				singleUnitWriter.replaceStatement(exprstmnt, newStatement);
+			}
 		}
 	}
 
