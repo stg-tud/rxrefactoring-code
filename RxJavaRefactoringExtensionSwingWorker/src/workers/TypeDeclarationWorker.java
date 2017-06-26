@@ -145,12 +145,42 @@ public class TypeDeclarationWorker extends GeneralWorker
 		} else if(typeDeclaration.getParent() instanceof TypeDeclaration) {
 			className = ((TypeDeclaration)typeDeclaration.getParent()).getName().toString();
 		}
-		for(MethodInvocation methodInvocation : refactoringVisitor.getAllMethodInvocations()) {
-			if(!(refactoringVisitor.getMethodsofsubscriber().get(methodInvocation.getName().getIdentifier()) == null)) {
-				ExpressionStatement exprstmnt = (ExpressionStatement)methodInvocation.getParent();
-				String methodNameString = className + ".this." + exprstmnt;
-				Statement newStatement = ASTNodeFactory.createSingleStatementFromText(ast, methodNameString);
-				singleUnitWriter.replaceStatement(exprstmnt, newStatement);
+		Block block = refactoringVisitor.getDoInBackgroundBlock();
+		if(block != null) {
+			refactorBlock(block, ast, singleUnitWriter, className, refactoringVisitor, typeDeclaration);
+		}
+		block = refactoringVisitor.getProcessBlock();
+		if(block != null) {
+			refactorBlock(block, ast, singleUnitWriter, className, refactoringVisitor, typeDeclaration);
+		}
+		block = refactoringVisitor.getDoneBlock();
+		if(block != null) {
+			refactorBlock(block, ast, singleUnitWriter, className, refactoringVisitor, typeDeclaration);
+		}
+//		for(MethodInvocation methodInvocation : refactoringVisitor.getAllMethodInvocations()) {
+//			if(!(refactoringVisitor.getMethodsofsubscriber().get(methodInvocation.getName().getIdentifier()) == null)) {
+//				ExpressionStatement exprstmnt = (ExpressionStatement)methodInvocation.getParent();
+//				String methodNameString = className + ".this." + exprstmnt;
+//				Statement newStatement = ASTNodeFactory.createSingleStatementFromText(ast, methodNameString);
+//				singleUnitWriter.replaceStatement(exprstmnt, newStatement);
+//			}
+//		}
+	}
+
+	private void refactorBlock(Block block, AST ast, RxSingleUnitWriter singleUnitWriter, String className, RefactoringVisitor refactoringVisitor, TypeDeclaration typeDeclaration) {
+		List<Statement> list = block.statements();
+		for(int i=0;i<list.size();i++) {
+			Statement stmnt = (Statement)list.get(i);
+			if(stmnt instanceof ExpressionStatement) {
+				ExpressionStatement exprstmnt = (ExpressionStatement)stmnt;
+				if(exprstmnt.getExpression() instanceof MethodInvocation) {
+					MethodInvocation methodInvocation = (MethodInvocation) exprstmnt.getExpression();
+					if(!(refactoringVisitor.getMethodsofsubscriber().get(methodInvocation.getName().getIdentifier()) == null)) {
+						String methodNameString = className + ".this." + exprstmnt;
+						Statement newStatement = ASTNodeFactory.createSingleStatementFromText(ast, methodNameString);
+						singleUnitWriter.replaceStatement(exprstmnt, newStatement);
+					}
+				}
 			}
 		}
 	}
