@@ -1,0 +1,54 @@
+package de.tudarmstadt.refactoringrx.core.workers;
+
+import java.util.concurrent.Callable;
+
+import org.eclipse.core.runtime.IProgressMonitor;
+
+import de.tudarmstadt.refactoringrx.core.collect.Collector;
+import de.tudarmstadt.refactoringrx.core.utils.RxLogger;
+import de.tudarmstadt.refactoringrx.core.writers.RxMultipleUnitsWriter;
+
+/**
+ * Description: Abstract refactor worker. It forces definition of the minimum
+ * parameters required to execute a refactoring task<br>
+ * Author: Grebiel Jose Ifill Brito<br>
+ * Created: 11/12/2016
+ */
+public abstract class AbstractRefactorWorker<CollectorType extends Collector> implements Callable<WorkerStatus>
+{
+	protected RxMultipleUnitsWriter rxMultipleUnitsWriter;
+	protected IProgressMonitor monitor;
+	protected final CollectorType collector;
+
+	public AbstractRefactorWorker( CollectorType collector )
+	{
+		this.collector = collector;
+	}
+
+	public void setRxMultipleUnitsWriter( RxMultipleUnitsWriter rxMultipleUnitsWriter )
+	{
+		this.rxMultipleUnitsWriter = rxMultipleUnitsWriter;
+	}
+
+	public void setMonitor( IProgressMonitor monitor )
+	{
+		this.monitor = monitor;
+	}
+
+	@Override
+	public WorkerStatus call() throws Exception
+	{
+		try
+		{
+			RxLogger.info( this, "METHOD=call - Starting worker in thread: " + Thread.currentThread().getName() );
+			return refactor();
+		}
+		catch ( Exception e )
+		{
+			RxLogger.error( this, "METHOD=call", e );
+			return WorkerStatus.ERROR;
+		}
+	}
+
+	protected abstract WorkerStatus refactor();
+}

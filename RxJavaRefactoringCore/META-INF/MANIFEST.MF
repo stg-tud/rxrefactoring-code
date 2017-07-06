@@ -18,14 +18,14 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ClassPath: libs/rxjava-1.2.2.jar,
  libs/commons-io-2.5.jar,
  .
-Export-Package: pluginhandlers,
+Export-Package: de.tudarmstadt.refactoringrx.core,
+ de.tudarmstadt.refactoringrx.core.codegen,
+ de.tudarmstadt.refactoringrx.core.collect,
+ de.tudarmstadt.refactoringrx.core.handler,
+ de.tudarmstadt.refactoringrx.core.utils,
+ de.tudarmstadt.refactoringrx.core.workers,
+ de.tudarmstadt.refactoringrx.core.writers,
  rx,
  rx.functions,
- rx.schedulers,
- rxjavarefactoring.framework.api,
- rxjavarefactoring.framework.codegenerators,
- rxjavarefactoring.framework.refactoring,
- rxjavarefactoring.framework.utils,
- rxjavarefactoring.framework.writers,
- rxjavarefactoring.processor
+ rx.schedulers
 
