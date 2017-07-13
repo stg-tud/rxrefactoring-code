@@ -4,19 +4,28 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.ChildListPropertyDescriptor;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
-import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
-import org.eclipse.ltk.core.refactoring.TextFileChange;
-import org.eclipse.text.edits.MultiTextEdit;
 
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 
 /**
- * Description: This class is responsible for managing the changes in one compilation unit<br>
- * Author: Grebiel Jose Ifill Brito<br>
- * Created: 11/12/2016
+ * This class is responsible for managing the changes in one compilation unit.
+ * The methods are thread safe. The writer should be executed by using a
+ * {@link UnitWriterExecution}.
+ * 
+ * @author Grebiel Jose Ifill Brito, Mirko Köhler
  */
 public class UnitWriter {
 	
@@ -24,24 +33,17 @@ public class UnitWriter {
 	
 	protected final ASTRewrite astRewriter;
 	
-	//protected final CompilationUnitChange cuChange;
-	
 	protected final Set<String> addedImports;
 	protected final Set<String> removedImports;
 
-	public UnitWriter( ICompilationUnit icu, AST ast, String description ) {
+	public UnitWriter( ICompilationUnit unit, AST ast, String description ) {
 		
-		this.unit = icu;		
+		this.unit = unit;		
 		
 		addedImports = new HashSet<>();
 		removedImports = new HashSet<>();
 		
 		astRewriter = ASTRewrite.create( ast );
-		
-//		cuChange = new CompilationUnitChange( description, icu );
-//		cuChange.setSaveMode( TextFileChange.KEEP_SAVE_STATE );
-//		MultiTextEdit root = new MultiTextEdit();
-//		cuChange.setEdit(root);
 	}
 	
 	public ICompilationUnit getUnit() {
@@ -285,11 +287,29 @@ public class UnitWriter {
 		astRewriter.replace(oldStmnt, newStmnt, null);
 	}
 	
+	
+	/**
+	 * Produces a rewriter for list elements. 
+	 * 
+	 * @param node The node that contains the list.
+	 * @param property The property that specifies the list.
+	 * 
+	 * @return An object that can be used to alter the specified
+	 * list.
+	 * 
+	 * @see ASTRewrite#getListRewrite(ASTNode, ChildListPropertyDescriptor)
+	 */
 	public ListRewrite getListRewrite(ASTNode node, ChildListPropertyDescriptor property) {
 		return astRewriter.getListRewrite(node, property);
 	}
 	
-
+	
+	/**
+	 * Returns the ast used by the internal rewriter.
+	 * 
+	 * @return An AST that can be used to create new
+	 * nodes.
+	 */
 	public AST getAST() {
 		return astRewriter.getAST();
 	}
