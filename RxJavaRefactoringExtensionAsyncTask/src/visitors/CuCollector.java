@@ -4,75 +4,75 @@ import java.util.*;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.internal.corext.refactoring.util.RefactoringASTParser;
 
-import rxjavarefactoring.framework.refactoring.AbstractCollector;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
+import de.tudarmstadt.rxrefactoring.core.collect.AbstractCollector;
+import domain.ClassDetails;
+
 
 /**
  * Description: Collects relevant information for refactoring<br>
  * Author: Template<br>
  * Created: 01/18/2017
  */
-public class CuCollector extends AbstractCollector
-{
-	private IProject project;
+public class CuCollector extends AbstractCollector {
 
-	private final Map<ICompilationUnit, List<TypeDeclaration>> cuSubclassesMap;
-	private final Map<ICompilationUnit, List<AnonymousClassDeclaration>> cuAnonymousClassesMap;
-	private final Map<ICompilationUnit, List<ASTNode>> cuAnonymousCachedClassesMap;
-	private final Map<ICompilationUnit, List<MethodInvocation>> cuRelevantUsagesMap;
+	private final Multimap<ICompilationUnit, TypeDeclaration> cuSubclassesMap;
+	private final Multimap<ICompilationUnit, AnonymousClassDeclaration> cuAnonymousClassesMap;
+	private final Multimap<ICompilationUnit, ASTNode> cuAnonymousCachedClassesMap;
+	private final Multimap<ICompilationUnit, MethodInvocation> cuRelevantUsagesMap;
 
-	public CuCollector(IProject project, String collectorName )
+	public CuCollector(IJavaProject project, String collectorName )
 	{
-		super( collectorName );
-		this.project = project;
-		cuSubclassesMap = new HashMap<>();
-		cuAnonymousClassesMap = new HashMap<>();
-		cuAnonymousCachedClassesMap = new HashMap<>();
-		cuRelevantUsagesMap = new HashMap<>();
+		super(project, collectorName);
+		cuSubclassesMap = HashMultimap.create();
+		cuAnonymousClassesMap = HashMultimap.create();
+		cuAnonymousCachedClassesMap = HashMultimap.create();
+		cuRelevantUsagesMap = HashMultimap.create();
 	}
 
-	public void addSubclasses( ICompilationUnit cu, List<TypeDeclaration> subclasses )
-	{
-		addToMap( cu, subclasses, cuSubclassesMap );
+	public void addSubclasses(ICompilationUnit cu, Iterable<TypeDeclaration> subclasses) {
+		cuSubclassesMap.putAll(cu, subclasses);
 	}
 
-	public void addAnonymClassDecl( ICompilationUnit cu, List<AnonymousClassDeclaration> anonymDeclarations )
-	{
-		addToMap( cu, anonymDeclarations, cuAnonymousClassesMap );
+	public void addAnonymClassDecl( ICompilationUnit cu, Iterable<AnonymousClassDeclaration> anonymDeclarations ) {
+		cuAnonymousClassesMap.putAll(cu, anonymDeclarations);
 	}
 
 	public void addAnonymCachedClassDecl( ICompilationUnit cu, List<ASTNode> anonymCachedDeclarations )
 	{
-		addToMap( cu, anonymCachedDeclarations, cuAnonymousCachedClassesMap );
+		cuAnonymousCachedClassesMap.putAll(cu, anonymCachedDeclarations);
 	}
 
 	public void addRelevantUsages( ICompilationUnit cu, List<MethodInvocation> usages )
 	{
-		addToMap( cu, usages, cuRelevantUsagesMap );
+		cuRelevantUsagesMap.putAll(cu, usages);
 	}
 
-	public Map<ICompilationUnit, List<TypeDeclaration>> getCuSubclassesMap()
-	{
-		return Collections.unmodifiableMap( cuSubclassesMap );
+	public Multimap<ICompilationUnit, TypeDeclaration> getCuSubclassesMap() {
+		return cuSubclassesMap;
 	}
 
-	public Map<ICompilationUnit, List<AnonymousClassDeclaration>> getCuAnonymousClassesMap()
-	{
-		return Collections.unmodifiableMap( cuAnonymousClassesMap );
+	public Multimap<ICompilationUnit, AnonymousClassDeclaration> getCuAnonymousClassesMap()	{
+		return cuAnonymousClassesMap;
 	}
 
-	public Map<ICompilationUnit, List<ASTNode>> getCuAnonymousCachedClassesMap()
-	{
-		return Collections.unmodifiableMap( cuAnonymousCachedClassesMap );
+	public Multimap<ICompilationUnit, ASTNode> getCuAnonymousCachedClassesMap()	{
+		return cuAnonymousCachedClassesMap;
 	}
 
-	public Map<ICompilationUnit, List<MethodInvocation>> getCuRelevantUsagesMap()
-	{
-		return Collections.unmodifiableMap( cuRelevantUsagesMap );
+	public Multimap<ICompilationUnit, MethodInvocation> getCuRelevantUsagesMap()	{
+		return cuRelevantUsagesMap;
 	}
 
 	public int getNumberOfCompilationUnits()
@@ -85,7 +85,6 @@ public class CuCollector extends AbstractCollector
 		return allCompilationUnits.size();
 	}
 
-	@Override
 	public String getInfo()
 	{
 		return "\n******************************************************************\n" +
@@ -93,7 +92,6 @@ public class CuCollector extends AbstractCollector
 				"\n******************************************************************";
 	}
 
-	@Override
 	public String getError()
 	{
 		return "\n******************************************************************\n" +
@@ -105,10 +103,26 @@ public class CuCollector extends AbstractCollector
 	public String getDetails()
 	{
 		return "Nr. files: " + getNumberOfCompilationUnits() + "\n" +
-				"Project = " + project.getName() + "\n" +
+				"Project = " + getProject().toString() + "\n" +
 				"Subclasses = " + cuSubclassesMap.values().size() + "\n" +
 				"Anonymous Classes = " + cuAnonymousClassesMap.values().size() + "\n" +
 				"Anonymous Cached Classes = " + cuAnonymousCachedClassesMap.values().size() + "\n" +
 				"Relevant Usages = " + cuRelevantUsagesMap.values().size() + "\n";
+	}
+
+	@Override
+	public void processCompilationUnit(ICompilationUnit unit) {
+		CompilationUnit cu = new RefactoringASTParser( AST.JLS8 ).parse( unit, true );
+
+		DeclarationVisitor declarationVisitor = new DeclarationVisitor( ClassDetails.ASYNC_TASK );
+		UsagesVisitor usagesVisitor = new UsagesVisitor( ClassDetails.ASYNC_TASK );
+		cu.accept( declarationVisitor );
+		cu.accept( usagesVisitor );
+
+		// Cache relevant information in an object that contains maps
+		addSubclasses( unit, declarationVisitor.getSubclasses() );
+		addAnonymClassDecl( unit, declarationVisitor.getAnonymousClasses() );
+		addAnonymCachedClassDecl( unit, declarationVisitor.getAnonymousCachedClasses() );
+		addRelevantUsages( unit, usagesVisitor.getUsages() );		
 	}
 }

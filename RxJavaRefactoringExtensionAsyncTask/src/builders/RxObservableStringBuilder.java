@@ -14,7 +14,6 @@ import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
-import rxjavarefactoring.framework.utils.SourceCodeValidator;
 
 /**
  * Description: Builder to create Observables or Subscriptions as string<br>
@@ -116,19 +115,19 @@ public final class RxObservableStringBuilder
 	 *            this parameter is null.
 	 * @return The builder
 	 */
-	public RxObservableStringBuilder addDoOnSubscribe(Block doOnSubscribeBlock) {
-		if (doOnSubscribeBlock != null) {
-			rxObservable.append(NEW_LINE);
-			rxObservable.append(".doOnSubscribe(new Action0() {");
-			rxObservable.append(NEW_LINE);
-			rxObservable.append("@Override public void call() ");
-			rxObservable.append(NEW_LINE);
-			rxObservable.append(doOnSubscribeBlock.toString());
-			rxObservable.append("})");
-
-		}
-		return this;
-	}
+//	public RxObservableStringBuilder addDoOnSubscribe(Block doOnSubscribeBlock) {
+//		if (doOnSubscribeBlock != null) {
+//			rxObservable.append(NEW_LINE);
+//			rxObservable.append(".doOnSubscribe(new Action0() {");
+//			rxObservable.append(NEW_LINE);
+//			rxObservable.append("@Override public void call() ");
+//			rxObservable.append(NEW_LINE);
+//			rxObservable.append(doOnSubscribeBlock.toString());
+//			rxObservable.append("})");
+//
+//		}
+//		return this;
+//	}
 
 	/**
 	 * Adds the {@link Observable#doOnNext(Action1)} call. This method is
@@ -311,7 +310,7 @@ public final class RxObservableStringBuilder
 			// corrects the return type
 			statement = statement.replace("Observable<" + type + ">", "Subscription");
 		}
-		SourceCodeValidator.validateStatement(statement);
+		//SourceCodeValidator.validateStatement(statement);
 		return statement;
 	}
 

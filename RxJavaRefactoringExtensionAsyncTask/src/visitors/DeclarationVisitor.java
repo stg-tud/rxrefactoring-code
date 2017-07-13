@@ -9,9 +9,12 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
+
+import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.Log;
+
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.Assignment;
-import rxjavarefactoring.framework.utils.ASTUtil;
 
 /**
  * Description: This visitor collects all class declarations and groups then
@@ -41,7 +44,12 @@ public class DeclarationVisitor extends ASTVisitor {
 
 	@Override
 	public boolean visit(TypeDeclaration node) {
-		if (ASTUtil.isTypeOf(node, targetClass.getBinaryName())) {
+		
+//		Log.info(getClass(), "### Type : " + node.getName() + " ###");
+//		Log.info(getClass(), "Binding : " + node.resolveBinding().getQualifiedName());
+//		Log.info(getClass(), "isTypeOf : " + ASTUtils.isTypeOf(node, targetClass.getBinaryName()));
+		
+		if (ASTUtils.isTypeOf(node, targetClass.getBinaryName())) {
 			subclasses.add(node);
 		}
 		return true;
@@ -49,9 +57,9 @@ public class DeclarationVisitor extends ASTVisitor {
 
 	@Override
 	public boolean visit(AnonymousClassDeclaration node) {
-		if (ASTUtil.isTypeOf(node, targetClass.getBinaryName())) {
-			VariableDeclaration parent = ASTUtil.findParent(node, VariableDeclaration.class);
-			Expression parente = ASTUtil.findParent(node, Assignment.class);
+		if (ASTUtils.isTypeOf(node, targetClass.getBinaryName())) {
+			VariableDeclaration parent = ASTUtils.findParent(node, VariableDeclaration.class);
+			Expression parente = ASTUtils.findParent(node, Assignment.class);
 			Boolean isAssign = (parente instanceof Assignment ? true : false);
 			if (parent == null && !isAssign) {
 				anonymousClasses.add(node);

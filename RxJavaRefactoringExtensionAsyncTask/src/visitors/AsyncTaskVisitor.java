@@ -6,7 +6,7 @@ import java.util.List;
 import domain.ClassDetails;
 import org.eclipse.jdt.core.dom.*;
 
-import rxjavarefactoring.framework.utils.ASTUtil;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 
 /**
  * Description: Visitor to extract relevant information about AsyncTasks<br>
@@ -92,7 +92,7 @@ public class AsyncTaskVisitor extends ASTVisitor {
 
 	@Override
 	public boolean visit(MethodInvocation node) {
-		if (ASTUtil.matchesTargetMethod(node, PUBLISH, ClassDetails.ASYNC_TASK.getBinaryName())) {
+		if (ASTUtils.matchesTargetMethod(node, PUBLISH, ClassDetails.ASYNC_TASK.getBinaryName())) {
 			publishInvocations.add(node);
 
 		}
@@ -118,18 +118,18 @@ public class AsyncTaskVisitor extends ASTVisitor {
 
 	@Override
 	public boolean visit(SuperMethodInvocation node) {
-		if (ASTUtil.matchesTargetMethod(node, "onCancelled", ClassDetails.ASYNC_TASK.getBinaryName())) {
+		if (ASTUtils.matchesTargetMethod(node, "onCancelled", ClassDetails.ASYNC_TASK.getBinaryName())) {
 			superClassMethodInvocation.add(node);
 		}
-		if (ASTUtil.matchesTargetMethod(node, "onPreExecute", ClassDetails.ASYNC_TASK.getBinaryName())) {
-			superClassMethodInvocation.add(node);
-
-		}
-		if (ASTUtil.matchesTargetMethod(node, "onPostExecute", ClassDetails.ASYNC_TASK.getBinaryName())) {
+		if (ASTUtils.matchesTargetMethod(node, "onPreExecute", ClassDetails.ASYNC_TASK.getBinaryName())) {
 			superClassMethodInvocation.add(node);
 
 		}
-		if (ASTUtil.matchesTargetMethod(node, "onProgressUpdate", ClassDetails.ASYNC_TASK.getBinaryName())) {
+		if (ASTUtils.matchesTargetMethod(node, "onPostExecute", ClassDetails.ASYNC_TASK.getBinaryName())) {
+			superClassMethodInvocation.add(node);
+
+		}
+		if (ASTUtils.matchesTargetMethod(node, "onProgressUpdate", ClassDetails.ASYNC_TASK.getBinaryName())) {
 			superClassMethodInvocation.add(node);
 
 		}

@@ -46,9 +46,9 @@ public interface RxRefactoringExtension<CollectorType extends Collector> {
 	 * @param collector
 	 *            collector
 	 */
-	default void processUnit(ICompilationUnit unit, CollectorType collector) {
-		collector.processCompilationUnit(unit);
-	}
+//	default void processUnit(ICompilationUnit unit, CollectorType collector) {
+//		collector.processCompilationUnit(unit);
+//	}
 
 	/**
 	 * Returns a list of workers that performs the refactorings

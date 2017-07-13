@@ -10,7 +10,7 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
-import rxjavarefactoring.framework.utils.ASTUtil;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 
 /**
  * Description: Collects usages information for a target class<br>
@@ -48,7 +48,7 @@ public class UsagesVisitor extends ASTVisitor
 		String methodName = binding.getName();
 
 		Set<String> publicMethods = targetClass.getPublicMethodsMap().keySet();
-		boolean targetClassFound = ASTUtil.isTypeOf( declaringClass, this.targetClass.getBinaryName() );
+		boolean targetClassFound = ASTUtils.isTypeOf( declaringClass, this.targetClass.getBinaryName() );
 		boolean targetMethodFound = publicMethods.contains( methodName );
 		DeclarationVisitor dv= new DeclarationVisitor(targetClass);
 		node.accept(dv);

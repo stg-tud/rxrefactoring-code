@@ -4,16 +4,17 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
-import rxjavarefactoring.framework.utils.ASTUtil;
-import rxjavarefactoring.framework.writers.RxSingleUnitWriter;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
+
+
 
 /**
  * Description: Single Unit Writer to be used for this extension<br>
  * Author: Template<br>
  * Created: 01/18/2017
  */
-public class SingleUnitExtensionWriter extends RxSingleUnitWriter
-{
+public class SingleUnitExtensionWriter extends UnitWriter {
 	public SingleUnitExtensionWriter( ICompilationUnit icu, AST ast, String refactoringDescription )
 	{
 		super( icu, ast, refactoringDescription );
@@ -38,7 +39,7 @@ public class SingleUnitExtensionWriter extends RxSingleUnitWriter
 		}
 		else
 		{
-			Block parentBlock = ASTUtil.findParent( referenceStatement, Block.class );
+			Block parentBlock = ASTUtils.findParent( referenceStatement, Block.class );
 			ListRewrite statementsBlock = astRewriter.getListRewrite( parentBlock, Block.STATEMENTS_PROPERTY );
 			Statement placeHolder = (Statement) astRewriter.createStringPlaceholder( "", ASTNode.EMPTY_STATEMENT );
 			statementsBlock.insertBefore( newStatement, referenceStatement, null );

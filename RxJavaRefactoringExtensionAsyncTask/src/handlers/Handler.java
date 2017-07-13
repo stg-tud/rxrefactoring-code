@@ -1,24 +1,10 @@
 package handlers;
 
-import org.eclipse.core.commands.AbstractHandler;
-import org.eclipse.core.commands.ExecutionEvent;
-import org.eclipse.core.commands.ExecutionException;
+import de.tudarmstadt.rxrefactoring.core.handler.RxRefactoringHandler;
 
-import pluginhandlers.RxRefactoringHandler;
 
 /**
  * Author: Template<br>
  * Created: 01/18/2017
  */
-public class Handler extends AbstractHandler
-{
-
-	@Override
-	public Object execute( ExecutionEvent event ) throws ExecutionException
-	{
-		RxRefactoringHandler handler = new RxRefactoringHandler();
-		handler.execute( event );
-		return null;
-	}
-
-}
+public class Handler extends RxRefactoringHandler { }

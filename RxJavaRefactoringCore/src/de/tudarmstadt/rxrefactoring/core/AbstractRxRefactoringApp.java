@@ -140,7 +140,7 @@ abstract class AbstractRxRefactoringApp implements IApplication {
 			@Override
 			public void run() throws Exception {
 				if (commandId.equals( extension.getId())) {
-					extension.processUnit( unit, collector );
+					collector.processCompilationUnit(unit);
 				}
 			}
 		};
