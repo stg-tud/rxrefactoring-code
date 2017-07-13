@@ -3,7 +3,13 @@ package workers;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.SuperMethodInvocation;
+import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import domain.RxObservableModel;
 import domain.RxObserverModel;
@@ -162,7 +168,9 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		}
 		for ( MethodDeclaration methodDeclaration : refactoringVisitor.getAdditionalMethodDeclarations() )
 		{
-			model.getMethods().add( methodDeclaration.toString() );
+			if(methodDeclaration.modifiers() != null && !methodDeclaration.modifiers().toString().contains("@Override")) {
+				model.getMethods().add( methodDeclaration.toString() );
+			}
 		}
 		for ( TypeDeclaration typeDeclaration : refactoringVisitor.getTypeDeclarations() )
 		{
