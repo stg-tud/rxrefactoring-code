@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: RxJavaRefactoringCore
-Bundle-SymbolicName: de.tudarmstadt.stg.rxjava.refactoring.core;singleton:=true
+Bundle-SymbolicName: de.tudarmstadt.rxrefactoring.core;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
