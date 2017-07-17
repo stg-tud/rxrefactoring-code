@@ -1,5 +1,7 @@
 package de.tudarmstadt.rxrefactoring.core.handler;
 
+import java.util.Objects;
+
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -20,7 +22,7 @@ import de.tudarmstadt.rxrefactoring.core.RxRefactoringApp;
 public class RxRefactoringHandler extends AbstractHandler
 {
 
-	private static final String EXTENSION_ID = "de.tudarmstadt.stg.rxjava.refactoring.extensionpoint";
+	private static final String EXTENSION_ID = "de.tudarmstadt.rxrefactoring.extensionpoint";
 
 	@Override
 	public Object execute( ExecutionEvent event ) throws ExecutionException
@@ -42,8 +44,10 @@ public class RxRefactoringHandler extends AbstractHandler
 					// setup extension
 					RxRefactoringExtension rxJavaRefactoringExtension = (RxRefactoringExtension) extension;
 					String currentId = rxJavaRefactoringExtension.getId();
-					if (currentId.equals( commandId )) 
-					{
+					if (currentId.equals( commandId )) {
+						//Check whether the extension exists.
+						Objects.requireNonNull(extension, "Extension could not be found. Is the id set correctly?");
+						
 						rxJavaRefactoringApp.setExtension( (RxRefactoringExtension) extension );
 						rxJavaRefactoringApp.setCommandId( commandId );
 						break;

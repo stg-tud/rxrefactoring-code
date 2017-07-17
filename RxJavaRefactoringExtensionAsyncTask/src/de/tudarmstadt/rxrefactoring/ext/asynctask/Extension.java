@@ -21,7 +21,7 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.workers.SubClassAsyncTaskWorke
  */
 public class Extension implements RxRefactoringExtension<AsyncTaskCollector>
 {
-	private static final String PLUGIN_ID = "de.tudarmstadt.stg.rxjava.refactoring.extension.asynctask";
+	private static final String PLUGIN_ID = "de.tudarmstadt.rxrefactoring.ext.asynctask";
 
 	private static final String COMMAND_ID = "rxRefactoring.commands.rxJavaRefactoringAsyncTask";
 

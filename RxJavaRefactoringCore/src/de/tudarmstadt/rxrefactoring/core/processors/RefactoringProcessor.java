@@ -43,7 +43,7 @@ public class RefactoringProcessor extends AbstractRefactoringProcessor
 		}
 		catch ( Throwable throwable )
 		{
-			Log.notifyExceptionInClient( throwable );
+			Log.errorInClient(getClass(), throwable);
 			return null;
 		}
 
@@ -58,7 +58,7 @@ public class RefactoringProcessor extends AbstractRefactoringProcessor
 			//RxLogger.showInConsole( this, collector.getInfo() );
 		} catch ( Exception e ) {
 			//RxLogger.showInConsole( this, collector.getError() );
-			Log.error(this, "Error occured during execution of workers.", e);
+			Log.error(getClass(), "Error occured during execution of workers.", e);
 		}
 		return null;
 	}

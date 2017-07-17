@@ -72,7 +72,7 @@ public class CachedAnonymousTaskWorker extends AbstractRefactorWorker<AsyncTaskC
 		Multimap<ICompilationUnit, ASTNode> cuAnonymousClassesMap = collector.getCuAnonymousCachedClassesMap();
 		int numCunits = collector.getNumberOfCompilationUnits();
 		monitor.beginTask( getClass().getSimpleName(), numCunits );
-		Log.info( this, "METHOD=refactor - Number of compilation units: " + numCunits );
+		Log.info( getClass(), "METHOD=refactor - Number of compilation units: " + numCunits );
 		for ( ICompilationUnit icu : cuAnonymousClassesMap.keySet() )
 		{
 			Collection<ASTNode> declarations = cuAnonymousClassesMap.get( icu );
@@ -81,7 +81,7 @@ public class CachedAnonymousTaskWorker extends AbstractRefactorWorker<AsyncTaskC
 
 				ClassInstanceCreation classInstance = (ClassInstanceCreation) asyncCachedTask.getParent();
 				AnonymousClassDeclaration asyncTaskDeclaration = classInstance.getAnonymousClassDeclaration();
-				Log.info( this, "METHOD=refactor - Extract Information from AsyncTask: " + icu.getElementName() );
+				Log.info( getClass(), "METHOD=refactor - Extract Information from AsyncTask: " + icu.getElementName() );
 				AsyncTaskVisitor asyncTaskVisitor = new AsyncTaskVisitor();
 				classInstance.accept( asyncTaskVisitor );
 				if ( asyncTaskVisitor.getDoInBackgroundBlock() != null )
@@ -89,7 +89,7 @@ public class CachedAnonymousTaskWorker extends AbstractRefactorWorker<AsyncTaskC
 					AST ast = asyncTaskDeclaration.getAST();
 					UnitWriterExt singleChangeWriter = UnitWriters.getOrElse( icu, () -> new UnitWriterExt( icu, ast, getClass().getSimpleName() ));
 
-					Log.info( this, "METHOD=refactor - Updating imports: " + icu.getElementName() );
+					Log.info( getClass(), "METHOD=refactor - Updating imports: " + icu.getElementName() );
 					Statement referenceStatement = (Statement) ASTUtils.findParent( asyncTaskDeclaration,
 							Statement.class );
 					addRxObservable( icu, singleChangeWriter, referenceStatement, asyncTaskVisitor,
@@ -103,7 +103,7 @@ public class CachedAnonymousTaskWorker extends AbstractRefactorWorker<AsyncTaskC
 					updateUsage( collector.getCuRelevantUsagesMap(), ast, singleChangeWriter, asyncTaskDeclaration, icu );
 
 					updateImports( singleChangeWriter, asyncTaskVisitor );
-					Log.info( this, "METHOD=refactor - Refactoring class: " + icu.getElementName());
+					Log.info( getClass(), "METHOD=refactor - Refactoring class: " + icu.getElementName());
 					NUMBER_OF_ASYNC_TASKS++;
 
 					execution.addUnitWriter(singleChangeWriter);
@@ -111,7 +111,7 @@ public class CachedAnonymousTaskWorker extends AbstractRefactorWorker<AsyncTaskC
 			}
 			monitor.worked( 1 );
 		}
-		Log.info( this, "Number of AsynckTasks Subclass=  " + NUMBER_OF_ASYNC_TASKS );
+		Log.info( getClass(), "Number of AsynckTasks Subclass=  " + NUMBER_OF_ASYNC_TASKS );
 		return WorkerStatus.OK;
 	}
 
@@ -191,7 +191,7 @@ public class CachedAnonymousTaskWorker extends AbstractRefactorWorker<AsyncTaskC
 			TypeDeclaration tyDec = ast.newTypeDeclaration();
 			UnitWriterExt singleChangeWriterNew = null;
 			AST astInvoke = ast;
-			Log.info( this, "METHOD=updateUsage - updating usage for class: " + icuOuter.getElementName() + " in "
+			Log.info( getClass(), "METHOD=updateUsage - updating usage for class: " + icuOuter.getElementName() + " in "
 					+ icu.getElementName() );
 			for ( MethodInvocation methodInvoke : cuRelevantUsagesMap.get( icu ) )
 			{
@@ -239,7 +239,7 @@ public class CachedAnonymousTaskWorker extends AbstractRefactorWorker<AsyncTaskC
 					if ( methodReference.getName().toString().equals( CANCEL ) )
 					{
 						isCancelPresent = true;
-						Log.info( this,
+						Log.info( getClass(),
 								"METHOD=replaceCancel - updating cancel invocation for class: " + icu.getElementName() );
 						replaceExecute( methodInvoke, icu, astInvoke, true );
 						updateCancelInvocation( icu, methodReference, astInvoke );
@@ -265,7 +265,7 @@ public class CachedAnonymousTaskWorker extends AbstractRefactorWorker<AsyncTaskC
 	private void updateCancelInvocation( ICompilationUnit icu, MethodInvocation methodInvoke, AST astInvoke ) {
 
 		UnitWriterExt singleChangeWriter = UnitWriters.getOrElse( icu, () -> new UnitWriterExt(icu, astInvoke, getClass().getSimpleName()) );
-		Log.info( this,
+		Log.info( getClass(),
 				"METHOD=updateCancelInvocation - update Cancel Invocation for class: " + icu.getElementName() );
 		MethodInvocation unSubscribe = astInvoke.newMethodInvocation();
 		unSubscribe

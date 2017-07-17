@@ -3,17 +3,36 @@ package de.tudarmstadt.rxrefactoring.core;
 import java.io.File;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.*;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.ISafeRunnable;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.SafeRunner;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
-import org.eclipse.jdt.core.*;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
@@ -79,7 +98,7 @@ abstract class AbstractRxRefactoringApp implements IApplication {
 			{
 				subscription = Observable
 						.from( workspaceRoot.getProjects() )
-						.doOnSubscribe( () -> Log.info( AbstractRxRefactoringApp.this, "Rx Refactoring Plugin Starting..." ) )
+						.doOnSubscribe( () -> Log.info( AbstractRxRefactoringApp.this.getClass(), "Rx Refactoring Plugin Starting..." ) )
 						.filter( AbstractRxRefactoringApp.this::isJavaProjectOpen )
 						.doOnNext( AbstractRxRefactoringApp.this::refactorProject )
 						.doOnError( t -> showErrorDialog( t ) )
@@ -135,7 +154,7 @@ abstract class AbstractRxRefactoringApp implements IApplication {
 		ISafeRunnable runnable = new ISafeRunnable() {
 			@Override
 			public void handleException( Throwable throwable )	{
-				Log.notifyExceptionInClient( throwable );
+				Log.errorInClient(getClass(), throwable);
 				errorProjects.add( project.getPath().toString() );
 			}
 
@@ -160,7 +179,7 @@ abstract class AbstractRxRefactoringApp implements IApplication {
 
 	private void showOnCompletedDialogAndLogTotalTime( long startTime )
 	{
-		Log.info( AbstractRxRefactoringApp.this, "Rx Refactoring Plugin Done!" );
+		Log.info( AbstractRxRefactoringApp.this.getClass(), "Rx Refactoring Plugin Done!" );
 		String projects = String.join( ", ", errorProjects );
 		String warningMessage = "Check the following projects carefully. Exceptions were thrown" +
 				" during refactoring:\n\n" + projects + ".";
@@ -188,6 +207,7 @@ abstract class AbstractRxRefactoringApp implements IApplication {
 	{
 		String message = "The refactoring action for one or more projects has failed";
 		Status status = new Status( IStatus.ERROR, PLUGIN_ID, message, t );
+		t.printStackTrace();
 		Display.getDefault().asyncExec( () -> ErrorDialog.openError( activeShell, dialogTitle, message, status ) );
 	}
 
@@ -215,7 +235,7 @@ abstract class AbstractRxRefactoringApp implements IApplication {
 	private void refactorProject( IProject project ) {
 		IJavaProject javaProject = JavaCore.create( project );
 		try {
-			Log.info( this, "METHOD=refactorProject : PROJECT ----> " + project.getName() );
+			Log.info( getClass(), "METHOD=refactorProject : PROJECT ----> " + project.getName() );
 			final String location = project.getLocation().toPortableString();
 			addJarFiles( location );
 			project.refreshLocal( IResource.DEPTH_INFINITE, null );
@@ -224,9 +244,9 @@ abstract class AbstractRxRefactoringApp implements IApplication {
 			compilationUnitsMap = getCompilationUnits( javaProject );
 			refactorCompilationUnits( javaProject, compilationUnitsMap );
 		} catch (JavaModelException e) {
-			Log.error( this, "Project: " + project.getName() + " could not be refactored.", e );
+			Log.error( getClass(), "Project: " + project.getName() + " could not be refactored.", e );
 		} catch ( CoreException e ) {
-			Log.error( this, "Project: " + project.getName() + " resources could not be refreshed.", e );
+			Log.error( getClass(), "Project: " + project.getName() + " resources could not be refreshed.", e );
 		}
 	}
 
@@ -234,7 +254,9 @@ abstract class AbstractRxRefactoringApp implements IApplication {
 	{
 		try
 		{
-			java.nio.file.Path jarFilesPath = this.extension.getLibJars();
+			java.nio.file.Path jarFilesPath = this.
+					extension.
+					getLibJars();
 			if ( jarFilesPath == null )
 			{
 				return;
@@ -246,7 +268,7 @@ abstract class AbstractRxRefactoringApp implements IApplication {
 		}
 		catch ( Throwable throwable )
 		{
-			Log.notifyExceptionInClient( throwable );
+			Log.errorInClient(getClass(), throwable);
 			return;
 		}
 	}

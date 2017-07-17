@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -18,7 +17,6 @@ import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 
-import de.tudarmstadt.rxrefactoring.core.collect.AbstractCollector;
 import de.tudarmstadt.rxrefactoring.core.collect.Collector;
 import de.tudarmstadt.rxrefactoring.core.processors.AbstractRefactoringProcessor;
 import de.tudarmstadt.rxrefactoring.core.processors.RefactoringProcessor;
@@ -45,11 +43,11 @@ public class RxRefactoringApp extends AbstractRxRefactoringApp {
 
 	@Override
 	public void refactorCompilationUnits(IJavaProject project, Map<String, ICompilationUnit> units ) {
-		Log.info( this, "METHOD=refactorCompilationUnits - # units: " + units.size() );
+		Log.info( getClass(), "METHOD=refactorCompilationUnits - # units: " + units.size() );
 				
 		Collector collector = this.extension.createCollector(project);
 		if (collector == null) {
-			Log.notifyExceptionInClient( new IllegalArgumentException( "getASTNodesCollectorInstance must return not null" ));
+			Log.errorInClient(getClass(), new IllegalArgumentException( "getASTNodesCollectorInstance must return not null" ));
 		}
 	
 		CountDownLatch latch = new CountDownLatch(1);
@@ -64,12 +62,12 @@ public class RxRefactoringApp extends AbstractRxRefactoringApp {
 							// Filter using the boolean formula "runningForTest -> validateName"
 							.filter( unit -> !runningForTests || validateUnitName( unit ) )
 							.doOnNext( unit -> {
-								Log.info(this, "Refactor " + unit.getElementName());
+								Log.info(getClass(), "Refactor " + unit.getElementName());
 								processUnitFromExtension( project, unit, RxRefactoringApp.this.extension, collector );
 								monitor.worked( 1 );
 							} )
 							.doOnCompleted( () -> refactorUnits( collector ) )
-							.doOnError( t -> Log.error( this, "METHOD=refactorCompilationUnits", t ) )
+							.doOnError( t -> Log.error( getClass(), "METHOD=refactorCompilationUnits", t ) )
 							.subscribe();
 					latch.countDown();
 					monitor.done();
@@ -85,7 +83,7 @@ public class RxRefactoringApp extends AbstractRxRefactoringApp {
 			} );
 		}
 		catch ( Exception e ) {
-			Log.error( this, "METHOD=refactorCompilationUnits, Project:" + project.getPath() + " - FAILED", e );
+			Log.error( getClass(), "METHOD=refactorCompilationUnits, Project:" + project.getPath() + " - FAILED", e );
 		}
 		try	{
 			latch.await();
@@ -127,7 +125,7 @@ public class RxRefactoringApp extends AbstractRxRefactoringApp {
 	}
 
 	private void refactorUnits( Collector collector ) {
-		Log.info( this, "METHOD=refactorUnits - " + collector.getName() + " Refactoring starting..." );
+		Log.info( getClass(), "METHOD=refactorUnits - " + collector.getName() + " Refactoring starting..." );
 		AbstractRefactoringProcessor processor = new RefactoringProcessor( extension, collector );
 		runProcessor( processor );
 	}
@@ -138,7 +136,7 @@ public class RxRefactoringApp extends AbstractRxRefactoringApp {
 			NullProgressMonitor progressMonitor = new NullProgressMonitor();
 			processor.createChange( progressMonitor );
 		} catch ( Exception e ) {
-			Log.error( this, "METHOD=runProcessor, Processor:" + processor.getName() + " - FAILED", e );
+			Log.error( getClass(), "METHOD=runProcessor, Processor:" + processor.getName() + " - FAILED", e );
 		}
 	}
 }

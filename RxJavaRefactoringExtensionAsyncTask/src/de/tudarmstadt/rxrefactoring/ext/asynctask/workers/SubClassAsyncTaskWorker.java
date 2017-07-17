@@ -71,7 +71,7 @@ public class SubClassAsyncTaskWorker extends AbstractRefactorWorker<AsyncTaskCol
 		Multimap<ICompilationUnit, TypeDeclaration> cuAnonymousClassesMap = collector.getCuSubclassesMap();
 		int numCunits = collector.getNumberOfCompilationUnits();
 		monitor.beginTask( getClass().getSimpleName(), numCunits );
-		Log.info( this, "METHOD=refactor - Number of compilation units: " + numCunits );
+		Log.info( getClass(), "METHOD=refactor - Number of compilation units: " + numCunits );
 		
 		for ( ICompilationUnit icu : cuAnonymousClassesMap.keySet() )
 		{
@@ -79,7 +79,7 @@ public class SubClassAsyncTaskWorker extends AbstractRefactorWorker<AsyncTaskCol
 			for ( TypeDeclaration asyncTaskDeclaration : declarations )
 			{
 
-				Log.info( this, "METHOD=refactor - Extract Information from AsyncTask: " + icu.getElementName() );
+				Log.info( getClass(), "METHOD=refactor - Extract Information from AsyncTask: " + icu.getElementName() );
 				AsyncTaskVisitor asyncTaskVisitor = new AsyncTaskVisitor();
 				asyncTaskDeclaration.accept( asyncTaskVisitor );
 				if ( asyncTaskVisitor.getDoInBackgroundBlock() == null )
@@ -92,11 +92,11 @@ public class SubClassAsyncTaskWorker extends AbstractRefactorWorker<AsyncTaskCol
 				UnitWriterExt singleChangeWriter = UnitWriters.getOrElse( icu, () -> new UnitWriterExt( icu, ast, getClass().getSimpleName()));
 				updateUsage( collector.getCuRelevantUsagesMap(), ast, singleChangeWriter, asyncTaskDeclaration, icu );
 				singleChangeWriter.removeSuperClass( asyncTaskDeclaration );
-				Log.info( this, "METHOD=refactor - Updating imports: " + icu.getElementName() );
+				Log.info( getClass(), "METHOD=refactor - Updating imports: " + icu.getElementName() );
 				updateImports( singleChangeWriter, asyncTaskVisitor );
 				createLocalObservable( singleChangeWriter, asyncTaskDeclaration, ast, asyncTaskVisitor );
 				addProgressBlock( ast, icu, asyncTaskVisitor, singleChangeWriter );
-				Log.info( this, "METHOD=refactor - Refactoring class: " + icu.getElementName() );
+				Log.info( getClass(), "METHOD=refactor - Refactoring class: " + icu.getElementName() );
 
 				if ( asyncTaskVisitor.getOnPreExecuteBlock() != null )
 					updateonPreExecute( asyncTaskDeclaration, singleChangeWriter, ast, asyncTaskVisitor );
@@ -107,8 +107,8 @@ public class SubClassAsyncTaskWorker extends AbstractRefactorWorker<AsyncTaskCol
 
 			monitor.worked( 1 );
 		}
-		Log.info( this, "Number of AsynckTasks Subclass=  " + NUMBER_OF_ASYNC_TASKS );
-		Log.info( this, "Number of Abstract AsynckTasks Subclass=  " + NUMBER_OF_ABSTRACT_TASKS );
+		Log.info( getClass(), "Number of AsynckTasks Subclass=  " + NUMBER_OF_ASYNC_TASKS );
+		Log.info( getClass(), "Number of Abstract AsynckTasks Subclass=  " + NUMBER_OF_ABSTRACT_TASKS );
 
 		return WorkerStatus.OK;
 	}
@@ -122,7 +122,7 @@ public class SubClassAsyncTaskWorker extends AbstractRefactorWorker<AsyncTaskCol
 			TypeDeclaration tyDec = ast.newTypeDeclaration();
 
 			AST astInvoke = ast;
-			Log.info( this, "METHOD=updateUsage - updating usage for class: " + icuOuter.getElementName() + " in "
+			Log.info( getClass(), "METHOD=updateUsage - updating usage for class: " + icuOuter.getElementName() + " in "
 					+ icu.getElementName() );
 			for ( MethodInvocation methodInvoke : cuRelevantUsagesMap.get( icu ) )
 			{
@@ -164,7 +164,7 @@ public class SubClassAsyncTaskWorker extends AbstractRefactorWorker<AsyncTaskCol
 					if ( methodReference.getName().toString().equals( CANCEL ) )
 					{
 						isCancelPresent = true;
-						Log.info( this,
+						Log.info( getClass(),
 								"METHOD=replaceCancel - updating cancel invocation for class: " + icu.getElementName() );
 						replaceExecuteWithSubscription( methodInvoke, icu, astInvoke );
 						updateCancelInvocation( icu, methodReference, astInvoke );
@@ -216,7 +216,7 @@ public class SubClassAsyncTaskWorker extends AbstractRefactorWorker<AsyncTaskCol
 	{
 		UnitWriterExt singleChangeWriter = UnitWriters.getOrElse( icu, () -> new UnitWriterExt( icu, astInvoke, getClass().getSimpleName()));
 
-		Log.info( this, "METHOD=replaceExecuteWithSubscription - replace Execute With Subscription for class: "
+		Log.info( getClass(), "METHOD=replaceExecuteWithSubscription - replace Execute With Subscription for class: "
 				+ icu.getElementName() );
 		createSubscriptionDeclaration( icu, methodInvoke );
 
@@ -236,7 +236,7 @@ public class SubClassAsyncTaskWorker extends AbstractRefactorWorker<AsyncTaskCol
 
 	void createSubscriptionDeclaration( ICompilationUnit icu, MethodInvocation methodInvoke )
 	{
-		Log.info( this, "METHOD=createSubscriptionDeclaration - create Subscription Declaration for class: "
+		Log.info( getClass(), "METHOD=createSubscriptionDeclaration - create Subscription Declaration for class: "
 				+ icu.getElementName() );
 		TypeDeclaration tyDec = ASTUtils.findParent( methodInvoke, TypeDeclaration.class );
 		AST astInvoke = tyDec.getAST();
@@ -267,7 +267,7 @@ public class SubClassAsyncTaskWorker extends AbstractRefactorWorker<AsyncTaskCol
 	{
 
 		UnitWriterExt singleChangeWriter = UnitWriters.getOrElse(icu, () -> new UnitWriterExt( icu, astInvoke, getClass().getSimpleName()));
-		Log.info( this,
+		Log.info( getClass(),
 				"METHOD=updateCancelInvocation - update Cancel Invocation for class: " + icu.getElementName() );
 		MethodInvocation unSubscribe = astInvoke.newMethodInvocation();
 		unSubscribe

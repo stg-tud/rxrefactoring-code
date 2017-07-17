@@ -21,7 +21,7 @@ import de.tudarmstadt.rxrefactoring.ext.akka.workers.AkkaWorker;
 public class Extension implements RxRefactoringExtension<ASTCollector> {
 	
 	
-	public static final String PLUGIN_ID = "de.tudarmstadt.stg.rxjava.refactoring.extension.akkafutures";
+	public static final String PLUGIN_ID = "de.tudarmstadt.rxrefactoring.ext.akkafutures";
 	public static final String TEMPLATES_DIR_NAME = "templates";
 
 	private static final String COMMAND_ID = "rxRefactoring.commands.rxJavaRefactoringAkkaFutures";

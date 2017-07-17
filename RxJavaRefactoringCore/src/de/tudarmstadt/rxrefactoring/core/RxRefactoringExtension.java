@@ -1,13 +1,9 @@
 package de.tudarmstadt.rxrefactoring.core;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.dom.ASTNode;
 
 import de.tudarmstadt.rxrefactoring.core.collect.AbstractCollector;
 import de.tudarmstadt.rxrefactoring.core.collect.Collector;

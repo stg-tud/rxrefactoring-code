@@ -45,7 +45,7 @@ public class AkkaWorker extends ASTWorker {
 		public boolean visit(VariableDeclarationStatement node) {
 			//Check whether the variable type is a future
 			if (ASTUtils.matchType("^scala\\.concurrent\\.Future(<.*>)?$", node.getType())) {
-				Log.info(this, "Refactor variable declaration...");
+				Log.info(getClass(), "Refactor variable declaration...");
 				//If so, then change the type to Observable and add the correct import
 				ParameterizedType type = (ParameterizedType) node.getType();		
 				writer.replace(type.getType(), ast.newSimpleName("Observable"));
@@ -69,7 +69,7 @@ public class AkkaWorker extends ASTWorker {
 			if (mb != null) {
 				if (ASTUtils.matchMethod(mb, "^akka\\.dispatch\\.Futures$", "future", "^scala\\.concurrent\\.Future(<.*>)?$", "^java\\.util\\.concurrent\\.Callable(<.*>)?$", "^scala\\.concurrent\\.ExecutionContext$")) {
 					//futureInvocations.put(unit, node);
-					Log.info(this, "Refactor " + node.getName());
+					Log.info(getClass(), "Refactor " + node.getName());
 					writer.replace(node.getExpression(), ast.newSimpleName("Observable"));
 		            writer.replace(node.getName(), ast.newSimpleName("fromCallable"));			            
 		            
@@ -78,7 +78,7 @@ public class AkkaWorker extends ASTWorker {
 		            setChanged();
 				}
 			} else {
-				Log.info(this, "No binding for: " + node.getName());
+				Log.info(getClass(), "No binding for: " + node.getName());
 			}		
 			
 		}

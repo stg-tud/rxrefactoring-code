@@ -1,25 +1,38 @@
 package de.tudarmstadt.rxrefactoring.core.utils;
 
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Objects;
 
-import org.eclipse.jdt.internal.corext.util.Strings;
-import org.eclipse.ui.console.*;
+import org.eclipse.ui.console.ConsolePlugin;
+import org.eclipse.ui.console.IConsole;
+import org.eclipse.ui.console.IConsoleManager;
+import org.eclipse.ui.console.MessageConsole;
+import org.eclipse.ui.console.MessageConsoleStream;
 
 /**
  * Description: This class is responsible for managing logging task<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/12/2016
  */
-public final class Log
-{
+public final class Log {
+	
 	private static final String CONSOLE_NAME = "Rx Java Refactoring";
 
-	private Log()
-	{
-		// This class should not be instantiated
-	}
+	public static final PrintStream INFO = System.out;
+	public static final PrintStream ERR = System.err;
+	public static final PrintStream PLUGIN_INFO = System.out; //new PrintStream(findConsole(CONSOLE_NAME).newOutputStream());
+
+
+	
+	private static final DateFormat format = new SimpleDateFormat("HH:mm:ss.SSS"); 
+	
+	// This class should not be instantiated 
+	private Log() { }
 
 	/**
 	 * Uses System.out.println(...) to log in the console
@@ -28,15 +41,15 @@ public final class Log
 	 *            class invoking the method
 	 * @param text
 	 *            logging text
+	 *            
 	 */
-	public static void info(Object currentObject, Object text)	{
-		System.out.println( "[ INFO ] " + convertObjectName(currentObject) + ": " + text );
-	}
-	
-	public static void info(Class<?> cls, Object text) {
-		System.out.println( "[ INFO ] " + convertClassName(cls) + ": " + text );
+	public static void info(PrintStream out, Class<?> cls, Object text) {
+		println(out, "INFO", convertClassName(cls), text == null ? "null" : text.toString());
 	}
 
+	public static void info(Class<?> cls, Object text) {
+		info(INFO, cls, text);
+	}
 	
 	/**
 	 * Uses System.err.println(...) to log in the console and prints stack trace
@@ -48,41 +61,37 @@ public final class Log
 	 * @param throwable
 	 *            exception
 	 */
-	public static void error(Object currentObject, Object text, Throwable throwable) {
-		System.err.println( "[ ERROR ] " + convertObjectName(currentObject) + ": " + text );
+	public static void error(PrintStream out, Class<?> cls, Object text, Throwable throwable) {
+		println(out, "INFO", convertClassName(cls), text == null ? "null" : text.toString());
+				
+		if (Objects.nonNull(throwable)) {
+			throwable.printStackTrace(out);
+		}
+			
+	}
+	
+	public static void error(Class<?> cls, Object text, Throwable throwable) {
+		error(ERR, cls, text, throwable);
+	}
+	
+	public static void error(Class<?> cls, Object text) {
+		error(cls, text, null);
+	}
+	
+	public static void errorInClient(Class<?> cls, Throwable throwable) {
+		error(PLUGIN_INFO, cls, "An error occured:", throwable);
+	}
 		
-		if (Objects.nonNull(throwable))
-			throwable.printStackTrace();
-	}
-	
-	/**
-	 * Produces the name of the class of an object.
-	 * @param clss 
-	 * @return
-	 */
-	private static String convertObjectName(Object obj) {
-		if (obj == null)
-			return "<NONE>";
-		else
-			return convertClassName(obj.getClass());
-	}
-	
 	private static String convertClassName(Class<?> cls) {
+		Objects.requireNonNull(cls, "Class can not be null.");
 		return cls.getSimpleName();
 	}
 
-	/**
-	 * Logs exceptions occurred in client (extensions)
-	 *
-	 * @param throwable
-	 *            exception
-	 */
-	public static void notifyExceptionInClient( Throwable throwable )
-	{
-		System.err.println( "[ ERROR ] Exception in client" );
-		throwable.printStackTrace();
+	
+	private static void println(PrintStream out, String tag, String cls, String text) {		
+		out.println("[" + format.format(new Date()) + "][" + tag + "][" + cls + "]: " + text);
 	}
-
+	
 	/**
 	 * Shows text in the console of the Eclipse instance that's
 	 * running the plugin

@@ -1,10 +1,7 @@
 package de.tudarmstadt.rxrefactoring.core.writers;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -20,7 +17,6 @@ import org.eclipse.text.edits.TextEdit;
 
 import de.tudarmstadt.rxrefactoring.core.RxRefactoringApp;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
-import rx.Observable;
 
 /**
  * Description: This class is in charge of accumulating the changes
@@ -70,7 +66,7 @@ public class UnitWriterExecution {
 				ImportRewrite importRewriter = createImportWriter( icu, writer );
 				applyChanges( icu, importRewriter, compilationUnitChange, progressMonitor );
 			} catch (Exception e)	{
-				Log.error( this, "METHOD=executeChanges - " + compilationUnitName, e );
+				Log.error( getClass(), "METHOD=executeChanges - " + compilationUnitName, e );
 			}
 		}
 	}
@@ -85,17 +81,12 @@ public class UnitWriterExecution {
 		return compilationUnitChange;
 	}
 
-	private ImportRewrite createImportWriter( ICompilationUnit icu, UnitWriter singleUnitWriter ) throws JavaModelException	{
+	private ImportRewrite createImportWriter( ICompilationUnit icu, UnitWriter writer ) throws JavaModelException	{
 		ImportRewrite importRewriter = StubUtility.createImportRewrite( icu, true );
-		Observable
-				.from( singleUnitWriter.getAddedImports() )
-				.doOnNext( newImport -> importRewriter.addImport( newImport ) )
-				.subscribe();
-
-		Observable
-				.from( singleUnitWriter.getRemovedImports() )
-				.doOnNext( deletedImport -> importRewriter.removeImport( deletedImport ) )
-				.subscribe();
+		
+		writer.getAddedImports().forEach(importRewriter::addImport);
+		writer.getRemovedImports().forEach(importRewriter::removeImport);
+		
 		return importRewriter;
 	}
 

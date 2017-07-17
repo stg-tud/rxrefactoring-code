@@ -77,7 +77,7 @@ public abstract class AbstractRefactoringProcessor<CollectorType extends Collect
 		}
 		catch ( InterruptedException e )
 		{
-			Log.error( this, "createChange: Interrupted", e );
+			Log.error( getClass(), "createChange: Interrupted", e );
 		}
 	}
 

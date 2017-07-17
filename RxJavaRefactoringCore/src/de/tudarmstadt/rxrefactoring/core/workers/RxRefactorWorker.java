@@ -22,10 +22,10 @@ public interface RxRefactorWorker extends Callable<WorkerStatus> {
 	@Override
 	default public WorkerStatus call() throws Exception {
 		try	{
-			Log.info( this, "METHOD=call - Starting worker in thread: " + Thread.currentThread().getName() );
+			Log.info( getClass(), "METHOD=call - Starting worker in thread: " + Thread.currentThread().getName() );
 			return refactor();
 		} catch ( Exception e ) {
-			Log.error( this, "METHOD=call", e );
+			Log.error( getClass(), "METHOD=call", e );
 			return WorkerStatus.ERROR;
 		}
 	}
