@@ -1,5 +1,9 @@
 package de.tudarmstadt.rxrefactoring.core;
 
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
@@ -29,7 +33,7 @@ public interface RxRefactoringExtension<CollectorType extends Collector> {
 	 * @return an instance of XYZ to collect information
 	 * @param project
 	 */
-	CollectorType createCollector(IJavaProject project);
+	public CollectorType createCollector(IJavaProject project);
 
 	/**
 	 * This method is responsible for adding the relevant information
@@ -62,19 +66,28 @@ public interface RxRefactoringExtension<CollectorType extends Collector> {
 	 * @return list of workers in charge of performing the refactorings
 	 * @param collector
 	 */
-	Iterable<RxRefactorWorker> getRefactoringWorkers(CollectorType collector);
+	public Iterable<RxRefactorWorker> getRefactoringWorkers(CollectorType collector);
 
 	/**
 	 * @return Command Id of the extension
 	 */
-	String getId();
-
+	public String getId();
+		
 	/**
-	 * This method is invoked once before the compilation units
-	 * start being processed. Use this method to specify the jar files
-	 * that should be added to the project
+	 * Specifies which jars should be included to the refactored project.
+	 * 
+	 * @return Path with all jars, or null if no jars should be included.
 	 */
-	default String getJarFilesPath() {
+	public default Path getLibJars() {
 		return null;
+	}
+	
+	/**
+	 * Specifies where the jars should be included to the refactored project.
+	 * 
+	 * @return Path where the jars should be included relative to the project root.
+	 */
+	public default Path getLibPath() {		
+		return Paths.get("./libs");
 	}
 }

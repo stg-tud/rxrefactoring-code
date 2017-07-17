@@ -14,7 +14,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 
-import de.tudarmstadt.rxrefactoring.core.codegen.DynamicIdsMapHolder;
+import de.tudarmstadt.rxrefactoring.core.codegen.IdManager;
 import de.tudarmstadt.rxrefactoring.core.collect.AbstractCollector;
 import de.tudarmstadt.rxrefactoring.core.collect.Collector;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
@@ -39,7 +39,7 @@ public abstract class AbstractRefactoringProcessor<CollectorType extends Collect
 		this.collector = (CollectorType) collector;
 		rxMultipleUnitsWriter = new UnitWriterExecution();
 		UnitWriters.initializeUnitWriters();
-		DynamicIdsMapHolder.reset();
+		IdManager.reset();
 	}
 
 	@Override

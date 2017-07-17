@@ -1,4 +1,4 @@
-package builders;
+package de.tudarmstadt.refactoringrx.ext.asynctask.builders;
 
 import org.eclipse.jdt.core.dom.Block;
 
@@ -9,12 +9,12 @@ import rx.Subscriber;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/18/2016
  */
-public final class RxSubscriberStringBuilder
+public final class SubscriberBuilder
 {
 	private static final String NEW_LINE = "\n";
 	private static final String SPACE = " ";
 
-	private RxSubscriberStringBuilder()
+	private SubscriberBuilder()
 	{
 
 	}

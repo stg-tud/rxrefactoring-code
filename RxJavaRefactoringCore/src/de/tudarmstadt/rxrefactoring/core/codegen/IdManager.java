@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/23/2016
  */
-public final class DynamicIdsMapHolder
+public final class IdManager
 {
 	private static final String EMPTY = "";
 	private static final int INITIAL_ID = 0;
@@ -34,8 +34,8 @@ public final class DynamicIdsMapHolder
 	 */
 	public static String getNextObserverId( String icuName )
 	{
-		incAndGetCounter( icuName, DynamicIdsMapHolder.observerCounter );
-		return getId( icuName, DynamicIdsMapHolder.observerCounter );
+		incAndGetCounter( icuName, IdManager.observerCounter );
+		return getId( icuName, IdManager.observerCounter );
 	}
 
 	/**
@@ -48,8 +48,8 @@ public final class DynamicIdsMapHolder
 	 */
 	public static String getNextObservableId( String icuName )
 	{
-		incAndGetCounter( icuName, DynamicIdsMapHolder.observableCounter );
-		return getId( icuName, DynamicIdsMapHolder.observableCounter );
+		incAndGetCounter( icuName, IdManager.observableCounter );
+		return getId( icuName, IdManager.observableCounter );
 	}
 
 	/**
@@ -61,7 +61,7 @@ public final class DynamicIdsMapHolder
 	 */
 	public static String getLastObservableId( String icuName )
 	{
-		return getId( icuName, DynamicIdsMapHolder.observableCounter );
+		return getId( icuName, IdManager.observableCounter );
 	}
 
 	// ### Private Methods ###

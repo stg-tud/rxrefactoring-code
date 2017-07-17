@@ -1,4 +1,4 @@
-package domain;
+package de.tudarmstadt.refactoringrx.ext.asynctask.domain;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,9 +1,10 @@
-package builders;
+package de.tudarmstadt.refactoringrx.ext.asynctask.builders;
 
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.Block;
 
+import de.tudarmstadt.rxrefactoring.core.codegen.IdManager;
 import rx.Subscriber;
 
 /**
@@ -11,7 +12,7 @@ import rx.Subscriber;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/18/2016
  */
-public class RxSubscriberHolder
+public class SubscriberHolder
 {
 	private static final String NEW_LINE = "\n";
 	private static final String SPACE = " ";
@@ -38,7 +39,7 @@ public class RxSubscriberHolder
 	 *            name of the variable used in the block onNext
 	 * @return a string corresponding to the subscriber. "new Subscriber<...>(){ ... };"
 	 */
-	public RxSubscriberHolder( String icuName, String type, Block onNext, String onNextVariableName )
+	public SubscriberHolder( String icuName, String type, Block onNext, String onNextVariableName )
 	{
 		this.type = type;
 		StringBuilder rxSubscriber = new StringBuilder();
@@ -59,7 +60,7 @@ public class RxSubscriberHolder
 		rxSubscriber.append( onNext.toString() );
 		rxSubscriber.append( "};" );
 		classInstantiation = rxSubscriber.toString();
-		idNumber = IdsManager.getNextSubscriberId( icuName );
+		idNumber = IdManager.getNextObserverId( icuName );
 	}
 
 	/**

@@ -1,4 +1,4 @@
-package visitors;
+package de.tudarmstadt.refactoringrx.ext.asynctask.collect;
 
 import java.util.*;
 
@@ -16,8 +16,8 @@ import org.eclipse.jdt.internal.corext.refactoring.util.RefactoringASTParser;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
+import de.tudarmstadt.refactoringrx.ext.asynctask.domain.ClassDetails;
 import de.tudarmstadt.rxrefactoring.core.collect.AbstractCollector;
-import domain.ClassDetails;
 
 
 /**
@@ -25,63 +25,63 @@ import domain.ClassDetails;
  * Author: Template<br>
  * Created: 01/18/2017
  */
-public class CuCollector extends AbstractCollector {
+public class AsyncTaskCollector extends AbstractCollector {
 
-	private final Multimap<ICompilationUnit, TypeDeclaration> cuSubclassesMap;
-	private final Multimap<ICompilationUnit, AnonymousClassDeclaration> cuAnonymousClassesMap;
-	private final Multimap<ICompilationUnit, ASTNode> cuAnonymousCachedClassesMap;
-	private final Multimap<ICompilationUnit, MethodInvocation> cuRelevantUsagesMap;
+	private final Multimap<ICompilationUnit, TypeDeclaration> subclassesMap;
+	private final Multimap<ICompilationUnit, AnonymousClassDeclaration> anonymousClassesMap;
+	private final Multimap<ICompilationUnit, ASTNode> anonymousCachedClassesMap;
+	private final Multimap<ICompilationUnit, MethodInvocation> relevantUsagesMap;
 
-	public CuCollector(IJavaProject project, String collectorName )
+	public AsyncTaskCollector(IJavaProject project, String collectorName )
 	{
 		super(project, collectorName);
-		cuSubclassesMap = HashMultimap.create();
-		cuAnonymousClassesMap = HashMultimap.create();
-		cuAnonymousCachedClassesMap = HashMultimap.create();
-		cuRelevantUsagesMap = HashMultimap.create();
+		subclassesMap = HashMultimap.create();
+		anonymousClassesMap = HashMultimap.create();
+		anonymousCachedClassesMap = HashMultimap.create();
+		relevantUsagesMap = HashMultimap.create();
 	}
 
 	public void addSubclasses(ICompilationUnit cu, Iterable<TypeDeclaration> subclasses) {
-		cuSubclassesMap.putAll(cu, subclasses);
+		subclassesMap.putAll(cu, subclasses);
 	}
 
 	public void addAnonymClassDecl( ICompilationUnit cu, Iterable<AnonymousClassDeclaration> anonymDeclarations ) {
-		cuAnonymousClassesMap.putAll(cu, anonymDeclarations);
+		anonymousClassesMap.putAll(cu, anonymDeclarations);
 	}
 
 	public void addAnonymCachedClassDecl( ICompilationUnit cu, List<ASTNode> anonymCachedDeclarations )
 	{
-		cuAnonymousCachedClassesMap.putAll(cu, anonymCachedDeclarations);
+		anonymousCachedClassesMap.putAll(cu, anonymCachedDeclarations);
 	}
 
 	public void addRelevantUsages( ICompilationUnit cu, List<MethodInvocation> usages )
 	{
-		cuRelevantUsagesMap.putAll(cu, usages);
+		relevantUsagesMap.putAll(cu, usages);
 	}
 
 	public Multimap<ICompilationUnit, TypeDeclaration> getCuSubclassesMap() {
-		return cuSubclassesMap;
+		return subclassesMap;
 	}
 
 	public Multimap<ICompilationUnit, AnonymousClassDeclaration> getCuAnonymousClassesMap()	{
-		return cuAnonymousClassesMap;
+		return anonymousClassesMap;
 	}
 
 	public Multimap<ICompilationUnit, ASTNode> getCuAnonymousCachedClassesMap()	{
-		return cuAnonymousCachedClassesMap;
+		return anonymousCachedClassesMap;
 	}
 
 	public Multimap<ICompilationUnit, MethodInvocation> getCuRelevantUsagesMap()	{
-		return cuRelevantUsagesMap;
+		return relevantUsagesMap;
 	}
 
 	public int getNumberOfCompilationUnits()
 	{
 		Set<ICompilationUnit> allCompilationUnits = new HashSet<>();
-		allCompilationUnits.addAll( cuSubclassesMap.keySet() );
-		allCompilationUnits.addAll( cuAnonymousClassesMap.keySet() );
-		allCompilationUnits.addAll( cuAnonymousCachedClassesMap.keySet() );
-		allCompilationUnits.addAll( cuRelevantUsagesMap.keySet() );
+		allCompilationUnits.addAll( subclassesMap.keySet() );
+		allCompilationUnits.addAll( anonymousClassesMap.keySet() );
+		allCompilationUnits.addAll( anonymousCachedClassesMap.keySet() );
+		allCompilationUnits.addAll( relevantUsagesMap.keySet() );
 		return allCompilationUnits.size();
 	}
 
@@ -104,10 +104,10 @@ public class CuCollector extends AbstractCollector {
 	{
 		return "Nr. files: " + getNumberOfCompilationUnits() + "\n" +
 				"Project = " + getProject().toString() + "\n" +
-				"Subclasses = " + cuSubclassesMap.values().size() + "\n" +
-				"Anonymous Classes = " + cuAnonymousClassesMap.values().size() + "\n" +
-				"Anonymous Cached Classes = " + cuAnonymousCachedClassesMap.values().size() + "\n" +
-				"Relevant Usages = " + cuRelevantUsagesMap.values().size() + "\n";
+				"Subclasses = " + subclassesMap.values().size() + "\n" +
+				"Anonymous Classes = " + anonymousClassesMap.values().size() + "\n" +
+				"Anonymous Cached Classes = " + anonymousCachedClassesMap.values().size() + "\n" +
+				"Relevant Usages = " + relevantUsagesMap.values().size() + "\n";
 	}
 
 	@Override

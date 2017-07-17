@@ -1,4 +1,4 @@
-package writer;
+package de.tudarmstadt.refactoringrx.ext.asynctask.writers;
 
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
@@ -14,8 +14,8 @@ import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
  * Author: Template<br>
  * Created: 01/18/2017
  */
-public class SingleUnitExtensionWriter extends UnitWriter {
-	public SingleUnitExtensionWriter( ICompilationUnit icu, AST ast, String refactoringDescription )
+public class UnitWriterExt extends UnitWriter {
+	public UnitWriterExt( ICompilationUnit icu, AST ast, String refactoringDescription )
 	{
 		super( icu, ast, refactoringDescription );
 	}

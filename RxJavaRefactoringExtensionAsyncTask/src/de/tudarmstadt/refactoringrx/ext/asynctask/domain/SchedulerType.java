@@ -1,4 +1,4 @@
-package domain;
+package de.tudarmstadt.refactoringrx.ext.asynctask.domain;
 
 import rx.Scheduler;
 

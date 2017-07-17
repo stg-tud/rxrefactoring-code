@@ -1,13 +1,14 @@
-package builders;
+package de.tudarmstadt.refactoringrx.ext.asynctask.builders;
 
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import domain.SchedulerType;
 import org.eclipse.jdt.core.dom.Block;
 
 import org.eclipse.jdt.core.dom.Expression;
+
+import de.tudarmstadt.refactoringrx.ext.asynctask.domain.SchedulerType;
 import rx.Observable;
 import rx.Scheduler;
 import rx.functions.Action0;
@@ -20,7 +21,7 @@ import rx.schedulers.Schedulers;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/16/2016
  */
-public final class RxObservableStringBuilder
+public final class ObservableBuilder
 {
 	private static final String NEW_LINE = "\n";
 	private static final String SPACE = " ";
@@ -30,7 +31,7 @@ public final class RxObservableStringBuilder
 	private final boolean willBeCached;
 	private boolean willBeSubscribed;
 
-	private RxObservableStringBuilder( String type, Block doInBackground, SchedulerType observeOnScheduler )
+	private ObservableBuilder( String type, Block doInBackground, SchedulerType observeOnScheduler )
 	{
 		validateDoInBackgroundBlock( doInBackground );
 		rxObservable = new StringBuilder();
@@ -38,7 +39,7 @@ public final class RxObservableStringBuilder
 		this.willBeCached = false;
 	}
 
-	private RxObservableStringBuilder( String variableName, String type, Block doInBackground, SchedulerType observeOnScheduler )
+	private ObservableBuilder( String variableName, String type, Block doInBackground, SchedulerType observeOnScheduler )
 	{
 		validateDoInBackgroundBlock( doInBackground );
 		rxObservable = new StringBuilder();
@@ -51,7 +52,7 @@ public final class RxObservableStringBuilder
 		this.willBeCached = true;
 	}
 
-	public RxObservableStringBuilder(String type, Expression expression, SchedulerType observeOnScheduler)
+	public ObservableBuilder(String type, Expression expression, SchedulerType observeOnScheduler)
 	{
 		validateForExpressionk(expression);
 		rxObservable = new StringBuilder();
@@ -75,9 +76,9 @@ public final class RxObservableStringBuilder
 	 *            {@link rx.Observable#observeOn(Scheduler)}
 	 * @return The builder
 	 */
-	public static RxObservableStringBuilder newObservable( String type, Block doInBackground, SchedulerType observeOnScheduler )
+	public static ObservableBuilder newObservable( String type, Block doInBackground, SchedulerType observeOnScheduler )
 	{
-		return new RxObservableStringBuilder( type, doInBackground, observeOnScheduler );
+		return new ObservableBuilder( type, doInBackground, observeOnScheduler );
 	}
 
 	/**
@@ -97,14 +98,14 @@ public final class RxObservableStringBuilder
 	 *            scheduler used for {@link rx.Observable#observeOn(Scheduler)}
 	 * @return The builder
 	 */
-	public static RxObservableStringBuilder newObservable( String variableName, String type, Block doInBackground, SchedulerType observeOnScheduler )
+	public static ObservableBuilder newObservable( String variableName, String type, Block doInBackground, SchedulerType observeOnScheduler )
 	{
-		return new RxObservableStringBuilder( variableName, type, doInBackground, observeOnScheduler );
+		return new ObservableBuilder( variableName, type, doInBackground, observeOnScheduler );
 	}
 
-	public static RxObservableStringBuilder newObservable(String type, Expression expression,
+	public static ObservableBuilder newObservable(String type, Expression expression,
 														  SchedulerType observeOnScheduler) {
-		return new RxObservableStringBuilder(type, expression, observeOnScheduler);
+		return new ObservableBuilder(type, expression, observeOnScheduler);
 	}
 
 	/**
@@ -144,7 +145,7 @@ public final class RxObservableStringBuilder
 	 *            for example: for "doOnPostExecute(Integer number)" use number
 	 * @return The builder
 	 */
-	public RxObservableStringBuilder addDoOnNext(String doOnNextBlock, String resultVariableName,String type,boolean isFinal) {
+	public ObservableBuilder addDoOnNext(String doOnNextBlock, String resultVariableName,String type,boolean isFinal) {
 		if (doOnNextBlock != null) {
 			rxObservable.append(NEW_LINE);
 			rxObservable.append(".");
@@ -181,7 +182,7 @@ public final class RxObservableStringBuilder
 	 *            for example: for "doOnPostExecute(Integer number)" use number
 	 * @return The builder
 	 */
-	public RxObservableStringBuilder addDoOnCompleted(Block doPostExecuteBlock, String resultVariableName,String type) {
+	public ObservableBuilder addDoOnCompleted(Block doPostExecuteBlock, String resultVariableName,String type) {
 		if (doPostExecuteBlock != null) {
 			rxObservable.append(NEW_LINE);
 			rxObservable.append(".");
@@ -207,7 +208,7 @@ public final class RxObservableStringBuilder
 	 *            parameter is null.
 	 * @return The builder
 	 */
-	public RxObservableStringBuilder addDoOnCancelled(Block doOnCancelled) {
+	public ObservableBuilder addDoOnCancelled(Block doOnCancelled) {
 		if (doOnCancelled != null) {
 			rxObservable.append(NEW_LINE);
 			rxObservable.append(".");
@@ -233,7 +234,7 @@ public final class RxObservableStringBuilder
 	 *            parameter is null.
 	 * @return The builder
 	 */
-	public RxObservableStringBuilder addDoOnPreExecute(Block onPreExecute) {
+	public ObservableBuilder addDoOnPreExecute(Block onPreExecute) {
 		if (onPreExecute != null) {
 			rxObservable.append(NEW_LINE);
 			rxObservable.append(".");
@@ -261,7 +262,7 @@ public final class RxObservableStringBuilder
 	 *            the time unit. For example: 3L, TimeUnit.SECONDS
 	 * @return The builder
 	 */
-	public RxObservableStringBuilder addTimeout(List<String> arguments) {
+	public ObservableBuilder addTimeout(List<String> arguments) {
 		if (!arguments.isEmpty() && arguments.size() == 2) {
 			rxObservable.append(NEW_LINE);
 			rxObservable.append(".timeout(");
@@ -290,7 +291,7 @@ public final class RxObservableStringBuilder
 	 *
 	 * @return The builder
 	 */
-	public RxObservableStringBuilder addSubscribe() {
+	public ObservableBuilder addSubscribe() {
 		rxObservable.append(NEW_LINE);
 		rxObservable.append(".subscribe()");
 		willBeSubscribed = true;

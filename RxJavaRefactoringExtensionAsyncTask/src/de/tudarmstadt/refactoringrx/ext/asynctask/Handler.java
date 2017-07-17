@@ -1,4 +1,4 @@
-package handlers;
+package de.tudarmstadt.refactoringrx.ext.asynctask;
 
 import de.tudarmstadt.rxrefactoring.core.handler.RxRefactoringHandler;
 

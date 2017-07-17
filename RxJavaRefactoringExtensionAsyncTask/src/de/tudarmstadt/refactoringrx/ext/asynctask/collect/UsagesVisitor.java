@@ -1,15 +1,15 @@
-package visitors;
+package de.tudarmstadt.refactoringrx.ext.asynctask.collect;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import domain.ClassDetails;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
+import de.tudarmstadt.refactoringrx.ext.asynctask.domain.ClassDetails;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 
 /**

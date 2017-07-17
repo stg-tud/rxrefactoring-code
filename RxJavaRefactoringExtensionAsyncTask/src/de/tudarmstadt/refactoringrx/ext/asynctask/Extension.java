@@ -1,4 +1,4 @@
-package rxjavarefactoring;
+package de.tudarmstadt.refactoringrx.ext.asynctask;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -7,19 +7,19 @@ import java.util.Set;
 
 import org.eclipse.jdt.core.IJavaProject;
 
+import de.tudarmstadt.refactoringrx.ext.asynctask.collect.AsyncTaskCollector;
+import de.tudarmstadt.refactoringrx.ext.asynctask.workers.AnonymAsyncTaskWorker;
+import de.tudarmstadt.refactoringrx.ext.asynctask.workers.CachedAnonymousTaskWorker;
+import de.tudarmstadt.refactoringrx.ext.asynctask.workers.SubClassAsyncTaskWorker;
 import de.tudarmstadt.rxrefactoring.core.RxRefactoringExtension;
 import de.tudarmstadt.rxrefactoring.core.utils.PluginUtils;
 import de.tudarmstadt.rxrefactoring.core.workers.RxRefactorWorker;
-import visitors.CuCollector;
-import workers.AnonymAsyncTaskWorker;
-import workers.CachedAnonymousTaskWorker;
-import workers.SubClassAsyncTaskWorker;
 
 /**
  * Author: Template<br>
  * Created: 01/18/2017
  */
-public class Extension implements RxRefactoringExtension<CuCollector>
+public class Extension implements RxRefactoringExtension<AsyncTaskCollector>
 {
 	private static final String PLUGIN_ID = "de.tudarmstadt.stg.rxjava.refactoring.extension.asynctask";
 
@@ -33,12 +33,12 @@ public class Extension implements RxRefactoringExtension<CuCollector>
 	}
 	
 	@Override
-	public CuCollector createCollector(IJavaProject project) {
-		return new CuCollector( project, "AsyncTask" );
+	public AsyncTaskCollector createCollector(IJavaProject project) {
+		return new AsyncTaskCollector( project, "AsyncTask" );
 	}
 
 	@Override
-	public Iterable<RxRefactorWorker> getRefactoringWorkers(CuCollector collector )
+	public Iterable<RxRefactorWorker> getRefactoringWorkers(AsyncTaskCollector collector )
 	{
 		Set<RxRefactorWorker> workers = new HashSet<>();
 		workers.add( new AnonymAsyncTaskWorker( collector ) );
@@ -48,10 +48,14 @@ public class Extension implements RxRefactoringExtension<CuCollector>
 	}
 
 	@Override
-	public String getJarFilesPath()	{
+	public Path getLibJars()	{
 		String pluginDir = PluginUtils.getPluginDir( PLUGIN_ID );
-		Path jarFilsPath = Paths.get( pluginDir, RESOURCES_DIR_NAME ).toAbsolutePath();
-		return jarFilsPath.toString();
+		Path jarFilesPath = Paths.get( pluginDir, RESOURCES_DIR_NAME ).toAbsolutePath();
+		return jarFilesPath;
+	}
+	
+	public Path getLibPath() {
+		return Paths.get("./app/libs");
 	}
 
 	

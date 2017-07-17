@@ -1,4 +1,4 @@
-package utils;
+package de.tudarmstadt.refactoringrx.ext.asynctask.utils;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;

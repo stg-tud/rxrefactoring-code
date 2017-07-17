@@ -1,15 +1,15 @@
-package visitors;
+package de.tudarmstadt.refactoringrx.ext.asynctask.collect;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import domain.ClassDetails;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
 
+import de.tudarmstadt.refactoringrx.ext.asynctask.domain.ClassDetails;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 

@@ -35,12 +35,12 @@ import rx.Observable;
  * Created: 11/11/2016
  */
 public class RxRefactoringApp extends AbstractRxRefactoringApp {
-	private static final String DEPENDENCIES_DIRECTORY = "lib";
+	//private static final String DEPENDENCIES_DIRECTORY = "lib";
 	private Set<String> targetClasses;
 
 	@Override
 	protected String getDependenciesDirectoryName()	{
-		return DEPENDENCIES_DIRECTORY;
+		return extension.getLibPath().toString();
 	}
 
 	@Override

@@ -1,24 +1,26 @@
-package builders;
+package de.tudarmstadt.refactoringrx.ext.asynctask.builders;
 
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
+import de.tudarmstadt.rxrefactoring.core.codegen.IdManager;
+
 /**
  * Description: Builder to create inner classes as string<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/23/2016
  */
-public final class ComplexRxObservableBuilder {
+public final class ComplexObservableBuilder {
 	private static final String NEW_LINE = "\n";
 	private static final String EMPTY = "";
 
 	private StringBuilder rxComplexObservableBuilder;
 	private String idNumber;
 
-	private ComplexRxObservableBuilder(String icuName) {
-		idNumber = IdsManager.getNextComplexObsId(icuName);
+	private ComplexObservableBuilder(String icuName) {
+		idNumber = IdManager.getNextObservableId(icuName);
 		rxComplexObservableBuilder = new StringBuilder();
 		rxComplexObservableBuilder.append("private class ComplexRxObservable");
 		rxComplexObservableBuilder.append(getNumber());
@@ -44,9 +46,9 @@ public final class ComplexRxObservableBuilder {
 	 * @return the builder
 	 * @param icuName
 	 */
-	public static ComplexRxObservableBuilder newComplexRxObservable(String icuName) {
+	public static ComplexObservableBuilder newComplexRxObservable(String icuName) {
 		;
-		return new ComplexRxObservableBuilder(icuName);
+		return new ComplexObservableBuilder(icuName);
 	}
 
 	/**
@@ -56,7 +58,7 @@ public final class ComplexRxObservableBuilder {
 	 *            field declarations to be added
 	 * @return the builder
 	 */
-	public ComplexRxObservableBuilder withFields(List<FieldDeclaration> fieldDeclarations) {
+	public ComplexObservableBuilder withFields(List<FieldDeclaration> fieldDeclarations) {
 		for (FieldDeclaration field : fieldDeclarations) {
 			rxComplexObservableBuilder.append(field.toString());
 			rxComplexObservableBuilder.append(NEW_LINE);
@@ -74,7 +76,7 @@ public final class ComplexRxObservableBuilder {
 	 *            statemens to be added in the method
 	 * @return the builder
 	 */
-	public ComplexRxObservableBuilder withGetAsyncObservable(String type, String... statements) {
+	public ComplexObservableBuilder withGetAsyncObservable(String type, String... statements) {
 		rxComplexObservableBuilder.append("public Observable<");
 		rxComplexObservableBuilder.append(type);
 		rxComplexObservableBuilder.append("> getAsyncObservable");
@@ -98,7 +100,7 @@ public final class ComplexRxObservableBuilder {
 	 *            method as string
 	 * @return the builder
 	 */
-	public ComplexRxObservableBuilder withMethod(String method) {
+	public ComplexObservableBuilder withMethod(String method) {
 		rxComplexObservableBuilder.append(method);
 		return this;
 	}
@@ -110,7 +112,7 @@ public final class ComplexRxObservableBuilder {
 	 *            the methods to be added
 	 * @return the builder
 	 */
-	public ComplexRxObservableBuilder withMethods(List<MethodDeclaration> methods) {
+	public ComplexObservableBuilder withMethods(List<MethodDeclaration> methods) {
 		for (MethodDeclaration method : methods) {
 			rxComplexObservableBuilder.append(method.toString());
 			rxComplexObservableBuilder.append(NEW_LINE);

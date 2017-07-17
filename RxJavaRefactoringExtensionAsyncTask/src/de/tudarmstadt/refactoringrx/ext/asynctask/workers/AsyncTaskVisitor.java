@@ -1,11 +1,11 @@
-package visitors;
+package de.tudarmstadt.refactoringrx.ext.asynctask.workers;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import domain.ClassDetails;
 import org.eclipse.jdt.core.dom.*;
 
+import de.tudarmstadt.refactoringrx.ext.asynctask.domain.ClassDetails;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 
 /**

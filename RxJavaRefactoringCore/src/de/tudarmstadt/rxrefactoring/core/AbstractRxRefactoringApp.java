@@ -39,7 +39,9 @@ abstract class AbstractRxRefactoringApp implements IApplication {
 	protected static final String PLUGIN_ID = "de.tudarmstadt.stg.rxjava.refactoring.core";
 
 	protected Map<String, ICompilationUnit> compilationUnitsMap;
+	
 	protected RxRefactoringExtension extension;
+	
 	protected Shell activeShell;
 	protected static boolean runningForTests = false;
 	protected final String dialogTitle = "RxJavaRefactoring";
@@ -232,7 +234,7 @@ abstract class AbstractRxRefactoringApp implements IApplication {
 	{
 		try
 		{
-			String jarFilesPath = this.extension.getJarFilesPath();
+			java.nio.file.Path jarFilesPath = this.extension.getLibJars();
 			if ( jarFilesPath == null )
 			{
 				return;
@@ -240,7 +242,7 @@ abstract class AbstractRxRefactoringApp implements IApplication {
 
 			// copy jar files to DEPENDENCIES_DIRECTORY
 			String destinationDirectory = Paths.get( location, getDependenciesDirectoryName() ).toAbsolutePath().toString();
-			FileUtils.copyDirectory( new File( jarFilesPath ), new File( destinationDirectory ) );
+			FileUtils.copyDirectory( new File( jarFilesPath.toString() ), new File( destinationDirectory ) );
 		}
 		catch ( Throwable throwable )
 		{
