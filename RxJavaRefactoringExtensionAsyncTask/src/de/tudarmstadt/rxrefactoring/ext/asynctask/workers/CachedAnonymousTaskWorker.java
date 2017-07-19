@@ -35,7 +35,7 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.ObservableBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.SubscriberHolder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.collect.AsyncTaskCollector;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.SchedulerType;
-import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskAstUtils;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.writers.UnitWriterExt;
 
 /**
@@ -133,7 +133,7 @@ public class CachedAnonymousTaskWorker extends AbstractRefactorWorker<AsyncTaskC
 	{
 		String variableName;
 		MethodInvocation implicitExecute = null;
-		ASTNode execute = AsyncTaskAstUtils.findOuterParent( asyncTaskDeclaration, MethodInvocation.class );
+		ASTNode execute = AsyncTaskASTUtils.findOuterParent( asyncTaskDeclaration, MethodInvocation.class );
 		if ( execute != null )
 			implicitExecute = (MethodInvocation) execute;
 		if ( implicitExecute != null )
@@ -289,7 +289,7 @@ public class CachedAnonymousTaskWorker extends AbstractRefactorWorker<AsyncTaskC
 		{
 			execute.arguments().clear();
 		}
-		execute.setExpression( AsyncTaskAstUtils.getinstannceCreationStatement( methodAST, complexObservableclassName ) );
+		execute.setExpression( AsyncTaskASTUtils.getinstannceCreationStatement( methodAST, complexObservableclassName ) );
 		execute.setName( methodAST.newSimpleName( asyncMethodName ) );
 
 		MethodInvocation invocation = methodAST.newMethodInvocation();
@@ -329,7 +329,7 @@ public class CachedAnonymousTaskWorker extends AbstractRefactorWorker<AsyncTaskC
 		{
 			execute.arguments().clear();
 		}
-		execute.setExpression( AsyncTaskAstUtils.getinstannceCreationStatement( methodAST, complexObservableclassName ) );
+		execute.setExpression( AsyncTaskASTUtils.getinstannceCreationStatement( methodAST, complexObservableclassName ) );
 		execute.setName( methodAST.newSimpleName( asyncMethodName ) );
 
 		MethodInvocation invocation = methodAST.newMethodInvocation();

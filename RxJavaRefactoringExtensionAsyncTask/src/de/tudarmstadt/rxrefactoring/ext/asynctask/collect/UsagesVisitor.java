@@ -19,8 +19,8 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.ClassDetails;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/11/2016
  */
-public class UsagesVisitor extends ASTVisitor
-{
+public class UsagesVisitor extends ASTVisitor {
+	
 	private final ClassDetails targetClass;
 	private final List<MethodInvocation> usages;
 
@@ -48,8 +48,10 @@ public class UsagesVisitor extends ASTVisitor
 		String methodName = binding.getName();
 
 		Set<String> publicMethods = targetClass.getPublicMethodsMap().keySet();
+		
 		boolean targetClassFound = ASTUtils.isTypeOf( declaringClass, this.targetClass.getBinaryName() );
 		boolean targetMethodFound = publicMethods.contains( methodName );
+		
 		DeclarationVisitor dv= new DeclarationVisitor(targetClass);
 		node.accept(dv);
 		if ( targetClassFound && targetMethodFound && dv.getAnonymousClasses().size()==0 && dv.getAnonymousCachedClasses().size()==0)

@@ -22,7 +22,6 @@ public class Extension implements RxRefactoringExtension<ASTCollector> {
 	
 	
 	public static final String PLUGIN_ID = "de.tudarmstadt.rxrefactoring.ext.akkafutures";
-	public static final String TEMPLATES_DIR_NAME = "templates";
 
 	private static final String COMMAND_ID = "rxRefactoring.commands.rxJavaRefactoringAkkaFutures";
 	private static final String RESOURCES_DIR_NAME = "resources";
@@ -41,8 +40,6 @@ public class Extension implements RxRefactoringExtension<ASTCollector> {
 
 	@Override
 	public Iterable<RxRefactorWorker> getRefactoringWorkers(ASTCollector collector) {
-		//setupFreemaker();
-			
 		return Sets.newHashSet(
 				new AkkaWorker(collector));
 	}
@@ -50,7 +47,7 @@ public class Extension implements RxRefactoringExtension<ASTCollector> {
 	@Override
 	public Path getLibJars()	{
 		String pluginDir = PluginUtils.getPluginDir( PLUGIN_ID );
-		Path jarFilsPath = Paths.get( pluginDir, RESOURCES_DIR_NAME ).toAbsolutePath();
-		return jarFilsPath;
+		Path jarFilesPath = Paths.get( pluginDir, RESOURCES_DIR_NAME );
+		return jarFilesPath;
 	}	
 }

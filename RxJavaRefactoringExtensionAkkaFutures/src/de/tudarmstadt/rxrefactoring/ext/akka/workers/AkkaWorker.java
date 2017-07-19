@@ -68,7 +68,6 @@ public class AkkaWorker extends ASTWorker {
 			IMethodBinding mb = node.resolveMethodBinding();			
 			if (mb != null) {
 				if (ASTUtils.matchMethod(mb, "^akka\\.dispatch\\.Futures$", "future", "^scala\\.concurrent\\.Future(<.*>)?$", "^java\\.util\\.concurrent\\.Callable(<.*>)?$", "^scala\\.concurrent\\.ExecutionContext$")) {
-					//futureInvocations.put(unit, node);
 					Log.info(getClass(), "Refactor " + node.getName());
 					writer.replace(node.getExpression(), ast.newSimpleName("Observable"));
 		            writer.replace(node.getName(), ast.newSimpleName("fromCallable"));			            

@@ -1,0 +1,72 @@
+package de.tudarmstadt.rxrefactoring.ext.asynctask2.collect;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+
+import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
+import de.tudarmstadt.rxrefactoring.ext.asynctask2.domain.ClassDetails;
+
+/**
+ * Description: Collects usages information for a target class<br>
+ * This class contains code from the tool
+ * <a href="http://refactoring.info/tools/asyncdroid/">AsyncDroid</a>
+ * Author: Grebiel Jose Ifill Brito<br>
+ * Created: 11/11/2016
+ */
+public class UsagesVisitor extends ASTVisitor
+{
+	private final ClassDetails targetClass;
+	private final List<MethodInvocation> usages;
+
+	public UsagesVisitor( ClassDetails targetClass )
+	{
+		this.targetClass = targetClass;
+		usages = new ArrayList<>();
+	}
+
+	@Override
+	public boolean visit( MethodInvocation node )
+	{
+		IMethodBinding binding = node.resolveMethodBinding();
+		if ( binding == null )
+		{
+			return true;
+		}
+
+		ITypeBinding declaringClass = binding.getDeclaringClass();
+		if ( declaringClass == null )
+		{
+			return true;
+		}
+
+		String methodName = binding.getName();
+
+		Set<String> publicMethods = targetClass.getPublicMethodsMap().keySet();
+		boolean targetClassFound = ASTUtils.isTypeOf( declaringClass, this.targetClass.getBinaryName() );
+		boolean targetMethodFound = publicMethods.contains( methodName );
+		DeclarationVisitor dv= new DeclarationVisitor(targetClass);
+		node.accept(dv);
+		if ( targetClassFound && targetMethodFound && dv.getAnonymousClasses().size()==0 && dv.getAnonymousCachedClasses().size()==0)
+		{
+			usages.add( node );
+		}
+
+		return true;
+	}
+
+	public List<MethodInvocation> getUsages()
+	{
+		return usages;
+	}
+
+	public boolean isUsagesFound()
+	{
+		return !usages.isEmpty();
+	}
+}

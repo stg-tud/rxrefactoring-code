@@ -12,9 +12,15 @@ import org.eclipse.jdt.core.dom.VariableDeclaration;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.ClassDetails;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
 
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 
 /**
  * Description: This visitor collects all class declarations and groups then
@@ -44,27 +50,35 @@ public class DeclarationVisitor extends ASTVisitor {
 
 	@Override
 	public boolean visit(TypeDeclaration node) {
-		
-//		Log.info(getClass(), "### Type : " + node.getName() + " ###");
-//		Log.info(getClass(), "Binding : " + node.resolveBinding().getQualifiedName());
-//		Log.info(getClass(), "isTypeOf : " + ASTUtils.isTypeOf(node, targetClass.getBinaryName()));
-		
-		if (ASTUtils.isTypeOf(node, targetClass.getBinaryName())) {
-			subclasses.add(node);
+	
+		if (ASTUtils.isTypeOf(node, targetClass.getBinaryName())) {			
+			if (!AsyncTaskASTUtils.containsForbiddenMethod(node)) {				
+				subclasses.add(node);
+			} else {
+				Log.info(getClass(), "Could not refactor class declaration, because it contains a forbidden method.");
+			}			
 		}
 		return true;
 	}
 
+	
 	@Override
 	public boolean visit(AnonymousClassDeclaration node) {
+									
 		if (ASTUtils.isTypeOf(node, targetClass.getBinaryName())) {
-			VariableDeclaration parent = ASTUtils.findParent(node, VariableDeclaration.class);
-			Expression parente = ASTUtils.findParent(node, Assignment.class);
-			Boolean isAssign = (parente instanceof Assignment ? true : false);
-			if (parent == null && !isAssign) {
-				anonymousClasses.add(node);
+			if (!AsyncTaskASTUtils.containsForbiddenMethod(node)) {
+				
+				VariableDeclaration parent = ASTUtils.findParent(node, VariableDeclaration.class);
+				Expression parentExp = ASTUtils.findParent(node, Assignment.class);
+				Boolean isAssign = (parentExp instanceof Assignment ? true : false);
+				
+				if (parent == null && !isAssign) {
+					anonymousClasses.add(node);
+				} else {
+					anonymousCachedClasses.add(node);
+				}
 			} else {
-				anonymousCachedClasses.add(node);
+				Log.info(getClass(), "Could not refactor anonymous class, because it contains a forbidden method.");
 			}
 		}
 		return true;

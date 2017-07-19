@@ -1,6 +1,0 @@
-repo: fac2741bd501424e122aca6c21383763c100cfdb
-node: fac2741bd501424e122aca6c21383763c100cfdb
-branch: default
-latesttag: null
-latesttagdistance: 1
-changessincelatesttag: 1

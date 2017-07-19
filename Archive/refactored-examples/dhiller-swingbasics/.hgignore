@@ -1,7 +1,0 @@
-bin/
-syntax: regexp
-^scrapbook\.jpage$
-syntax: regexp
-^exportToHTML$
-syntax: regexp
-^docs$

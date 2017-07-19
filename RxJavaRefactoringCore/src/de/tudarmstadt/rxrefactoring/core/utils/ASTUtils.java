@@ -6,9 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.CatchClause;
@@ -180,6 +182,31 @@ public final class ASTUtils
 		return false;
 	}
 	
+	
+	/**
+	 * Checks whether an AST contains a node that fulfills the given
+	 * predicate.
+	 * 
+	 * @param root The root node of the AST.
+	 * @param predicate The predicate to be checked.
+	 * @return True, if the AST contains a node n where predicate.apply(n) == true.
+	 */
+	public static boolean contains(ASTNode root, Function<ASTNode, Boolean> predicate) {		
+		
+		class Visitor extends ASTVisitor {
+			boolean result = false;
+					
+			public boolean preVisit2(ASTNode node) {
+				if (predicate.apply(node)) result = true;
+				return !result;
+			}
+		}
+		
+		Visitor v = new Visitor();		
+		root.accept(v);		
+		return v.result;
+	}
+	
 	/**
 	 * Checks if the given types qualified name matches the given regex.
 	 * If the types binding can not be resolved, then this method returns
@@ -208,15 +235,22 @@ public final class ASTUtils
 	public static boolean matchType(String regex, ITypeBinding typeBinding) {			
 		//Objects.requireNonNull(typeBinding, "The type binding can not be null. regex was " + regex);
 		
-		Log.info(ASTUtils.class, "### Type : " + typeBinding.getQualifiedName() + " ###");
+		//Log.info(ASTUtils.class, "### Type : " + typeBinding.getQualifiedName() + " ###");
 		boolean result = Pattern.matches(regex, typeBinding.getQualifiedName());
 		//RxLogger.info(ASTUtil.class, "regex = " + regex + " matches? " + result);
 		return result;
 	}
 	
 	public static boolean matchMethod(IMethodBinding mb, String classRegex, String methodName, String returnTypeRegex, String... parameterTypeRegexes) {
+			
 		if (mb != null) {
 			ITypeBinding[] mbParameters = mb.getParameterTypes();				
+			
+			Log.info(ASTUtils.class, "Class " + mb.getDeclaringClass().getQualifiedName() + " match " + matchType(classRegex, mb.getDeclaringClass()));
+			Log.info(ASTUtils.class, "Return " + mb.getReturnType().getQualifiedName() + " match " + matchType(returnTypeRegex, mb.getReturnType()));
+			Log.info(ASTUtils.class, "Name " + mb.getName());
+			Log.info(ASTUtils.class, "Return " + Arrays.toString(mbParameters));
+
 			
 			boolean result = matchType(classRegex, mb.getDeclaringClass()) 
 					&& matchType(returnTypeRegex, mb.getReturnType()) 
@@ -232,7 +266,7 @@ public final class ASTUtils
 			return result;	
 			
 		} else {
-			Log.info(null, "Methodbinding not available");
+			Log.info(ASTUtils.class, "Methodbinding not available");
 		}			
 		
 		return false;

@@ -310,6 +310,7 @@ abstract class AbstractRxRefactoringApp implements IApplication {
 
 	private Map<String, ICompilationUnit> getCompilationUnits( IJavaProject javaProject ) throws JavaModelException
 	{
+		
 		IPackageFragmentRoot[] roots = javaProject.getAllPackageFragmentRoots();
 		IPackageFragment[] packages = getPackageFragmentsInRoots( roots );
 		return getCompilationUnitInPackages( packages );
@@ -325,6 +326,7 @@ abstract class AbstractRxRefactoringApp implements IApplication {
 		{
 			return false;
 		}
+		
 	}
 
 	private IPackageFragment[] getPackageFragmentsInRoots( IPackageFragmentRoot[] roots ) throws JavaModelException

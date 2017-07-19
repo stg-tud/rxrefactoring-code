@@ -16,6 +16,7 @@ import org.eclipse.jdt.internal.corext.refactoring.util.RefactoringASTParser;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
+import de.tudarmstadt.rxrefactoring.core.collect.ASTCollector;
 import de.tudarmstadt.rxrefactoring.core.collect.AbstractCollector;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.ClassDetails;
 
@@ -25,7 +26,8 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.ClassDetails;
  * Author: Template<br>
  * Created: 01/18/2017
  */
-public class AsyncTaskCollector extends AbstractCollector {
+@SuppressWarnings("unused")
+public class AsyncTaskCollector extends ASTCollector {
 
 	private final Multimap<ICompilationUnit, TypeDeclaration> subclassesMap;
 	private final Multimap<ICompilationUnit, AnonymousClassDeclaration> anonymousClassesMap;
@@ -34,7 +36,7 @@ public class AsyncTaskCollector extends AbstractCollector {
 
 	public AsyncTaskCollector(IJavaProject project, String collectorName )
 	{
-		super(project, collectorName);
+		super(project, collectorName, true);
 		subclassesMap = HashMultimap.create();
 		anonymousClassesMap = HashMultimap.create();
 		anonymousCachedClassesMap = HashMultimap.create();
