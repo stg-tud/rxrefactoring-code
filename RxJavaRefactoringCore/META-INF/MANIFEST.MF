@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: RxJavaRefactoringCore
-Bundle-SymbolicName: de.tudarmstadt.stg.rxjava.refactoring.core;singleton:=true
+Bundle-SymbolicName: de.tudarmstadt.rxrefactoring.core;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
@@ -18,14 +18,14 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ClassPath: libs/rxjava-1.2.2.jar,
  libs/commons-io-2.5.jar,
  .
-Export-Package: pluginhandlers,
+Export-Package: de.tudarmstadt.rxrefactoring.core,
+ de.tudarmstadt.rxrefactoring.core.codegen,
+ de.tudarmstadt.rxrefactoring.core.collect,
+ de.tudarmstadt.rxrefactoring.core.handler,
+ de.tudarmstadt.rxrefactoring.core.utils,
+ de.tudarmstadt.rxrefactoring.core.workers,
+ de.tudarmstadt.rxrefactoring.core.writers,
  rx,
  rx.functions,
- rx.schedulers,
- rxjavarefactoring.framework.api,
- rxjavarefactoring.framework.codegenerators,
- rxjavarefactoring.framework.refactoring,
- rxjavarefactoring.framework.utils,
- rxjavarefactoring.framework.writers,
- rxjavarefactoring.processor
+ rx.schedulers
 

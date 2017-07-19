@@ -2,7 +2,7 @@
 <?eclipse version="3.4"?>
 <plugin>
     <extension-point
-            id="de.tudarmstadt.stg.rxjava.refactoring.extensionpoint"
+            id="de.tudarmstadt.rxrefactoring.extensionpoint"
             name="RxJava Refactoring Tool Extension Point"
-            schema="schema/de.tudarmstadt.stg.rxjava.refactoring.extensionpoint.exsd"/>
+            schema="schema/de.tudarmstadt.rxrefactoring.extensionpoint.exsd"/>
 </plugin>

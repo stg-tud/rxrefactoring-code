@@ -4,7 +4,7 @@
     <extension
             point="de.tudarmstadt.rxrefactoring.extensionpoint">
         <client
-                class="de.tudarmstadt.rxrefactoring.ext.asynctask.Extension">
+                class="de.tudarmstadt.rxrefactoring.ext.akka.Extension">
         </client>
     </extension>
 
@@ -15,17 +15,17 @@
                 id="rxRefactoring.commands.rxrefactoring">
         </category>
         <command
-                name="AsyncTask to RxJava"
+                name="AkkaFutures to RxJava"
                 categoryId="rxRefactoring.commands.rxrefactoring"
-                id="rxRefactoring.commands.rxJavaRefactoringAsyncTask">
+                id="rxRefactoring.commands.rxJavaRefactoringAkkaFutures">
         </command>
     </extension>
 
     <extension
             point="org.eclipse.ui.handlers">
         <handler
-                commandId="rxRefactoring.commands.rxJavaRefactoringAsyncTask"
-                class="de.tudarmstadt.rxrefactoring.ext.asynctask.Handler">
+                commandId="rxRefactoring.commands.rxJavaRefactoringAkkaFutures"
+                class="de.tudarmstadt.rxrefactoring.ext.akka.Handler">
         </handler>
     </extension>
 
@@ -38,7 +38,7 @@
                     mnemonic="R"
                     id="rxRefactoring.menus.rxJavaRefactorings">
                 <command
-                        commandId="rxRefactoring.commands.rxJavaRefactoringAsyncTask"
+                        commandId="rxRefactoring.commands.rxJavaRefactoringAkkaFutures"
                         mnemonic="1"
                         id="rxRefactoring.menus.rxJavaRefactorings">
                 </command>
