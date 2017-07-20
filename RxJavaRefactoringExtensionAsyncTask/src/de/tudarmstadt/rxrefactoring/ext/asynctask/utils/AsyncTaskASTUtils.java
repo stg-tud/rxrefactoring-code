@@ -40,24 +40,29 @@ public class AsyncTaskASTUtils
 		return instanceCreationStatement;
 	}
 	
-	
-	public static boolean containsForbiddenMethod(ASTNode node) {
+	/**
+	 * Checks whether an AST contains an invocation to a method that is not allowed for refactoring.
+	 * Those methods are AsyncTask.isCancelled() and AsyncTask.getStatus().
+	 * 
+	 * @param root The root of the AST to check.
+	 * @return True, if a forbidden method has been found.
+	 */
+	public static boolean containsForbiddenMethod(ASTNode root) {
 		
-		Log.info(AsyncTaskASTUtils.class, "### Contains");
+		//Log.info(AsyncTaskASTUtils.class, "### Contains");
 		
-		boolean result = ASTUtils.contains(node, (n) -> {
-			boolean r1 = n instanceof MethodInvocation;
-			
-			if (r1) {
+		boolean result = ASTUtils.containsNode(root, (n) -> {
+			if (n instanceof MethodInvocation) {
 				MethodInvocation inv = (MethodInvocation) n;
-				Log.info(AsyncTaskASTUtils.class, inv.resolveMethodBinding() + " " + inv.resolveMethodBinding().getReturnType() );
-				return  r1 && ASTUtils.matchMethod((MethodInvocation) n, "^android\\.os\\.AsyncTask(<.*>)?$", "isCancelled", "^boolean$");
+				//Log.info(AsyncTaskASTUtils.class, inv.resolveMethodBinding() + " " + inv.resolveMethodBinding().getReturnType() );
+				return ASTUtils.matchMethod(inv, "^android\\.os\\.AsyncTask(<.*>)?$", "isCancelled", "^boolean$") ||
+						ASTUtils.matchMethod(inv, "^android\\.os\\.AsyncTask(<.*>)?$", "getStatus", "^android.os.AsyncTask.Status$");
 			}
 			
 			return false;
 		});
 	
-		Log.info(AsyncTaskASTUtils.class, "### Result : " + node + ", " + result);
+		//Log.info(AsyncTaskASTUtils.class, "### Result : " + node + ", " + result);
 		return result;
 	}
 }

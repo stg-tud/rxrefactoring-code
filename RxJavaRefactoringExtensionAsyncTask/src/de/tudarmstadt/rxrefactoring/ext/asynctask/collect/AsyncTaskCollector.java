@@ -51,12 +51,12 @@ public class AsyncTaskCollector extends ASTCollector {
 		anonymousClassesMap.putAll(cu, anonymDeclarations);
 	}
 
-	public void addAnonymCachedClassDecl( ICompilationUnit cu, List<ASTNode> anonymCachedDeclarations )
+	public void addAnonymCachedClassDecl( ICompilationUnit cu, Iterable<ASTNode> anonymCachedDeclarations )
 	{
 		anonymousCachedClassesMap.putAll(cu, anonymCachedDeclarations);
 	}
 
-	public void addRelevantUsages( ICompilationUnit cu, List<MethodInvocation> usages )
+	public void addRelevantUsages( ICompilationUnit cu, Iterable<MethodInvocation> usages )
 	{
 		relevantUsagesMap.putAll(cu, usages);
 	}

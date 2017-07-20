@@ -1,11 +1,16 @@
 package de.tudarmstadt.rxrefactoring.ext.asynctask.collect;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
+import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
 
@@ -13,14 +18,6 @@ import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.ClassDetails;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
-
-import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.ParameterizedType;
-import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.Type;
-import org.eclipse.jdt.core.dom.Assignment;
-import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 
 /**
  * Description: This visitor collects all class declarations and groups then
@@ -37,26 +34,22 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation;
  */
 public class DeclarationVisitor extends ASTVisitor {
 	private final ClassDetails targetClass;
-	private final List<TypeDeclaration> subclasses;
-	private final List<AnonymousClassDeclaration> anonymousClasses;
-	private final List<ASTNode> anonymousCachedClasses;
+	private final Set<TypeDeclaration> subclasses;
+	private final Set<AnonymousClassDeclaration> anonymousClasses;
+	private final Set<ASTNode> anonymousCachedClasses;
 
 	public DeclarationVisitor(ClassDetails targetClass) {
 		this.targetClass = targetClass;
-		subclasses = new ArrayList<>();
-		anonymousClasses = new ArrayList<>();
-		anonymousCachedClasses = new ArrayList<>();
+		subclasses = new HashSet<>();
+		anonymousClasses = new HashSet<>();
+		anonymousCachedClasses = new HashSet<>();
 	}
 
 	@Override
-	public boolean visit(TypeDeclaration node) {
-	
-		if (ASTUtils.isTypeOf(node, targetClass.getBinaryName())) {			
-			if (!AsyncTaskASTUtils.containsForbiddenMethod(node)) {				
-				subclasses.add(node);
-			} else {
-				Log.info(getClass(), "Could not refactor class declaration, because it contains a forbidden method.");
-			}			
+	public boolean visit(TypeDeclaration node) {	
+		
+		if (checkClass(node)) {				
+			subclasses.add(node);					
 		}
 		return true;
 	}
@@ -64,24 +57,61 @@ public class DeclarationVisitor extends ASTVisitor {
 	
 	@Override
 	public boolean visit(AnonymousClassDeclaration node) {
-									
-		if (ASTUtils.isTypeOf(node, targetClass.getBinaryName())) {
-			if (!AsyncTaskASTUtils.containsForbiddenMethod(node)) {
-				
-				VariableDeclaration parent = ASTUtils.findParent(node, VariableDeclaration.class);
-				Expression parentExp = ASTUtils.findParent(node, Assignment.class);
-				Boolean isAssign = (parentExp instanceof Assignment ? true : false);
-				
-				if (parent == null && !isAssign) {
-					anonymousClasses.add(node);
-				} else {
-					anonymousCachedClasses.add(node);
-				}
+										
+		if (checkClass(node)) {
+			VariableDeclaration parent = ASTUtils.findParent(node, VariableDeclaration.class);
+			Expression parentExp = ASTUtils.findParent(node, Assignment.class);
+			Boolean isAssign = (parentExp instanceof Assignment ? true : false);
+			
+			if (parent == null && !isAssign) {
+				anonymousClasses.add(node);
 			} else {
-				Log.info(getClass(), "Could not refactor anonymous class, because it contains a forbidden method.");
-			}
+				anonymousCachedClasses.add(node);
+			}						
 		}
 		return true;
+	}
+
+	/**
+	 * Checks whether a class is suitable for refactoring.
+	 * @param classDecl The AST Node representing the class declaration.
+	 * @return True, if the class is an AsyncTask and no method contains a call to a forbidden method.
+	 */
+	private boolean checkClass(ASTNode classDecl) {
+		
+		/*
+		 * Define local visitor
+		 */
+		class CheckClassVisitor extends ASTVisitor {			
+			boolean containsForbiddenMethod = false;
+			
+			public boolean visit(MethodDeclaration node) {
+				Block body = node.getBody();
+				
+				if (Objects.nonNull(body)) {
+					boolean r = AsyncTaskASTUtils.containsForbiddenMethod(body);
+					
+					if (r) {
+						Log.info(getClass(), "Could not refactor anonymous class, because it contains a forbidden method.");
+						containsForbiddenMethod = true;	
+						return false;
+					}
+				}					
+				return !containsForbiddenMethod;
+			}
+		}
+		
+		
+		
+		if (ASTUtils.isTypeOf(classDecl, targetClass.getBinaryName())) {		
+			
+			CheckClassVisitor v = new CheckClassVisitor();
+			classDecl.accept(v);	
+			
+			return !v.containsForbiddenMethod;
+		} else {
+			return false;
+		}
 	}
 
 	/**
@@ -90,7 +120,7 @@ public class DeclarationVisitor extends ASTVisitor {
 	 * 
 	 * @return A type declaration of the class extending TargetClass
 	 */
-	public List<TypeDeclaration> getSubclasses() {
+	public Set<TypeDeclaration> getSubclasses() {
 		return subclasses;
 	}
 
@@ -101,7 +131,7 @@ public class DeclarationVisitor extends ASTVisitor {
 	 * 
 	 * @return An anonymous class declaration of TargetClass
 	 */
-	public List<AnonymousClassDeclaration> getAnonymousClasses() {
+	public Set<AnonymousClassDeclaration> getAnonymousClasses() {
 		return anonymousClasses;
 	}
 
@@ -112,7 +142,7 @@ public class DeclarationVisitor extends ASTVisitor {
 	 * 
 	 * @return A Variable declaration of TargetClass
 	 */
-	public List<ASTNode> getAnonymousCachedClasses() {
+	public Set<ASTNode> getAnonymousCachedClasses() {
 		return anonymousCachedClasses;
 	}
 

@@ -1,10 +1,10 @@
 package de.tudarmstadt.rxrefactoring.core.utils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -183,28 +183,36 @@ public final class ASTUtils
 	}
 	
 	
+		
 	/**
 	 * Checks whether an AST contains a node that fulfills the given
 	 * predicate.
 	 * 
 	 * @param root The root node of the AST.
 	 * @param predicate The predicate to be checked.
-	 * @return True, if the AST contains a node n where predicate.apply(n) == true.
+	 * @return The first encountered AST node where predicate.apply(n) == true, or an empty Optional if no node has been found.
 	 */
-	public static boolean contains(ASTNode root, Function<ASTNode, Boolean> predicate) {		
+	public static Optional<ASTNode> findNode(ASTNode root, Function<ASTNode, Boolean> predicate) {		
 		
 		class Visitor extends ASTVisitor {
-			boolean result = false;
+			ASTNode result = null;
 					
 			public boolean preVisit2(ASTNode node) {
-				if (predicate.apply(node)) result = true;
-				return !result;
+				Log.info(getClass(), "Visit node: " + node);
+				
+				if (Objects.isNull(result) && predicate.apply(node)) result = node;
+				
+				return Objects.isNull(result);
 			}
 		}
 		
 		Visitor v = new Visitor();		
 		root.accept(v);		
-		return v.result;
+		return Optional.ofNullable(v.result);
+	}
+	
+	public static boolean containsNode(ASTNode root, Function<ASTNode, Boolean> predicate) {
+		return findNode(root, predicate).isPresent();
 	}
 	
 	/**
@@ -249,7 +257,7 @@ public final class ASTUtils
 			Log.info(ASTUtils.class, "Class " + mb.getDeclaringClass().getQualifiedName() + " match " + matchType(classRegex, mb.getDeclaringClass()));
 			Log.info(ASTUtils.class, "Return " + mb.getReturnType().getQualifiedName() + " match " + matchType(returnTypeRegex, mb.getReturnType()));
 			Log.info(ASTUtils.class, "Name " + mb.getName());
-			Log.info(ASTUtils.class, "Return " + Arrays.toString(mbParameters));
+//			Log.info(ASTUtils.class, "Return " + Arrays.toString(mbParameters));
 
 			
 			boolean result = matchType(classRegex, mb.getDeclaringClass()) 
@@ -768,4 +776,5 @@ public final class ASTUtils
 
 		return methodName.equals( bindingName ) && classBinaryName.equals( className );
 	}
+
 }
