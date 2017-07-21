@@ -18,8 +18,8 @@ import de.tudarmstadt.rxrefactoring.core.codegen.IdManager;
 import de.tudarmstadt.rxrefactoring.core.collect.AbstractCollector;
 import de.tudarmstadt.rxrefactoring.core.collect.Collector;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
-import de.tudarmstadt.rxrefactoring.core.workers.AbstractRefactorWorker;
-import de.tudarmstadt.rxrefactoring.core.workers.RxRefactorWorker;
+import de.tudarmstadt.rxrefactoring.core.workers.AbstractWorker;
+import de.tudarmstadt.rxrefactoring.core.workers.RefactorWorker;
 import de.tudarmstadt.rxrefactoring.core.workers.WorkerStatus;
 import de.tudarmstadt.rxrefactoring.core.writers.UnitWriterExecution;
 import de.tudarmstadt.rxrefactoring.core.writers.UnitWriters;
@@ -65,7 +65,7 @@ public abstract class AbstractRefactoringProcessor<CollectorType extends Collect
 	 * @param <T>
 	 *            collector type
 	 */
-	protected <T extends AbstractCollector> void startWorkers( Iterable<RxRefactorWorker> workers )	{
+	protected <T extends AbstractCollector> void startWorkers( Iterable<RefactorWorker> workers )	{
 		Set<Callable<WorkerStatus>> workerSet = new HashSet<>();		
 		
 		workers.forEach( worker -> workerSet.add( worker ) );

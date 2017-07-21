@@ -46,68 +46,75 @@ public class DeclarationVisitor extends ASTVisitor {
 	}
 
 	@Override
-	public boolean visit(TypeDeclaration node) {	
-		
-		if (checkClass(node)) {				
-			subclasses.add(node);					
+	public boolean visit(TypeDeclaration node) {
+
+		Log.info(getClass(), "Type -> " + node.getName().getIdentifier());
+
+		if (node.getName().getIdentifier().contains("AsyncTask")) {
+			Log.info(getClass(), "Found.");
+
+		}
+
+		if (checkClass(node)) {
+			subclasses.add(node);
 		}
 		return true;
 	}
 
-	
 	@Override
 	public boolean visit(AnonymousClassDeclaration node) {
-										
+
 		if (checkClass(node)) {
 			VariableDeclaration parent = ASTUtils.findParent(node, VariableDeclaration.class);
 			Expression parentExp = ASTUtils.findParent(node, Assignment.class);
 			Boolean isAssign = (parentExp instanceof Assignment ? true : false);
-			
+
 			if (parent == null && !isAssign) {
 				anonymousClasses.add(node);
 			} else {
 				anonymousCachedClasses.add(node);
-			}						
+			}
 		}
 		return true;
 	}
 
 	/**
 	 * Checks whether a class is suitable for refactoring.
-	 * @param classDecl The AST Node representing the class declaration.
-	 * @return True, if the class is an AsyncTask and no method contains a call to a forbidden method.
+	 * 
+	 * @param classDecl
+	 *            The AST Node representing the class declaration.
+	 * @return True, if the class is an AsyncTask and no method contains a call to a
+	 *         forbidden method.
 	 */
 	private boolean checkClass(ASTNode classDecl) {
-		
+
 		/*
 		 * Define local visitor
 		 */
-		class CheckClassVisitor extends ASTVisitor {			
+		class CheckClassVisitor extends ASTVisitor {
 			boolean containsForbiddenMethod = false;
-			
+
 			public boolean visit(MethodDeclaration node) {
 				Block body = node.getBody();
-				
+
 				if (Objects.nonNull(body)) {
 					boolean r = AsyncTaskASTUtils.containsForbiddenMethod(body);
-					
+
 					if (r) {
-						Log.info(getClass(), "Could not refactor anonymous class, because it contains a forbidden method.");
-						containsForbiddenMethod = true;	
+						Log.info(getClass(),
+								"Could not refactor anonymous class, because it contains a forbidden method.");
+						containsForbiddenMethod = true;
 						return false;
 					}
-				}					
+				}
 				return !containsForbiddenMethod;
 			}
 		}
-		
-		
-		
-		if (ASTUtils.isTypeOf(classDecl, targetClass.getBinaryName())) {		
-			
+
+		if (ASTUtils.isTypeOf(classDecl, targetClass.getBinaryName())) {
 			CheckClassVisitor v = new CheckClassVisitor();
-			classDecl.accept(v);	
-			
+			classDecl.accept(v);
+
 			return !v.containsForbiddenMethod;
 		} else {
 			return false;
@@ -125,8 +132,8 @@ public class DeclarationVisitor extends ASTVisitor {
 	}
 
 	/**
-	 * AnonymousClasses correspond to class instance creations without assigning
-	 * the value to a variable.<br>
+	 * AnonymousClasses correspond to class instance creations without assigning the
+	 * value to a variable.<br>
 	 * Example: new TargetClass(){...}
 	 * 
 	 * @return An anonymous class declaration of TargetClass

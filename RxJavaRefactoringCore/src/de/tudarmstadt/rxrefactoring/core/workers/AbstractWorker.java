@@ -11,13 +11,13 @@ import de.tudarmstadt.rxrefactoring.core.writers.UnitWriterExecution;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/12/2016
  */
-public abstract class AbstractRefactorWorker<CollectorType extends Collector> implements RxRefactorWorker {
+public abstract class AbstractWorker<CollectorType extends Collector> implements RefactorWorker {
 	
 	protected UnitWriterExecution execution;
 	protected IProgressMonitor monitor;
 	protected final CollectorType collector;
 
-	public AbstractRefactorWorker(CollectorType collector) {
+	public AbstractWorker(CollectorType collector) {
 		this.collector = collector;
 	}
 

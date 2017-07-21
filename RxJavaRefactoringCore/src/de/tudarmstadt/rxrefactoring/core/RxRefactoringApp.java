@@ -28,115 +28,107 @@ import rx.Observable;
  * dependencies are already in the classpath or that the .jar files are in
  * directory in root called "/all-deps".<br>
  * This class contains code from the tool
- * <a href="http://refactoring.info/tools/asyncdroid/">AsyncDroid</a>
- * Author: Grebiel Jose Ifill Brito<br>
+ * <a href="http://refactoring.info/tools/asyncdroid/">AsyncDroid</a> Author:
+ * Grebiel Jose Ifill Brito<br>
  * Created: 11/11/2016
  */
 public class RxRefactoringApp extends AbstractRxRefactoringApp {
-	//private static final String DEPENDENCIES_DIRECTORY = "lib";
+	// private static final String DEPENDENCIES_DIRECTORY = "lib";
 	private Set<String> targetClasses;
 
 	@Override
-	protected String getDependenciesDirectoryName()	{
+	protected String getDependenciesDirectoryName() {
 		return extension.getLibPath().toString();
 	}
 
 	@Override
-	public void refactorCompilationUnits(IJavaProject project, Map<String, ICompilationUnit> units ) {
-		Log.info( getClass(), "METHOD=refactorCompilationUnits - # units: " + units.size() );
-				
+	public void refactorCompilationUnits(IJavaProject project, Map<String, ICompilationUnit> units) {
+		Log.info(getClass(), "METHOD=refactorCompilationUnits - # units: " + units.size());
+
 		Collector collector = this.extension.createCollector(project);
 		if (collector == null) {
-			Log.errorInClient(getClass(), new IllegalArgumentException( "getASTNodesCollectorInstance must return not null" ));
+			Log.errorInClient(getClass(),
+					new IllegalArgumentException("getASTNodesCollectorInstance must return not null"));
 		}
-	
+
 		CountDownLatch latch = new CountDownLatch(1);
-		ProgressMonitorDialog dialog = new ProgressMonitorDialog( activeShell );
-		try	{
-			dialog.run( true, false, new IRunnableWithProgress() {
+		ProgressMonitorDialog dialog = new ProgressMonitorDialog(activeShell);
+		try {
+			dialog.run(true, false, new IRunnableWithProgress() {
 				@Override
-				public void run( IProgressMonitor monitor ) throws InvocationTargetException, InterruptedException	{
-					beginTask( monitor );
-					Observable
-							.from( units.values() )
+				public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
+					beginTask(monitor);
+					Observable.from(units.values())
 							// Filter using the boolean formula "runningForTest -> validateName"
-							.filter( unit -> !runningForTests || validateUnitName( unit ) )
-							.doOnNext( unit -> {
-								Log.info(getClass(), "Refactor " + unit.getElementName());
-								processUnitFromExtension( project, unit, RxRefactoringApp.this.extension, collector );
-								monitor.worked( 1 );
-							} )
-							.doOnCompleted( () -> refactorUnits( collector ) )
-							.doOnError( t -> Log.error( getClass(), "METHOD=refactorCompilationUnits", t ) )
-							.subscribe();
+							.filter(unit -> !runningForTests || validateUnitName(unit)).doOnNext(unit -> {
+								Log.info(RxRefactoringApp.class, "Refactor " + unit.getElementName());
+								processUnitFromExtension(project, unit, RxRefactoringApp.this.extension, collector);
+								monitor.worked(1);
+							}).doOnCompleted(() -> refactorUnits(collector))
+							.doOnError(t -> Log.error(getClass(), "METHOD=refactorCompilationUnits", t)).subscribe();
 					latch.countDown();
 					monitor.done();
 				}
 
-				private void beginTask( IProgressMonitor monitor ) {
+				private void beginTask(IProgressMonitor monitor) {
 					int numberOfFiles = units.values().size();
 					String pluralForm = numberOfFiles == 1 ? "" : "s";
-					String message = "Project: " + project.getPath()+ ". Analyzing "
-							+ numberOfFiles + " java file" + pluralForm + ".";
-					monitor.beginTask( message, numberOfFiles );
+					String message = "Project: " + project.getPath() + ". Analyzing " + numberOfFiles + " java file"
+							+ pluralForm + ".";
+					monitor.beginTask(message, numberOfFiles);
 				}
-			} );
+			});
+		} catch (Exception e) {
+			Log.error(getClass(), "METHOD=refactorCompilationUnits, Project:" + project.getPath() + " - FAILED", e);
 		}
-		catch ( Exception e ) {
-			Log.error( getClass(), "METHOD=refactorCompilationUnits, Project:" + project.getPath() + " - FAILED", e );
-		}
-		try	{
+		try {
 			latch.await();
-		} catch ( InterruptedException e ) {
+		} catch (InterruptedException e) {
 			String message = "The refactoring action has been interrupted.";
-			Status status = new Status( IStatus.ERROR, PLUGIN_ID, message, e );
-			ErrorDialog.openError( activeShell, dialogTitle, message, status );
+			Status status = new Status(IStatus.ERROR, PLUGIN_ID, message, e);
+			ErrorDialog.openError(activeShell, dialogTitle, message, status);
 		}
 	}
 
 	/**
-	 * Specify the binary name of the classes that should be refactored.
-	 * This method sets the flag runningForTests to true, which means
-	 * that the files will not be changed. Therefore this method can only
-	 * be used for unit tests.
+	 * Specify the binary name of the classes that should be refactored. This method
+	 * sets the flag runningForTests to true, which means that the files will not be
+	 * changed. Therefore this method can only be used for unit tests.
 	 * 
 	 * @param classNames
 	 *            binary names of the target classes
 	 */
-	public void refactorOnly( String... classNames )
-	{
+	public void refactorOnly(String... classNames) {
 		this.targetClasses = new HashSet<>();
-		this.targetClasses.addAll( Arrays.asList( classNames ) );
+		this.targetClasses.addAll(Arrays.asList(classNames));
 		runningForTests = true;
 	}
 
 	/**
 	 * @return true if the app is being ran only for tests purposes
 	 */
-	public static boolean isRunningForTests()
-	{
+	public static boolean isRunningForTests() {
 		return runningForTests;
 	}
 
 	// ### Private Methods ###
 
-	private boolean validateUnitName( ICompilationUnit unit ){
-		return this.targetClasses != null && this.targetClasses.contains( unit.getElementName() );
+	private boolean validateUnitName(ICompilationUnit unit) {
+		return this.targetClasses != null && this.targetClasses.contains(unit.getElementName());
 	}
 
-	private void refactorUnits( Collector collector ) {
-		Log.info( getClass(), "METHOD=refactorUnits - " + collector.getName() + " Refactoring starting..." );
-		AbstractRefactoringProcessor processor = new RefactoringProcessor( extension, collector );
-		runProcessor( processor );
+	private void refactorUnits(Collector collector) {
+		Log.info(getClass(), "METHOD=refactorUnits - " + collector.getName() + " Refactoring starting...");
+		AbstractRefactoringProcessor processor = new RefactoringProcessor(extension, collector);
+		runProcessor(processor);
 	}
 
-	private void runProcessor( AbstractRefactoringProcessor processor )
-	{
+	private void runProcessor(AbstractRefactoringProcessor processor) {
 		try {
 			NullProgressMonitor progressMonitor = new NullProgressMonitor();
-			processor.createChange( progressMonitor );
-		} catch ( Exception e ) {
-			Log.error( getClass(), "METHOD=runProcessor, Processor:" + processor.getName() + " - FAILED", e );
+			processor.createChange(progressMonitor);
+		} catch (Exception e) {
+			Log.error(getClass(), "METHOD=runProcessor, Processor:" + processor.getName() + " - FAILED", e);
 		}
 	}
 }

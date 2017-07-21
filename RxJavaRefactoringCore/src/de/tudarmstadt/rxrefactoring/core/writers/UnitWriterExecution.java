@@ -37,7 +37,7 @@ public class UnitWriterExecution {
 	 * a compilation unit is not added to this class by using
 	 * this method, then the changes will be ignored
 	 * 
-	 * @param icu
+	 * @param unit
 	 *            unit to be refactored
 	 */
 	public synchronized void addUnitWriter(UnitWriter writer)	{
@@ -58,13 +58,13 @@ public class UnitWriterExecution {
 	public void execute( IProgressMonitor progressMonitor )	{
 		for (UnitWriter writer : writers) {
 			
-			ICompilationUnit icu = writer.getUnit();			
-			String compilationUnitName = icu.getElementName();
+			ICompilationUnit unit = writer.getUnit();			
+			String compilationUnitName = unit.getElementName();
 			
 			try	{				
-				CompilationUnitChange compilationUnitChange = createCompilationUnitChange( icu, writer );
-				ImportRewrite importRewriter = createImportWriter( icu, writer );
-				applyChanges( icu, importRewriter, compilationUnitChange, progressMonitor );
+				CompilationUnitChange compilationUnitChange = createCompilationUnitChange( unit, writer );
+				ImportRewrite importRewriter = createImportWriter( unit, writer );
+				applyChanges( unit, importRewriter, compilationUnitChange, progressMonitor );
 			} catch (Exception e)	{
 				Log.error( getClass(), "METHOD=executeChanges - " + compilationUnitName, e );
 			}
@@ -73,16 +73,16 @@ public class UnitWriterExecution {
 
 	// ### Private Methods ###
 
-	private CompilationUnitChange createCompilationUnitChange( ICompilationUnit icu, UnitWriter singleUnitWriter ) throws JavaModelException {
-		String name = icu.getElementName();
-		CompilationUnitChange compilationUnitChange = new CompilationUnitChange( name, icu );
+	private CompilationUnitChange createCompilationUnitChange( ICompilationUnit unit, UnitWriter singleUnitWriter ) throws JavaModelException {
+		String name = unit.getElementName();
+		CompilationUnitChange compilationUnitChange = new CompilationUnitChange( name, unit );
 		TextEdit sourceCodeEdits = singleUnitWriter.getAstRewriter().rewriteAST();
 		compilationUnitChange.setEdit( sourceCodeEdits );
 		return compilationUnitChange;
 	}
 
-	private ImportRewrite createImportWriter( ICompilationUnit icu, UnitWriter writer ) throws JavaModelException	{
-		ImportRewrite importRewriter = StubUtility.createImportRewrite( icu, true );
+	private ImportRewrite createImportWriter( ICompilationUnit unit, UnitWriter writer ) throws JavaModelException	{
+		ImportRewrite importRewriter = StubUtility.createImportRewrite( unit, true );
 		
 		writer.getAddedImports().forEach(importRewriter::addImport);
 		writer.getRemovedImports().forEach(importRewriter::removeImport);
@@ -90,7 +90,7 @@ public class UnitWriterExecution {
 		return importRewriter;
 	}
 
-	private void applyChanges( ICompilationUnit icu, ImportRewrite importRewriter, CompilationUnitChange compilationUnitChange, IProgressMonitor progressMonitor ) throws BadLocationException, CoreException
+	private void applyChanges( ICompilationUnit unit, ImportRewrite importRewriter, CompilationUnitChange compilationUnitChange, IProgressMonitor progressMonitor ) throws BadLocationException, CoreException
 	{
 		// process source code
 		String sourceCode = compilationUnitChange.getCompilationUnit().getSource();
@@ -101,7 +101,7 @@ public class UnitWriterExecution {
 		TextEdit importsEdit = importRewriter.rewriteImports( progressMonitor );
 		importsEdit.apply( document );
 		String newSourceCode = document.get();
-		IBuffer buffer = icu.getBuffer();
+		IBuffer buffer = unit.getBuffer();
 		buffer.setContents( newSourceCode );
 
 		// save changes

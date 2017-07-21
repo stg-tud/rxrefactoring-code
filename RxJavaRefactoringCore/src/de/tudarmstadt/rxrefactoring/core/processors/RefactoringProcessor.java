@@ -11,12 +11,12 @@ import de.tudarmstadt.rxrefactoring.core.RxRefactoringExtension;
 import de.tudarmstadt.rxrefactoring.core.collect.AbstractCollector;
 import de.tudarmstadt.rxrefactoring.core.collect.Collector;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
-import de.tudarmstadt.rxrefactoring.core.workers.AbstractRefactorWorker;
-import de.tudarmstadt.rxrefactoring.core.workers.RxRefactorWorker;
+import de.tudarmstadt.rxrefactoring.core.workers.AbstractWorker;
+import de.tudarmstadt.rxrefactoring.core.workers.RefactorWorker;
 
 /**
  * Description: Refactors SwingWorkers by using
- * {@link AbstractRefactorWorker}s<br>
+ * {@link AbstractWorker}s<br>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/16/2016
  */
@@ -32,7 +32,7 @@ public class RefactoringProcessor extends AbstractRefactoringProcessor
 	@Override
 	public Change createChange( IProgressMonitor monitor ) throws CoreException, OperationCanceledException
 	{
-		Iterable<RxRefactorWorker> workers;
+		Iterable<RefactorWorker> workers;
 		try
 		{
 			workers = extension.getRefactoringWorkers( collector );
@@ -47,7 +47,7 @@ public class RefactoringProcessor extends AbstractRefactoringProcessor
 			return null;
 		}
 
-		for ( RxRefactorWorker worker : workers ) {
+		for ( RefactorWorker worker : workers ) {
 			worker.setMonitor( monitor );
 			worker.setRxMultipleUnitsWriter( rxMultipleUnitsWriter );
 		}

@@ -28,9 +28,9 @@ public final class ComplexObservableBuilder {
 	}
 
 	/**
-	 * Initializes the builder of a private class named "ComplexRxObservable".
-	 * If there are multiple classes in the same scope, then the names are
-	 * enumerated. i.e: ComplexRxObservable1
+	 * Initializes the builder of a private class named "ComplexRxObservable". If
+	 * there are multiple classes in the same scope, then the names are enumerated.
+	 * i.e: ComplexRxObservable1
 	 * 
 	 * @return the builder
 	 */
@@ -39,9 +39,9 @@ public final class ComplexObservableBuilder {
 	}
 
 	/**
-	 * Initializes the builder of a private class named "ComplexRxObservable".
-	 * If there are multiple classes in the same scope, then the names are
-	 * enumerated. i.e: ComplexRxObservable1
+	 * Initializes the builder of a private class named "ComplexRxObservable". If
+	 * there are multiple classes in the same scope, then the names are enumerated.
+	 * i.e: ComplexRxObservable1
 	 * 
 	 * @return the builder
 	 * @param icuName
@@ -67,8 +67,8 @@ public final class ComplexObservableBuilder {
 	}
 
 	/**
-	 * Adds a GetAsyncObservable Method given the type of the
-	 * {@link rx.Observable} and its statements
+	 * Adds a GetAsyncObservable Method given the type of the {@link rx.Observable}
+	 * and its statements
 	 * 
 	 * @param type
 	 *            type of the {@link rx.Observable}

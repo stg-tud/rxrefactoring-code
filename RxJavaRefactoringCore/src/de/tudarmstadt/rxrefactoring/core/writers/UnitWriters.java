@@ -34,11 +34,11 @@ public class UnitWriters {
 	 * @deprecated Use {@link #getOrElse(ICompilationUnit, UnitWriterFactory)} instead.
 	 */
 	@Deprecated
-	public synchronized static <W extends UnitWriter> W getSingleUnitWriter( ICompilationUnit icu, W writer ) {
-		return getOrElse(icu, () -> writer);
+	public synchronized static <W extends UnitWriter> W getSingleUnitWriter( ICompilationUnit unit, W writer ) {
+		return getOrElse(unit, () -> writer);
 	}
 
-	public static UnitWriter get(ICompilationUnit icu)	{
-		return writers.get( icu );
+	public static UnitWriter get(ICompilationUnit unit)	{
+		return writers.get( unit );
 	}
 }

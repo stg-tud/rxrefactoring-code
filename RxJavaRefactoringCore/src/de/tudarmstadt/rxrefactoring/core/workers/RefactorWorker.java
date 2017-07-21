@@ -7,7 +7,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.writers.UnitWriterExecution;
 
-public interface RxRefactorWorker extends Callable<WorkerStatus> {
+public interface RefactorWorker extends Callable<WorkerStatus> {
 
 	/**
 	 * Refactors the given code.

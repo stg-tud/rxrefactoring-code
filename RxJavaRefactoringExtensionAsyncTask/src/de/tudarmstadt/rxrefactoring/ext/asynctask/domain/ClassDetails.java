@@ -45,8 +45,8 @@ public enum ClassDetails {
 
 	/**
 	 *
-	 * @return map containing public methods and its equivalent (if any) when
-	 *         using RxJava
+	 * @return map containing public methods and its equivalent (if any) when using
+	 *         RxJava
 	 */
 	public Map<String, String> getPublicMethodsMap() {
 		return publicMethodsMap;

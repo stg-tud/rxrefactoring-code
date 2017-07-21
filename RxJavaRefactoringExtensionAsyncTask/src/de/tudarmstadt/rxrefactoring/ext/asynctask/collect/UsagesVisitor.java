@@ -15,60 +15,54 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.ClassDetails;
 /**
  * Description: Collects usages information for a target class<br>
  * This class contains code from the tool
- * <a href="http://refactoring.info/tools/asyncdroid/">AsyncDroid</a>
- * Author: Grebiel Jose Ifill Brito<br>
+ * <a href="http://refactoring.info/tools/asyncdroid/">AsyncDroid</a> Author:
+ * Grebiel Jose Ifill Brito<br>
  * Created: 11/11/2016
  */
 public class UsagesVisitor extends ASTVisitor {
-	
+
 	private final ClassDetails targetClass;
 	private final List<MethodInvocation> usages;
 
-	public UsagesVisitor( ClassDetails targetClass )
-	{
+	public UsagesVisitor(ClassDetails targetClass) {
 		this.targetClass = targetClass;
 		usages = new ArrayList<>();
 	}
 
 	@Override
-	public boolean visit( MethodInvocation node )
-	{
+	public boolean visit(MethodInvocation node) {
 		IMethodBinding binding = node.resolveMethodBinding();
-		if ( binding == null )
-		{
+		if (binding == null) {
 			return true;
 		}
 
 		ITypeBinding declaringClass = binding.getDeclaringClass();
-		if ( declaringClass == null )
-		{
+		if (declaringClass == null) {
 			return true;
 		}
 
 		String methodName = binding.getName();
 
 		Set<String> publicMethods = targetClass.getPublicMethodsMap().keySet();
-		
-		boolean targetClassFound = ASTUtils.isTypeOf( declaringClass, this.targetClass.getBinaryName() );
-		boolean targetMethodFound = publicMethods.contains( methodName );
-		
-		DeclarationVisitor dv= new DeclarationVisitor(targetClass);
+
+		boolean targetClassFound = ASTUtils.isTypeOf(declaringClass, this.targetClass.getBinaryName());
+		boolean targetMethodFound = publicMethods.contains(methodName);
+
+		DeclarationVisitor dv = new DeclarationVisitor(targetClass);
 		node.accept(dv);
-		if ( targetClassFound && targetMethodFound && dv.getAnonymousClasses().size()==0 && dv.getAnonymousCachedClasses().size()==0)
-		{
-			usages.add( node );
+		if (targetClassFound && targetMethodFound && dv.getAnonymousClasses().size() == 0
+				&& dv.getAnonymousCachedClasses().size() == 0) {
+			usages.add(node);
 		}
 
 		return true;
 	}
 
-	public List<MethodInvocation> getUsages()
-	{
+	public List<MethodInvocation> getUsages() {
 		return usages;
 	}
 
-	public boolean isUsagesFound()
-	{
+	public boolean isUsagesFound() {
 		return !usages.isEmpty();
 	}
 }

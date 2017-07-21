@@ -8,20 +8,16 @@ import rx.Scheduler;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/16/2016
  */
-public enum SchedulerType
-{
-	ANDROID_MAIN_THREAD( "AndroidSchedulers.mainThread()" ),
-	JAVA_MAIN_THREAD( "Schedulers.immediate()" );
+public enum SchedulerType {
+	ANDROID_MAIN_THREAD("AndroidSchedulers.mainThread()"), JAVA_MAIN_THREAD("Schedulers.immediate()");
 
 	private final String mainThread;
 
-	SchedulerType( String mainThread )
-	{
+	SchedulerType(String mainThread) {
 		this.mainThread = mainThread;
 	}
 
-	public String getMainThread()
-	{
+	public String getMainThread() {
 		return mainThread;
 	}
 }

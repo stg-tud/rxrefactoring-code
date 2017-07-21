@@ -198,7 +198,7 @@ public final class ASTUtils
 			ASTNode result = null;
 					
 			public boolean preVisit2(ASTNode node) {
-				Log.info(getClass(), "Visit node: " + node);
+				//Log.info(getClass(), "Visit node: " + node);
 				
 				if (Objects.isNull(result) && predicate.apply(node)) result = node;
 				
@@ -249,14 +249,20 @@ public final class ASTUtils
 		return result;
 	}
 	
-	public static boolean matchMethod(IMethodBinding mb, String classRegex, String methodName, String returnTypeRegex, String... parameterTypeRegexes) {
+	public static final int SIGNATURE_MATCH = 0;
+	public static final int SIGNATURE_UNMATCH = 1;
+	public static final int SIGNATURE_UNAVAILABLE = 2;
+
+
+	
+	public static int matchSignature(IMethodBinding mb, String classRegex, String methodName, String returnTypeRegex, String... parameterTypeRegexes) {
 			
 		if (mb != null) {
 			ITypeBinding[] mbParameters = mb.getParameterTypes();				
 			
-			Log.info(ASTUtils.class, "Class " + mb.getDeclaringClass().getQualifiedName() + " match " + matchType(classRegex, mb.getDeclaringClass()));
-			Log.info(ASTUtils.class, "Return " + mb.getReturnType().getQualifiedName() + " match " + matchType(returnTypeRegex, mb.getReturnType()));
-			Log.info(ASTUtils.class, "Name " + mb.getName());
+//			Log.info(ASTUtils.class, "Class " + mb.getDeclaringClass().getQualifiedName() + " match " + matchType(classRegex, mb.getDeclaringClass()));
+//			Log.info(ASTUtils.class, "Return " + mb.getReturnType().getQualifiedName() + " match " + matchType(returnTypeRegex, mb.getReturnType()));
+//			Log.info(ASTUtils.class, "Name " + mb.getName());
 //			Log.info(ASTUtils.class, "Return " + Arrays.toString(mbParameters));
 
 			
@@ -265,24 +271,33 @@ public final class ASTUtils
 					&& mb.getName().equals(methodName)
 					&& parameterTypeRegexes.length == mbParameters.length;
 			
-			if (!result) return false;
+			if (!result) return SIGNATURE_UNMATCH;
 			
 			for (int i = 0; i < parameterTypeRegexes.length; i++) {
 				result = result && matchType(parameterTypeRegexes[i], mbParameters[i]);
 			}		
 			
-			return result;	
+			return result ? SIGNATURE_MATCH : SIGNATURE_UNMATCH;	
 			
 		} else {
-			Log.info(ASTUtils.class, "Methodbinding not available");
+			
+			return SIGNATURE_UNAVAILABLE;
 		}			
-		
-		return false;
 	}
 	
-	public static boolean matchMethod(MethodInvocation inv, String className, String methodName, String returnType, String... parameterTypes) {
+	public static boolean matchSignature(MethodInvocation inv, String className, String methodName, String returnType, String... parameterTypes) {
 		IMethodBinding mb = inv.resolveMethodBinding();
-		return matchMethod(mb, className, methodName, returnType, parameterTypes);
+		switch (matchSignature(mb, className, methodName, returnType, parameterTypes)) {
+			case SIGNATURE_MATCH : 
+				return true;
+			case SIGNATURE_UNMATCH : 
+				return false;
+			case SIGNATURE_UNAVAILABLE : 
+				Log.error(ASTUtils.class, "Note: methodbinding for " + inv.getName().getIdentifier() + " not available!");
+				return inv.getName().getIdentifier().equals(methodName);
+			default :
+				throw new IllegalStateException("Unexpected return value from matchSignature.");
+		}
 	}
 
 	/**

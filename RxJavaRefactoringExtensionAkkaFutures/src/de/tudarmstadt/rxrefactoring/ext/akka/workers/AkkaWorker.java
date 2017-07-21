@@ -63,23 +63,16 @@ public class AkkaWorker extends ASTWorker {
 		
 		@Override
 		//TODO: Only visit this when we refactored the variable.
-		public void endVisit(MethodInvocation node) {				
-			
-			IMethodBinding mb = node.resolveMethodBinding();			
-			if (mb != null) {
-				if (ASTUtils.matchMethod(mb, "^akka\\.dispatch\\.Futures$", "future", "^scala\\.concurrent\\.Future(<.*>)?$", "^java\\.util\\.concurrent\\.Callable(<.*>)?$", "^scala\\.concurrent\\.ExecutionContext$")) {
-					Log.info(getClass(), "Refactor " + node.getName());
-					writer.replace(node.getExpression(), ast.newSimpleName("Observable"));
-		            writer.replace(node.getName(), ast.newSimpleName("fromCallable"));			            
-		            
-		            ListRewrite lr = writer.getListRewrite(node, MethodInvocation.ARGUMENTS_PROPERTY);
-		            lr.remove((ASTNode) node.arguments().get(1), null);    
-		            setChanged();
-				}
-			} else {
-				Log.info(getClass(), "No binding for: " + node.getName());
+		public void endVisit(MethodInvocation node) {			
+
+			if (ASTUtils.matchSignature(node, "^akka\\.dispatch\\.Futures$", "future", "^scala\\.concurrent\\.Future(<.*>)?$", "^java\\.util\\.concurrent\\.Callable(<.*>)?$", "^scala\\.concurrent\\.ExecutionContext$")) {
+				writer.replace(node.getExpression(), ast.newSimpleName("Observable"));
+	            writer.replace(node.getName(), ast.newSimpleName("fromCallable"));			            
+	            
+	            ListRewrite lr = writer.getListRewrite(node, MethodInvocation.ARGUMENTS_PROPERTY);
+	            lr.remove((ASTNode) node.arguments().get(1), null);    
+	            setChanged();
 			}		
-			
 		}
 	}
 

@@ -9,7 +9,7 @@ import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
 import de.tudarmstadt.rxrefactoring.core.writers.UnitWriters;
 
-public abstract class ASTWorker extends AbstractRefactorWorker<ASTCollector> {
+public abstract class ASTWorker extends AbstractWorker<ASTCollector> {
 
 	public ASTWorker(ASTCollector collector) {
 		super(collector);

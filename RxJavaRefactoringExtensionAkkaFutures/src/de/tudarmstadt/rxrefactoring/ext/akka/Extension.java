@@ -10,7 +10,7 @@ import com.google.common.collect.Sets;
 import de.tudarmstadt.rxrefactoring.core.RxRefactoringExtension;
 import de.tudarmstadt.rxrefactoring.core.collect.ASTCollector;
 import de.tudarmstadt.rxrefactoring.core.utils.PluginUtils;
-import de.tudarmstadt.rxrefactoring.core.workers.RxRefactorWorker;
+import de.tudarmstadt.rxrefactoring.core.workers.RefactorWorker;
 import de.tudarmstadt.rxrefactoring.ext.akka.workers.AkkaWorker;
 
 /**
@@ -39,7 +39,7 @@ public class Extension implements RxRefactoringExtension<ASTCollector> {
 
 
 	@Override
-	public Iterable<RxRefactorWorker> getRefactoringWorkers(ASTCollector collector) {
+	public Iterable<RefactorWorker> getRefactoringWorkers(ASTCollector collector) {
 		return Sets.newHashSet(
 				new AkkaWorker(collector));
 	}

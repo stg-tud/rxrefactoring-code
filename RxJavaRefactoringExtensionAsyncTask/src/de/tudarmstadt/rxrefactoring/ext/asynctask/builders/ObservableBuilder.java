@@ -21,8 +21,7 @@ import rx.schedulers.Schedulers;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/16/2016
  */
-public final class ObservableBuilder
-{
+public final class ObservableBuilder {
 	private static final String NEW_LINE = "\n";
 	private static final String SPACE = " ";
 
@@ -31,29 +30,27 @@ public final class ObservableBuilder
 	private final boolean willBeCached;
 	private boolean willBeSubscribed;
 
-	private ObservableBuilder( String type, Block doInBackground, SchedulerType observeOnScheduler )
-	{
-		validateDoInBackgroundBlock( doInBackground );
+	private ObservableBuilder(String type, Block doInBackground, SchedulerType observeOnScheduler) {
+		validateDoInBackgroundBlock(doInBackground);
 		rxObservable = new StringBuilder();
-		addFromCallable( type, doInBackground, observeOnScheduler );
+		addFromCallable(type, doInBackground, observeOnScheduler);
 		this.willBeCached = false;
 	}
 
-	private ObservableBuilder( String variableName, String type, Block doInBackground, SchedulerType observeOnScheduler )
-	{
-		validateDoInBackgroundBlock( doInBackground );
+	private ObservableBuilder(String variableName, String type, Block doInBackground,
+			SchedulerType observeOnScheduler) {
+		validateDoInBackgroundBlock(doInBackground);
 		rxObservable = new StringBuilder();
-		rxObservable.append( "Observable<" );
-		rxObservable.append( type );
-		rxObservable.append( "> " );
-		rxObservable.append( variableName );
-		rxObservable.append( " = " );
-		addFromCallable( type, doInBackground, observeOnScheduler );
+		rxObservable.append("Observable<");
+		rxObservable.append(type);
+		rxObservable.append("> ");
+		rxObservable.append(variableName);
+		rxObservable.append(" = ");
+		addFromCallable(type, doInBackground, observeOnScheduler);
 		this.willBeCached = true;
 	}
 
-	public ObservableBuilder(String type, Expression expression, SchedulerType observeOnScheduler)
-	{
+	public ObservableBuilder(String type, Expression expression, SchedulerType observeOnScheduler) {
 		validateForExpressionk(expression);
 		rxObservable = new StringBuilder();
 		addFromIterable(type, expression, observeOnScheduler);
@@ -62,9 +59,8 @@ public final class ObservableBuilder
 
 	/**
 	 * Builds an {@link rx.Observable} using
-	 * {@link rx.Observable#fromCallable(Callable)}. The {@link rx.Observable}
-	 * will be subscribed on
-	 * {@link Schedulers#computation()}
+	 * {@link rx.Observable#fromCallable(Callable)}. The {@link rx.Observable} will
+	 * be subscribed on {@link Schedulers#computation()}
 	 *
 	 * @param type
 	 *            the type of the observable
@@ -72,20 +68,18 @@ public final class ObservableBuilder
 	 *            the code block passed to
 	 *            {@link rx.Observable#fromCallable(Callable)}
 	 * @param observeOnScheduler
-	 *            Scheduler used for
-	 *            {@link rx.Observable#observeOn(Scheduler)}
+	 *            Scheduler used for {@link rx.Observable#observeOn(Scheduler)}
 	 * @return The builder
 	 */
-	public static ObservableBuilder newObservable( String type, Block doInBackground, SchedulerType observeOnScheduler )
-	{
-		return new ObservableBuilder( type, doInBackground, observeOnScheduler );
+	public static ObservableBuilder newObservable(String type, Block doInBackground, SchedulerType observeOnScheduler) {
+		return new ObservableBuilder(type, doInBackground, observeOnScheduler);
 	}
 
 	/**
 	 * Builds an {@link rx.Observable} using
-	 * {@link rx.Observable#fromCallable(Callable)}. The {@link rx.Observable}
-	 * will be subscribed on {@link Schedulers#computation()}. The
-	 * {@link rx.Observable} will be assigned to a variable.
+	 * {@link rx.Observable#fromCallable(Callable)}. The {@link rx.Observable} will
+	 * be subscribed on {@link Schedulers#computation()}. The {@link rx.Observable}
+	 * will be assigned to a variable.
 	 *
 	 * @param variableName
 	 *            variable used to cache the {@link rx.Observable}
@@ -98,13 +92,13 @@ public final class ObservableBuilder
 	 *            scheduler used for {@link rx.Observable#observeOn(Scheduler)}
 	 * @return The builder
 	 */
-	public static ObservableBuilder newObservable( String variableName, String type, Block doInBackground, SchedulerType observeOnScheduler )
-	{
-		return new ObservableBuilder( variableName, type, doInBackground, observeOnScheduler );
+	public static ObservableBuilder newObservable(String variableName, String type, Block doInBackground,
+			SchedulerType observeOnScheduler) {
+		return new ObservableBuilder(variableName, type, doInBackground, observeOnScheduler);
 	}
 
 	public static ObservableBuilder newObservable(String type, Expression expression,
-														  SchedulerType observeOnScheduler) {
+			SchedulerType observeOnScheduler) {
 		return new ObservableBuilder(type, expression, observeOnScheduler);
 	}
 
@@ -112,41 +106,43 @@ public final class ObservableBuilder
 	 * Adds the {@link Observable#doOnSubscribe(Action0)} call.
 	 *
 	 * @param doOnSubscribeBlock
-	 *            the code block to be used on subscribe. Nothing is added if
-	 *            this parameter is null.
+	 *            the code block to be used on subscribe. Nothing is added if this
+	 *            parameter is null.
 	 * @return The builder
 	 */
-//	public RxObservableStringBuilder addDoOnSubscribe(Block doOnSubscribeBlock) {
-//		if (doOnSubscribeBlock != null) {
-//			rxObservable.append(NEW_LINE);
-//			rxObservable.append(".doOnSubscribe(new Action0() {");
-//			rxObservable.append(NEW_LINE);
-//			rxObservable.append("@Override public void call() ");
-//			rxObservable.append(NEW_LINE);
-//			rxObservable.append(doOnSubscribeBlock.toString());
-//			rxObservable.append("})");
-//
-//		}
-//		return this;
-//	}
+	// public RxObservableStringBuilder addDoOnSubscribe(Block doOnSubscribeBlock) {
+	// if (doOnSubscribeBlock != null) {
+	// rxObservable.append(NEW_LINE);
+	// rxObservable.append(".doOnSubscribe(new Action0() {");
+	// rxObservable.append(NEW_LINE);
+	// rxObservable.append("@Override public void call() ");
+	// rxObservable.append(NEW_LINE);
+	// rxObservable.append(doOnSubscribeBlock.toString());
+	// rxObservable.append("})");
+	//
+	// }
+	// return this;
+	// }
 
 	/**
-	 * Adds the {@link Observable#doOnNext(Action1)} call. This method is
-	 * used as an equivalent for doOnPostExecute(T result) for AsyncTasks.
-	 * {@link Observable#doOnCompleted(Action0)} is not used because a result
-	 * is needed
+	 * Adds the {@link Observable#doOnNext(Action1)} call. This method is used as an
+	 * equivalent for doOnPostExecute(T result) for AsyncTasks.
+	 * {@link Observable#doOnCompleted(Action0)} is not used because a result is
+	 * needed
 	 *
 	 * @param doOnNextBlock
 	 *            the code block to be used on next. Nothing is added if this
 	 *            parameter is null.
 	 * @param resultVariableName
-	 *            the name of the variable used. (For AsyncTasks it makes sense
-	 *            to use the same from doOnPostExecute)<br>
+	 *            the name of the variable used. (For AsyncTasks it makes sense to
+	 *            use the same from doOnPostExecute)<br>
 	 *            for example: for "doOnPostExecute(Integer number)" use number
 	 * @return The builder
 	 */
-	public ObservableBuilder addDoOnNext(String doOnNextBlock, String resultVariableName,String type,boolean isFinal) {
+	public ObservableBuilder addDoOnNext(String doOnNextBlock, String resultVariableName, String type,
+			boolean isFinal) {
 		if (doOnNextBlock != null) {
+
 			rxObservable.append(NEW_LINE);
 			rxObservable.append(".");
 			rxObservable.append("doOnNext");
@@ -155,7 +151,7 @@ public final class ObservableBuilder
 			rxObservable.append(">() {");
 			rxObservable.append(NEW_LINE);
 			rxObservable.append("@Override public void call(");
-			rxObservable.append(isFinal?"final ":" ");
+			rxObservable.append(isFinal ? "final " : " ");
 			rxObservable.append(type);
 			rxObservable.append(SPACE);
 			rxObservable.append(resultVariableName);
@@ -168,21 +164,21 @@ public final class ObservableBuilder
 	}
 
 	/**
-	 * Adds the {@link Observable#doOnNext(Action1)} call. This method is
-	 * used as an equivalent for doOnPostExecute(T result) for AsyncTasks.
-	 * {@link Observable#doOnCompleted(Action0)} is not used because a result
-	 * is needed
+	 * Adds the {@link Observable#doOnNext(Action1)} call. This method is used as an
+	 * equivalent for doOnPostExecute(T result) for AsyncTasks.
+	 * {@link Observable#doOnCompleted(Action0)} is not used because a result is
+	 * needed
 	 *
 	 * @param doPostExecuteBlock
 	 *            the code block to be used on next. Nothing is added if this
 	 *            parameter is null.
 	 * @param resultVariableName
-	 *            the name of the variable used. (For AsyncTasks it makes sense
-	 *            to use the same from doOnPostExecute)<br>
+	 *            the name of the variable used. (For AsyncTasks it makes sense to
+	 *            use the same from doOnPostExecute)<br>
 	 *            for example: for "doOnPostExecute(Integer number)" use number
 	 * @return The builder
 	 */
-	public ObservableBuilder addDoOnCompleted(Block doPostExecuteBlock, String resultVariableName,String type) {
+	public ObservableBuilder addDoOnCompleted(Block doPostExecuteBlock, String resultVariableName, String type) {
 		if (doPostExecuteBlock != null) {
 			rxObservable.append(NEW_LINE);
 			rxObservable.append(".");
@@ -198,10 +194,10 @@ public final class ObservableBuilder
 	}
 
 	/**
-	 * Adds the {@link Observable#doOnNext(Action1)} call. This method is
-	 * used as an equivalent for doOnPostExecute(T result) for AsyncTasks.
-	 * {@link Observable#doOnCompleted(Action0)} is not used because a result
-	 * is needed
+	 * Adds the {@link Observable#doOnNext(Action1)} call. This method is used as an
+	 * equivalent for doOnPostExecute(T result) for AsyncTasks.
+	 * {@link Observable#doOnCompleted(Action0)} is not used because a result is
+	 * needed
 	 *
 	 * @param doOnCancelled
 	 *            the code block to be used on next. Nothing is added if this
@@ -224,10 +220,10 @@ public final class ObservableBuilder
 	}
 
 	/**
-	 * Adds the {@link Observable#doOnNext(Action1)} call. This method is
-	 * used as an equivalent for doOnPostExecute(T result) for AsyncTasks.
-	 * {@link Observable#doOnCompleted(Action0)} is not used because a result
-	 * is needed
+	 * Adds the {@link Observable#doOnNext(Action1)} call. This method is used as an
+	 * equivalent for doOnPostExecute(T result) for AsyncTasks.
+	 * {@link Observable#doOnCompleted(Action0)} is not used because a result is
+	 * needed
 	 *
 	 * @param onPreExecute
 	 *            the code block to be used on next. Nothing is added if this
@@ -249,17 +245,16 @@ public final class ObservableBuilder
 		return this;
 	}
 
-
 	/**
 	 * Adds the {@link Observable#timeout(long, TimeUnit)} and
 	 * {@link Observable#onErrorReturn(Func1)} calls. The onErrorReturn returns
-	 * null. Developers can modify this method after refactoring to return a
-	 * default value
+	 * null. Developers can modify this method after refactoring to return a default
+	 * value
 	 *
 	 * @param arguments
-	 *            list of strings of size 2 for the arguments. The first
-	 *            argument corresponds to the time and the second argument to
-	 *            the time unit. For example: 3L, TimeUnit.SECONDS
+	 *            list of strings of size 2 for the arguments. The first argument
+	 *            corresponds to the time and the second argument to the time unit.
+	 *            For example: 3L, TimeUnit.SECONDS
 	 * @return The builder
 	 */
 	public ObservableBuilder addTimeout(List<String> arguments) {
@@ -299,8 +294,8 @@ public final class ObservableBuilder
 	}
 
 	/**
-	 * Builds the observable string based on the information collected until
-	 * this method was invoked.
+	 * Builds the observable string based on the information collected until this
+	 * method was invoked.
 	 *
 	 * @return A String representing a statement.
 	 */
@@ -311,22 +306,19 @@ public final class ObservableBuilder
 			// corrects the return type
 			statement = statement.replace("Observable<" + type + ">", "Subscription");
 		}
-		//SourceCodeValidator.validateStatement(statement);
+		// SourceCodeValidator.validateStatement(statement);
 		return statement;
 	}
 
 	// ### Private Methods ###
 
-	private String getStatements( Block timeoutCatchBlock )
-	{
-		return timeoutCatchBlock.toString().replace( "{", "" ).replace( "}", "" );
+	private String getStatements(Block timeoutCatchBlock) {
+		return timeoutCatchBlock.toString().replace("{", "").replace("}", "");
 	}
 
-	private static void validateDoInBackgroundBlock( Block doInBackground )
-	{
-		if ( doInBackground == null )
-		{
-			throw new RuntimeException( "doInBackground cannot be null" );
+	private static void validateDoInBackgroundBlock(Block doInBackground) {
+		if (doInBackground == null) {
+			throw new RuntimeException("doInBackground cannot be null");
 		}
 	}
 
@@ -336,25 +328,24 @@ public final class ObservableBuilder
 		}
 	}
 
-	private void addFromCallable( String type, Block doInBackground, SchedulerType observeOnScheduler )
-	{
+	private void addFromCallable(String type, Block doInBackground, SchedulerType observeOnScheduler) {
 		this.type = type;
-		rxObservable.append( "Observable.fromCallable(new Callable<" );
-		rxObservable.append( type );
-		rxObservable.append( ">() {" );
-		rxObservable.append( NEW_LINE );
-		rxObservable.append( "@Override public " );
-		rxObservable.append( type );
-		rxObservable.append( " call() throws Exception" );
-		rxObservable.append( NEW_LINE );
-		rxObservable.append( doInBackground.toString() );
-		rxObservable.append( "})" );
-		rxObservable.append( NEW_LINE );
-		rxObservable.append( ".subscribeOn(Schedulers.computation())" );
-		rxObservable.append( NEW_LINE );
-		rxObservable.append( ".observeOn(" );
-		rxObservable.append( observeOnScheduler.getMainThread() );
-		rxObservable.append( ")" );
+		rxObservable.append("Observable.fromCallable(new Callable<");
+		rxObservable.append(type);
+		rxObservable.append(">() {");
+		rxObservable.append(NEW_LINE);
+		rxObservable.append("@Override public ");
+		rxObservable.append(type);
+		rxObservable.append(" call() throws Exception");
+		rxObservable.append(NEW_LINE);
+		rxObservable.append(doInBackground.toString());
+		rxObservable.append("})");
+		rxObservable.append(NEW_LINE);
+		rxObservable.append(".subscribeOn(Schedulers.computation())");
+		rxObservable.append(NEW_LINE);
+		rxObservable.append(".observeOn(");
+		rxObservable.append(observeOnScheduler.getMainThread());
+		rxObservable.append(")");
 	}
 
 	private void addFromIterable(String type, Expression expression, SchedulerType observeOnScheduler) {
@@ -363,14 +354,14 @@ public final class ObservableBuilder
 		rxObservable.append(expression.toString().replace(";", ""));
 		rxObservable.append(")");
 	}
+
 	/**
-	 * Builds the observable as a result statement based on
-	 * the information collected until this method was invoked.
+	 * Builds the observable as a result statement based on the information
+	 * collected until this method was invoked.
 	 *
 	 * @return A String representing the return statement
 	 */
-	public String buildReturnStatement()
-	{
+	public String buildReturnStatement() {
 		return "return " + build();
 	}
 }
