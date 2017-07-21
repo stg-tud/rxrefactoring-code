@@ -46,6 +46,9 @@ public class AsyncTaskWrapper extends ASTVisitor {
 	 *            (Sub-)class of an AsyncTask.
 	 */
 	public AsyncTaskWrapper(ASTNode declaration) {
+		if (!(declaration instanceof TypeDeclaration || declaration instanceof AnonymousClassDeclaration))
+			throw new IllegalArgumentException("Can only wrap around TypeDeclaration or AnonymousClassDeclaration, but got " + declaration);
+		
 		visitor = new AsyncTaskVisitor();
 		declaration.accept(visitor);
 	}
@@ -241,11 +244,14 @@ public class AsyncTaskWrapper extends ASTVisitor {
 	}
 
 	/**
-	 * @return the hAS_FIELD
+	 * Checks whether the AsyncTask has additional functionality, i.e. extra fields, 
+	 * method declarations, or a progress update (= intermediate results).
+	 * 
+	 * @return True, if the AsyncTask has additional functionality.
 	 */
-	public boolean hasField() {
+	public boolean hasAdditionalAccess() {
 		return !visitor.fieldDeclarations.isEmpty() || !visitor.additionalMethodDeclarations.isEmpty()
-				|| !(getOnProgressUpdateBlock() == null);
+				|| getOnProgressUpdateBlock() != null;
 	}
 
 	public List<FieldDeclaration> getFieldDeclarations() {

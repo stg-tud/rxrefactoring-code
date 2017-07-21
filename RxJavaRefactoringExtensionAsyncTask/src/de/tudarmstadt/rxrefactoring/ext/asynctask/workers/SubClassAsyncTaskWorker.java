@@ -84,21 +84,23 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 				}
 
 				AST ast = asyncTaskDeclaration.getAST();
-				UnitWriterExt singleChangeWriter = UnitWriters.getOrElse(unit,
-						() -> new UnitWriterExt(unit, ast, getClass().getSimpleName()));
-				updateUsage(collector.getRelevantUsages(), ast, singleChangeWriter, asyncTaskDeclaration, unit);
-				singleChangeWriter.removeSuperClass(asyncTaskDeclaration);
+				UnitWriterExt writer = UnitWriters.getOrElse(unit,
+						() -> new UnitWriterExt(unit, ast));
+				
+				updateUsage(collector.getRelevantUsages(), ast, asyncTaskDeclaration, unit);
+				writer.removeSuperClass(asyncTaskDeclaration);
+				
 				Log.info(getClass(), "METHOD=refactor - Updating imports: " + unit.getElementName());
-				updateImports(singleChangeWriter, asyncTask);
-				createLocalObservable(singleChangeWriter, asyncTaskDeclaration, ast, asyncTask);
-				addProgressBlock(ast, unit, asyncTask, singleChangeWriter);
+				updateImports(writer, asyncTask);
+				createLocalObservable(writer, asyncTaskDeclaration, ast, asyncTask);
+				addProgressBlock(ast, unit, asyncTask, writer);
+				
 				Log.info(getClass(), "METHOD=refactor - Refactoring class: " + unit.getElementName());
-
 				if (asyncTask.getOnPreExecuteBlock() != null)
-					updateonPreExecute(asyncTaskDeclaration, singleChangeWriter, ast, asyncTask);
+					updateonPreExecute(asyncTaskDeclaration, writer, ast, asyncTask);
 
 				NUMBER_OF_ASYNC_TASKS++;
-				execution.addUnitWriter(singleChangeWriter);
+				execution.addUnitWriter(writer);
 			}
 
 			monitor.worked(1);
@@ -109,24 +111,25 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 		return WorkerStatus.OK;
 	}
 
-	private void updateUsage(Multimap<ICompilationUnit, MethodInvocation> cuRelevantUsagesMap, AST ast,
-			UnitWriterExt writer, TypeDeclaration asyncTaskDeclaration, ICompilationUnit outerUnit) {
-		for (ICompilationUnit unit : cuRelevantUsagesMap.keySet()) {
+	private void updateUsage(Multimap<ICompilationUnit, MethodInvocation> relevantUsages, AST ast,
+			TypeDeclaration asyncTaskDeclaration, ICompilationUnit outerUnit) {
+		for (ICompilationUnit unit : relevantUsages.keySet()) {
 			TypeDeclaration tyDec = ast.newTypeDeclaration();
 
-			AST astInvoke = ast;
 			Log.info(getClass(), "METHOD=updateUsage - updating usage for class: " + outerUnit.getElementName() + " in "
 					+ unit.getElementName());
-			for (MethodInvocation methodInvoke : cuRelevantUsagesMap.get(unit)) {
+			for (MethodInvocation methodInvoke : relevantUsages.get(unit)) {
 				if (methodInvoke.getName().toString().equals(EXECUTE)
 						|| methodInvoke.getName().toString().equals(EXECUTE_ON_EXECUTOR)) {
 
 					if (outerUnit.getElementName().equals(unit.getElementName())) {
-						replaceCancel(cuRelevantUsagesMap, methodInvoke, outerUnit, ast);
+						UnitWriterExt writer = UnitWriters.getOrElse(outerUnit, () -> new UnitWriterExt(outerUnit, ast));
+						replaceCancel(writer, relevantUsages, methodInvoke, outerUnit, ast);
 					} else {
 						tyDec = ASTUtils.findParent(methodInvoke, TypeDeclaration.class);
-						astInvoke = tyDec.getAST();
-						replaceCancel(cuRelevantUsagesMap, methodInvoke, unit, astInvoke);
+						AST astInvoke = tyDec.getAST();
+						UnitWriterExt writer = UnitWriters.getOrElse(unit, () -> new UnitWriterExt(unit, astInvoke));
+						replaceCancel(writer, relevantUsages, methodInvoke, unit, astInvoke);
 						execution.addUnitWriter(writer);
 					}
 
@@ -140,28 +143,28 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 	/**
 	 * Replace asyncTask.cancel() method with Subscription.unsubscribe()
 	 */
-	void replaceCancel(Multimap<ICompilationUnit, MethodInvocation> cuRelevantUsagesMap, MethodInvocation methodInvoke,
+	void replaceCancel(UnitWriterExt writer, Multimap<ICompilationUnit, MethodInvocation> relevantUsages, MethodInvocation methodInvoke,
 			ICompilationUnit unit, AST astInvoke) {
+		
+		
+		
 		boolean isCancelPresent = false;
-		for (MethodInvocation methodReference : cuRelevantUsagesMap.get(unit)) {
-			try {
-				if (methodInvoke.getExpression().toString().equals(methodReference.getExpression().toString())) {
-					if (methodReference.getName().toString().equals(CANCEL)) {
-						isCancelPresent = true;
-						Log.info(getClass(), "METHOD=replaceCancel - updating cancel invocation for class: "
-								+ unit.getElementName());
-						replaceExecuteWithSubscription(methodInvoke, unit, astInvoke);
-						updateCancelInvocation(unit, methodReference, astInvoke);
+		
+		for (MethodInvocation methodReference : relevantUsages.get(unit)) {
+			if (methodInvoke.getExpression().toString().equals(methodReference.getExpression().toString())) {
+				if (methodReference.getName().toString().equals(CANCEL)) {
+					isCancelPresent = true;
+					Log.info(getClass(), "METHOD=replaceCancel - updating cancel invocation for class: "
+							+ unit.getElementName());
+					replaceExecuteWithSubscription(writer, methodInvoke, astInvoke);
+					updateCancelInvocation(writer, methodReference, astInvoke);
 
-					}
 				}
-			} catch (Exception e) {
-
-			}
+			}			
 		}
+		
 		if (!isCancelPresent) {
-
-			replaceExecute(methodInvoke, unit, astInvoke);
+			replaceExecute(writer, methodInvoke, unit, astInvoke);
 		}
 	}
 
@@ -169,9 +172,9 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 	 * Method to refactor method invocation statements with name execute EX: new
 	 * Task().execute();
 	 */
-	void replaceExecute(MethodInvocation methodInvoke, ICompilationUnit unit, AST astInvoke) {
-		UnitWriterExt singleChangeWriter = UnitWriters.getOrElse(unit,
-				() -> new UnitWriterExt(unit, astInvoke, getClass().getSimpleName()));
+	void replaceExecute(UnitWriterExt writer, MethodInvocation methodInvoke, ICompilationUnit unit, AST astInvoke) {
+//		UnitWriterExt singleChangeWriter = UnitWriters.getOrElse(unit,
+//				() -> new UnitWriterExt(unit, astInvoke, getClass().getSimpleName()));
 
 		AST methodAST = methodInvoke.getAST();
 		MethodInvocation execute = (MethodInvocation) ASTNode.copySubtree(methodAST, methodInvoke);
@@ -184,7 +187,7 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 		invocation.setExpression(execute);
 		invocation.setName(methodAST.newSimpleName(SUBSCRIBE));
 		// ASTUtil.replaceInStatement(methodInvoke, invocation);
-		singleChangeWriter.replace(methodInvoke, invocation);
+		writer.replace(methodInvoke, invocation);
 		// singleChangeWriter.replace(methodInvoke, invocation);
 	}
 
@@ -192,13 +195,14 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 	 * Method to refactor method invocation statements with name execute EX: new
 	 * Task().execute();
 	 */
-	void replaceExecuteWithSubscription(MethodInvocation methodInvoke, ICompilationUnit unit, AST astInvoke) {
-		UnitWriterExt singleChangeWriter = UnitWriters.getOrElse(unit,
-				() -> new UnitWriterExt(unit, astInvoke, getClass().getSimpleName()));
+	void replaceExecuteWithSubscription(UnitWriterExt writer, MethodInvocation methodInvoke, AST astInvoke) {
+//		UnitWriterExt singleChangeWriter = UnitWriters.getOrElse(unit,
+//				() -> new UnitWriterExt(unit, astInvoke, getClass().getSimpleName()));
 
 		Log.info(getClass(), "METHOD=replaceExecuteWithSubscription - replace Execute With Subscription for class: "
-				+ unit.getElementName());
-		createSubscriptionDeclaration(unit, methodInvoke);
+				+ writer.getUnit().getElementName());
+		
+		createSubscriptionDeclaration(writer, methodInvoke);
 
 		MethodInvocation execute = (MethodInvocation) ASTNode.copySubtree(astInvoke, methodInvoke);
 		execute.setName(astInvoke.newSimpleName(ASYNC_METHOD_NAME));
@@ -211,16 +215,16 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 		initSubscription
 				.setLeftHandSide(astInvoke.newSimpleName(getVariableName(methodInvoke.getExpression()) + SUBSCRIPTION));
 		initSubscription.setRightHandSide(invocation);
-		singleChangeWriter.replace(methodInvoke, initSubscription);
+		writer.replace(methodInvoke, initSubscription);
 	}
 
-	void createSubscriptionDeclaration(ICompilationUnit unit, MethodInvocation methodInvoke) {
-		Log.info(getClass(), "METHOD=createSubscriptionDeclaration - create Subscription Declaration for class: "
-				+ unit.getElementName());
+	void createSubscriptionDeclaration(UnitWriterExt writer, MethodInvocation methodInvoke) {
+
+		
 		TypeDeclaration tyDec = ASTUtils.findParent(methodInvoke, TypeDeclaration.class);
 		AST astInvoke = tyDec.getAST();
-		UnitWriterExt singleChangeWriter = UnitWriters.getOrElse(unit,
-				() -> new UnitWriterExt(unit, astInvoke, getClass().getSimpleName()));
+//		UnitWriterExt singleChangeWriter = UnitWriters.getOrElse(unit,
+//				() -> new UnitWriterExt(unit, astInvoke, getClass().getSimpleName()));
 		VariableDeclarationFragment variable = astInvoke.newVariableDeclarationFragment();
 		Expression e = methodInvoke.getExpression();
 
@@ -228,8 +232,8 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 
 		FieldDeclaration subscription = astInvoke.newFieldDeclaration(variable);
 		subscription.setType(astInvoke.newSimpleType(astInvoke.newSimpleName(SUBSCRIPTION)));
-		singleChangeWriter.addStatementToClass(subscription, tyDec);
-		singleChangeWriter.addImport("rx.Subscription");
+		writer.addStatementToClass(subscription, tyDec);
+		writer.addImport("rx.Subscription");
 	}
 
 	private String getVariableName(Expression e) {
@@ -242,17 +246,17 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 	/**
 	 * Add cancel method if AsyncTask.cacel() method was invoked
 	 */
-	private void updateCancelInvocation(ICompilationUnit unit, MethodInvocation methodInvoke, AST astInvoke) {
+	private void updateCancelInvocation(UnitWriterExt writer, MethodInvocation methodInvoke, AST astInvoke) {
 
-		UnitWriterExt singleChangeWriter = UnitWriters.getOrElse(unit,
-				() -> new UnitWriterExt(unit, astInvoke, getClass().getSimpleName()));
+//		UnitWriterExt singleChangeWriter = UnitWriters.getOrElse(unit,
+//				() -> new UnitWriterExt(unit, astInvoke, getClass().getSimpleName()));
 		Log.info(getClass(),
-				"METHOD=updateCancelInvocation - update Cancel Invocation for class: " + unit.getElementName());
+				"METHOD=updateCancelInvocation - update Cancel Invocation for class: " + writer.getUnit().getElementName());
 		MethodInvocation unSubscribe = astInvoke.newMethodInvocation();
 		unSubscribe
 				.setExpression(astInvoke.newSimpleName(getVariableName(methodInvoke.getExpression()) + SUBSCRIPTION));
 		unSubscribe.setName(astInvoke.newSimpleName(UN_SUBSCRIBE));
-		singleChangeWriter.replace(methodInvoke, unSubscribe);
+		writer.replace(methodInvoke, unSubscribe);
 
 	}
 
@@ -427,7 +431,7 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 	private void replacePublishInvocations(AsyncTaskWrapper asynctaskVisitor, UnitWriterExt rewriter) {
 		if (!asynctaskVisitor.getPublishInvocations().isEmpty()) {
 			for (MethodInvocation publishInvocation : asynctaskVisitor.getPublishInvocations()) {
-				List argumentList = publishInvocation.arguments();
+				List<?> argumentList = publishInvocation.arguments();
 				AST ast = publishInvocation.getAST();
 				replacePublishInvocationsAux(publishInvocation, argumentList, ast, rewriter, asynctaskVisitor);
 			}
@@ -442,16 +446,13 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 	 * @param argumentList
 	 * @param ast
 	 */
-	private <T extends ASTNode> void replacePublishInvocationsAux(T publishInvocation, List argumentList, AST ast,
+	private <T extends ASTNode> void replacePublishInvocationsAux(T publishInvocation, List<?> argumentList, AST ast,
 			UnitWriterExt rewriter, AsyncTaskWrapper asyncTask) {
-		ASTNode referenceStatement = publishInvocation;
 		String value = argumentList.toString().replace("[", "").replace("]", "");
 		String newInvocation = "getRxUpdateSubscriber().onNext((" + asyncTask.getProgressType() + "[])Arrays.asList("
 				+ value + ").toArray())";
 		Statement newStatement = ASTNodeFactory.createSingleStatementFromText(ast, newInvocation);
-		if (!(publishInvocation instanceof Statement)) {
-			referenceStatement = ASTUtils.findParent(publishInvocation, Statement.class);
-		}
+
 		System.out.println(publishInvocation + " -> " + newStatement);
 		ASTUtils.replaceInStatement(publishInvocation, newStatement);
 	}

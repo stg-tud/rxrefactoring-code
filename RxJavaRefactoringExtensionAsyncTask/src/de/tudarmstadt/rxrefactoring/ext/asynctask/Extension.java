@@ -7,7 +7,7 @@ import java.util.Set;
 
 import org.eclipse.jdt.core.IJavaProject;
 
-import de.tudarmstadt.rxrefactoring.core.RxRefactoringExtension;
+import de.tudarmstadt.rxrefactoring.core.RefactoringExtension;
 import de.tudarmstadt.rxrefactoring.core.utils.PluginUtils;
 import de.tudarmstadt.rxrefactoring.core.workers.RefactorWorker;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.collect.AsyncTaskCollector;
@@ -19,7 +19,7 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.workers.SubClassAsyncTaskWorke
  * Author: Template<br>
  * Created: 01/18/2017
  */
-public class Extension implements RxRefactoringExtension<AsyncTaskCollector> {
+public class Extension implements RefactoringExtension<AsyncTaskCollector> {
 	private static final String PLUGIN_ID = "de.tudarmstadt.rxrefactoring.ext.asynctask";
 
 	private static final String COMMAND_ID = "rxRefactoring.commands.rxJavaRefactoringAsyncTask";

@@ -36,7 +36,7 @@ public class DeclarationVisitor extends ASTVisitor {
 	private final ClassDetails targetClass;
 	private final Set<TypeDeclaration> subclasses;
 	private final Set<AnonymousClassDeclaration> anonymousClasses;
-	private final Set<ASTNode> anonymousCachedClasses;
+	private final Set<AnonymousClassDeclaration> anonymousCachedClasses;
 
 	public DeclarationVisitor(ClassDetails targetClass) {
 		this.targetClass = targetClass;
@@ -149,7 +149,7 @@ public class DeclarationVisitor extends ASTVisitor {
 	 * 
 	 * @return A Variable declaration of TargetClass
 	 */
-	public Set<ASTNode> getAnonymousCachedClasses() {
+	public Set<AnonymousClassDeclaration> getAnonymousCachedClasses() {
 		return anonymousCachedClasses;
 	}
 

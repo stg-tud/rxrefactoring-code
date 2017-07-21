@@ -7,7 +7,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.ltk.core.refactoring.Change;
 
-import de.tudarmstadt.rxrefactoring.core.RxRefactoringExtension;
+import de.tudarmstadt.rxrefactoring.core.RefactoringExtension;
 import de.tudarmstadt.rxrefactoring.core.collect.AbstractCollector;
 import de.tudarmstadt.rxrefactoring.core.collect.Collector;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
@@ -22,9 +22,9 @@ import de.tudarmstadt.rxrefactoring.core.workers.RefactorWorker;
  */
 public class RefactoringProcessor extends AbstractRefactoringProcessor
 {
-	private RxRefactoringExtension extension;
+	private RefactoringExtension extension;
 
-	public RefactoringProcessor( RxRefactoringExtension extension, Collector collector ) {
+	public RefactoringProcessor( RefactoringExtension extension, Collector collector ) {
 		super( collector );
 		this.extension = extension;
 	}

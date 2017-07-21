@@ -24,7 +24,7 @@ public final class Log {
 	private static final String CONSOLE_NAME = "Rx Java Refactoring";
 
 	public static final PrintStream INFO = System.out;
-	public static final PrintStream ERR = System.err;
+	public static final PrintStream ERR = System.out;
 	public static final PrintStream PLUGIN_INFO = System.out; //new PrintStream(findConsole(CONSOLE_NAME).newOutputStream());
 
 

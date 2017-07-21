@@ -3,7 +3,11 @@ package de.tudarmstadt.rxrefactoring.core.writers;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.core.IBuffer;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Block;
@@ -16,13 +20,21 @@ import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
+import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
+import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
+import org.eclipse.jdt.internal.corext.codemanipulation.StubUtility;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.Document;
+import org.eclipse.text.edits.MalformedTreeException;
+import org.eclipse.text.edits.TextEdit;
 
+import de.tudarmstadt.rxrefactoring.core.RefactoringApp;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 
 /**
  * This class is responsible for managing the changes in one compilation unit.
- * The methods are thread safe. The writer should be executed by using a
+ * The methods are thread safe. The marked changes should be applied by using a
  * {@link UnitWriterExecution}.
  * 
  * @author Grebiel Jose Ifill Brito, Mirko Köhler
@@ -36,7 +48,7 @@ public class UnitWriter {
 	protected final Set<String> addedImports;
 	protected final Set<String> removedImports;
 
-	public UnitWriter(ICompilationUnit unit, AST ast, String description) {
+	public UnitWriter(ICompilationUnit unit, AST ast) {
 
 		this.unit = unit;
 
@@ -48,6 +60,48 @@ public class UnitWriter {
 
 	public ICompilationUnit getUnit() {
 		return unit;
+	}
+	
+	/**
+	 * Applies the changes that have been marked in this unit writer.
+	 * 
+	 * @param monitor The progress monitor or null.
+	 * 
+	 * @throws MalformedTreeException If there are conflicting edits. 
+	 * @throws BadLocationException If the text store is not valid.
+	 * @throws CoreException If the rewrite fails.
+	 */
+	protected synchronized void applyChanges(IProgressMonitor monitor) throws MalformedTreeException, BadLocationException, CoreException {
+		String name = unit.getElementName();
+		
+		//Apply the changes in the compilation unit
+		CompilationUnitChange compilationUnitChange = new CompilationUnitChange(name, unit);
+		TextEdit sourceCodeEdits = getAstRewriter().rewriteAST();
+		compilationUnitChange.setEdit(sourceCodeEdits);
+		
+		//Create the import rewrite		
+		ImportRewrite importRewriter = ImportRewrite.create(unit, true); //StubUtility.createImportRewrite( unit, true );
+		
+		getAddedImports().forEach(importRewriter::addImport);
+		getRemovedImports().forEach(importRewriter::removeImport);
+		
+		// process source code
+		String sourceCode = compilationUnitChange.getCompilationUnit().getSource();
+
+		// load document and apply changes
+		Document document = new Document( sourceCode );
+		compilationUnitChange.getEdit().apply( document );
+		TextEdit importsEdit = importRewriter.rewriteImports(monitor);
+		importsEdit.apply( document );
+		String newSourceCode = document.get();
+		IBuffer buffer = unit.getBuffer();
+		buffer.setContents( newSourceCode );
+
+		// save changes
+		if ( !RefactoringApp.isRunningForTests() ) {
+			buffer.save(monitor, false);
+		}
+		
 	}
 
 	/**

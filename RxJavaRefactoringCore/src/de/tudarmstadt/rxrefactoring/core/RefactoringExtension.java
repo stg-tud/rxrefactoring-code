@@ -14,7 +14,7 @@ import de.tudarmstadt.rxrefactoring.core.workers.RefactorWorker;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/17/2016
  */
-public interface RxRefactoringExtension<CollectorType extends Collector> {
+public interface RefactoringExtension<CollectorType extends Collector> {
 
 	/**
 	 * Returns the object responsible of collecting the relevant information for the

@@ -32,7 +32,7 @@ import rx.Observable;
  * Grebiel Jose Ifill Brito<br>
  * Created: 11/11/2016
  */
-public class RxRefactoringApp extends AbstractRxRefactoringApp {
+public class RefactoringApp extends AbstractRefactoringApp {
 	// private static final String DEPENDENCIES_DIRECTORY = "lib";
 	private Set<String> targetClasses;
 
@@ -61,8 +61,8 @@ public class RxRefactoringApp extends AbstractRxRefactoringApp {
 					Observable.from(units.values())
 							// Filter using the boolean formula "runningForTest -> validateName"
 							.filter(unit -> !runningForTests || validateUnitName(unit)).doOnNext(unit -> {
-								Log.info(RxRefactoringApp.class, "Refactor " + unit.getElementName());
-								processUnitFromExtension(project, unit, RxRefactoringApp.this.extension, collector);
+								Log.info(RefactoringApp.class, "Refactor " + unit.getElementName());
+								processUnitFromExtension(project, unit, RefactoringApp.this.extension, collector);
 								monitor.worked(1);
 							}).doOnCompleted(() -> refactorUnits(collector))
 							.doOnError(t -> Log.error(getClass(), "METHOD=refactorCompilationUnits", t)).subscribe();

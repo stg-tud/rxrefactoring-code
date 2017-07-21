@@ -14,8 +14,8 @@ import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
  */
 public class UnitWriterExt extends UnitWriter {
 
-	public UnitWriterExt(ICompilationUnit unit, AST ast, String refactoringDescription) {
-		super(unit, ast, refactoringDescription);
+	public UnitWriterExt(ICompilationUnit unit, AST ast) {
+		super(unit, ast);
 	}
 
 	public synchronized void replace(ASTNode oldValue, ASTNode newValue) {

@@ -15,7 +15,7 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.text.edits.TextEdit;
 
-import de.tudarmstadt.rxrefactoring.core.RxRefactoringApp;
+import de.tudarmstadt.rxrefactoring.core.RefactoringApp;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 /**
@@ -41,7 +41,7 @@ public class UnitWriterExecution {
 	 *            unit to be refactored
 	 */
 	public synchronized void addUnitWriter(UnitWriter writer)	{
-		writers.add( writer );
+		writers.add(writer);
 	}
 
 	@Deprecated
@@ -55,31 +55,19 @@ public class UnitWriterExecution {
 	 * @param progressMonitor
 	 *            progress monitor
 	 */
-	public void execute( IProgressMonitor progressMonitor )	{
+	public void execute(IProgressMonitor progressMonitor)	{
 		for (UnitWriter writer : writers) {
-			
-			ICompilationUnit unit = writer.getUnit();			
-			String compilationUnitName = unit.getElementName();
-			
 			try	{				
-				CompilationUnitChange compilationUnitChange = createCompilationUnitChange( unit, writer );
-				ImportRewrite importRewriter = createImportWriter( unit, writer );
-				applyChanges( unit, importRewriter, compilationUnitChange, progressMonitor );
+				writer.applyChanges(progressMonitor);
 			} catch (Exception e)	{
-				Log.error( getClass(), "METHOD=executeChanges - " + compilationUnitName, e );
+				Log.error( getClass(), "METHOD=executeChanges - " + writer.getUnit().getElementName(), e);
 			}
 		}
 	}
 
 	// ### Private Methods ###
 
-	private CompilationUnitChange createCompilationUnitChange( ICompilationUnit unit, UnitWriter singleUnitWriter ) throws JavaModelException {
-		String name = unit.getElementName();
-		CompilationUnitChange compilationUnitChange = new CompilationUnitChange( name, unit );
-		TextEdit sourceCodeEdits = singleUnitWriter.getAstRewriter().rewriteAST();
-		compilationUnitChange.setEdit( sourceCodeEdits );
-		return compilationUnitChange;
-	}
+	
 
 	private ImportRewrite createImportWriter( ICompilationUnit unit, UnitWriter writer ) throws JavaModelException	{
 		ImportRewrite importRewriter = StubUtility.createImportRewrite( unit, true );
@@ -105,8 +93,7 @@ public class UnitWriterExecution {
 		buffer.setContents( newSourceCode );
 
 		// save changes
-		if ( !RxRefactoringApp.isRunningForTests() )
-		{
+		if ( !RefactoringApp.isRunningForTests() ) {
 			buffer.save( progressMonitor, false );
 		}
 	}

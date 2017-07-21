@@ -52,14 +52,14 @@ import rx.Subscription;
  * Grebiel Jose Ifill Brito<br>
  * Created: 11/11/2016
  */
-abstract class AbstractRxRefactoringApp implements IApplication {
+abstract class AbstractRefactoringApp implements IApplication {
 	private static Subscription subscription;
 
 	protected static final String PLUGIN_ID = "de.tudarmstadt.stg.rxjava.refactoring.core";
 
 	protected Map<String, ICompilationUnit> compilationUnitsMap;
 
-	protected RxRefactoringExtension extension;
+	protected RefactoringExtension extension;
 
 	protected Shell activeShell;
 	protected static boolean runningForTests = false;
@@ -69,7 +69,7 @@ abstract class AbstractRxRefactoringApp implements IApplication {
 
 	private static final String PACKAGE_SEPARATOR = ".";
 
-	public AbstractRxRefactoringApp() {
+	public AbstractRefactoringApp() {
 		compilationUnitsMap = new HashMap<>();
 		errorProjects = new HashSet<>();
 	}
@@ -78,7 +78,7 @@ abstract class AbstractRxRefactoringApp implements IApplication {
 		this.commandId = commandId;
 	}
 
-	public void setExtension(RxRefactoringExtension extension) {
+	public void setExtension(RefactoringExtension extension) {
 		this.extension = extension;
 	}
 
@@ -92,10 +92,10 @@ abstract class AbstractRxRefactoringApp implements IApplication {
 			boolean confirmed = showConfirmationDialog();
 			if (confirmed) {
 				subscription = Observable.from(workspaceRoot.getProjects())
-						.doOnSubscribe(() -> Log.info(AbstractRxRefactoringApp.this.getClass(),
+						.doOnSubscribe(() -> Log.info(AbstractRefactoringApp.this.getClass(),
 								"Rx Refactoring Plugin Starting..."))
-						.filter(AbstractRxRefactoringApp.this::isJavaProjectOpen)
-						.doOnNext(AbstractRxRefactoringApp.this::refactorProject).doOnError(t -> showErrorDialog(t))
+						.filter(AbstractRefactoringApp.this::isJavaProjectOpen)
+						.doOnNext(AbstractRefactoringApp.this::refactorProject).doOnError(t -> showErrorDialog(t))
 						.doOnCompleted(() -> showOnCompletedDialogAndLogTotalTime(startTime)).subscribe();
 			}
 		} else {
@@ -135,11 +135,15 @@ abstract class AbstractRxRefactoringApp implements IApplication {
 	protected abstract String getDependenciesDirectoryName();
 
 	protected void processUnitFromExtension(IJavaProject project, final ICompilationUnit unit,
-			final RxRefactoringExtension<Collector> extension, final Collector collector) {
+			final RefactoringExtension<Collector> extension, final Collector collector) {
 		ISafeRunnable runnable = new ISafeRunnable() {
 			@Override
 			public void handleException(Throwable throwable) {
+				
 				Log.errorInClient(getClass(), throwable);
+				Log.info(getClass(), "Error during refactoring");
+				throwable.printStackTrace();
+				
 				errorProjects.add(project.getPath().toString());
 			}
 
@@ -161,16 +165,16 @@ abstract class AbstractRxRefactoringApp implements IApplication {
 	}
 
 	private void showOnCompletedDialogAndLogTotalTime(long startTime) {
-		Log.info(AbstractRxRefactoringApp.this.getClass(), "Rx Refactoring Plugin Done!");
+		Log.info(AbstractRefactoringApp.this.getClass(), "Rx Refactoring Plugin Done!");
 		String projects = String.join(", ", errorProjects);
 		String warningMessage = "Check the following projects carefully. Exceptions were thrown"
 				+ " during refactoring:\n\n" + projects + ".";
 		if (!errorProjects.isEmpty()) {
-			Log.showInConsole(AbstractRxRefactoringApp.this, warningMessage);
+			Log.showInConsole(AbstractRefactoringApp.this, warningMessage);
 		}
 
 		DecimalFormat df = new DecimalFormat("#,##0.00");
-		Log.showInConsole(AbstractRxRefactoringApp.this,
+		Log.showInConsole(AbstractRefactoringApp.this,
 				"Total Time: " + df.format(getTotalTimeInMinutes(startTime)) + " min.");
 		if (!runningForTests) {
 			if (!errorProjects.isEmpty()) {

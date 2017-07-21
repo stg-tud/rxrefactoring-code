@@ -3,8 +3,11 @@ package de.tudarmstadt.rxrefactoring.ext.asynctask.collect;
 import java.util.*;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.ITypeRoot;
+import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
@@ -35,7 +38,7 @@ public class AsyncTaskCollector extends ASTCollector {
 
 	private final Multimap<ICompilationUnit, TypeDeclaration> subclassesMap;
 	private final Multimap<ICompilationUnit, AnonymousClassDeclaration> anonymousClassesMap;
-	private final Multimap<ICompilationUnit, ASTNode> anonymousCachedClassesMap;
+	private final Multimap<ICompilationUnit, AnonymousClassDeclaration> anonymousCachedClassesMap;
 	private final Multimap<ICompilationUnit, MethodInvocation> relevantUsagesMap;
 
 	public AsyncTaskCollector(IJavaProject project, String collectorName) {
@@ -54,7 +57,7 @@ public class AsyncTaskCollector extends ASTCollector {
 		anonymousClassesMap.putAll(cu, anonymDeclarations);
 	}
 
-	public void addAnonymCachedClassDecl(ICompilationUnit cu, Iterable<ASTNode> anonymCachedDeclarations) {
+	public void addAnonymCachedClassDecl(ICompilationUnit cu, Iterable<AnonymousClassDeclaration> anonymCachedDeclarations) {
 		anonymousCachedClassesMap.putAll(cu, anonymCachedDeclarations);
 	}
 
@@ -70,7 +73,7 @@ public class AsyncTaskCollector extends ASTCollector {
 		return anonymousClassesMap;
 	}
 
-	public Multimap<ICompilationUnit, ASTNode> getAnonymousCachedClasses() {
+	public Multimap<ICompilationUnit, AnonymousClassDeclaration> getAnonymousCachedClasses() {
 		return anonymousCachedClassesMap;
 	}
 
@@ -109,14 +112,14 @@ public class AsyncTaskCollector extends ASTCollector {
 	@Override
 	public void processCompilationUnit(ICompilationUnit unit) {
 
-		// RefactoringASTParser
-
 		ASTParser parser = ASTParser.newParser(AST.JLS8);
-		// RefactoringASTParser parser = new RefactoringASTParser( AST.JLS8 );
-
 		parser.setResolveBindings(true);
 		parser.setBindingsRecovery(true);
 		parser.setSource(unit);
+		
+//		RefactoringASTParser parser = new RefactoringASTParser( AST.JLS8 );
+//		parser.parse(unit, true);
+		
 
 		ASTNode cu = parser.createAST(null);
 

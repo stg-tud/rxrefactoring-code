@@ -7,7 +7,7 @@ import org.eclipse.jdt.core.IJavaProject;
 
 import com.google.common.collect.Sets;
 
-import de.tudarmstadt.rxrefactoring.core.RxRefactoringExtension;
+import de.tudarmstadt.rxrefactoring.core.RefactoringExtension;
 import de.tudarmstadt.rxrefactoring.core.collect.ASTCollector;
 import de.tudarmstadt.rxrefactoring.core.utils.PluginUtils;
 import de.tudarmstadt.rxrefactoring.core.workers.RefactorWorker;
@@ -18,7 +18,7 @@ import de.tudarmstadt.rxrefactoring.ext.akka.workers.AkkaWorker;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016
  */
-public class Extension implements RxRefactoringExtension<ASTCollector> {
+public class Extension implements RefactoringExtension<ASTCollector> {
 	
 	
 	public static final String PLUGIN_ID = "de.tudarmstadt.rxrefactoring.ext.akkafutures";

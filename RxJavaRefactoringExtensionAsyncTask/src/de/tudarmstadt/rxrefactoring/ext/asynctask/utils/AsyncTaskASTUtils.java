@@ -9,11 +9,14 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
+import org.eclipse.jdt.core.dom.ThisExpression;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.internal.corext.dom.Bindings;
@@ -80,42 +83,37 @@ public class AsyncTaskASTUtils {
 		return result;
 	}
 
-	// TODO: Fix the method. Does it find the variable name?
 	public static void replaceFieldsWithFullyQualifiedNameIn(ASTNode root, UnitWriter writer) {
 
 		class FieldsVisitor extends ASTVisitor {
-
-			// TODO: Retrieve the field on the lhs and add the full qualifier to it.
-
 			@Override
-			public boolean visit(Assignment node) {
+			public void endVisit(Assignment node) {
 
 				Expression lhs = node.getLeftHandSide();
 				processFieldExpression(lhs);
 
-				return true;
+				return;
 			}
 
 			@Override
-			public boolean visit(MethodInvocation node) {
+			public void endVisit(MethodInvocation node) {
 				processFieldExpression(node.getExpression());
 
-				return true;
+				return;
 			}
 
 			private void processFieldExpression(Expression expr) {
-
 				Log.info(getClass(), "FieldExpr: " + expr);
 
 				TypeDeclaration t = ASTUtils.findParent(expr, TypeDeclaration.class);
 				if (Objects.isNull(t)) {
-					Log.error(getClass(), "Could not find enclosing type declaration.");
+					Log.error(AsyncTaskASTUtils.class, "Could not find enclosing type declaration.");
 					return;
 				}
 
 				ITypeBinding binding = t.resolveBinding();
 				if (Objects.isNull(binding)) {
-					Log.error(getClass(), "Could not resolve type binding.");
+					Log.error(AsyncTaskASTUtils.class, "Could not resolve type binding.");
 					return;
 				}
 
@@ -129,10 +127,22 @@ public class AsyncTaskASTUtils {
 
 					if (variable != null && variable.isField()) {
 						Log.info(getClass(), "Replace field...");
-						// writer.replaceSimpleName(variableName,
-						// variable.getDeclaringClass().getQualifiedName() + ".this." + variableName);
+						//variableName.setIdentifier(variable.getDeclaringClass().getQualifiedName() + ".this." + variableName);
+						
+						ThisExpression thisExp = writer.getAST().newThisExpression();
+						thisExp.setQualifier(writer.getAST().newName(variable.getDeclaringClass().getName()));
+						
+						FieldAccess fa = writer.getAST().newFieldAccess();
+						fa.setName(writer.getAST().newSimpleName(variableName.getIdentifier()));
+						fa.setExpression(thisExp);						
+						
+						
+						writer.replace(variableName, fa);
+						
+						
 					}
-				}
+				}				
+				
 			}
 		}
 
