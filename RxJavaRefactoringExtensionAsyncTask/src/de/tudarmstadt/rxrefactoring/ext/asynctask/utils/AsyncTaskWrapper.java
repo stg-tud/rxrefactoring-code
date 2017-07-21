@@ -71,7 +71,7 @@ public class AsyncTaskWrapper extends ASTVisitor {
 		private Type progressType;
 		private String parameters;
 		private String progressParameters;
-		private String postExecuteParameters;
+		private SingleVariableDeclaration postExecuteParameter;
 		private MethodDeclaration doInBackgroundMethod;
 		private Type postExecuteType;
 		private List<MethodInvocation> publishInvocations = new ArrayList<>();
@@ -98,8 +98,7 @@ public class AsyncTaskWrapper extends ASTVisitor {
 				} else if (ON_POST_EXECUTE.equals(methodDeclarationName)) {
 					onPostExecuteBlock = node;
 					postExecuteType = ((SingleVariableDeclaration) methodDeclaration.parameters().get(0)).getType();
-					postExecuteParameters = ((SingleVariableDeclaration) methodDeclaration.parameters().get(0))
-							.getName().toString();
+					postExecuteParameter = (SingleVariableDeclaration) methodDeclaration.parameters().get(0);
 				} else if (ON_PRE_EXECUTE.equals(methodDeclarationName)) {
 					onPreExecuteBlock = node;
 				} else if (ON_PROGRESS_UPDATE.equals(methodDeclarationName)) {
@@ -186,7 +185,7 @@ public class AsyncTaskWrapper extends ASTVisitor {
 	 * @return The type of the doInBackground method, or null if the type could not
 	 *         be resolved.
 	 */
-	public Type getReturnedType() {
+	public Type getReturnedType() {		
 		return visitor.returnedType;
 	}
 
@@ -206,8 +205,8 @@ public class AsyncTaskWrapper extends ASTVisitor {
 		return visitor.progressParameters;
 	}
 
-	public String getPostExecuteParameters() {
-		return visitor.postExecuteParameters;
+	public SingleVariableDeclaration getPostExecuteParameter() {
+		return visitor.postExecuteParameter;
 	}
 
 	public Type getProgressType() {

@@ -344,9 +344,9 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 		Block doProgressUpdate = asyncTask.getOnProgressUpdateBlock();
 		Block onCancelled = asyncTask.getOnCancelled();
 		String type = asyncTask.getReturnedType().toString();
-		String postExecuteParameters = asyncTask.getPostExecuteParameters();
+		String postExecuteParameters = asyncTask.getPostExecuteParameter().toString();
 		removeSuperInvocations(asyncTask);
-		ObservableBuilder rxObservable = ObservableBuilder.newObservable(type, doInBackgroundBlock,
+		ObservableBuilder rxObservable = ObservableBuilder.newObservable(asyncTask, writer, type, doInBackgroundBlock,
 				SchedulerType.JAVA_MAIN_THREAD);
 		if (doProgressUpdate != null) {
 

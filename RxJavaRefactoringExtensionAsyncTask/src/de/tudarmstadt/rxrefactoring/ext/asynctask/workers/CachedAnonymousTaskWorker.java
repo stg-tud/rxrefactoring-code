@@ -472,7 +472,7 @@ public class CachedAnonymousTaskWorker extends AbstractWorker<AsyncTaskCollector
 		Block onCancelled = asyncTask.getOnCancelled();
 
 		String type = (asyncTask.getReturnedType() == null ? "Void" : asyncTask.getReturnedType().toString());
-		String postExecuteParameters = asyncTask.getPostExecuteParameters();
+		String postExecuteParameters = asyncTask.getPostExecuteParameter().toString();
 
 		if (type == null) {
 			System.out.println("NULL type for Do In Background");
@@ -486,7 +486,7 @@ public class CachedAnonymousTaskWorker extends AbstractWorker<AsyncTaskCollector
 		AsyncTaskASTUtils.replaceFieldsWithFullyQualifiedNameIn(doOnCompletedBlock, writer);
 
 		ObservableBuilder complexObservable = ObservableBuilder
-				.newObservable(type, doInBackgroundBlock, SchedulerType.JAVA_MAIN_THREAD)
+				.newObservable(asyncTask, writer, type, doInBackgroundBlock, SchedulerType.JAVA_MAIN_THREAD)
 				.addDoOnNext((doOnCompletedBlock == null ? "{}" : doOnCompletedBlock.toString()),
 						postExecuteParameters == null ? "arg" : postExecuteParameters, type, true);
 		Block onPreExecute = asyncTask.getOnPreExecuteBlock();

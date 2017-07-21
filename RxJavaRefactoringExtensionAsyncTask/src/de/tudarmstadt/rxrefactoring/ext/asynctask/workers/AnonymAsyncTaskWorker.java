@@ -29,6 +29,7 @@ import de.tudarmstadt.rxrefactoring.core.workers.WorkerStatus;
 import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
 import de.tudarmstadt.rxrefactoring.core.writers.UnitWriters;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.ComplexObservableBuilder;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.FromCallableBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.ObservableBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.SubscriberHolder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.collect.AsyncTaskCollector;
@@ -86,6 +87,9 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> {
 				//Initializes the unit writer.
 				UnitWriterExt writer = UnitWriters.getOrElse(unit,
 						() -> new UnitWriterExt(unit, asyncTaskDeclaration.getAST()));
+				
+				FromCallableBuilder builder = new FromCallableBuilder(asyncTask, writer);
+				ASTNode node = builder.build();
 				
 				AST ast = writer.getAST();
 
@@ -411,8 +415,12 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> {
 
 		AST ast = referenceStatement.getAST();
 		if (!complexRxObservableClassNeeded && asyncTask.getIsVoid()) {
-			String subscribedObservable = createObservable(asyncTask, writer, subscriberHolder).addSubscribe().build();
+			
 
+			FromCallableBuilder builder = new FromCallableBuilder(asyncTask, writer);
+			Expression observable = builder.build();
+			observable = builder.addSubscribe(observable);
+			
 			if (onProgressUpdateBlock) {
 				String newMethodString = subscriberHolder.getGetMethodDeclaration();
 				MethodDeclaration newMethod = ASTNodeFactory.createMethodFromText(ast, newMethodString);
@@ -422,10 +430,29 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> {
 				Statement getSubscriberStatement = ASTNodeFactory.createSingleStatementFromText(ast, subscriberDecl);
 				writer.addStatementBefore(getSubscriberStatement, referenceStatement);
 			}
+			
+			Statement stmt = ast.newExpressionStatement(observable);
+			
+			writer.replaceStatement(referenceStatement, stmt);
+			
+			/*
+			 * Old code
+			 */
+//			String subscribedObservable = createObservable(asyncTask, writer, subscriberHolder).addSubscribe().build();
+//		
+//			if (onProgressUpdateBlock) {
+//				String newMethodString = subscriberHolder.getGetMethodDeclaration();
+//				MethodDeclaration newMethod = ASTNodeFactory.createMethodFromText(ast, newMethodString);
+//				writer.addMethodAfter(newMethod, anonymousCachedClassDecleration);
+//
+//				String subscriberDecl = subscriberHolder.getSubscriberDeclaration();
+//				Statement getSubscriberStatement = ASTNodeFactory.createSingleStatementFromText(ast, subscriberDecl);
+//				writer.addStatementBefore(getSubscriberStatement, referenceStatement);
+//			}
 
-			Statement newStatement = ASTNodeFactory.createSingleStatementFromText(ast, subscribedObservable);
-
-			writer.replaceStatement(referenceStatement, newStatement);
+//			Statement newStatement = ASTNodeFactory.createSingleStatementFromText(ast, subscribedObservable);
+//			
+//			writer.replaceStatement(referenceStatement, newStatement);
 
 		} else {
 
@@ -471,7 +498,7 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> {
 		Block doOnCompletedBlock = asyncTask.getOnPostExecuteBlock();
 
 		String type = (asyncTask.getReturnedType() == null ? "Void" : asyncTask.getReturnedType().toString());
-		String postExecuteParameters = asyncTask.getPostExecuteParameters();
+		String postExecuteParameters = asyncTask.getPostExecuteParameter();
 
 		if (type == null) {
 			Log.error(getClass(), "NULL type for DoInBackground");
@@ -484,12 +511,23 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> {
 		//doOnCompletedBlock.
 		AsyncTaskASTUtils.replaceFieldsWithFullyQualifiedNameIn(doOnCompletedBlock, writer);
 		
+		FromCallableBuilder builder = new FromCallableBuilder(asyncTask, writer);
+		Expression observable = builder.createObservable();
+		
+		if (asyncTask.getOnPostExecuteBlock() != null) {
+			observable = builder.addDoOnNext(observable);
+		}
+		
+		//TODO: Finish this method!
+		//REPLACE OBSERVABLE BUILDER WITH FROMCALLABLE BUILDER!!!
 
+		
+		
 		ObservableBuilder complexObservable = ObservableBuilder
-				.newObservable(type, doInBackgroundBlock, SchedulerType.JAVA_MAIN_THREAD)
+				.newObservable(asyncTask, writer, type, doInBackgroundBlock, SchedulerType.JAVA_MAIN_THREAD)
 				.addDoOnNext((doOnCompletedBlock == null ? "{}" : doOnCompletedBlock.toString()),
 						postExecuteParameters == null ? "arg" : postExecuteParameters, type, true);
-
+		
 		Block preExec = asyncTask.getOnPreExecuteBlock();
 		if (preExec != null) {
 			complexObservable.addDoOnPreExecute(preExec);
@@ -499,6 +537,8 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> {
 		if (onCancelled != null) {
 			complexObservable.addDoOnCancelled(onCancelled);
 		}
+		
+		
 
 		return complexObservable;
 	}

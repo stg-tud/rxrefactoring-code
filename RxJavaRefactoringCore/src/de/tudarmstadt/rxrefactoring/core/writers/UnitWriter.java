@@ -353,7 +353,7 @@ public class UnitWriter {
 	 * Used by {@link UnitWriterExecution}
 	 * 
 	 */
-	ASTRewrite getAstRewriter() {
+	public ASTRewrite getAstRewriter() {
 		return astRewriter;
 	}
 

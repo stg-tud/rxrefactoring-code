@@ -4,11 +4,15 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Block;
 
 import org.eclipse.jdt.core.dom.Expression;
 
+import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.SchedulerType;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 import rx.Observable;
 import rx.Scheduler;
 import rx.functions.Action0;
@@ -29,16 +33,25 @@ public final class ObservableBuilder {
 	private String type;
 	private final boolean willBeCached;
 	private boolean willBeSubscribed;
+	
+	private final AsyncTaskWrapper asyncTask;
+	private final UnitWriter writer;
 
-	private ObservableBuilder(String type, Block doInBackground, SchedulerType observeOnScheduler) {
+	private ObservableBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer, String type, Block doInBackground, SchedulerType observeOnScheduler) {
+		this.asyncTask = asyncTask;
+		this.writer = writer;
+		
 		validateDoInBackgroundBlock(doInBackground);
 		rxObservable = new StringBuilder();
 		addFromCallable(type, doInBackground, observeOnScheduler);
 		this.willBeCached = false;
 	}
 
-	private ObservableBuilder(String variableName, String type, Block doInBackground,
+	private ObservableBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer, String variableName, String type, Block doInBackground,
 			SchedulerType observeOnScheduler) {
+		this.asyncTask = asyncTask;
+		this.writer = writer;
+		
 		validateDoInBackgroundBlock(doInBackground);
 		rxObservable = new StringBuilder();
 		rxObservable.append("Observable<");
@@ -50,7 +63,10 @@ public final class ObservableBuilder {
 		this.willBeCached = true;
 	}
 
-	public ObservableBuilder(String type, Expression expression, SchedulerType observeOnScheduler) {
+	public ObservableBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer, String type, Expression expression, SchedulerType observeOnScheduler) {
+		this.asyncTask = asyncTask;
+		this.writer = writer;
+		
 		validateForExpressionk(expression);
 		rxObservable = new StringBuilder();
 		addFromIterable(type, expression, observeOnScheduler);
@@ -71,8 +87,8 @@ public final class ObservableBuilder {
 	 *            Scheduler used for {@link rx.Observable#observeOn(Scheduler)}
 	 * @return The builder
 	 */
-	public static ObservableBuilder newObservable(String type, Block doInBackground, SchedulerType observeOnScheduler) {
-		return new ObservableBuilder(type, doInBackground, observeOnScheduler);
+	public static ObservableBuilder newObservable(AsyncTaskWrapper asyncTask, UnitWriter writer, String type, Block doInBackground, SchedulerType observeOnScheduler) {
+		return new ObservableBuilder(asyncTask, writer, type, doInBackground, observeOnScheduler);
 	}
 
 	/**
@@ -92,14 +108,14 @@ public final class ObservableBuilder {
 	 *            scheduler used for {@link rx.Observable#observeOn(Scheduler)}
 	 * @return The builder
 	 */
-	public static ObservableBuilder newObservable(String variableName, String type, Block doInBackground,
+	public static ObservableBuilder newObservable(AsyncTaskWrapper asyncTask, UnitWriter writer, String variableName, String type, Block doInBackground,
 			SchedulerType observeOnScheduler) {
-		return new ObservableBuilder(variableName, type, doInBackground, observeOnScheduler);
+		return new ObservableBuilder(asyncTask, writer, variableName, type, doInBackground, observeOnScheduler);
 	}
 
-	public static ObservableBuilder newObservable(String type, Expression expression,
+	public static ObservableBuilder newObservable(AsyncTaskWrapper asyncTask, UnitWriter writer, String type, Expression expression,
 			SchedulerType observeOnScheduler) {
-		return new ObservableBuilder(type, expression, observeOnScheduler);
+		return new ObservableBuilder(asyncTask, writer, type, expression, observeOnScheduler);
 	}
 
 	/**
@@ -330,7 +346,13 @@ public final class ObservableBuilder {
 
 	private void addFromCallable(String type, Block doInBackground, SchedulerType observeOnScheduler) {
 		this.type = type;
-		rxObservable.append("Observable.fromCallable(new Callable<");
+		rxObservable.append("Observable.fromCallable(");
+		
+//		FromCallableBuilder b = new FromCallableBuilder(asyncTask, writer);
+//		ASTNode n = b.buildCallable();		
+//		rxObservable.append(n.toString());
+		
+		rxObservable.append("new Callable<");
 		rxObservable.append(type);
 		rxObservable.append(">() {");
 		rxObservable.append(NEW_LINE);
@@ -340,6 +362,7 @@ public final class ObservableBuilder {
 		rxObservable.append(NEW_LINE);
 		rxObservable.append(doInBackground.toString());
 		rxObservable.append("})");
+		
 		rxObservable.append(NEW_LINE);
 		rxObservable.append(".subscribeOn(Schedulers.computation())");
 		rxObservable.append(NEW_LINE);
