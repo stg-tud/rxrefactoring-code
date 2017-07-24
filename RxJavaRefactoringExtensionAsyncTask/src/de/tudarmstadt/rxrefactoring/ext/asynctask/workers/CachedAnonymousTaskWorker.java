@@ -397,8 +397,8 @@ public class CachedAnonymousTaskWorker extends AbstractWorker<AsyncTaskCollector
 		SubscriberHolder subscriberHolder = null;
 		if (onProgressUpdateBlock) {
 			subscriberHolder = new SubscriberHolder(unit.getElementName(),
-					asyncTask.getProgressType().toString() + "[]", asyncTask.getOnProgressUpdateBlock(),
-					asyncTask.getProgressParameters());
+					asyncTask.getProgressParameter().getType().toString() + "[]", asyncTask.getOnProgressUpdateBlock(),
+					asyncTask.getProgressParameter().toString());
 		}
 
 		AST ast = referenceStatement.getAST();
@@ -441,11 +441,13 @@ public class CachedAnonymousTaskWorker extends AbstractWorker<AsyncTaskCollector
 			}
 
 			String observableStatement = createObservable(asyncTask, subscriberHolder, rewriter).buildReturnStatement();
-			String observableType = asyncTask.getReturnedType().toString();
+			String observableType = asyncTask.getReturnType().toString();
 			ComplexObservableBuilder complexObservable = ComplexObservableBuilder
-					.newComplexRxObservable(unit.getElementName()).withFields(fieldDeclarations)
+					.newComplexRxObservable(unit.getElementName())
+					.withFields(fieldDeclarations)
 					.withGetAsyncObservable(observableType, subscriberDecl, observableStatement)
-					.withMethod(subscriberGetRxUpdateMethod).withMethods(asyncTask.getAdditionalMethodDeclarations());
+					.withMethod(subscriberGetRxUpdateMethod)
+					.withMethods(asyncTask.getAdditionalMethodDeclarations());
 
 			String complexRxObservableClass = complexObservable.build();
 			// initialize class name which will be used for replacing execute
@@ -471,7 +473,7 @@ public class CachedAnonymousTaskWorker extends AbstractWorker<AsyncTaskCollector
 		Block doOnCompletedBlock = asyncTask.getOnPostExecuteBlock();
 		Block onCancelled = asyncTask.getOnCancelled();
 
-		String type = (asyncTask.getReturnedType() == null ? "Void" : asyncTask.getReturnedType().toString());
+		String type = (asyncTask.getReturnType() == null ? "Void" : asyncTask.getReturnType().toString());
 		String postExecuteParameters = asyncTask.getPostExecuteParameter().toString();
 
 		if (type == null) {
@@ -482,7 +484,6 @@ public class CachedAnonymousTaskWorker extends AbstractWorker<AsyncTaskCollector
 
 		ASTUtils.removeUnnecessaryCatchClauses(doOnCompletedBlock);
 
-		AsyncTaskASTUtils.removeMethodInvocations(doOnCompletedBlock);
 		AsyncTaskASTUtils.replaceFieldsWithFullyQualifiedNameIn(doOnCompletedBlock, writer);
 
 		ObservableBuilder complexObservable = ObservableBuilder

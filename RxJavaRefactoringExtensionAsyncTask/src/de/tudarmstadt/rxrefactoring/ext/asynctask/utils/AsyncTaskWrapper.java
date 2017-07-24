@@ -67,10 +67,10 @@ public class AsyncTaskWrapper extends ASTVisitor {
 		private Block onProgressUpdateBlock;
 		private Block onCancelled = null;
 
-		private Type returnedType;
-		private Type progressType;
+		private Type returnType;
+
 		private String parameters;
-		private String progressParameters;
+		private SingleVariableDeclaration progressParameter;
 		private SingleVariableDeclaration postExecuteParameter;
 		private MethodDeclaration doInBackgroundMethod;
 		private Type postExecuteType;
@@ -91,7 +91,7 @@ public class AsyncTaskWrapper extends ASTVisitor {
 				String methodDeclarationName = methodDeclaration.getName().toString();
 				if (DO_IN_BACKGROUND.equals(methodDeclarationName)) {
 					doInBackgroundBlock = node;
-					returnedType = methodDeclaration.getReturnType2();
+					returnType = methodDeclaration.getReturnType2();
 					parameters = methodDeclaration.parameters().toString().replace("[", "").replace("]", "");
 					isVoid = (parameters == null ? false : (parameters.contains("Void") ? true : false));
 					doInBackgroundMethod = methodDeclaration;
@@ -103,9 +103,7 @@ public class AsyncTaskWrapper extends ASTVisitor {
 					onPreExecuteBlock = node;
 				} else if (ON_PROGRESS_UPDATE.equals(methodDeclarationName)) {
 					onProgressUpdateBlock = node;
-					progressType = ((SingleVariableDeclaration) methodDeclaration.parameters().get(0)).getType();
-					progressParameters = ((SingleVariableDeclaration) methodDeclaration.parameters().get(0)).getName()
-							.toString();
+					progressParameter = (SingleVariableDeclaration) methodDeclaration.parameters().get(0);
 				} else if (ON_CANCELLED.equals(methodDeclarationName)) {
 					onCancelled = node;
 				}
@@ -144,17 +142,17 @@ public class AsyncTaskWrapper extends ASTVisitor {
 			if (ASTUtils.matchesTargetMethod(node, "onCancelled", ClassDetails.ASYNC_TASK.getBinaryName())) {
 				superClassMethodInvocation.add(node);
 			}
+			
 			if (ASTUtils.matchesTargetMethod(node, "onPreExecute", ClassDetails.ASYNC_TASK.getBinaryName())) {
 				superClassMethodInvocation.add(node);
-
 			}
+			
 			if (ASTUtils.matchesTargetMethod(node, "onPostExecute", ClassDetails.ASYNC_TASK.getBinaryName())) {
 				superClassMethodInvocation.add(node);
-
 			}
+			
 			if (ASTUtils.matchesTargetMethod(node, "onProgressUpdate", ClassDetails.ASYNC_TASK.getBinaryName())) {
 				superClassMethodInvocation.add(node);
-
 			}
 			return true;
 		}
@@ -185,8 +183,8 @@ public class AsyncTaskWrapper extends ASTVisitor {
 	 * @return The type of the doInBackground method, or null if the type could not
 	 *         be resolved.
 	 */
-	public Type getReturnedType() {		
-		return visitor.returnedType;
+	public Type getReturnType() {		
+		return visitor.returnType;
 	}
 
 	public MethodDeclaration getDoInBackgroundmethod() {
@@ -201,18 +199,15 @@ public class AsyncTaskWrapper extends ASTVisitor {
 		return visitor.onProgressUpdateBlock;
 	}
 
-	public String getProgressParameters() {
-		return visitor.progressParameters;
+	public SingleVariableDeclaration getProgressParameter() {
+		return visitor.progressParameter;
 	}
 
 	public SingleVariableDeclaration getPostExecuteParameter() {
 		return visitor.postExecuteParameter;
 	}
 
-	public Type getProgressType() {
-		return visitor.progressType;
-	}
-
+	
 	/**
 	 * @return the postExecuteType
 	 */

@@ -301,7 +301,7 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 		replacePublishInvocations(asyncTask, rewriter);
 		String observableStatement = createObservable(asyncTask, rewriter);
 		MethodDeclaration getAsyncMethod = ASTNodeFactory.createMethodFromText(ast,
-				"public Observable<" + asyncTask.getReturnedType() + "> getAsyncObservable( final "
+				"public Observable<" + asyncTask.getReturnType() + "> getAsyncObservable( final "
 						+ asyncTask.getParameters() + "){" + " return " + observableStatement + "}");
 		rewriter.replaceStatement(asyncTask.getDoInBackgroundmethod(), getAsyncMethod);
 
@@ -343,7 +343,7 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 		Block onPostExecuteBlock = asyncTask.getOnPostExecuteBlock();
 		Block doProgressUpdate = asyncTask.getOnProgressUpdateBlock();
 		Block onCancelled = asyncTask.getOnCancelled();
-		String type = asyncTask.getReturnedType().toString();
+		String type = asyncTask.getReturnType().toString();
 		String postExecuteParameters = asyncTask.getPostExecuteParameter().toString();
 		removeSuperInvocations(asyncTask);
 		ObservableBuilder rxObservable = ObservableBuilder.newObservable(asyncTask, writer, type, doInBackgroundBlock,
@@ -351,7 +351,6 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 		if (doProgressUpdate != null) {
 
 			if (onPostExecuteBlock != null) {
-				AsyncTaskASTUtils.removeMethodInvocations(onPostExecuteBlock);
 				AsyncTaskASTUtils.replaceFieldsWithFullyQualifiedNameIn(onPostExecuteBlock, writer);
 
 				rxObservable.addDoOnNext(onPostExecuteBlock.toString(), postExecuteParameters,
@@ -360,7 +359,6 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 
 		} else {
 			if (onPostExecuteBlock != null) {
-				AsyncTaskASTUtils.removeMethodInvocations(onPostExecuteBlock);
 				AsyncTaskASTUtils.replaceFieldsWithFullyQualifiedNameIn(onPostExecuteBlock, writer);
 
 				rxObservable.addDoOnNext(onPostExecuteBlock.toString(), postExecuteParameters, type, true);
@@ -414,8 +412,8 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 	 */
 	private String createNewMethod(AsyncTaskWrapper asyncTask) {
 		Block doProgressUpdate = asyncTask.getOnProgressUpdateBlock();
-		Type progressType = asyncTask.getProgressType();
-		String progressParameters = asyncTask.getProgressParameters();
+		Type progressType = asyncTask.getProgressParameter().getType();
+		String progressParameters = asyncTask.getProgressParameter().toString();
 		String newSubscriber = SubscriberBuilder.newSubscriber(progressType.toString(), doProgressUpdate,
 				progressParameters);
 		return "private Subscriber<" + progressType.toString() + "[]> getRxUpdateSubscriber() { return " + newSubscriber
@@ -449,7 +447,7 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 	private <T extends ASTNode> void replacePublishInvocationsAux(T publishInvocation, List<?> argumentList, AST ast,
 			UnitWriterExt rewriter, AsyncTaskWrapper asyncTask) {
 		String value = argumentList.toString().replace("[", "").replace("]", "");
-		String newInvocation = "getRxUpdateSubscriber().onNext((" + asyncTask.getProgressType() + "[])Arrays.asList("
+		String newInvocation = "getRxUpdateSubscriber().onNext((" + asyncTask.getProgressParameter() + "[])Arrays.asList("
 				+ value + ").toArray())";
 		Statement newStatement = ASTNodeFactory.createSingleStatementFromText(ast, newInvocation);
 

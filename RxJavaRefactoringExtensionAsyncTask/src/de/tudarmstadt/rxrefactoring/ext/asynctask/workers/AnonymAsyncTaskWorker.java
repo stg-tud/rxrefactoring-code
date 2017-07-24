@@ -8,14 +8,11 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.Assignment;
-import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Statement;
-import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
@@ -26,14 +23,11 @@ import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.workers.AbstractWorker;
 import de.tudarmstadt.rxrefactoring.core.workers.WorkerStatus;
-import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
 import de.tudarmstadt.rxrefactoring.core.writers.UnitWriters;
-import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.ComplexObservableBuilder;
-import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.FromCallableBuilder;
-import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.ObservableBuilder;
-import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.SubscriberHolder;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.builders2.AnonymousClassBuilder;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.builders2.InnerClassBuilder;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.builders2.SubscriberBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.collect.AsyncTaskCollector;
-import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.SchedulerType;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.writers.UnitWriterExt;
@@ -43,8 +37,8 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.writers.UnitWriterExt;
  * Created: 01/18/2017
  */
 public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> {
-	private static final String EMPTY = "";
-	private int NUMBER_OF_ANONYMOUS_TASKS = 0;
+
+	private int numOfAnonymousClasses = 0;
 
 	private final String EXECUTE = "execute";
 	private final String CANCEL = "cancel";
@@ -88,9 +82,7 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> {
 				UnitWriterExt writer = UnitWriters.getOrElse(unit,
 						() -> new UnitWriterExt(unit, asyncTaskDeclaration.getAST()));
 				
-				FromCallableBuilder builder = new FromCallableBuilder(asyncTask, writer);
-				ASTNode node = builder.build();
-				
+							
 				AST ast = writer.getAST();
 
 				Statement referenceStatement = ASTUtils.findParent(asyncTaskDeclaration, Statement.class);
@@ -107,10 +99,9 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> {
 
 				updateImports(asyncTask, writer);
 				
-				AsyncTaskASTUtils.replaceFieldsWithFullyQualifiedNameIn(asyncTask.getOnPostExecuteBlock(), writer);
 				
 				Log.info(getClass(), "METHOD=refactor - Refactoring class: " + unit.getElementName());
-				NUMBER_OF_ANONYMOUS_TASKS++;
+				numOfAnonymousClasses++;
 				
 				
 				execution.addUnitWriter(writer);
@@ -118,7 +109,7 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> {
 			monitor.worked(1);
 		}
 
-		Log.info(getClass(), "Number of Anonymous AsynckTasks =  " + NUMBER_OF_ANONYMOUS_TASKS);
+		Log.info(getClass(), "Number of Anonymous AsynckTasks =  " + numOfAnonymousClasses);
 		return WorkerStatus.OK;
 	}
 	
@@ -150,15 +141,7 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> {
 		if (implicitExecute != null)
 			if (implicitExecute.getName().toString().equals(EXECUTE)
 					|| implicitExecute.getName().toString().equals(EXECUTE_ON_EXECUTOR)) {
-				VariableDeclarationFragment var = ASTUtils.findParent(implicitExecute,
-						VariableDeclarationFragment.class);
-				// if (var != null) {
-				// variableName = var.getName().toString();
-				// } else {
-				// variableName = ((Assignment)
-				// ASTUtil.findParent(implicitExecute, Assignment.class))
-				// .getLeftHandSide().toString();
-				// }
+				
 				MethodInvocation me = ast.newMethodInvocation();
 				me.setName(ast.newSimpleName(implicitExecute.getName().toString()));
 				me.setExpression(ast.newSimpleName(variableName));
@@ -386,51 +369,49 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> {
 		}
 	}
 
-	/**
-	 * Remove super method invocation from AsyncTask methods
-	 *
-	 * @param asyncTask
-	 */
-	private void removeSuperInvocations(AsyncTaskWrapper asyncTask) {
-
-		for (SuperMethodInvocation methodInvocation : asyncTask.getSuperClassMethodInvocation()) {
-			Statement statement = ASTUtils.findParent(methodInvocation, Statement.class);
-			statement.delete();
-		}
-	}
 
 	private void addObservable(AsyncTaskWrapper asyncTask, UnitWriterExt writer, ICompilationUnit unit,
 			Statement referenceStatement, AnonymousClassDeclaration anonymousCachedClassDecleration) {
 		
-		boolean complexRxObservableClassNeeded = asyncTask.hasAdditionalAccess();
-		boolean onProgressUpdateBlock = asyncTask.getOnProgressUpdateBlock() != null;
-		removeSuperInvocations(asyncTask);
+		
+		boolean hasProgressUpdateBlock = asyncTask.getOnProgressUpdateBlock() != null;
+		//removeSuperInvocations(asyncTask);
 
-		SubscriberHolder subscriberHolder = null;
-		if (onProgressUpdateBlock) {
-			subscriberHolder = new SubscriberHolder(unit.getElementName(),
-					asyncTask.getProgressType().toString() + "[]", asyncTask.getOnProgressUpdateBlock(),
-					asyncTask.getProgressParameters());
-		}
-
+//		SubscriberHolder subscriberHolder = null;
+//		if (hasProgressUpdateBlock) {
+//			subscriberHolder = new SubscriberHolder(unit.getElementName(),
+//					asyncTask.getProgressType().toString() + "[]", asyncTask.getOnProgressUpdateBlock(),
+//					asyncTask.getProgressParameters());
+//		}
+		
+		
+		
+		
+		
 		AST ast = referenceStatement.getAST();
-		if (!complexRxObservableClassNeeded && asyncTask.getIsVoid()) {
+		
+		if (!asyncTask.hasAdditionalAccess() && asyncTask.getIsVoid()) {
 			
-
-			FromCallableBuilder builder = new FromCallableBuilder(asyncTask, writer);
-			Expression observable = builder.build();
-			observable = builder.addSubscribe(observable);
+			//Produces the builder that creates the observable
+			//AnonymousClassBuilder builder = observableBuilder(asyncTask, writer, subscriberHolder);
 			
-			if (onProgressUpdateBlock) {
-				String newMethodString = subscriberHolder.getGetMethodDeclaration();
-				MethodDeclaration newMethod = ASTNodeFactory.createMethodFromText(ast, newMethodString);
-				writer.addMethodAfter(newMethod, anonymousCachedClassDecleration);
-
-				String subscriberDecl = subscriberHolder.getSubscriberDeclaration();
-				Statement getSubscriberStatement = ASTNodeFactory.createSingleStatementFromText(ast, subscriberDecl);
-				writer.addStatementBefore(getSubscriberStatement, referenceStatement);
+			
+			
+			//Adds the progress-update subscriber
+			if (hasProgressUpdateBlock) {
+				SubscriberBuilder subscriberBuilder = new SubscriberBuilder(asyncTask, writer);
+				
+				//Add the method that creates the subscriber (getRxSubscriber)
+				writer.addMethodAfter(subscriberBuilder.create(), anonymousCachedClassDecleration);
+				//Adds the subscriber declaration
+				writer.addStatementBefore(subscriberBuilder.getSubscriberDeclaration(), referenceStatement);
+				
+				replacePublishInvocations(asyncTask, writer, subscriberBuilder);
 			}
 			
+			
+			//Gets the observable expression and adds it to the observable.
+			Expression observable = AnonymousClassBuilder.from(asyncTask, writer);			
 			Statement stmt = ast.newExpressionStatement(observable);
 			
 			writer.replaceStatement(referenceStatement, stmt);
@@ -456,112 +437,95 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> {
 
 		} else {
 
-			List<FieldDeclaration> fieldDeclarations = asyncTask.getFieldDeclarations();
-			String subscriberDecl = EMPTY;
-			String subscriberGetRxUpdateMethod = EMPTY;
+			SubscriberBuilder subscriberBuilder = new SubscriberBuilder(asyncTask, writer);
+			
+			InnerClassBuilder builder = new InnerClassBuilder(asyncTask, writer);
+			TypeDeclaration observable = builder.create(subscriberBuilder);
+			
+//			List<FieldDeclaration> fieldDeclarations = asyncTask.getFieldDeclarations();
+//			String subscriberDecl = EMPTY;
+//			String subscriberGetRxUpdateMethod = EMPTY;
+//
+//			if (hasProgressUpdateBlock) {
+//				subscriberDecl = subscriberHolder.getSubscriberDeclaration();
+//				subscriberGetRxUpdateMethod = subscriberHolder.getGetMethodDeclaration();
+//			}
+//
+//			String observableStatement = observableBuilder(asyncTask, writer, subscriberHolder).buildReturnStatement();
+//			String observableType = asyncTask.getReturnType().toString();
+//
+//			ComplexObservableBuilder complexObservable = ComplexObservableBuilder
+//					.newComplexRxObservable(unit.getElementName())
+//					.withFields(fieldDeclarations)
+//					.withGetAsyncObservable(observableType, subscriberDecl, observableStatement)
+//					.withMethod(subscriberGetRxUpdateMethod)
+//					.withMethods(asyncTask.getAdditionalMethodDeclarations());
+			
+			
+			replacePublishInvocations(asyncTask, writer, subscriberBuilder);
+			
 
-			if (onProgressUpdateBlock) {
-				subscriberDecl = subscriberHolder.getSubscriberDeclaration();
-				subscriberGetRxUpdateMethod = subscriberHolder.getGetMethodDeclaration();
-			}
-
-			String observableStatement = createObservable(asyncTask, writer, subscriberHolder).buildReturnStatement();
-			String observableType = asyncTask.getReturnedType().toString();
-
-			ComplexObservableBuilder complexObservable = ComplexObservableBuilder
-					.newComplexRxObservable(unit.getElementName()).withFields(fieldDeclarations)
-					.withGetAsyncObservable(observableType, subscriberDecl, observableStatement)
-					.withMethod(subscriberGetRxUpdateMethod).withMethods(asyncTask.getAdditionalMethodDeclarations());
-
-			String complexRxObservableClass = complexObservable.build();
+//			String complexRxObservableClass = complexObservable.build();
 			// initialize class name which will be used for replacing execute
 			// method usage
-			complexObservableclassName = complexObservable.getComplexObservableName();
+			complexObservableclassName = observable.getName().getIdentifier();
 
 			// initialize asyncmethodname to be used at execute
-			asyncMethodName = complexObservable.getAsyncmethodName();
+			asyncMethodName = builder.getMethodName();
 
 			// initialize asyncmethodname to be used at execute
-			subscription = complexObservable.getAsynSubscription();
+			//subscription = complexObservable.getAsynSubscription();
+			subscription = "subscription" + builder.getId();
 
-			TypeDeclaration complexRxObservableDecl = ASTNodeFactory.createTypeDeclarationFromText(ast,
-					complexRxObservableClass);
-			writer.addInnerClassAfter(complexRxObservableDecl, referenceStatement);
+//			TypeDeclaration complexRxObservableDecl = ASTNodeFactory.createTypeDeclarationFromText(ast,
+//					complexRxObservableClass);
+			writer.addInnerClassAfter(observable, referenceStatement);
 		}
 
 	}
 
-	private ObservableBuilder createObservable(AsyncTaskWrapper asyncTask, UnitWriter writer,
-			SubscriberHolder subscriberHolder) {
+//	private AnonymousClassBuilder observableBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer,
+//			SubscriberHolder subscriberHolder) {
+//
+//		Block doInBackgroundBlock = asyncTask.getDoInBackgroundBlock();
+//		Block doOnCompletedBlock = asyncTask.getOnPostExecuteBlock();
+//
+//		//String type = (asyncTask.getReturnedType() == null ? "Void" : asyncTask.getReturnedType().toString());
+//		//String postExecuteParameters = asyncTask.getPostExecuteParameter();
+//
+////		if (type == null) {
+////			Log.error(getClass(), "NULL type for DoInBackground");
+////		}
+//		
+//		replacePublishInvocations(asyncTask, subscriberHolder);
+//		ASTUtils.removeUnnecessaryCatchClauses(doOnCompletedBlock);
+//		AsyncTaskASTUtils.removeMethodInvocations(doOnCompletedBlock);
+//		
+//		//doOnCompletedBlock.
+//		AsyncTaskASTUtils.replaceFieldsWithFullyQualifiedNameIn(doOnCompletedBlock, writer);
+//
+//		
+//		return AnonymousClassBuilder.from(asyncTask, writer);
+//	}
 
-		Block doInBackgroundBlock = asyncTask.getDoInBackgroundBlock();
-		Block doOnCompletedBlock = asyncTask.getOnPostExecuteBlock();
-
-		String type = (asyncTask.getReturnedType() == null ? "Void" : asyncTask.getReturnedType().toString());
-		String postExecuteParameters = asyncTask.getPostExecuteParameter();
-
-		if (type == null) {
-			Log.error(getClass(), "NULL type for DoInBackground");
-		}
-		replacePublishInvocations(asyncTask, subscriberHolder);
-		ASTUtils.removeUnnecessaryCatchClauses(doOnCompletedBlock);
-
-		AsyncTaskASTUtils.removeMethodInvocations(doOnCompletedBlock);
+	private void replacePublishInvocations(AsyncTaskWrapper asyncTask, UnitWriterExt writer, SubscriberBuilder builder) {
+		//Iterate over all publish invocations
+		for (MethodInvocation publishInvocation : asyncTask.getPublishInvocations()) {
+			
+			List<?> argumentList = publishInvocation.arguments();
+						
+			@SuppressWarnings("unchecked")
+			MethodInvocation invoke = builder.getSubscriberPublish((List<Expression>) argumentList);
+			
+			writer.replace(publishInvocation, invoke);
 		
-		//doOnCompletedBlock.
-		AsyncTaskASTUtils.replaceFieldsWithFullyQualifiedNameIn(doOnCompletedBlock, writer);
-		
-		FromCallableBuilder builder = new FromCallableBuilder(asyncTask, writer);
-		Expression observable = builder.createObservable();
-		
-		if (asyncTask.getOnPostExecuteBlock() != null) {
-			observable = builder.addDoOnNext(observable);
-		}
-		
-		//TODO: Finish this method!
-		//REPLACE OBSERVABLE BUILDER WITH FROMCALLABLE BUILDER!!!
-
-		
-		
-		ObservableBuilder complexObservable = ObservableBuilder
-				.newObservable(asyncTask, writer, type, doInBackgroundBlock, SchedulerType.JAVA_MAIN_THREAD)
-				.addDoOnNext((doOnCompletedBlock == null ? "{}" : doOnCompletedBlock.toString()),
-						postExecuteParameters == null ? "arg" : postExecuteParameters, type, true);
-		
-		Block preExec = asyncTask.getOnPreExecuteBlock();
-		if (preExec != null) {
-			complexObservable.addDoOnPreExecute(preExec);
-		}
-
-		Block onCancelled = asyncTask.getOnCancelled();
-		if (onCancelled != null) {
-			complexObservable.addDoOnCancelled(onCancelled);
 		}
 		
-		
-
-		return complexObservable;
 	}
-
-	private void replacePublishInvocations(AsyncTaskWrapper asyncTask, SubscriberHolder subscriberHolder) {
-		if (!asyncTask.getPublishInvocations().isEmpty()) {
-			for (MethodInvocation publishInvocation : asyncTask.getPublishInvocations()) {
-				List<?> argumentList = publishInvocation.arguments();
-				AST ast = publishInvocation.getAST();
-				replacePublishInvocationsAux(subscriberHolder, publishInvocation, argumentList, ast);
-			}
-		}
-	}
-
-	private <T extends ASTNode> void replacePublishInvocationsAux(SubscriberHolder subscriberHolder,
-			T publishInvocation, List<?> argumentList, AST ast) {
-		String newInvocation = subscriberHolder.getOnNextInvocation(argumentList, subscriberHolder.getType());
-		Statement newStatement = ASTNodeFactory.createSingleStatementFromText(ast, newInvocation);
-		ASTUtils.replaceInStatement(publishInvocation, newStatement);
-	}
+	
 
 	public int getNUMBER_OF_ANONYMOUS_TASKS() {
-		return NUMBER_OF_ANONYMOUS_TASKS;
+		return numOfAnonymousClasses;
 	}
 
 }

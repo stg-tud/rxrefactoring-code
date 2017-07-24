@@ -171,16 +171,4 @@ public class AsyncTaskASTUtils {
 		return v.names;
 	}
 
-	public static void removeMethodInvocations(ASTNode root) {
-
-		class RemoveVisitor extends ASTVisitor {
-			@Override
-			public boolean visit(SuperMethodInvocation node) {
-				Log.info(AsyncTaskASTUtils.class, "SUPER INVOCATION = " + node.getName().getFullyQualifiedName());
-				return false;
-			}
-		}
-
-		root.accept(new RemoveVisitor());
-	}
 }

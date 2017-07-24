@@ -1,5 +1,6 @@
 package de.tudarmstadt.rxrefactoring.ext.asynctask.builders;
 
+import java.lang.reflect.Array;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.Block;
@@ -102,6 +103,9 @@ public class SubscriberHolder {
 	 */
 	public String getOnNextInvocation(List arguments, String type) {
 		String argumentsString = arguments.toString().replace(RIGHT_REC_BRACE, EMPTY).replace(LEFT_REC_BRACE, EMPTY);
+		
+		
+		
 		return "rxUpdateSubscriber" + getNumber() + " .onNext((" + type + ")Arrays.asList(" + argumentsString
 				+ ").toArray());";
 	}

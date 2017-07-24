@@ -552,7 +552,7 @@ public final class ASTUtils
 	 * @param <V>
 	 *            new node type
 	 */
-	public static <T extends ASTNode, V extends ASTNode> void replaceInStatement( T originalNode, V newNode )
+	public static void replaceInStatement( ASTNode originalNode, ASTNode newNode )
 	{
 		Block block = ASTUtils.findParent( originalNode, Block.class );
 		if ( block != null )
