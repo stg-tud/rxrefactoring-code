@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
 
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
@@ -33,10 +34,21 @@ public class AsyncTaskWrapper extends ASTVisitor {
 	private static final String ON_PROGRESS_UPDATE = "onProgressUpdate";
 	private static final String PUBLISH = "publishProgress";
 
-	/*
+	/**
 	 * This visitor retrieves and stores the relevant data of the AsyncTask.
 	 */
 	private final AsyncTaskVisitor visitor;
+	
+	/**
+	 * The root node of the declaration of the AsyncTask. Can either be a TypeDeclaration
+	 * or an AnonymousClassDeclaration.
+	 */
+	private final ASTNode declaration;
+	
+	/**
+	 * The compilation unit that contains the declaration. 
+	 */
+	private final ICompilationUnit unit;
 
 	/**
 	 * Creates a new wrapper given the class declaration of a class that is an
@@ -44,10 +56,18 @@ public class AsyncTaskWrapper extends ASTVisitor {
 	 * 
 	 * @param declaration
 	 *            (Sub-)class of an AsyncTask.
+	 *            
+	 * @throws NullPointerException if either argument is null.
 	 */
-	public AsyncTaskWrapper(ASTNode declaration) {
+	public AsyncTaskWrapper(ASTNode declaration, ICompilationUnit unit) {
+		Objects.requireNonNull(declaration);
+		Objects.requireNonNull(unit);
+		
 		if (!(declaration instanceof TypeDeclaration || declaration instanceof AnonymousClassDeclaration))
 			throw new IllegalArgumentException("Can only wrap around TypeDeclaration or AnonymousClassDeclaration, but got " + declaration);
+		
+		this.declaration = declaration;
+		this.unit = unit;
 		
 		visitor = new AsyncTaskVisitor();
 		declaration.accept(visitor);
@@ -67,7 +87,7 @@ public class AsyncTaskWrapper extends ASTVisitor {
 		private Block onProgressUpdateBlock;
 		private Block onCancelled = null;
 
-		private Type returnType;
+		private Type resultType;
 
 		private String parameters;
 		private SingleVariableDeclaration progressParameter;
@@ -91,7 +111,7 @@ public class AsyncTaskWrapper extends ASTVisitor {
 				String methodDeclarationName = methodDeclaration.getName().toString();
 				if (DO_IN_BACKGROUND.equals(methodDeclarationName)) {
 					doInBackgroundBlock = node;
-					returnType = methodDeclaration.getReturnType2();
+					resultType = methodDeclaration.getReturnType2();
 					parameters = methodDeclaration.parameters().toString().replace("[", "").replace("]", "");
 					isVoid = (parameters == null ? false : (parameters.contains("Void") ? true : false));
 					doInBackgroundMethod = methodDeclaration;
@@ -159,6 +179,60 @@ public class AsyncTaskWrapper extends ASTVisitor {
 	}
 
 	/**
+	 * Returns the declaration where this wrapper is built of.
+	 * 
+	 * @return Either a {@link TypeDeclaration} or {@link AnonymousClassDeclaration}. Can not be null.
+	 */
+	public ASTNode getDeclaration() {
+		return declaration;
+	}
+	
+	/**
+	 * Returns whether this wrapper has been built using an anonymous class.
+	 * 
+	 * @return True, if the wrapper is built from an anonymous class.
+	 */
+	public boolean isAnonymousClass() {
+		return declaration instanceof AnonymousClassDeclaration;
+	}
+	
+	/**
+	 * Returns whether this wrapper has been built using an inner class.
+	 * 
+	 * @return True, if the wrapper is built from an inner class.
+	 */
+	public boolean isInnerClass() {
+		return declaration instanceof TypeDeclaration && declaration.getParent() instanceof TypeDeclaration;
+	}
+	
+	public ICompilationUnit getUnit() {
+		return unit;
+	}
+	
+	public AST getAST() {
+		return declaration.getAST();
+	}
+	
+	/**
+	 * Resolves and returns the binding for the type declared by this AsyncTask.<br>
+	 * <br>	
+	 * Note that bindings are generally unavailable unless requested when the AST is being built.
+	 *	
+	 * @return the binding, or null if the binding cannot be resolved
+	 */
+	public ITypeBinding resolveTypeBinding() {
+		if (declaration instanceof TypeDeclaration) {
+			return ((TypeDeclaration) declaration).resolveBinding();
+		} else if (declaration instanceof AnonymousClassDeclaration) {
+			return ((AnonymousClassDeclaration) declaration).resolveBinding();			
+		}
+				
+		return null;
+	}
+	
+	
+	
+	/**
 	 * @return the isVoid
 	 */
 	public Boolean getIsVoid() {
@@ -183,8 +257,8 @@ public class AsyncTaskWrapper extends ASTVisitor {
 	 * @return The type of the doInBackground method, or null if the type could not
 	 *         be resolved.
 	 */
-	public Type getReturnType() {		
-		return visitor.returnType;
+	public Type getResultType() {		
+		return visitor.resultType;
 	}
 
 	public MethodDeclaration getDoInBackgroundmethod() {
@@ -259,6 +333,22 @@ public class AsyncTaskWrapper extends ASTVisitor {
 	public void setDoOnCompletedBlock(Block doOnCompleted) {
 		visitor.onPostExecuteBlock = doOnCompleted;
 
+	}
+	
+	/**
+	 * 
+	 * 
+	 * @return
+	 */
+	public Type getResultTypeOrVoid() {
+		Type t = getResultType(); 		
+		if (t == null) return getAST().newSimpleType(getAST().newSimpleName("Void"));
+		else return t;
+	}
+	
+	@Override
+	public String toString() {
+		return "AsyncTaskWrapper(unit = " + unit.getElementName() + ", anoynmous/inner class = " + isAnonymousClass() + "/" + isInnerClass() + "declaration =\n" + declaration.toString();
 	}
 
 }

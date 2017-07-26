@@ -5,7 +5,26 @@ package de.tudarmstadt.rxrefactoring.ext.asynctask.workers;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
+
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.FieldAccess;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
+import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.SuperMethodInvocation;
+import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+
+import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.codegen.ASTNodeFactory;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
@@ -16,16 +35,14 @@ import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
 import de.tudarmstadt.rxrefactoring.core.writers.UnitWriters;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.ObservableBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.SubscriberBuilder;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.builders2.AnonymousClassBuilder;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.builders2.InnerClassBuilder;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.builders2.ObservableMethodBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.collect.AsyncTaskCollector;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.SchedulerType;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.writers.UnitWriterExt;
-
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.dom.*;
-
-import com.google.common.collect.Multimap;
 
 /**
  * Description: This worker is in charge of refactoring classes that extends
@@ -42,21 +59,22 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 	final String ASYNC_METHOD_NAME = "getAsyncObservable";
 	final String SUBSCRIBE = "subscribe";
 	final String UN_SUBSCRIBE = "unsubscribe";
-	private int NUMBER_OF_ASYNC_TASKS = 0;
-	private int NUMBER_OF_ABSTRACT_TASKS = 0;
+	
+	private int numOfAsyncTasks = 0;
+	private int numOfAbstractClasses = 0;
 
 	/**
 	 * @return the nUMBER_OF_ASYNC_TASKS
 	 */
 	public int getNUMBER_OF_ASYNC_TASKS() {
-		return NUMBER_OF_ASYNC_TASKS;
+		return numOfAsyncTasks;
 	}
 
 	/**
 	 * @return the nUMBER_OF_ABSTRACT_TASKS
 	 */
 	public int getNUMBER_OF_ABSTRACT_TASKS() {
-		return NUMBER_OF_ABSTRACT_TASKS;
+		return numOfAbstractClasses;
 	}
 
 	public SubClassAsyncTaskWorker(AsyncTaskCollector collector) {
@@ -65,7 +83,7 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 
 	@Override
 	public WorkerStatus refactor() {
-		NUMBER_OF_ASYNC_TASKS = 0;
+		numOfAsyncTasks = 0;
 		Multimap<ICompilationUnit, TypeDeclaration> cuAnonymousClassesMap = collector.getSubclasses();
 		int numCunits = collector.getNumberOfCompilationUnits();
 		monitor.beginTask(getClass().getSimpleName(), numCunits);
@@ -76,15 +94,15 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 			for (TypeDeclaration asyncTaskDeclaration : declarations) {
 
 				Log.info(getClass(), "METHOD=refactor - Extract Information from AsyncTask: " + unit.getElementName());
-				AsyncTaskWrapper asyncTask = new AsyncTaskWrapper(asyncTaskDeclaration);
+				AsyncTaskWrapper asyncTask = new AsyncTaskWrapper(asyncTaskDeclaration, unit);
 
 				if (asyncTask.getDoInBackgroundBlock() == null) {
-					NUMBER_OF_ABSTRACT_TASKS++;
+					numOfAbstractClasses++;
 					continue;
 				}
 
 				AST ast = asyncTaskDeclaration.getAST();
-				UnitWriterExt writer = UnitWriters.getOrElse(unit,
+				UnitWriterExt writer = UnitWriters.getOrPut(unit,
 						() -> new UnitWriterExt(unit, ast));
 				
 				updateUsage(collector.getRelevantUsages(), ast, asyncTaskDeclaration, unit);
@@ -92,44 +110,47 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 				
 				Log.info(getClass(), "METHOD=refactor - Updating imports: " + unit.getElementName());
 				updateImports(writer, asyncTask);
-				createLocalObservable(writer, asyncTaskDeclaration, ast, asyncTask);
+				createLocalObservable(asyncTask, writer, asyncTaskDeclaration);
 				addProgressBlock(ast, unit, asyncTask, writer);
 				
 				Log.info(getClass(), "METHOD=refactor - Refactoring class: " + unit.getElementName());
 				if (asyncTask.getOnPreExecuteBlock() != null)
-					updateonPreExecute(asyncTaskDeclaration, writer, ast, asyncTask);
+					updateOnPreExecute(asyncTask, writer, asyncTaskDeclaration);
 
-				NUMBER_OF_ASYNC_TASKS++;
+				numOfAsyncTasks++;
 				execution.addUnitWriter(writer);
 			}
 
 			monitor.worked(1);
 		}
-		Log.info(getClass(), "Number of AsynckTasks Subclass=  " + NUMBER_OF_ASYNC_TASKS);
-		Log.info(getClass(), "Number of Abstract AsynckTasks Subclass=  " + NUMBER_OF_ABSTRACT_TASKS);
+		Log.info(getClass(), "Number of AsynckTasks Subclass=  " + numOfAsyncTasks);
+		Log.info(getClass(), "Number of Abstract AsynckTasks Subclass=  " + numOfAbstractClasses);
 
 		return WorkerStatus.OK;
 	}
 
 	private void updateUsage(Multimap<ICompilationUnit, MethodInvocation> relevantUsages, AST ast,
-			TypeDeclaration asyncTaskDeclaration, ICompilationUnit outerUnit) {
-		for (ICompilationUnit unit : relevantUsages.keySet()) {
+			TypeDeclaration asyncTaskDeclaration, ICompilationUnit unit) {
+		
+		
+		for (ICompilationUnit usageUnit : relevantUsages.keySet()) {
 			TypeDeclaration tyDec = ast.newTypeDeclaration();
 
-			Log.info(getClass(), "METHOD=updateUsage - updating usage for class: " + outerUnit.getElementName() + " in "
-					+ unit.getElementName());
-			for (MethodInvocation methodInvoke : relevantUsages.get(unit)) {
+			Log.info(getClass(), "METHOD=updateUsage - updating usage for class: " + unit.getElementName() + " in "
+					+ usageUnit.getElementName());
+			
+			for (MethodInvocation methodInvoke : relevantUsages.get(usageUnit)) {
 				if (methodInvoke.getName().toString().equals(EXECUTE)
 						|| methodInvoke.getName().toString().equals(EXECUTE_ON_EXECUTOR)) {
 
-					if (outerUnit.getElementName().equals(unit.getElementName())) {
-						UnitWriterExt writer = UnitWriters.getOrElse(outerUnit, () -> new UnitWriterExt(outerUnit, ast));
-						replaceCancel(writer, relevantUsages, methodInvoke, outerUnit, ast);
+					if (unit.getElementName().equals(usageUnit.getElementName())) {
+						UnitWriterExt writer = UnitWriters.getOrPut(unit, () -> new UnitWriterExt(unit, ast));
+						replaceCancel(writer, relevantUsages, methodInvoke, unit, ast);
 					} else {
 						tyDec = ASTUtils.findParent(methodInvoke, TypeDeclaration.class);
 						AST astInvoke = tyDec.getAST();
-						UnitWriterExt writer = UnitWriters.getOrElse(unit, () -> new UnitWriterExt(unit, astInvoke));
-						replaceCancel(writer, relevantUsages, methodInvoke, unit, astInvoke);
+						UnitWriterExt writer = UnitWriters.getOrPut(usageUnit, () -> new UnitWriterExt(usageUnit, astInvoke));
+						replaceCancel(writer, relevantUsages, methodInvoke, usageUnit, astInvoke);
 						execution.addUnitWriter(writer);
 					}
 
@@ -265,7 +286,7 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 		rewriter.addImport("rx.schedulers.Schedulers");
 		rewriter.addImport("java.util.concurrent.Callable");
 
-		if (NUMBER_OF_ABSTRACT_TASKS == 0) {
+		if (numOfAbstractClasses == 0) {
 			rewriter.removeImport("android.os.AsyncTask");
 		}
 
@@ -296,24 +317,31 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 		}
 	}
 
-	private void createLocalObservable(UnitWriterExt rewriter, TypeDeclaration taskObject, AST ast,
-			AsyncTaskWrapper asyncTask) {
-		replacePublishInvocations(asyncTask, rewriter);
-		String observableStatement = createObservable(asyncTask, rewriter);
-		MethodDeclaration getAsyncMethod = ASTNodeFactory.createMethodFromText(ast,
-				"public Observable<" + asyncTask.getReturnType() + "> getAsyncObservable( final "
-						+ asyncTask.getParameters() + "){" + " return " + observableStatement + "}");
-		rewriter.replaceStatement(asyncTask.getDoInBackgroundmethod(), getAsyncMethod);
+	private void createLocalObservable(AsyncTaskWrapper asyncTask, UnitWriterExt writer, TypeDeclaration taskObject) {
+		
+		//replacePublishInvocations(asyncTask, rewriter);
+		
+		
+		
+		//Define method
+		/*
+		 * public Observable<T> getAsyncObservable(final PARAMETER) {
+		 *   return NEW OBSERVABLE
+		 * }
+		 */		
+		ObservableMethodBuilder builder = new ObservableMethodBuilder(asyncTask, writer);
+		writer.replaceStatement(asyncTask.getDoInBackgroundmethod(), builder.create());
 
 		// Remove postExecute method
 		if (asyncTask.getOnPostExecuteBlock() != null)
-			rewriter.removeMethod(asyncTask.getOnPostExecuteBlock().getParent(), taskObject);
+			writer.removeMethod(asyncTask.getOnPostExecuteBlock().getParent(), taskObject);
 		// Remove updateProgress method
 		if (asyncTask.getOnProgressUpdateBlock() != null)
-			rewriter.removeMethod(asyncTask.getOnProgressUpdateBlock().getParent(), taskObject);
+			writer.removeMethod(asyncTask.getOnProgressUpdateBlock().getParent(), taskObject);
 		// Remove onCancelled method
 		if (asyncTask.getOnCancelled() != null)
-			rewriter.removeMethod(asyncTask.getOnCancelled().getParent(), taskObject);
+			writer.removeMethod(asyncTask.getOnCancelled().getParent(), taskObject);
+	
 	}
 
 	/**
@@ -322,70 +350,73 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 	 * 
 	 * @override has to be removed and super() should be removed from
 	 *           onPreExecuteBlock
-	 * @param parent
-	 * @param singleChangeWriter
-	 * @param ast
 	 * @param asyncTask
+	 * @param writer
+	 * @param parent
+	 * @param ast
 	 */
-	private void updateonPreExecute(TypeDeclaration parent, UnitWriterExt singleChangeWriter, AST ast,
-			AsyncTaskWrapper asyncTask) {
+	private void updateOnPreExecute(AsyncTaskWrapper asyncTask, UnitWriterExt writer,
+			TypeDeclaration parent) {
 
-		MethodDeclaration getAsyncMethod = ASTNodeFactory.createMethodFromText(ast,
+		MethodDeclaration getAsyncMethod = ASTNodeFactory.createMethodFromText(writer.getAST(),
 				"public onPreExecute(){" + asyncTask.getOnPreExecuteBlock().toString() + "}");
-		singleChangeWriter.replaceStatement((MethodDeclaration) asyncTask.getOnPreExecuteBlock().getParent(),
+		writer.replaceStatement((MethodDeclaration) asyncTask.getOnPreExecuteBlock().getParent(),
 				getAsyncMethod);
 
 	}
 
-	private String createObservable(AsyncTaskWrapper asyncTask, UnitWriter writer) {
-
-		Block doInBackgroundBlock = asyncTask.getDoInBackgroundBlock();
-		Block onPostExecuteBlock = asyncTask.getOnPostExecuteBlock();
-		Block doProgressUpdate = asyncTask.getOnProgressUpdateBlock();
-		Block onCancelled = asyncTask.getOnCancelled();
-		String type = asyncTask.getReturnType().toString();
-		String postExecuteParameters = asyncTask.getPostExecuteParameter().toString();
-		removeSuperInvocations(asyncTask);
-		ObservableBuilder rxObservable = ObservableBuilder.newObservable(asyncTask, writer, type, doInBackgroundBlock,
-				SchedulerType.JAVA_MAIN_THREAD);
-		if (doProgressUpdate != null) {
-
-			if (onPostExecuteBlock != null) {
-				AsyncTaskASTUtils.replaceFieldsWithFullyQualifiedNameIn(onPostExecuteBlock, writer);
-
-				rxObservable.addDoOnNext(onPostExecuteBlock.toString(), postExecuteParameters,
-						asyncTask.getPostExecuteType().toString(), true);
-			}
-
-		} else {
-			if (onPostExecuteBlock != null) {
-				AsyncTaskASTUtils.replaceFieldsWithFullyQualifiedNameIn(onPostExecuteBlock, writer);
-
-				rxObservable.addDoOnNext(onPostExecuteBlock.toString(), postExecuteParameters, type, true);
-			}
-		}
-		if (onCancelled != null) {
-			rxObservable.addDoOnCancelled(onCancelled);
-		}
-		Block preExec = asyncTask.getOnPreExecuteBlock();
-		if (preExec != null) {
-
-			rxObservable.addDoOnPreExecute(preExec);
-		}
-		return rxObservable.build();
-	}
+//	private Expression createObservable(AsyncTaskWrapper asyncTask, UnitWriter writer) {
+//
+////		Block doInBackgroundBlock = asyncTask.getDoInBackgroundBlock();
+////		Block onPostExecuteBlock = asyncTask.getOnPostExecuteBlock();
+////		Block doProgressUpdate = asyncTask.getOnProgressUpdateBlock();
+////		Block onCancelled = asyncTask.getOnCancelled();
+////		String type = asyncTask.getReturnType().toString();
+////		String postExecuteParameters = asyncTask.getPostExecuteParameter().toString();
+//		
+//		
+//		AnonymousClassBuilder builder = new AnonymousClassBuilder(asyncTask, writer);
+//		
+//		
+////		ObservableBuilder rxObservable = ObservableBuilder.newObservable(asyncTask, writer, type, doInBackgroundBlock,
+////				SchedulerType.JAVA_MAIN_THREAD);
+//		
+//		
+//	
+//		
+////		if (doProgressUpdate != null) {
+////			if (onPostExecuteBlock != null) {
+////				rxObservable.addDoOnNext(onPostExecuteBlock.toString(), postExecuteParameters,
+////						asyncTask.getPostExecuteType().toString(), true);
+////			}
+////
+////		} else {
+////			if (onPostExecuteBlock != null) {
+////				rxObservable.addDoOnNext(onPostExecuteBlock.toString(), postExecuteParameters, type, true);
+////			}
+////		}
+////		if (onCancelled != null) {
+////			rxObservable.addDoOnCancelled(onCancelled);
+////		}
+////		Block preExec = asyncTask.getOnPreExecuteBlock();
+////		if (preExec != null) {
+////
+////			rxObservable.addDoOnPreExecute(preExec);
+////		}
+//		return builder.create();
+//	}
 
 	/**
 	 * Remove super method invocation from AsyncTask methods
 	 * 
 	 * @param asyncTask
 	 */
-	private void removeSuperInvocations(AsyncTaskWrapper asyncTask) {
-		for (SuperMethodInvocation methodInvocation : asyncTask.getSuperClassMethodInvocation()) {
-			Statement statement = (Statement) ASTUtils.findParent(methodInvocation, Statement.class);
-			statement.delete();
-		}
-	}
+//	private void removeSuperInvocations(AsyncTaskWrapper asyncTask) {
+//		for (SuperMethodInvocation methodInvocation : asyncTask.getSuperClassMethodInvocation()) {
+//			Statement statement = (Statement) ASTUtils.findParent(methodInvocation, Statement.class);
+//			statement.delete();
+//		}
+//	}
 
 	/**
 	 * If onUpdateProgressmethod exist method will add a new method to class

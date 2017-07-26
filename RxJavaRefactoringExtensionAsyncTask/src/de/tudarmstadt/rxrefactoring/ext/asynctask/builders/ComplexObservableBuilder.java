@@ -12,6 +12,7 @@ import de.tudarmstadt.rxrefactoring.core.codegen.IdManager;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/23/2016
  */
+@Deprecated
 public final class ComplexObservableBuilder {
 	private static final String NEW_LINE = "\n";
 	private static final String EMPTY = "";

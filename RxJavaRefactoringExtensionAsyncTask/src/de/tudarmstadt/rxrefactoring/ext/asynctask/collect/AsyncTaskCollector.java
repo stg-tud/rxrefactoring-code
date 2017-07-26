@@ -111,6 +111,7 @@ public class AsyncTaskCollector extends ASTCollector {
 
 	@Override
 	public void processCompilationUnit(ICompilationUnit unit) {
+		super.processCompilationUnit(unit);
 
 		ASTParser parser = ASTParser.newParser(AST.JLS8);
 		parser.setResolveBindings(true);

@@ -14,7 +14,10 @@ import org.eclipse.jdt.core.dom.*;
  * </ol>
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/10/2016
+ * 
+ * @deprecated Use {@link de.tudarmstadt.rxrefactoring.core.writers.UnitWriter} instead.
  */
+@Deprecated()
 public final class ASTNodeFactory extends ASTVisitor
 {
 	private MethodDeclaration methodDeclaration;

@@ -26,7 +26,7 @@ public abstract class ASTWorker extends AbstractWorker<ASTCollector> {
 		for (ICompilationUnit unit : collector.getUnits()) {
 			
 			UnitWriter writer = 
-					UnitWriters.getOrElse(unit, () -> new UnitWriter(unit, collector.getRootNode(unit).getAST()));				
+					UnitWriters.getOrPut(unit, () -> new UnitWriter(unit, collector.getRootNode(unit).getAST()));				
 			
 			synchronized (writer) {
 				Visitor v = createVisitor(writer);				

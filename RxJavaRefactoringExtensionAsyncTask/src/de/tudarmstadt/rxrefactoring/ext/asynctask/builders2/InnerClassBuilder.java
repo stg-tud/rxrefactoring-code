@@ -1,11 +1,15 @@
 package de.tudarmstadt.rxrefactoring.ext.asynctask.builders2;
 
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.ReturnStatement;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
+import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import de.tudarmstadt.rxrefactoring.core.codegen.IdManager;
 import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
@@ -18,7 +22,7 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
  * @author Mirko Köhler
  *
  */
-public class InnerClassBuilder extends AbstractBuilder<TypeDeclaration> {
+public class InnerClassBuilder extends AbstractBuilder {
 
 	//Unique id that gets added to the name to avoid naming conflicts.
 	private final String id;
@@ -38,6 +42,41 @@ public class InnerClassBuilder extends AbstractBuilder<TypeDeclaration> {
 	public InnerClassBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer) {
 		super(asyncTask, writer);		
 		id = IdManager.getNextObservableId(writer.getUnit().getElementName());
+		
+		/* 
+		 * Build:
+		 * 
+		 * private class ComplexRxObservable {
+		 *     ASYNC TASK FIELDS
+		 *     
+		 *     ASYNC TASK METHODS
+		 *    
+		 *     public Observable<T> getAsyncObservable() {
+		 *         return new Observable ...
+		 *     }
+		 *     
+		 *     //If needed
+		 *     SUBSCRIBER METHOD DECLARATION
+		 * }
+		 * 
+		 * }
+		 */ 
+		
+		//Define type: ComplexRxObservable
+		TypeDeclaration observableType = ast.newTypeDeclaration();
+		observableType.setName(ast.newSimpleName(getTypeName()));
+		observableType.setInterface(false);
+		observableType.modifiers().add(ast.newModifier(ModifierKeyword.PRIVATE_KEYWORD));
+		
+		//Add field and additional method declarations
+		asyncTask.getFieldDeclarations().forEach(observableType.bodyDeclarations()::add);
+		asyncTask.getAdditionalMethodDeclarations().forEach(observableType.bodyDeclarations()::add);
+		
+		
+		//Define method: getAsyncObservable
+		ObservableMethodBuilder builder = new ObservableMethodBuilder(asyncTask, writer, id);
+		observableType.bodyDeclarations().add(builder.create());
+		
 	}
 
 	
@@ -103,40 +142,11 @@ public class InnerClassBuilder extends AbstractBuilder<TypeDeclaration> {
 	 * }
 	 */ 
 	@SuppressWarnings("unchecked")
-	@Override TypeDeclaration initial() {
-	
-		//Define type: ComplexRxObservable
-		TypeDeclaration observableType = ast.newTypeDeclaration();
-		observableType.setName(ast.newSimpleName(getTypeName()));
-		observableType.setInterface(false);
-		observableType.modifiers().add(ast.newModifier(ModifierKeyword.PRIVATE_KEYWORD));
-		
-		//Add field and additional method declarations
-		asyncTask.getFieldDeclarations().forEach(observableType.bodyDeclarations()::add);
-		asyncTask.getAdditionalMethodDeclarations().forEach(observableType.bodyDeclarations()::add);
-		
-		//Define method: getAsyncObservable
-		MethodDeclaration getAsyncObservable = ast.newMethodDeclaration();
-		getAsyncObservable.setName(ast.newSimpleName("getAsyncObservable" + id));
-		//Construct return type Observable<T>
-		ParameterizedType returnType = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Observable")));
-		returnType.typeArguments().add(copy(returnTypeOrVoid()));
-		getAsyncObservable.setReturnType2(returnType);
-		
-		getAsyncObservable.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
-		getAsyncObservable.modifiers().add(createOverrideAnnotation());
-		
-		//Build body of getAsyncObservable
-		Block getAsyncObservableBody = ast.newBlock();
-		ReturnStatement returnStatement = ast.newReturnStatement();
-		returnStatement.setExpression(AnonymousClassBuilder.from(asyncTask, writer));		
-		getAsyncObservableBody.statements().add(returnStatement);
-		getAsyncObservable.setBody(getAsyncObservableBody);
-		
+	@Override TypeDeclaration initial() {	
 				
-		return observableType;
+		return null;
 	}
-	
+			
 	/*
 	 * Builds
 	 * 

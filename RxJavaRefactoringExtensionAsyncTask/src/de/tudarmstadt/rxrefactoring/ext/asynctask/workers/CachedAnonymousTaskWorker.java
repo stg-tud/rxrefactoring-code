@@ -81,11 +81,11 @@ public class CachedAnonymousTaskWorker extends AbstractWorker<AsyncTaskCollector
 				AnonymousClassDeclaration asyncTaskDeclaration = classInstance.getAnonymousClassDeclaration();
 				Log.info(getClass(), "METHOD=refactor - Extract Information from AsyncTask: " + unit.getElementName());
 
-				AsyncTaskWrapper asyncTask = new AsyncTaskWrapper(classInstance);
+				AsyncTaskWrapper asyncTask = new AsyncTaskWrapper(classInstance, unit);
 
 				if (asyncTask.getDoInBackgroundBlock() != null) {
 					AST ast = asyncTaskDeclaration.getAST();
-					UnitWriterExt writer = UnitWriters.getOrElse(unit,
+					UnitWriterExt writer = UnitWriters.getOrPut(unit,
 							() -> new UnitWriterExt(unit, ast));
 
 					Log.info(getClass(), "METHOD=refactor - Updating imports: " + unit.getElementName());
@@ -441,7 +441,7 @@ public class CachedAnonymousTaskWorker extends AbstractWorker<AsyncTaskCollector
 			}
 
 			String observableStatement = createObservable(asyncTask, subscriberHolder, rewriter).buildReturnStatement();
-			String observableType = asyncTask.getReturnType().toString();
+			String observableType = asyncTask.getResultType().toString();
 			ComplexObservableBuilder complexObservable = ComplexObservableBuilder
 					.newComplexRxObservable(unit.getElementName())
 					.withFields(fieldDeclarations)
@@ -473,7 +473,7 @@ public class CachedAnonymousTaskWorker extends AbstractWorker<AsyncTaskCollector
 		Block doOnCompletedBlock = asyncTask.getOnPostExecuteBlock();
 		Block onCancelled = asyncTask.getOnCancelled();
 
-		String type = (asyncTask.getReturnType() == null ? "Void" : asyncTask.getReturnType().toString());
+		String type = (asyncTask.getResultType() == null ? "Void" : asyncTask.getResultType().toString());
 		String postExecuteParameters = asyncTask.getPostExecuteParameter().toString();
 
 		if (type == null) {

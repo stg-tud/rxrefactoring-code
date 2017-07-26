@@ -12,7 +12,7 @@ import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 
-abstract class AbstractBuilder<T extends ASTNode> implements IObservableBuilder<T> {
+abstract class AbstractBuilder {
 
 	
 	final AsyncTaskWrapper asyncTask;
@@ -20,26 +20,19 @@ abstract class AbstractBuilder<T extends ASTNode> implements IObservableBuilder<
 	
 	final AST ast;
 	final ASTRewrite astRewrite;
-
-	T node = null;
 	
 	
 	public AbstractBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer) {		
 		this.asyncTask = asyncTask;
 		this.writer = writer;		
 		this.ast = writer.getAST();
-		this.astRewrite = writer.getAstRewriter();	
-		
-		node = initial();
+		this.astRewrite = writer.getAstRewriter();
 	}
-	
-	abstract T initial();
-	
+		
 	
 	/*
 	 * Private helper methods
-	 */
-	
+	 */	
 	@SuppressWarnings("unchecked")
 	<V extends ASTNode> V copy(V node) {
 		return (V) astRewrite.createCopyTarget(node);
@@ -57,12 +50,5 @@ abstract class AbstractBuilder<T extends ASTNode> implements IObservableBuilder<
 		return annotation;
 	}
 	
-	Type returnTypeOrVoid() {
-		Type t = asyncTask.getReturnType(); 
-		
-		if (t == null)
-			return ast.newSimpleType(ast.newSimpleName("Void"));
-		else
-			return t;
-	}
+	
 }

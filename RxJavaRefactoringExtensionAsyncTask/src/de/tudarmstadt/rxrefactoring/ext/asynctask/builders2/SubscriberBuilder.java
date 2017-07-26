@@ -37,35 +37,13 @@ public class SubscriberBuilder extends AbstractBuilder<MethodDeclaration> {
 		super(asyncTask, writer);
 		
 		id = IdManager.getNextObserverId(writer.getUnit().getElementName());
+		
+		
+		
 	}
 
 	@Override
 	public MethodDeclaration create() {
-		return node;
-	}
-
-	public static MethodDeclaration from(AsyncTaskWrapper asyncTask, UnitWriter writer) {
-		SubscriberBuilder builder = new SubscriberBuilder(asyncTask, writer);
-		return builder.create();
-	}
-	
-	/*
-	 * Builds
-	 * 
-	 * private Subscriber<T> getRxUpdateSubscriber() {
-	 *     return new Subscriber<T>() {
-	 *         public onNext() {
-	 *             PROGRESS_UPDATE_BLOCK
-	 *         }
-	 *         
-	 *         public onCompleted() { }
-	 *         
-	 *         public onError(Throwable throwable) { }
-	 *     }
-	 * }
-	 */
-	@SuppressWarnings("unchecked")
-	@Override MethodDeclaration initial() {		
 		
 		//Define type: Subscriber
 		Type subscriberType = getSubscriberType();
@@ -130,10 +108,36 @@ public class SubscriberBuilder extends AbstractBuilder<MethodDeclaration> {
 		getSubscriberBlock.statements().add(ast.newExpressionStatement(constructorCall));
 		
 		getSubscriber.modifiers().add(ast.newModifier(ModifierKeyword.PRIVATE_KEYWORD));
-		getSubscriber.setBody(getSubscriberBlock);		
-	
-		
+		getSubscriber.setBody(getSubscriberBlock);
+				
+				
 		return getSubscriber;
+	}
+
+	public static MethodDeclaration from(AsyncTaskWrapper asyncTask, UnitWriter writer) {
+		SubscriberBuilder builder = new SubscriberBuilder(asyncTask, writer);
+		return builder.create();
+	}
+	
+	/*
+	 * Builds
+	 * 
+	 * private Subscriber<T> getRxUpdateSubscriber() {
+	 *     return new Subscriber<T>() {
+	 *         public onNext() {
+	 *             PROGRESS_UPDATE_BLOCK
+	 *         }
+	 *         
+	 *         public onCompleted() { }
+	 *         
+	 *         public onError(Throwable throwable) { }
+	 *     }
+	 * }
+	 */
+	@SuppressWarnings("unchecked")
+	@Override MethodDeclaration initial() {		
+		
+		return null;
 	}
 	
 	/*

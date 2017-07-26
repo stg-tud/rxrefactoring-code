@@ -34,11 +34,52 @@ import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 
-public class AnonymousClassBuilder extends AbstractBuilder<Expression> {
+public class AnonymousClassBuilder extends AbstractBuilder {
 
+	private Expression node;
 	
-	private AnonymousClassBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer) {		
+	public AnonymousClassBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer) {		
 		super(asyncTask, writer);
+		
+		/*
+		 * Builds
+		 * 
+		 * Observable.fromCallable(new Callable<RETURN_TYPE>() {
+		 *     public RETURN_TYPE call() throws Exception {
+		 *         DO_IN_BACKGROUND_BLOCK
+		 *     }
+		 * })
+		 */
+		//Define type: Callable
+		ParameterizedType tCallable = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Callable"))); //Callable<>
+		tCallable.typeArguments().add(copy(asyncTask.getResultTypeOrVoid())); //Callable<T>
+		
+				
+		//Define method: call()
+		MethodDeclaration callMethod = ast.newMethodDeclaration();
+		callMethod.setName(ast.newSimpleName("call"));
+		callMethod.setReturnType2(copy(asyncTask.getResultType()));
+		callMethod.thrownExceptionTypes().add(ast.newSimpleType(ast.newSimpleName("Exception")));
+		callMethod.modifiers().add(createOverrideAnnotation());
+		callMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
+		callMethod.setBody(copy(asyncTask.getDoInBackgroundBlock()));
+		
+		//Define anonymous class
+		AnonymousClassDeclaration classDecl = ast.newAnonymousClassDeclaration();
+		classDecl.bodyDeclarations().add(callMethod);
+		
+		//Define constructor call: new Callable() { ... }
+		ClassInstanceCreation initCallable = ast.newClassInstanceCreation();
+		initCallable.setType(tCallable);
+		initCallable.setAnonymousClassDeclaration(classDecl);
+		
+		//Define method invoke: Observable.fromCallable(new Callable ...)
+		MethodInvocation invoke = ast.newMethodInvocation();
+		invoke.setName(ast.newSimpleName("fromCallable"));
+		invoke.setExpression(ast.newSimpleName("Observable"));
+		invoke.arguments().add(initCallable);
+		
+		node = invoke;
 	}
 	
 	
@@ -94,62 +135,6 @@ public class AnonymousClassBuilder extends AbstractBuilder<Expression> {
 		return body;		
 	}
 	
-	/**
-	 * Returns the expression containing the built observable
-	 *  created by this builder. Do only use this expression
-	 *  when the build is finished.
-	 *  
-	 * @return The expression created by this builder.
-	 */
-	@Override public Expression create() {
-		return node;
-	}
-	
-	public static Expression from(AsyncTaskWrapper asyncTask, UnitWriter writer) {
-//		Block doInBackgroundBlock = asyncTask.getDoInBackgroundBlock();
-//		Block doOnCompletedBlock = asyncTask.getOnPostExecuteBlock();
-
-		//String type = (asyncTask.getReturnedType() == null ? "Void" : asyncTask.getReturnedType().toString());
-		//String postExecuteParameters = asyncTask.getPostExecuteParameter();
-
-//		if (type == null) {
-//			Log.error(getClass(), "NULL type for DoInBackground");
-//		}
-		
-		
-		
-		//Creates a new observable from a callable
-		AnonymousClassBuilder builder = new AnonymousClassBuilder(asyncTask, writer);
-				
-		//Adds the additional functionality to the observable
-		if (asyncTask.getOnPreExecuteBlock() != null) {
-			builder.addDoOnSubscribe();
-		}		
-		if (asyncTask.getOnPostExecuteBlock() != null) {
-			builder.addDoOnNext();
-		}
-		if (asyncTask.getOnCancelled() != null) {
-			builder.addDoOnUnsubscribe();
-		}
-		
-//		ObservableBuilder complexObservable = ObservableBuilder
-//				.newObservable(asyncTask, writer, type, doInBackgroundBlock, SchedulerType.JAVA_MAIN_THREAD)
-//				.addDoOnNext((doOnCompletedBlock == null ? "{}" : doOnCompletedBlock.toString()),
-//						postExecuteParameters == null ? "arg" : postExecuteParameters, type, true);
-//		
-//		Block preExec = asyncTask.getOnPreExecuteBlock();
-//		if (preExec != null) {
-//			complexObservable.addDoOnPreExecute(preExec);
-//		}
-//
-//		Block onCancelled = asyncTask.getOnCancelled();
-//		if (onCancelled != null) {
-//			complexObservable.addDoOnCancelled(onCancelled);
-//		}
-		
-		return builder.create();
-	}
-	
 	/*
 	 * Builds
 	 * 
@@ -157,73 +142,61 @@ public class AnonymousClassBuilder extends AbstractBuilder<Expression> {
 	 *     public RETURN_TYPE call() throws Exception {
 	 *         DO_IN_BACKGROUND_BLOCK
 	 *     }
-	 * })
+	 * }).doOnNext( ... ) ...
 	 */
-	@SuppressWarnings("unchecked")
-	@Override Expression initial() {
+	/**
+	 * Returns the expression containing the built observable
+	 * created by this builder. Do only use this expression
+	 * when the build is finished.
+	 *  
+	 * @return The expression created by this builder.
+	 */
+	public Expression create() {
 		
-		//Define type: Callable
-		ParameterizedType tCallable = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Callable"))); //Callable<>
-		tCallable.typeArguments().add(copy(returnTypeOrVoid())); //Callable<T>
+		addSubscribeOnComputation();
 		
-				
-		//Define method: call()
-		MethodDeclaration callMethod = ast.newMethodDeclaration();
-		callMethod.setName(ast.newSimpleName("call"));
-		callMethod.setReturnType2(copy(asyncTask.getReturnType()));
-		callMethod.thrownExceptionTypes().add(ast.newSimpleType(ast.newSimpleName("Exception")));
-		callMethod.modifiers().add(createOverrideAnnotation());
-		callMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
-		callMethod.setBody(copy(asyncTask.getDoInBackgroundBlock()));
+		//Adds the additional functionality to the observable
+		if (asyncTask.getOnPreExecuteBlock() != null) {
+			addDoOnSubscribe();
+		}		
+		if (asyncTask.getOnPostExecuteBlock() != null) {
+			addDoOnNext();
+		}
+		if (asyncTask.getOnCancelled() != null) {
+			addDoOnUnsubscribe();
+		}
 		
-		//Define anonymous class
-		AnonymousClassDeclaration classDecl = ast.newAnonymousClassDeclaration();
-		classDecl.bodyDeclarations().add(callMethod);
-		
-		//Define constructor call: new Callable() { ... }
-		ClassInstanceCreation initCallable = ast.newClassInstanceCreation();
-		initCallable.setType(tCallable);
-		initCallable.setAnonymousClassDeclaration(classDecl);
-		
-		//Define method invoke: Observable.fromCallable(new Callable ...)
-		MethodInvocation invoke = ast.newMethodInvocation();
-		invoke.setName(ast.newSimpleName("fromCallable"));
-		invoke.setExpression(ast.newSimpleName("Observable"));
-		invoke.arguments().add(initCallable);
-					
-		return invoke;
+		return node;
 	}
 	
+	public static Expression from(AsyncTaskWrapper asyncTask, UnitWriter writer) {
+		AnonymousClassBuilder builder = new AnonymousClassBuilder(asyncTask, writer);
+		return builder.create();
+	}
+	
+
+	
+	
+	
 	/*
 	 * Builds
 	 * 
-	 * private class MyObservable ... {
-	 * 
-	 * 
-	 * }
-	 */
-	
-	
-	/*
-	 * Builds
-	 * 
-	 * observable.methodName(new Action0 () {
+	 * observable.doOnNext(new Action0 () {
 	 *     public void call() {
 	 *         actionBody
 	 *     }
 	 * })
 	 */
+	@SuppressWarnings("unchecked")
 	public AnonymousClassBuilder addDoOnNext() {
 		checkInitialized();
 	
 		
 		//Define type: Action1
 		ParameterizedType tAction1 = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Action1"))); //Callable<>
-		tAction1.typeArguments().add(copy(returnTypeOrVoid()));				
+		tAction1.typeArguments().add(copy(asyncTask.getResultTypeOrVoid()));				
 		
-		//Define local variable: final 
-		SingleVariableDeclaration var = ast.newSingleVariableDeclaration();
-		
+				
 		//Define method: call()
 		MethodDeclaration callMethod = ast.newMethodDeclaration();
 		callMethod.setName(ast.newSimpleName("call"));
@@ -301,6 +274,23 @@ public class AnonymousClassBuilder extends AbstractBuilder<Expression> {
 		checkInitialized();
 
 		node = invokeWithAction0(node, "doOnUnsubscribe", preprocessBlock(copy(asyncTask.getOnCancelled()), "onCancelled"));
+		return this;
+	}
+	
+	public AnonymousClassBuilder addSubscribeOnComputation() {
+		checkInitialized();
+		
+		MethodInvocation invokeScheduler = ast.newMethodInvocation();
+		invokeScheduler.setName(ast.newSimpleName("computation"));
+		invokeScheduler.setExpression(ast.newSimpleName("Schedulers"));
+		
+		MethodInvocation invokeSubscribeOn = ast.newMethodInvocation();
+		invokeSubscribeOn.setName(ast.newSimpleName("subscribeOn"));
+		invokeSubscribeOn.setExpression(node);
+		invokeSubscribeOn.arguments().add(invokeScheduler);
+		
+		node = invokeSubscribeOn;
+		
 		return this;
 	}
 	

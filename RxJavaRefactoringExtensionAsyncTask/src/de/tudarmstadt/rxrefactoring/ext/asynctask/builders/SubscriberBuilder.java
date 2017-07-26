@@ -9,6 +9,7 @@ import rx.Subscriber;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/18/2016
  */
+@Deprecated
 public final class SubscriberBuilder {
 	private static final String NEW_LINE = "\n";
 	private static final String SPACE = " ";

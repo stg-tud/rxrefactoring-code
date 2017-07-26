@@ -41,6 +41,10 @@ public class ASTCollector extends AbstractCollector {
 		return rootNodes.keySet();
 	}
 	
+	public AST getAST(ICompilationUnit unit) {
+		return getRootNode(unit).getAST();
+	}
+	
 	public ASTNode getRootNode(ICompilationUnit unit) {
 		return rootNodes.get(unit);
 	}

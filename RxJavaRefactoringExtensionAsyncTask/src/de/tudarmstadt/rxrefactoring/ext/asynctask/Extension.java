@@ -7,12 +7,15 @@ import java.util.Set;
 
 import org.eclipse.jdt.core.IJavaProject;
 
+import com.google.common.collect.Sets;
+
 import de.tudarmstadt.rxrefactoring.core.RefactoringExtension;
 import de.tudarmstadt.rxrefactoring.core.utils.PluginUtils;
 import de.tudarmstadt.rxrefactoring.core.workers.RefactorWorker;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.collect.AsyncTaskCollector;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.workers.AnonymAsyncTaskWorker;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.workers.CachedAnonymousTaskWorker;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.workers.NewWorker;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.workers.SubClassAsyncTaskWorker;
 
 /**
@@ -38,11 +41,11 @@ public class Extension implements RefactoringExtension<AsyncTaskCollector> {
 
 	@Override
 	public Iterable<RefactorWorker> getRefactoringWorkers(AsyncTaskCollector collector) {
-		Set<RefactorWorker> workers = new HashSet<>();
-		workers.add(new AnonymAsyncTaskWorker(collector));
-		workers.add(new CachedAnonymousTaskWorker(collector));
-		workers.add(new SubClassAsyncTaskWorker(collector));
-		return workers;
+//		Set<RefactorWorker> workers = new HashSet<>();
+//		workers.add(new AnonymAsyncTaskWorker(collector));
+//		//workers.add(new CachedAnonymousTaskWorker(collector));
+//		workers.add(new SubClassAsyncTaskWorker(collector));
+		return Sets.newHashSet(new NewWorker(collector));
 	}
 
 	@Override

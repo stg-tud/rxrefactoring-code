@@ -270,6 +270,7 @@ abstract class AbstractRefactoringApp implements IApplication {
 			for (IClasspathEntry oldEntry : oldEntries) {
 				cps.add(oldEntry);
 			}
+			
 			javaProject.setRawClasspath(cps.toArray(new IClasspathEntry[0]), null);
 		}
 	}

@@ -46,8 +46,7 @@ public final class IdManager
 	 *            name of the compilation unit
 	 * @return next id
 	 */
-	public static String getNextObservableId( String icuName )
-	{
+	public static String getNextObservableId( String icuName ) {
 		incAndGetCounter( icuName, IdManager.observableCounter );
 		return getId( icuName, IdManager.observableCounter );
 	}
@@ -69,12 +68,9 @@ public final class IdManager
 	private static String getId( String icuName, Map<String, Integer> map )
 	{
 		Integer integer = map.get( icuName );
-		if ( integer == null || integer == INITIAL_ID )
-		{
+		if (integer == null || integer == INITIAL_ID)	{
 			return EMPTY;
-		}
-		else
-		{
+		} else {
 			return String.valueOf( integer );
 		}
 	}
@@ -82,12 +78,9 @@ public final class IdManager
 	private static void incAndGetCounter( String icuName, Map<String, Integer> map )
 	{
 		Integer integer = map.get( icuName );
-		if ( integer == null )
-		{
+		if ( integer == null ) {
 			map.put( icuName, INITIAL_ID );
-		}
-		else
-		{
+		} else {
 			map.put( icuName, integer + 1 );
 		}
 	}

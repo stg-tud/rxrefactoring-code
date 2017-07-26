@@ -18,7 +18,6 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import com.google.common.collect.Multimap;
 
-import de.tudarmstadt.rxrefactoring.core.codegen.ASTNodeFactory;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.workers.AbstractWorker;
@@ -73,13 +72,13 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> {
 				Log.info(getClass(), "METHOD=refactor - Extract Information from AsyncTask: " + unit.getElementName());
 
 				//Retrieves information about the AsyncTask declaration
-				AsyncTaskWrapper asyncTask = new AsyncTaskWrapper(asyncTaskDeclaration);
+				AsyncTaskWrapper asyncTask = new AsyncTaskWrapper(asyncTaskDeclaration, unit);
 
 				if (asyncTask.getDoInBackgroundBlock() == null)
 					continue;
 
 				//Initializes the unit writer.
-				UnitWriterExt writer = UnitWriters.getOrElse(unit,
+				UnitWriterExt writer = UnitWriters.getOrPut(unit,
 						() -> new UnitWriterExt(unit, asyncTaskDeclaration.getAST()));
 				
 							
@@ -300,21 +299,20 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> {
 		execute.setExpression(AsyncTaskASTUtils.getinstannceCreationStatement(methodAST, complexObservableclassName));
 		execute.setName(methodAST.newSimpleName(asyncMethodName));
 
-		MethodInvocation invocation = methodAST.newMethodInvocation();
-
-		invocation.setExpression(execute);
-		invocation.setName(methodAST.newSimpleName(SUBSCRIBE));
-		// ASTUtil.replaceInStatement(methodInvoke, invocation);
-		Statement ss = ASTNodeFactory.createSingleStatementFromText(methodAST, invocation.toString());
+		MethodInvocation newInvoke = methodAST.newMethodInvocation();
+		newInvoke.setExpression(execute);
+		newInvoke.setName(methodAST.newSimpleName(SUBSCRIBE));		
+		
+		//Statement ss = ASTNodeFactory.createSingleStatementFromText(methodAST, invocation.toString());
 		if (!withSubscription) {
-			writer.replace(referenceStatement, ss);
+			writer.replace(methodInvoke, newInvoke);
 		} else {
 			createSubscriptionDeclaration(writer, unit, methodInvoke);
 			Assignment initSubscription = methodAST.newAssignment();
 
 			initSubscription.setLeftHandSide(
 					methodAST.newSimpleName(getVariableName(methodInvoke.getExpression()) + subscription));
-			initSubscription.setRightHandSide(invocation);
+			initSubscription.setRightHandSide(newInvoke);
 			// ASTUtil.replaceInStatement(methodInvoke, initSubscription);
 			writer.replace(methodInvoke, initSubscription);
 		}

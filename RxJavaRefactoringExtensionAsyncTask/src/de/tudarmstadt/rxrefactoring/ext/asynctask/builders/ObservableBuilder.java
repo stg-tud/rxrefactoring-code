@@ -25,6 +25,7 @@ import rx.schedulers.Schedulers;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/16/2016
  */
+@Deprecated
 public final class ObservableBuilder {
 	private static final String NEW_LINE = "\n";
 	private static final String SPACE = " ";
