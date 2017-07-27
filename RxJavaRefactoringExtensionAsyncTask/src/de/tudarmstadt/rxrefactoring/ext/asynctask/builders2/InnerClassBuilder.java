@@ -24,6 +24,8 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
  */
 public class InnerClassBuilder extends AbstractBuilder {
 
+	private TypeDeclaration node;
+	
 	//Unique id that gets added to the name to avoid naming conflicts.
 	private final String id;
 
@@ -77,6 +79,7 @@ public class InnerClassBuilder extends AbstractBuilder {
 		ObservableMethodBuilder builder = new ObservableMethodBuilder(asyncTask, writer, id);
 		observableType.bodyDeclarations().add(builder.create());
 		
+		node = observableType;
 	}
 
 	
@@ -101,7 +104,7 @@ public class InnerClassBuilder extends AbstractBuilder {
 	 * Creates an observable type declaration that mirrors the
 	 * functionality of the given AsyncTask.
 	 */
-	@Override public TypeDeclaration create() {			
+	public TypeDeclaration create() {			
 		return create(new SubscriberBuilder(asyncTask, writer));
 	}
 	
@@ -124,29 +127,8 @@ public class InnerClassBuilder extends AbstractBuilder {
 		return builder.create();
 	}
 	
-	/* 
-	 * 
-	 * private class ComplexRxObservable {
-	 *     ASYNC TASK FIELDS
-	 *     
-	 *     ASYNC TASK METHODS
-	 *    
-	 *     public Observable<T> getAsyncObservable() {
-	 *         return new Observable ...
-	 *     }
-	 *     
-	 *     //If needed
-	 *     SUBSCRIBER METHOD DECLARATION
-	 * }
-	 * 
-	 * }
-	 */ 
-	@SuppressWarnings("unchecked")
-	@Override TypeDeclaration initial() {	
-				
-		return null;
-	}
-			
+	 
+	
 	/*
 	 * Builds
 	 * 
