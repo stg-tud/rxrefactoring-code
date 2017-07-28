@@ -1,6 +1,4 @@
-/backups/
 /.idea/
-*/oracle-java-concurrency-tutorial.iml
 *.class
 *.svg
 *.log
@@ -16,3 +14,4 @@
 *.toc
 /.metadata/
 /bin/
+/.recommenders/
