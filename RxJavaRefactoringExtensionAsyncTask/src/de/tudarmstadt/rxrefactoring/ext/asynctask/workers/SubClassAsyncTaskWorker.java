@@ -34,7 +34,7 @@ import de.tudarmstadt.rxrefactoring.core.workers.WorkerStatus;
 import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
 import de.tudarmstadt.rxrefactoring.core.writers.UnitWriters;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.ObservableBuilder;
-import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.SubscriberBuilder;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.builders2.SubscriberBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders2.AnonymousClassBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders2.InnerClassBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders2.ObservableMethodBuilder;
@@ -114,9 +114,7 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 				addProgressBlock(ast, unit, asyncTask, writer);
 				
 				Log.info(getClass(), "METHOD=refactor - Refactoring class: " + unit.getElementName());
-				if (asyncTask.getOnPreExecuteBlock() != null)
-					updateOnPreExecute(asyncTask, writer, asyncTaskDeclaration);
-
+				
 				numOfAsyncTasks++;
 				execution.addUnitWriter(writer);
 			}
@@ -329,41 +327,24 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 		 *   return NEW OBSERVABLE
 		 * }
 		 */		
-		ObservableMethodBuilder builder = new ObservableMethodBuilder(asyncTask, writer);
-		writer.replaceStatement(asyncTask.getDoInBackgroundmethod(), builder.create());
+		SubscriberBuilder subscriberBuilder = new SubscriberBuilder(asyncTask, writer);
+		ObservableMethodBuilder observableMethodBuilder = new ObservableMethodBuilder(asyncTask, writer, subscriberBuilder.getId());
+		writer.replaceStatement(asyncTask.getDoInBackgroundmethod(), builder.buildCreateMethod());
 
 		// Remove postExecute method
 		if (asyncTask.getOnPostExecuteBlock() != null)
 			writer.removeMethod(asyncTask.getOnPostExecuteBlock().getParent(), taskObject);
 		// Remove updateProgress method
-		if (asyncTask.getOnProgressUpdateBlock() != null)
+		if (asyncTask.getOnProgressUpdateBlock() != null) {
 			writer.removeMethod(asyncTask.getOnProgressUpdateBlock().getParent(), taskObject);
+		}
+			
 		// Remove onCancelled method
 		if (asyncTask.getOnCancelled() != null)
 			writer.removeMethod(asyncTask.getOnCancelled().getParent(), taskObject);
 	
 	}
 
-	/**
-	 * onPreExecute method will be invoked by getAsyncObservable block as a first
-	 * statement.
-	 * 
-	 * @override has to be removed and super() should be removed from
-	 *           onPreExecuteBlock
-	 * @param asyncTask
-	 * @param writer
-	 * @param parent
-	 * @param ast
-	 */
-	private void updateOnPreExecute(AsyncTaskWrapper asyncTask, UnitWriterExt writer,
-			TypeDeclaration parent) {
-
-		MethodDeclaration getAsyncMethod = ASTNodeFactory.createMethodFromText(writer.getAST(),
-				"public onPreExecute(){" + asyncTask.getOnPreExecuteBlock().toString() + "}");
-		writer.replaceStatement((MethodDeclaration) asyncTask.getOnPreExecuteBlock().getParent(),
-				getAsyncMethod);
-
-	}
 
 //	private Expression createObservable(AsyncTaskWrapper asyncTask, UnitWriter writer) {
 //
@@ -378,8 +359,8 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 //		AnonymousClassBuilder builder = new AnonymousClassBuilder(asyncTask, writer);
 //		
 //		
-////		ObservableBuilder rxObservable = ObservableBuilder.newObservable(asyncTask, writer, type, doInBackgroundBlock,
-////				SchedulerType.JAVA_MAIN_THREAD);
+//		ObservableBuilder rxObservable = ObservableBuilder.newObservable(asyncTask, writer, type, doInBackgroundBlock,
+//				SchedulerType.JAVA_MAIN_THREAD);
 //		
 //		
 //	
@@ -451,38 +432,5 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 				+ "}";
 	}
 
-	/**
-	 * Iterate on list of invocation of publishProgress
-	 * 
-	 * @param asynctaskVisitor
-	 * @param rewriter
-	 */
-	private void replacePublishInvocations(AsyncTaskWrapper asynctaskVisitor, UnitWriterExt rewriter) {
-		if (!asynctaskVisitor.getPublishInvocations().isEmpty()) {
-			for (MethodInvocation publishInvocation : asynctaskVisitor.getPublishInvocations()) {
-				List<?> argumentList = publishInvocation.arguments();
-				AST ast = publishInvocation.getAST();
-				replacePublishInvocationsAux(publishInvocation, argumentList, ast, rewriter, asynctaskVisitor);
-			}
-		}
-	}
-
-	/**
-	 * Convert pubishProgress(parms) method to
-	 * getRxUpdateSubscriber(parms).subscribe()
-	 * 
-	 * @param publishInvocation
-	 * @param argumentList
-	 * @param ast
-	 */
-	private <T extends ASTNode> void replacePublishInvocationsAux(T publishInvocation, List<?> argumentList, AST ast,
-			UnitWriterExt rewriter, AsyncTaskWrapper asyncTask) {
-		String value = argumentList.toString().replace("[", "").replace("]", "");
-		String newInvocation = "getRxUpdateSubscriber().onNext((" + asyncTask.getProgressParameter() + "[])Arrays.asList("
-				+ value + ").toArray())";
-		Statement newStatement = ASTNodeFactory.createSingleStatementFromText(ast, newInvocation);
-
-		System.out.println(publishInvocation + " -> " + newStatement);
-		ASTUtils.replaceInStatement(publishInvocation, newStatement);
-	}
+	
 }

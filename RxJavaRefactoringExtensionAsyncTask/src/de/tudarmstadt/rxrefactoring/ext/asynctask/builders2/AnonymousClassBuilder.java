@@ -88,52 +88,7 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 	}
 	
 	
-	/**
-	 * Removes method invocations such as super.onCompleted() and
-	 * removes unnecessary catch clauses.
-	 * 
-	 * @param body The statement block.
-	 * @param methodName The super method to look for.
-	 * 
-	 * @return Returns the same block that has been given as argument.
-	 */
-	private Block preprocessBlock(Block body, String methodName) {
-		
-		/*
-		 * Remove super calls such as super.onCompleted()
-		 */
-		final List<SuperMethodInvocation> methods = Lists.newLinkedList();
-		
-		class SuperVisitor extends ASTVisitor {
-			@Override public boolean visit(SuperMethodInvocation node) {
-				if (ASTUtils.matchesTargetMethod(node, methodName, "android.os.AsyncTask")) {
-					methods.add(node);
-				}
-				return true;
-			}
-		}
-		
-		SuperVisitor v = new SuperVisitor();
-		body.accept(v);
-		
-		for (SuperMethodInvocation methodInvocation : methods) {
-			Statement statement = ASTUtils.findParent(methodInvocation, Statement.class);
-			astRewrite.remove(statement, null);
-		}		
-		
-		/*
-		 * Remove unnecessary catch clauses.
-		 */
-		ASTUtils.removeUnnecessaryCatchClauses(body);
-		
-		/*
-		 * Replace field references with fully qualified name 
-		 */
-		AsyncTaskASTUtils.replaceFieldsWithFullyQualifiedNameIn(body, writer);
-
-		
-		return body;		
-	}
+	
 	
 	/*
 	 * Builds
@@ -151,8 +106,17 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 	 *  
 	 * @return The expression created by this builder.
 	 */
-	public Expression create() {
-		
+	public Expression create() {		
+		addRelevantMethods();		
+		return getExpression();
+	}
+	
+	public static Expression from(AsyncTaskWrapper asyncTask, UnitWriter writer) {
+		AnonymousClassBuilder builder = new AnonymousClassBuilder(asyncTask, writer);
+		return builder.create();
+	}
+	
+	public void addRelevantMethods() {
 		addSubscribeOnComputation();
 		
 		//Adds the additional functionality to the observable
@@ -165,18 +129,11 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 		if (asyncTask.getOnCancelled() != null) {
 			addDoOnUnsubscribe();
 		}
-		
+	}
+	
+	public Expression getExpression() {
 		return node;
 	}
-	
-	public static Expression from(AsyncTaskWrapper asyncTask, UnitWriter writer) {
-		AnonymousClassBuilder builder = new AnonymousClassBuilder(asyncTask, writer);
-		return builder.create();
-	}
-	
-
-	
-	
 	
 	/*
 	 * Builds

@@ -1,7 +1,6 @@
 package de.tudarmstadt.rxrefactoring.ext.asynctask.workers;
 
 import java.util.Collection;
-import java.util.List;
 
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;
@@ -35,7 +34,7 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.writers.UnitWriterExt;
  * Author: Template<br>
  * Created: 01/18/2017
  */
-public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> {
+public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> implements WorkerEnvironment {
 
 	private int numOfAnonymousClasses = 0;
 
@@ -400,9 +399,9 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> {
 				SubscriberBuilder subscriberBuilder = new SubscriberBuilder(asyncTask, writer);
 				
 				//Add the method that creates the subscriber (getRxSubscriber)
-				writer.addMethodAfter(subscriberBuilder.create(), anonymousCachedClassDecleration);
+				writer.addMethodAfter(subscriberBuilder.buildGetSubscriber(), anonymousCachedClassDecleration);
 				//Adds the subscriber declaration
-				writer.addStatementBefore(subscriberBuilder.getSubscriberDeclaration(), referenceStatement);
+				writer.addStatementBefore(subscriberBuilder.buildSubscriberDeclaration(), referenceStatement);
 				
 				replacePublishInvocations(asyncTask, writer, subscriberBuilder);
 			}
@@ -438,7 +437,7 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> {
 			SubscriberBuilder subscriberBuilder = new SubscriberBuilder(asyncTask, writer);
 			
 			InnerClassBuilder builder = new InnerClassBuilder(asyncTask, writer);
-			TypeDeclaration observable = builder.create(subscriberBuilder);
+			TypeDeclaration observable = builder.buildInnerClass();
 			
 //			List<FieldDeclaration> fieldDeclarations = asyncTask.getFieldDeclarations();
 //			String subscriberDecl = EMPTY;
@@ -471,7 +470,6 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> {
 			// initialize asyncmethodname to be used at execute
 			asyncMethodName = builder.getMethodName();
 
-			// initialize asyncmethodname to be used at execute
 			//subscription = complexObservable.getAsynSubscription();
 			subscription = "subscription" + builder.getId();
 
@@ -506,20 +504,7 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> {
 //		return AnonymousClassBuilder.from(asyncTask, writer);
 //	}
 
-	private void replacePublishInvocations(AsyncTaskWrapper asyncTask, UnitWriterExt writer, SubscriberBuilder builder) {
-		//Iterate over all publish invocations
-		for (MethodInvocation publishInvocation : asyncTask.getPublishInvocations()) {
-			
-			List<?> argumentList = publishInvocation.arguments();
-						
-			@SuppressWarnings("unchecked")
-			MethodInvocation invoke = builder.getSubscriberPublish((List<Expression>) argumentList);
-			
-			writer.replace(publishInvocation, invoke);
-		
-		}
-		
-	}
+	
 	
 
 	public int getNUMBER_OF_ANONYMOUS_TASKS() {

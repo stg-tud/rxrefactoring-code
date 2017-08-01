@@ -14,54 +14,40 @@ import de.tudarmstadt.rxrefactoring.core.codegen.IdManager;
 import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 
-public class ObservableMethodBuilder extends AbstractBuilder<MethodDeclaration> {
+public class ObservableMethodBuilder extends AbstractBuilder {
 	
 	private final String id;
-
+	
 	public ObservableMethodBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer, String id) {
 		super(asyncTask, writer);
 		Objects.requireNonNull(id);
-		this.id = id;
-		
-		node = afterInitial();	
+		this.id = id;	
 	}
 	
 	public ObservableMethodBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer) {
 		this(asyncTask, writer, IdManager.getNextObservableId(writer.getUnit().getElementName()));
 	}
 		
-	@Override
-	public MethodDeclaration create() {
-		return node;
-	}
-	
-
-	
-	//Ignore this method. Initializer should be called after id has been set in the constructor.
-	@Override
-	MethodDeclaration initial() {
-		return null;
-	}
-	
+		
 	/*    
 	 * Builds
 	 *  
-	 * public Observable<T> getAsyncObservable() {
+	 * public Observable<T> create() {
 	 *   return new Observable ...
 	 * }
 	 */
 	@SuppressWarnings("unchecked")
-	private MethodDeclaration afterInitial() {
-		//Define method: getAsyncObservable
-		MethodDeclaration getAsyncObservable = ast.newMethodDeclaration();
-		getAsyncObservable.setName(ast.newSimpleName("getAsyncObservable" + id));
+	public MethodDeclaration buildCreateMethod() {
+		//Define method: create
+		MethodDeclaration method = ast.newMethodDeclaration();
+		method.setName(ast.newSimpleName(RefactorNames.CREATE_OBSERVABLE_METHOD_NAME));
 		//Construct return type Observable<T>
 		ParameterizedType returnType = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Observable")));
 		returnType.typeArguments().add(copy(asyncTask.getResultTypeOrVoid()));
-		getAsyncObservable.setReturnType2(returnType);		
-		getAsyncObservable.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
+		method.setReturnType2(returnType);		
+		method.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
 		
-		//Add arguments of doInBackground to getAsyncObservable. Add 'final' to each parameter.
+		//Add arguments of doInBackground to create. Add 'final' to each parameter.
 		MethodDeclaration doInBackground = asyncTask.getDoInBackgroundmethod();
 		
 		doInBackground.parameters().forEach(parameter -> {
@@ -70,19 +56,23 @@ public class ObservableMethodBuilder extends AbstractBuilder<MethodDeclaration> 
 			ListRewrite modifierRewrite = astRewrite.getListRewrite(variable, SingleVariableDeclaration.MODIFIERS2_PROPERTY);
 			modifierRewrite.insertFirst(ast.newModifier(ModifierKeyword.FINAL_KEYWORD), null);		
 		
-			getAsyncObservable.parameters().add(copy(variable));
+			method.parameters().add(copy(variable));
 			
 			return;
 		});
 		
-		//Build body of getAsyncObservable
-		Block getAsyncObservableBody = ast.newBlock();
+		//Build body of create
+		Block methodBody = ast.newBlock();
 		ReturnStatement returnStatement = ast.newReturnStatement();
 		returnStatement.setExpression(AnonymousClassBuilder.from(asyncTask, writer));		
-		getAsyncObservableBody.statements().add(returnStatement);
-		getAsyncObservable.setBody(getAsyncObservableBody);
+		methodBody.statements().add(returnStatement);
+		method.setBody(methodBody);
 		
-		return getAsyncObservable;
+		return method;
+	}
+	
+	public String getId() {
+		return id;
 	}
 
 }

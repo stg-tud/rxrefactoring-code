@@ -24,6 +24,7 @@ import de.tudarmstadt.rxrefactoring.core.workers.WorkerStatus;
 import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
 import de.tudarmstadt.rxrefactoring.core.writers.UnitWriters;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders2.InnerClassBuilder;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.builders2.SubscriberBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.collect.AsyncTaskCollector;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 
@@ -62,10 +63,15 @@ public class NewWorker extends AbstractWorker<AsyncTaskCollector> {
 				
 				UnitWriter writer = UnitWriters.getOrPut(unit, () -> new UnitWriter(unit, collector.getAST(unit)));
 				
+				handleImports(asyncTask, writer);
+				
 				if (asyncTask.isInnerClass()) {
-					InnerClassBuilder builder = new InnerClassBuilder(asyncTask, writer);
-					TypeDeclaration newNode = builder.create();
-					writer.replace(asyncTask.getDeclaration(), newNode);
+					
+					SubscriberBuilder subscriberBuilder = new SubscriberBuilder(asyncTask, writer);
+					InnerClassBuilder classBuilder = new InnerClassBuilder(asyncTask, writer, subscriberBuilder.getId());
+//					TypeDeclaration newNode = classBuilder.buildClassWithSubscriber(subscriberBuilder);
+					//Change class ... extends AsyncTask  --with-->  class ObservableWrapper 
+//					writer.replace(asyncTask.getDeclaration(), newNode);
 				} else if (asyncTask.isAnonymousClass()) {
 					//TODO: Complete for anonymous classes
 				} else {
@@ -135,6 +141,33 @@ public class NewWorker extends AbstractWorker<AsyncTaskCollector> {
 		root.accept(new ClassCreationVisitor());
 		
 		return creations;
+	}
+	
+	private void handleImports(AsyncTaskWrapper asyncTask, UnitWriter writer) {
+		writer.addImport("rx.Observable");
+		writer.addImport("rx.schedulers.Schedulers");
+		writer.addImport("java.util.concurrent.Callable");
+		writer.removeImport("android.os.AsyncTask");
+
+		if (asyncTask.getOnPostExecuteBlock() != null) {
+			writer.addImport("rx.functions.Action1");
+			writer.removeImport("java.util.concurrent.ExecutionException");
+			writer.removeImport("java.util.concurrent.TimeoutException");
+
+		}
+
+		if (asyncTask.getDoInBackgroundBlock() != null) {
+			writer.addImport("rx.functions.Action1");
+		}
+
+		if (asyncTask.getOnProgressUpdateBlock() != null) {
+			writer.addImport("rx.Subscriber");
+			writer.addImport("java.util.Arrays");
+		}
+
+		if (asyncTask.getOnCancelled() != null) {
+			writer.addImport("rx.functions.Action0");
+		}
 	}
 	
 	private static boolean typeBindingEquals(ITypeBinding a, ITypeBinding b) {

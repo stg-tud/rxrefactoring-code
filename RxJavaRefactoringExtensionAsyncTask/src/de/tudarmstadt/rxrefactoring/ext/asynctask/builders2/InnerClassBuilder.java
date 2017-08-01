@@ -1,8 +1,13 @@
 package de.tudarmstadt.rxrefactoring.ext.asynctask.builders2;
 
+import java.util.Objects;
+
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.ReturnStatement;
@@ -30,8 +35,7 @@ public class InnerClassBuilder extends AbstractBuilder {
 	private final String id;
 
 	
-	private final String TYPE_NAME = "ComplexRxObservable";
-	private final String METHOD_NAME = "getAsyncObservable";
+
 	
 	/**
 	 * Creates a new builder that transforms AsyncTasks into observables
@@ -41,30 +45,29 @@ public class InnerClassBuilder extends AbstractBuilder {
 	 * @param writer The writer specifying the compilation unit where
 	 * the async task resides.
 	 */
-	public InnerClassBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer) {
+	@SuppressWarnings("unchecked")
+	public InnerClassBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer, String id) {
 		super(asyncTask, writer);		
-		id = IdManager.getNextObservableId(writer.getUnit().getElementName());
+		this.id = id;
 		
 		/* 
 		 * Build:
 		 * 
-		 * private class ComplexRxObservable {
+		 * private class ObservableWrapper {
 		 *     ASYNC TASK FIELDS
 		 *     
 		 *     ASYNC TASK METHODS
 		 *    
-		 *     public Observable<T> getAsyncObservable() {
+		 *     public Observable<T> create() {
 		 *         return new Observable ...
 		 *     }
 		 *     
-		 *     //If needed
-		 *     SUBSCRIBER METHOD DECLARATION
 		 * }
 		 * 
 		 * }
 		 */ 
 		
-		//Define type: ComplexRxObservable
+		//Define type: ObservableWrapper
 		TypeDeclaration observableType = ast.newTypeDeclaration();
 		observableType.setName(ast.newSimpleName(getTypeName()));
 		observableType.setInterface(false);
@@ -75,60 +78,46 @@ public class InnerClassBuilder extends AbstractBuilder {
 		asyncTask.getAdditionalMethodDeclarations().forEach(observableType.bodyDeclarations()::add);
 		
 		
-		//Define method: getAsyncObservable
+		//Define method: create
 		ObservableMethodBuilder builder = new ObservableMethodBuilder(asyncTask, writer, id);
-		observableType.bodyDeclarations().add(builder.create());
+		observableType.bodyDeclarations().add(builder.buildCreateMethod());
 		
 		node = observableType;
+	}
+	
+	public InnerClassBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer) {
+		this(asyncTask, writer, IdManager.getNextObservableId(writer.getUnit().getElementName()));
 	}
 
 	
 	/* 
 	 * 
-	 * private class ComplexRxObservable {
+	 * private class ObservableWrapper {
 	 *     ASYNC TASK FIELDS
 	 *     
 	 *     ASYNC TASK METHODS
 	 *    
-	 *     public Observable<T> getAsyncObservable() {
+	 *     public Observable<T> create() {
 	 *         return new Observable ...
 	 *     }
 	 *     
 	 *     //If needed
 	 *     SUBSCRIBER METHOD DECLARATION
-	 * }
-	 * 
+	 *  
 	 * }
 	 */ 
-	/**
-	 * Creates an observable type declaration that mirrors the
-	 * functionality of the given AsyncTask.
-	 */
-	public TypeDeclaration create() {			
-		return create(new SubscriberBuilder(asyncTask, writer));
-	}
+	public TypeDeclaration buildInnerClass() {
+		return buildInnerClassWithSubscriber(new SubscriberBuilder(asyncTask, writer, getId()));
+	} 
 	
-	
-	public TypeDeclaration create(SubscriberBuilder builder) {
+	public TypeDeclaration buildInnerClassWithSubscriber(SubscriberBuilder builder) {
 		if (asyncTask.getOnProgressUpdateBlock() != null) {
 			addSubscriber(builder);
 		}
 		
 		return node;
 	}
-	
-
-	/**
-	 * Creates an observable type declaration that mirrors the
-	 * functionality of the given AsyncTask.
-	 */
-	public static TypeDeclaration from(AsyncTaskWrapper asyncTask, UnitWriter writer) {
-		InnerClassBuilder builder = new InnerClassBuilder(asyncTask, writer);
-		return builder.create();
-	}
-	
-	 
-	
+		
 	/*
 	 * Builds
 	 * 
@@ -138,21 +127,51 @@ public class InnerClassBuilder extends AbstractBuilder {
 	 */
 	@SuppressWarnings("unchecked")
 	public InnerClassBuilder addSubscriber(SubscriberBuilder builder) {				
+		Objects.requireNonNull(builder);
 		
-		MethodDeclaration method = builder.create();
+		MethodDeclaration method = builder.buildGetSubscriber();
 		node.bodyDeclarations().add(method);
 		
 		return this;		
 	}
 	
+	/*
+	 * Builds
+	 * 
+	 * new ObservableWrapper()
+	 */
+	public ClassInstanceCreation buildNewObservableWrapper() {
+		ClassInstanceCreation constructor = ast.newClassInstanceCreation();
+		constructor.setType(ast.newSimpleType(ast.newSimpleName(getTypeName())));
+		
+		return constructor;
+	}
+	
+	/*
+	 * Cases
+	 * 
+	 * I.
+	 * new MyAsyncTask().execute(ARGS) --> new ObservableWrapper().create(ARGS).subscribe()
+	 * 
+	 * II.
+	 * x = new MyAsyncTask();
+	 * ... 
+	 * x.execute();
+	 * 
+	 * 
+	 * 
+	 * 
+	 */
+	
+	
 	
 	public String getTypeName() {
-		return TYPE_NAME + id;
+		return RefactorNames.INNER_CLASS_TYPE_NAME + id;
 	}
 
 	
 	public String getMethodName() {
-		return METHOD_NAME + id;
+		return RefactorNames.CREATE_OBSERVABLE_METHOD_NAME;
 	}
 	
 	public String getId() {

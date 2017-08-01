@@ -33,9 +33,7 @@ public class StatementGraph extends ControlFlowGraph<Statement, DefaultEdge<Stat
 	}
 
 	
-	private class CFGBuilder extends ASTVisitor {
-		
-		
+	private class CFGBuilder extends ASTVisitor {		
 		
 		private Statement previous = null;
 		
@@ -94,6 +92,22 @@ public class StatementGraph extends ControlFlowGraph<Statement, DefaultEdge<Stat
 			edgeFromPrevious(previous);			
 			return false;
 		}
+		
+		@Override public boolean visit(ForStatement stmt) {
+			edgeFromPrevious(previous);			
+			return false;
+		}
+		
+		@Override public boolean visit(IfStatement stmt) {
+			edgeFromPrevious(previous);			
+			return false;
+		}
+		
+		@Override public boolean visit(LabeledStatement stmt) {
+			edgeFromPrevious(previous);			
+			return false;
+		}
+		
 		
 		
 		

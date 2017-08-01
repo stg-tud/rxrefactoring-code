@@ -2,7 +2,6 @@ package de.tudarmstadt.rxrefactoring.ext.asynctask.builders2;
 
 import java.util.List;
 
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.ArrayCreation;
 import org.eclipse.jdt.core.dom.ArrayInitializer;
@@ -26,24 +25,38 @@ import de.tudarmstadt.rxrefactoring.core.codegen.IdManager;
 import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 
-public class SubscriberBuilder extends AbstractBuilder<MethodDeclaration> {
+public class SubscriberBuilder extends AbstractBuilder {
 
-	private static final String FIELD_NAME = "rxUpdateSubscriber";
-	private static final String METHOD_NAME = "getRxUpdateSubscriber";
+	
 	
 	private final String id;
 
 	public SubscriberBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer) {
-		super(asyncTask, writer);
-		
-		id = IdManager.getNextObserverId(writer.getUnit().getElementName());
-		
-		
-		
+		this(asyncTask, writer, IdManager.getNextObserverId(writer.getUnit().getElementName()));			
+	}
+	
+	public SubscriberBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer, String id) {
+		super(asyncTask, writer);		
+		this.id = id;		
 	}
 
-	@Override
-	public MethodDeclaration create() {
+	/*
+	 * Builds
+	 * 
+	 * private Subscriber<T> getRxUpdateSubscriber() {
+	 *     return new Subscriber<T>() {
+	 *         public onNext() {
+	 *             PROGRESS_UPDATE_BLOCK
+	 *         }
+	 *         
+	 *         public onCompleted() { }
+	 *         
+	 *         public onError(Throwable throwable) { }
+	 *     }
+	 * }
+	 */
+	@SuppressWarnings("unchecked")
+	public MethodDeclaration buildGetSubscriber() {
 		
 		//Define type: Subscriber
 		Type subscriberType = getSubscriberType();
@@ -113,39 +126,14 @@ public class SubscriberBuilder extends AbstractBuilder<MethodDeclaration> {
 				
 		return getSubscriber;
 	}
-
-	public static MethodDeclaration from(AsyncTaskWrapper asyncTask, UnitWriter writer) {
-		SubscriberBuilder builder = new SubscriberBuilder(asyncTask, writer);
-		return builder.create();
-	}
-	
-	/*
-	 * Builds
-	 * 
-	 * private Subscriber<T> getRxUpdateSubscriber() {
-	 *     return new Subscriber<T>() {
-	 *         public onNext() {
-	 *             PROGRESS_UPDATE_BLOCK
-	 *         }
-	 *         
-	 *         public onCompleted() { }
-	 *         
-	 *         public onError(Throwable throwable) { }
-	 *     }
-	 * }
-	 */
-	@SuppressWarnings("unchecked")
-	@Override MethodDeclaration initial() {		
-		
-		return null;
-	}
 	
 	/*
 	 * Builds
 	 * 
 	 * final Subscriber<T> rxUpdateSubscriber = getRxUpdateSubscriber();
 	 */
-	public Statement getSubscriberDeclaration() {
+	@SuppressWarnings("unchecked")
+	public Statement buildSubscriberDeclaration() {
 		
 		Assignment assignment = ast.newAssignment();		
 		
@@ -167,7 +155,12 @@ public class SubscriberBuilder extends AbstractBuilder<MethodDeclaration> {
 	}
 	
 	
-		
+	/*
+	 * Builds:
+	 * 
+	 * rxUpdateSubscriber.onNext(new T[] {EXPR, ...});	
+	 */
+	@SuppressWarnings("unchecked")
 	public MethodInvocation getSubscriberPublish(List<Expression> arguments) {
 		
 		//Define array creation: new T[] { arguments, ... } 
@@ -191,6 +184,7 @@ public class SubscriberBuilder extends AbstractBuilder<MethodDeclaration> {
 	/*
 	 * Builds type: Subscriber<PARAMETER_TYPE>
 	 */
+	@SuppressWarnings("unchecked")
 	public ParameterizedType getSubscriberType() {
 		ParameterizedType subscriberType = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Subscriber"))); //Subscriber<>
 		subscriberType.typeArguments().add(getParameterType());
@@ -203,11 +197,11 @@ public class SubscriberBuilder extends AbstractBuilder<MethodDeclaration> {
 	}
 	
 	public String getFieldName() {
-		return FIELD_NAME + getId();
+		return RefactorNames.SUBSCRIBER_FIELD_NAME + getId();
 	}
 	
 	public String getMethodName() {
-		return METHOD_NAME + getId();
+		return RefactorNames.CREATE_SUBSCRIBER_METHOD_NAME + getId();
 	}
 	
 	public String getId() {
