@@ -3,9 +3,13 @@ package de.tudarmstadt.rxrefactoring.ext.asynctask.utils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
+
+import com.google.common.collect.Lists;
 
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.ClassDetails;
@@ -187,6 +191,26 @@ public class AsyncTaskWrapper extends ASTVisitor {
 		return declaration;
 	}
 	
+	public List getModifiers() {
+		return doIfTypeDeclaration(d -> d.modifiers(), () -> Lists.newLinkedList());		
+	}
+	
+	public <V> V doIfTypeDeclaration(Function<TypeDeclaration, V> function, Supplier<V> elseV) {
+		if (declaration instanceof TypeDeclaration)
+			return function.apply((TypeDeclaration) declaration);
+		else
+			return elseV.get();
+	}
+	
+	public <V> V doIfAnonymousClassDeclaration(Function<AnonymousClassDeclaration, V> function) {
+		if (declaration instanceof AnonymousClassDeclaration)
+			return function.apply((AnonymousClassDeclaration) declaration);
+		
+		return null;
+	}
+	
+	
+	
 	/**
 	 * Returns whether this wrapper has been built using an anonymous class.
 	 * 
@@ -319,7 +343,16 @@ public class AsyncTaskWrapper extends ASTVisitor {
 	 */
 	public boolean hasAdditionalAccess() {
 		return !visitor.fieldDeclarations.isEmpty() || !visitor.additionalMethodDeclarations.isEmpty()
-				|| getOnProgressUpdateBlock() != null;
+				|| hasProgressUpdate();
+	}
+	
+	/**
+	 * Checks whether this AsyncTask is using a progress update (= intermediate results).
+	 * 
+	 * @return {@code getOnProgressUpdateBlock() != null}
+	 */
+	public boolean hasProgressUpdate() {
+		return getOnProgressUpdateBlock() != null;
 	}
 
 	public List<FieldDeclaration> getFieldDeclarations() {

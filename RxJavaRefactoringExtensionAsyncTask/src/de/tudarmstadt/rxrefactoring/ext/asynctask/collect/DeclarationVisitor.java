@@ -47,14 +47,7 @@ public class DeclarationVisitor extends ASTVisitor {
 
 	@Override
 	public boolean visit(TypeDeclaration node) {
-
-		Log.info(getClass(), "Type -> " + node.getName().getIdentifier());
-
-		if (node.getName().getIdentifier().contains("AsyncTask")) {
-			Log.info(getClass(), "Found.");
-
-		}
-
+		
 		if (checkClass(node)) {
 			subclasses.add(node);
 		}

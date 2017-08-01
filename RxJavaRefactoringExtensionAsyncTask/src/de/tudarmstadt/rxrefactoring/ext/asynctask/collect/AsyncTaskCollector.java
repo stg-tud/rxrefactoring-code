@@ -11,7 +11,9 @@ import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
@@ -26,6 +28,7 @@ import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.collect.ASTCollector;
 import de.tudarmstadt.rxrefactoring.core.collect.AbstractCollector;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.ClassDetails;
 
 /**
@@ -33,14 +36,13 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.ClassDetails;
  * Author: Template<br>
  * Created: 01/18/2017
  */
-@SuppressWarnings("unused")
 public class AsyncTaskCollector extends ASTCollector {
 
 	private final Multimap<ICompilationUnit, TypeDeclaration> subclassesMap;
 	private final Multimap<ICompilationUnit, AnonymousClassDeclaration> anonymousClassesMap;
 	private final Multimap<ICompilationUnit, AnonymousClassDeclaration> anonymousCachedClassesMap;
 	private final Multimap<ICompilationUnit, MethodInvocation> relevantUsagesMap;
-
+	
 	public AsyncTaskCollector(IJavaProject project, String collectorName) {
 		super(project, collectorName, true);
 		subclassesMap = HashMultimap.create();
@@ -133,6 +135,6 @@ public class AsyncTaskCollector extends ASTCollector {
 		addSubclasses(unit, declarationVisitor.getSubclasses());
 		addAnonymClassDecl(unit, declarationVisitor.getAnonymousClasses());
 		addAnonymCachedClassDecl(unit, declarationVisitor.getAnonymousCachedClasses());
-		addRelevantUsages(unit, usagesVisitor.getUsages());
-	}
+		addRelevantUsages(unit, usagesVisitor.getUsages());		
+	}	
 }

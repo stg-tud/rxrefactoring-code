@@ -17,6 +17,7 @@ import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.ThisExpression;
+import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.internal.corext.dom.Bindings;
@@ -97,7 +98,9 @@ public class AsyncTaskASTUtils {
 
 			@Override
 			public void endVisit(MethodInvocation node) {
-				processFieldExpression(node.getExpression());
+				Expression expr = node.getExpression();
+				
+				if (expr != null) processFieldExpression(expr);
 
 				return;
 			}
@@ -149,6 +152,9 @@ public class AsyncTaskASTUtils {
 		FieldsVisitor v = new FieldsVisitor();
 		root.accept(v);
 	}
+	
+	
+	
 
 	public static Set<SimpleName> getVariableNames(Expression expr) {
 		class ExpressionVisitor extends ASTVisitor {

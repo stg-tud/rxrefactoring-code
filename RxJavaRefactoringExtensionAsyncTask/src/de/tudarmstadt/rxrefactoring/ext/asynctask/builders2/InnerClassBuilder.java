@@ -2,12 +2,15 @@ package de.tudarmstadt.rxrefactoring.ext.asynctask.builders2;
 
 import java.util.Objects;
 
+import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.IExtendedModifier;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.ReturnStatement;
@@ -30,6 +33,7 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 public class InnerClassBuilder extends AbstractBuilder {
 
 	private TypeDeclaration node;
+	private String name;
 	
 	//Unique id that gets added to the name to avoid naming conflicts.
 	private final String id;
@@ -68,14 +72,24 @@ public class InnerClassBuilder extends AbstractBuilder {
 		 */ 
 		
 		//Define type: ObservableWrapper
-		TypeDeclaration observableType = ast.newTypeDeclaration();
+		this.name = asyncTask.doIfTypeDeclaration(t -> t.getName().getIdentifier(), () -> RefactorNames.INNER_CLASS_TYPE_NAME);
+		
+		TypeDeclaration observableType = ast.newTypeDeclaration();	
+		
 		observableType.setName(ast.newSimpleName(getTypeName()));
+		
 		observableType.setInterface(false);
-		observableType.modifiers().add(ast.newModifier(ModifierKeyword.PRIVATE_KEYWORD));
+		
+		asyncTask.getModifiers().forEach(x -> {
+			if (((IExtendedModifier) x).isModifier()) {
+				observableType.modifiers().add(copy((ASTNode) x));
+			}
+		});
+		//observableType.modifiers().add(ast.newModifier(ModifierKeyword.PRIVATE_KEYWORD));
 		
 		//Add field and additional method declarations
-		asyncTask.getFieldDeclarations().forEach(observableType.bodyDeclarations()::add);
-		asyncTask.getAdditionalMethodDeclarations().forEach(observableType.bodyDeclarations()::add);
+		asyncTask.getFieldDeclarations().forEach(x -> observableType.bodyDeclarations().add(copy(x)));
+		asyncTask.getAdditionalMethodDeclarations().forEach(x -> observableType.bodyDeclarations().add(copy(x)));
 		
 		
 		//Define method: create
@@ -140,11 +154,15 @@ public class InnerClassBuilder extends AbstractBuilder {
 	 * 
 	 * new ObservableWrapper()
 	 */
-	public ClassInstanceCreation buildNewObservableWrapper() {
+	public ClassInstanceCreation buildNewObservableWrapper(AST ast) {
 		ClassInstanceCreation constructor = ast.newClassInstanceCreation();
 		constructor.setType(ast.newSimpleType(ast.newSimpleName(getTypeName())));
 		
 		return constructor;
+	}
+	
+	public ClassInstanceCreation buildNewObservableWrapper() {
+		return buildNewObservableWrapper(ast);
 	}
 	
 	/*
@@ -163,10 +181,15 @@ public class InnerClassBuilder extends AbstractBuilder {
 	 * 
 	 */
 	
+	public void replaceClassInstanceCreationsIn(UnitWriter writer) {
+		AST ast = writer.getAST();
+	}
+	
 	
 	
 	public String getTypeName() {
-		return RefactorNames.INNER_CLASS_TYPE_NAME + id;
+		//return RefactorNames.INNER_CLASS_TYPE_NAME + id;
+		return name;
 	}
 
 	

@@ -41,11 +41,12 @@ public class Extension implements RefactoringExtension<AsyncTaskCollector> {
 
 	@Override
 	public Iterable<RefactorWorker> getRefactoringWorkers(AsyncTaskCollector collector) {
-//		Set<RefactorWorker> workers = new HashSet<>();
-//		workers.add(new AnonymAsyncTaskWorker(collector));
-//		//workers.add(new CachedAnonymousTaskWorker(collector));
-//		workers.add(new SubClassAsyncTaskWorker(collector));
-		return Sets.newHashSet(new NewWorker(collector));
+		return Sets.newHashSet(
+				//new NewWorker(collector)
+				new AnonymAsyncTaskWorker(collector),
+				new CachedAnonymousTaskWorker(collector),
+				new SubClassAsyncTaskWorker(collector)
+		);
 	}
 
 	@Override

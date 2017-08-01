@@ -47,7 +47,8 @@ public class UnitWriter {
 	protected final Set<String> removedImports;
 
 	public UnitWriter(ICompilationUnit unit, AST ast) {
-
+		
+		
 		this.unit = unit;
 
 		addedImports = new HashSet<>();

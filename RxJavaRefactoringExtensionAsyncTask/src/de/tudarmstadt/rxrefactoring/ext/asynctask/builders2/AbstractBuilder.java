@@ -46,6 +46,8 @@ abstract class AbstractBuilder {
 	@SuppressWarnings("unchecked")
 	<V extends ASTNode> V copy(V node) {
 		return (V) astRewrite.createCopyTarget(node);
+		
+		
 	}
 	
 	/**
