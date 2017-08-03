@@ -231,20 +231,7 @@ abstract class AbstractRefactoringApp implements IApplication {
 	}
 
 	private void addJarFiles(String location) {
-		try {
-			java.nio.file.Path jarFilesPath = this.extension.getLibJars();
-			if (jarFilesPath == null) {
-				return;
-			}
-
-			// copy jar files to DEPENDENCIES_DIRECTORY
-			String destinationDirectory = Paths.get(location, getDependenciesDirectoryName()).toAbsolutePath()
-					.toString();
-			FileUtils.copyDirectory(new File(jarFilesPath.toString()), new File(destinationDirectory));
-		} catch (Throwable throwable) {
-			Log.errorInClient(getClass(), throwable);
-			return;
-		}
+		
 	}
 
 	private void updateClassPath(String location, IJavaProject javaProject) throws JavaModelException {

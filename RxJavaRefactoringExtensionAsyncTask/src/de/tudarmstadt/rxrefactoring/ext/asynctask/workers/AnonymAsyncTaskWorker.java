@@ -7,6 +7,7 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
@@ -146,7 +147,7 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> im
 				
 				Statement s = ASTUtils.findParent(asyncTaskDeclaration, Statement.class);
 				
-				replaceExecuteImplicit(writer, me, unit, ast, false, s);
+				replaceExecute(writer, me, unit, false);
 				return true;
 			}
 		return false;
@@ -211,7 +212,7 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> im
 						isCancelPresent = true;
 						Log.info(getClass(), "METHOD=replaceCancel - updating cancel invocation for class: "
 								+ unit.getElementName());
-						replaceExecute(writer, methodInvoke, unit, astInvoke, true);
+						replaceExecute(writer, methodInvoke, unit, true);
 						updateCancelInvocation(writer, unit, methodReference, astInvoke);
 
 					}
@@ -222,7 +223,7 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> im
 		}
 		if (!isCancelPresent) {
 
-			replaceExecute(writer, methodInvoke, unit, astInvoke, false);
+			replaceExecute(writer, methodInvoke, unit, false);
 		}
 	}
 
@@ -248,72 +249,85 @@ public class AnonymAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> im
 	 * Method to refactor method invocation statements with name execute EX: new
 	 * Task().execute();
 	 */
-	void replaceExecute(UnitWriterExt writer, MethodInvocation methodInvoke, ICompilationUnit unit, AST astInvoke, boolean withSubscription) {
-
-//		UnitWriterExt writer = UnitWriters.getOrElse(unit,
-//				() -> new UnitWriterExt(unit, astInvoke, getClass().getSimpleName()));
-
-		AST methodAST = methodInvoke.getAST();
-		MethodInvocation execute = (MethodInvocation) ASTNode.copySubtree(methodAST, methodInvoke);
-		if (execute.getName().toString().equals(EXECUTE_ON_EXECUTOR)) {
-			execute.arguments().clear();
-		}
-		execute.setExpression(AsyncTaskASTUtils.getinstannceCreationStatement(methodAST, complexObservableclassName));
-		execute.setName(methodAST.newSimpleName(asyncMethodName));
-
-		MethodInvocation invocation = methodAST.newMethodInvocation();
-
-		invocation.setExpression(execute);
-		invocation.setName(methodAST.newSimpleName(SUBSCRIBE));
-		// ASTUtil.replaceInStatement(methodInvoke, invocation);
-		if (!withSubscription) {
-			writer.replace(methodInvoke, invocation);
-		} else {
-			createSubscriptionDeclaration(writer, unit, methodInvoke);
-			Assignment initSubscription = methodAST.newAssignment();
-
-			initSubscription.setLeftHandSide(
-					methodAST.newSimpleName(getVariableName(methodInvoke.getExpression()) + subscription));
-			initSubscription.setRightHandSide(invocation);
-			// ASTUtil.replaceInStatement(methodInvoke, initSubscription);
-			writer.replace(methodInvoke, initSubscription);
-		}
-	}
+//	void replaceExecute(UnitWriterExt writer, MethodInvocation methodInvoke, ICompilationUnit unit, AST astInvoke, boolean withSubscription) {
+//
+////		UnitWriterExt writer = UnitWriters.getOrElse(unit,
+////				() -> new UnitWriterExt(unit, astInvoke, getClass().getSimpleName()));
+//
+//		AST methodAST = methodInvoke.getAST();
+//		MethodInvocation execute = (MethodInvocation) ASTNode.copySubtree(methodAST, methodInvoke);
+//		if (execute.getName().toString().equals(EXECUTE_ON_EXECUTOR)) {
+//			execute.arguments().clear();
+//		}
+//		execute.setExpression(AsyncTaskASTUtils.getinstannceCreationStatement(methodAST, complexObservableclassName));
+//		execute.setName(methodAST.newSimpleName(asyncMethodName));
+//
+//		MethodInvocation invocation = methodAST.newMethodInvocation();
+//
+//		invocation.setExpression(execute);
+//		invocation.setName(methodAST.newSimpleName(SUBSCRIBE));
+//		// ASTUtil.replaceInStatement(methodInvoke, invocation);
+//		if (!withSubscription) {
+//			writer.replace(methodInvoke, invocation);
+//		} else {
+//			createSubscriptionDeclaration(writer, unit, methodInvoke);
+//			Assignment initSubscription = methodAST.newAssignment();
+//
+//			initSubscription.setLeftHandSide(
+//					methodAST.newSimpleName(getVariableName(methodInvoke.getExpression()) + subscription));
+//			initSubscription.setRightHandSide(invocation);
+//			// ASTUtil.replaceInStatement(methodInvoke, initSubscription);
+//			writer.replace(methodInvoke, initSubscription);
+//		}
+//	}
 
 	/**
 	 * Method to refactor method invocation statements with name execute EX: new
 	 * Task().execute();
 	 */
-	void replaceExecuteImplicit(UnitWriterExt writer, MethodInvocation methodInvoke, ICompilationUnit unit, AST ast, boolean withSubscription,
-			Statement referenceStatement) {
+	void replaceExecute(UnitWriterExt writer, MethodInvocation executeInvoke, ICompilationUnit unit, boolean withSubscription) {
 
 //		UnitWriterExt writer = UnitWriters.getOrElse(unit,
 //				() -> new UnitWriterExt(unit, ast, getClass().getSimpleName()));
 
-		AST methodAST = methodInvoke.getAST();
-		MethodInvocation execute = (MethodInvocation) ASTNode.copySubtree(methodAST, methodInvoke);
-		if (execute.getName().toString().equals(EXECUTE_ON_EXECUTOR)) {
-			execute.arguments().clear();
-		}
-		execute.setExpression(AsyncTaskASTUtils.getinstannceCreationStatement(methodAST, complexObservableclassName));
-		execute.setName(methodAST.newSimpleName(asyncMethodName));
+		AST ast = writer.getAST();
+		
+		
+		//Builds: new ObservableWrapper()
+		ClassInstanceCreation constructor = AsyncTaskASTUtils.getinstannceCreationStatement(ast, complexObservableclassName);
+		
+		//Builds: new ObservableWrapper().create()
+		MethodInvocation createInvoke = ast.newMethodInvocation();
+		createInvoke.setName(ast.newSimpleName(asyncMethodName));
+		createInvoke.setExpression(constructor);
+		
+		//TODO: Remove this part and produce a completely new expression
+		//Refactor: getObservable.execute()  -->  new ObservableWrapper().create().subscribe()
+//		MethodInvocation execute = (MethodInvocation) ASTNode.copySubtree(methodAST, executeInvoke);
+//		if (execute.getName().toString().equals(EXECUTE_ON_EXECUTOR)) {
+//			execute.arguments().clear();
+//		}
+//		execute.setExpression();
+//		execute.setName(methodAST.newSimpleName(asyncMethodName));
 
-		MethodInvocation newInvoke = methodAST.newMethodInvocation();
-		newInvoke.setExpression(execute);
-		newInvoke.setName(methodAST.newSimpleName(SUBSCRIBE));		
+		
+		//Builds: new ObservableWrapper().create().subscribe()
+		MethodInvocation subscribeInvoke = ast.newMethodInvocation();
+		subscribeInvoke.setExpression(createInvoke);
+		subscribeInvoke.setName(ast.newSimpleName(SUBSCRIBE));		
 		
 		//Statement ss = ASTNodeFactory.createSingleStatementFromText(methodAST, invocation.toString());
 		if (!withSubscription) {
-			writer.replace(methodInvoke, newInvoke);
+			writer.replace(executeInvoke, subscribeInvoke);
 		} else {
-			createSubscriptionDeclaration(writer, unit, methodInvoke);
-			Assignment initSubscription = methodAST.newAssignment();
+			createSubscriptionDeclaration(writer, unit, executeInvoke);
+			Assignment initSubscription = ast.newAssignment();
 
 			initSubscription.setLeftHandSide(
-					methodAST.newSimpleName(getVariableName(methodInvoke.getExpression()) + subscription));
-			initSubscription.setRightHandSide(newInvoke);
+					ast.newSimpleName(getVariableName(executeInvoke.getExpression()) + subscription));
+			initSubscription.setRightHandSide(subscribeInvoke);
 			// ASTUtil.replaceInStatement(methodInvoke, initSubscription);
-			writer.replace(methodInvoke, initSubscription);
+			writer.replace(executeInvoke, initSubscription);
 		}
 	}
 

@@ -48,10 +48,10 @@ public class AsyncTaskASTUtils {
 		return null;
 	}
 
-	public static Expression getinstannceCreationStatement(AST astInvoke, String name) {
-		ClassInstanceCreation instanceCreationStatement = astInvoke.newClassInstanceCreation();
-		instanceCreationStatement.setType(astInvoke.newSimpleType(astInvoke.newSimpleName(name)));
-		return instanceCreationStatement;
+	public static ClassInstanceCreation getinstannceCreationStatement(AST astInvoke, String name) {
+		ClassInstanceCreation instanceCreationExpr = astInvoke.newClassInstanceCreation();
+		instanceCreationExpr.setType(astInvoke.newSimpleType(astInvoke.newSimpleName(name)));
+		return instanceCreationExpr;
 	}
 
 	/**

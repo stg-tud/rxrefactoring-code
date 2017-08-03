@@ -67,6 +67,9 @@ public interface RefactoringExtension<CollectorType extends Collector> {
 	 */
 	public String getId();
 
+	
+	
+	
 	/**
 	 * Specifies which jars should be included to the refactored project.
 	 * 

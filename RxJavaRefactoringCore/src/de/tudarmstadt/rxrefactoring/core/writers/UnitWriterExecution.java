@@ -78,25 +78,7 @@ public class UnitWriterExecution {
 		return importRewriter;
 	}
 
-	private void applyChanges( ICompilationUnit unit, ImportRewrite importRewriter, CompilationUnitChange compilationUnitChange, IProgressMonitor progressMonitor ) throws BadLocationException, CoreException
-	{
-		// process source code
-		String sourceCode = compilationUnitChange.getCompilationUnit().getSource();
 
-		// load document and apply changes
-		Document document = new Document( sourceCode );
-		compilationUnitChange.getEdit().apply( document );
-		TextEdit importsEdit = importRewriter.rewriteImports( progressMonitor );
-		importsEdit.apply( document );
-		String newSourceCode = document.get();
-		IBuffer buffer = unit.getBuffer();
-		buffer.setContents( newSourceCode );
-
-		// save changes
-		if ( !RefactoringApp.isRunningForTests() ) {
-			buffer.save( progressMonitor, false );
-		}
-	}
 
 	
 }

@@ -11,6 +11,8 @@ import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
 
@@ -48,7 +50,7 @@ public class DeclarationVisitor extends ASTVisitor {
 	@Override
 	public boolean visit(TypeDeclaration node) {
 		
-		if (checkClass(node)) {
+		if (checkClass(node) && !isAbstract(node)) {
 			subclasses.add(node);
 		}
 		return true;
@@ -112,6 +114,17 @@ public class DeclarationVisitor extends ASTVisitor {
 		} else {
 			return false;
 		}
+	}
+	
+	private boolean isAbstract(TypeDeclaration type) {
+		for (Object o : type.modifiers()) {
+			if (o instanceof Modifier) {
+				Modifier m = (Modifier) o;
+				if (m.getKeyword().equals(ModifierKeyword.ABSTRACT_KEYWORD))
+					return true;
+			}
+		}
+		return false;
 	}
 
 	/**

@@ -1,5 +1,6 @@
 package de.tudarmstadt.rxrefactoring.ext.akka;
 
+import de.tudarmstadt.rxrefactoring.core.RefactoringExtension;
 import de.tudarmstadt.rxrefactoring.core.handler.RefactoringHandler;
 
 /**
@@ -7,4 +8,10 @@ import de.tudarmstadt.rxrefactoring.core.handler.RefactoringHandler;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016
  */
-public class Handler extends RefactoringHandler { }
+public class Handler extends RefactoringHandler {
+
+	@Override
+	public RefactoringExtension createEnvironment() {		
+		return new Extension();
+	} 
+}
