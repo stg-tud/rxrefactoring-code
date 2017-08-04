@@ -33,7 +33,9 @@ import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnitFactory;
 import de.tudarmstadt.rxrefactoring.core.parser.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.Status;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.ProjectStatus;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerStatus;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
 
 /**
@@ -101,17 +103,17 @@ public class RefactorExecution {
 					ProjectUnits units = findCompilationUnits(javaProject);
 					
 					//Performs the refactoring by applying the workers of the extension.
-					doRefactorProject(units);
+					doRefactorProject(units, summary);
 					
 					//Reports a successful refactoring
-					summary.reportProject(project, Status.COMPLETED);
+					summary.reportProject(project, ProjectStatus.COMPLETED);
 					Log.info(getClass(), "<<< Refactor project");
 				} else {
-					summary.reportProject(project, Status.SKIPPED);
+					summary.reportProject(project, ProjectStatus.SKIPPED);
 					Log.info(getClass(), "Skipping project: " + project.getName());
 				}
 			} catch (Exception e) {
-				summary.reportProject(project, Status.ERROR);
+				summary.reportProject(project, ProjectStatus.ERROR);
 				Log.error(getClass(), "### Error during the refactoring of " + project.getName() + " ###");
 				e.printStackTrace();
 				Log.error(getClass(), "### End ###");
@@ -229,10 +231,28 @@ public class RefactorExecution {
 	
 	
 	
-	private void doRefactorProject(ProjectUnits units) {
+	private void doRefactorProject(ProjectUnits units, RefactorSummary summary) {
 		Set<IWorker> workers = env.workers();
 		
 		//TODO: Implement the refactoring.
+		
+		for (IWorker worker: workers) {			
+			WorkerSummary workerSummary = new WorkerSummary(worker);
+			try {
+				worker.refactor(units, workerSummary);
+				workerSummary.setStatus(WorkerStatus.COMPLETED);
+			} catch (Exception e) {
+				workerSummary.setStatus(WorkerStatus.ERROR);
+				Log.error(getClass(), "## Error during the execution of " + worker.getName() + " ##");
+				e.printStackTrace();
+				Log.error(getClass(), "## End ##");
+			}				
+		}
+		
+		
+			
+		
+		
 	}
 
 	

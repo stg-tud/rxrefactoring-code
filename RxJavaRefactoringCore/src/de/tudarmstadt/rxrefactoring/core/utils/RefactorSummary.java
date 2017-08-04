@@ -1,10 +1,15 @@
 package de.tudarmstadt.rxrefactoring.core.utils;
 
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
 
 public class RefactorSummary {
 
@@ -19,7 +24,7 @@ public class RefactorSummary {
 		this.projects = Sets.newHashSet();
 	}
 	
-	public void reportProject(IProject project, Status status) {
+	public void reportProject(IProject project, ProjectStatus status) {
 		projects.add(new ProjectSummary(project, status));
 	}
 	
@@ -37,20 +42,79 @@ public class RefactorSummary {
 	 * @author mirko
 	 *
 	 */
-	public enum Status {
-		ERROR, SKIPPED, COMPLETED
+	public enum ProjectStatus {
+		UNDEFINED, ERROR, SKIPPED, COMPLETED
 	}
 	
 	
-	class ProjectSummary {
+	public static class ProjectSummary {
 		
 		private final IProject project;
-		private final Status status; 
+		private final ProjectStatus status; 
 		
-		public ProjectSummary(IProject project, Status status) {
+		public ProjectSummary(IProject project, ProjectStatus status) {
 			this.project = project;
 			this.status = status;
 		}		
+	}
+	
+	public enum WorkerStatus {
+		UNDEFINED, ERROR, COMPLETED
+	}
+	
+	public static class WorkerSummary {
+		
+		private final IWorker worker;
+		
+		private WorkerStatus status;
+		private final Map<String, CountEntry> entries;
+		
+		
+		public WorkerSummary(IWorker worker) {
+			this.worker = worker;
+			
+			this.status = WorkerStatus.UNDEFINED;			
+			this.entries = Maps.newHashMap();
+		}
+		
+		public void addCorrect(String key) {
+			getEntryFor(key).addCorrect();			
+		}
+		
+		public void addSkipped(String key) {
+			getEntryFor(key).addSkipped();			
+		}
+		
+		public void setStatus(WorkerStatus status) {
+			this.status = status;
+		}
+		
+		private CountEntry getEntryFor(String key) {
+			Objects.requireNonNull(key, "The key can not be null.");
+			
+			CountEntry entry = entries.get(key);
+			
+			if (entry == null) {
+				entry = new CountEntry();
+				entries.put(key, entry);
+			}
+			
+			return entry;
+		}
+		
+		class CountEntry {
+			private int correct = 0;
+			private int skipped = 0;
+			
+			public void addCorrect() {
+				correct++;
+			}
+			
+			public void addSkipped() {
+				skipped++;				
+			}		
+			
+		}
 	}
 	
 	

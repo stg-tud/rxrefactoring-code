@@ -30,8 +30,13 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
+import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
+import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
+import org.eclipse.jface.text.Document;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.UndoEdit;
+
+import de.tudarmstadt.rxrefactoring.core.RefactoringApp;
 /**
  * Bundles a compilation unit together with its AST and AST rewriter.
  * 
@@ -55,10 +60,14 @@ public class BundledCompilationUnit implements ICompilationUnit {
 	 */
 	private ASTRewrite writer;
 	
+	private ImportRewrite imports;
+	
 	/**
 	 * The AST that has been used to create the AST of this unit.
 	 */
 	private AST ast;
+	
+	
 	
 	/**
 	 * Bundles a compilation unit together with its root AST node.
@@ -110,15 +119,72 @@ public class BundledCompilationUnit implements ICompilationUnit {
 	}
 	
 	
-	public ASTRewrite writer() {
+	ASTRewrite writer() {
 		if (writer == null) {
 			writer = ASTRewrite.create(ast());
 		}
 		
 		return writer;
 	}
-
 	
+	public boolean hasASTChanges() {
+		return writer != null;
+	}
+
+	/**
+	 * Replaces an AST node with another AST node.
+	 * This replacement is not immediate as it does
+	 * not change the underlying AST graph.
+	 * 
+	 * @param node The node that should be marked for replacement.
+	 * @param replacement The new node.
+	 * 
+	 * @see ASTRewrite#replace(ASTNode, ASTNode, org.eclipse.text.edits.TextEditGroup)
+	 */
+	public void replace(ASTNode node, ASTNode replacement) {
+		writer.replace(node, replacement, null);
+	}
+	
+	Set<String> 
+	
+	public void addImport() {
+		ImportRewrite importRewriter = ImportRewrite.create(unit, true);
+		importRewriter.
+	}
+	
+	
+		
+	public void applyChanges() {
+		String name = getElementName();
+		
+		//Apply the changes in the compilation unit
+		CompilationUnitChange compilationUnitChange = new CompilationUnitChange(name, unit);
+		TextEdit sourceCodeEdits = writer().rewriteAST();
+		compilationUnitChange.setEdit(sourceCodeEdits);
+		
+		//Create the import rewrite		
+		ImportRewrite importRewriter = ImportRewrite.create(unit, true); //StubUtility.createImportRewrite( unit, true );
+		
+		getAddedImports().forEach(importRewriter::addImport);
+		getRemovedImports().forEach(importRewriter::removeImport);
+		
+		// process source code
+		String sourceCode = compilationUnitChange.getCompilationUnit().getSource();
+
+		// load document and apply changes
+		Document document = new Document( sourceCode );
+		compilationUnitChange.getEdit().apply( document );
+		TextEdit importsEdit = importRewriter.rewriteImports(monitor);
+		importsEdit.apply( document );
+		String newSourceCode = document.get();
+		IBuffer buffer = unit.getBuffer();
+		buffer.setContents( newSourceCode );
+
+		// save changes
+		if ( !RefactoringApp.isRunningForTests() ) {
+			buffer.save(monitor, false);
+		}
+	}
 	
 	
 	/*
