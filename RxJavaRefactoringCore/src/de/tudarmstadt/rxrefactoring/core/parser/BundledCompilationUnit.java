@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
@@ -32,7 +33,9 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
+import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.UndoEdit;
 
@@ -56,10 +59,13 @@ public class BundledCompilationUnit implements ICompilationUnit {
 	private final ASTNode rootNode;
 	
 	/**
-	 * The rewriter to be used for this compilation unit.
+	 * The ast rewriter to be used for this compilation unit.
 	 */
 	private ASTRewrite writer;
 	
+	/**
+	 * The import rewriter to be used for this compilation unit.
+	 */
 	private ImportRewrite imports;
 	
 	/**
@@ -127,14 +133,33 @@ public class BundledCompilationUnit implements ICompilationUnit {
 		return writer;
 	}
 	
-	public boolean hasASTChanges() {
-		return writer != null;
+	ImportRewrite imports() {
+		if (imports == null) {
+			try {
+				imports = ImportRewrite.create(unit, true);
+			} catch (JavaModelException e) {
+				throw new IllegalStateException(e);
+			}
+		}
+		
+		return imports;
+	}
+	
+	
+	
+	public boolean hasChanges() {
+		return writer != null || imports != null;
 	}
 
 	/**
 	 * Replaces an AST node with another AST node.
 	 * This replacement is not immediate as it does
-	 * not change the underlying AST graph.
+	 * not change the underlying AST graph.	 * 
+	 * <br>
+	 * <br>
+	 * This method does not change the AST until {@link BundledCompilationUnit#applyChanges(IProgressMonitor)}
+	 * has been called.
+	 * 
 	 * 
 	 * @param node The node that should be marked for replacement.
 	 * @param replacement The new node.
@@ -142,55 +167,75 @@ public class BundledCompilationUnit implements ICompilationUnit {
 	 * @see ASTRewrite#replace(ASTNode, ASTNode, org.eclipse.text.edits.TextEditGroup)
 	 */
 	public void replace(ASTNode node, ASTNode replacement) {
-		writer.replace(node, replacement, null);
+		writer().replace(node, replacement, null);
 	}
 	
-	Set<String> 
-	
-	public void addImport() {
-		ImportRewrite importRewriter = ImportRewrite.create(unit, true);
-		importRewriter.
+	/**
+	 * Adds an import to this compilation unit.
+	 * No imports are added for types that are already known.
+	 * <br>
+	 * <br>
+	 * This method does not change the AST until {@link BundledCompilationUnit#applyChanges(IProgressMonitor)}
+	 * has been called.
+	 *  
+	 * @param qualifiedTypeName The qualified name of the type
+	 * that should be imported.
+	 * 
+	 * @see ImportRewrite#addImport(String)
+	 */
+	public void addImport(String qualifiedTypeName) {
+		imports().addImport(qualifiedTypeName);
 	}
 	
+	/**
+	 * Removes an import from this compilation unit.
+	 * <br>
+	 * <br>
+	 * This method does not change the AST until {@link BundledCompilationUnit#applyChanges(IProgressMonitor)}
+	 * has been called.
+	 *  
+	 * @param qualifiedTypeName The qualified name of the type
+	 * that should be removed.
+	 * 
+	 * @see ImportRewrite#removeImport(String)
+	 */	
+	public void removeImport(String qualifiedTypeName) {
+		imports().removeImport(qualifiedTypeName);
+	}
 	
 		
-	public void applyChanges() {
-		String name = getElementName();
+	
+	public void applyChanges() throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
 		
 		//Apply the changes in the compilation unit
-		CompilationUnitChange compilationUnitChange = new CompilationUnitChange(name, unit);
+		CompilationUnitChange compilationUnitChange = new CompilationUnitChange(getElementName(), unit);
 		TextEdit sourceCodeEdits = writer().rewriteAST();
 		compilationUnitChange.setEdit(sourceCodeEdits);
-		
-		//Create the import rewrite		
-		ImportRewrite importRewriter = ImportRewrite.create(unit, true); //StubUtility.createImportRewrite( unit, true );
-		
-		getAddedImports().forEach(importRewriter::addImport);
-		getRemovedImports().forEach(importRewriter::removeImport);
-		
+					
 		// process source code
 		String sourceCode = compilationUnitChange.getCompilationUnit().getSource();
 
 		// load document and apply changes
 		Document document = new Document( sourceCode );
 		compilationUnitChange.getEdit().apply( document );
-		TextEdit importsEdit = importRewriter.rewriteImports(monitor);
+		
+		TextEdit importsEdit = imports.rewriteImports(null); //We can add a progress monitor here.
 		importsEdit.apply( document );
 		String newSourceCode = document.get();
-		IBuffer buffer = unit.getBuffer();
-		buffer.setContents( newSourceCode );
-
+		
 		// save changes
-		if ( !RefactoringApp.isRunningForTests() ) {
-			buffer.save(monitor, false);
-		}
+		IBuffer buffer = unit.getBuffer();
+		buffer.setContents( newSourceCode );	
+		//TODO: Fix this functionality if there is a test run.
+	//	if ( !RefactoringApp.isRunningForTests() ) 
+		buffer.save(null, false);
+		
 	}
 	
 	
 	/*
 	 * Methods from ICompilationUnit 
-	 */
-	
+	 */	
 	@Override
 	public IType findPrimaryType() {
 		return unit.findPrimaryType();

@@ -22,8 +22,10 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.text.edits.MalformedTreeException;
 
 import com.google.common.collect.Sets;
 
@@ -231,11 +233,12 @@ public class RefactorExecution {
 	
 	
 	
-	private void doRefactorProject(ProjectUnits units, RefactorSummary summary) {
+	private void doRefactorProject(ProjectUnits units, RefactorSummary summary) throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
 		Set<IWorker> workers = env.workers();
 		
 		//TODO: Implement the refactoring.
 		
+		//The workers add their changes to the bundled compilation units
 		for (IWorker worker: workers) {			
 			WorkerSummary workerSummary = new WorkerSummary(worker);
 			try {
@@ -249,9 +252,8 @@ public class RefactorExecution {
 			}				
 		}
 		
-		
-			
-		
+		//The changes of the compilation units are applied
+		units.applyChanges();
 		
 	}
 

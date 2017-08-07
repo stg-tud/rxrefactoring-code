@@ -4,6 +4,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.text.edits.MalformedTreeException;
+
 public class ProjectUnits implements Set<BundledCompilationUnit> {
 
 	private Set<BundledCompilationUnit> units;
@@ -11,6 +16,12 @@ public class ProjectUnits implements Set<BundledCompilationUnit> {
 	
 	public ProjectUnits(Set<BundledCompilationUnit> units) {
 		this.units = units;
+	}
+	
+	public void applyChanges() throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
+		for (BundledCompilationUnit unit : units) {
+			unit.applyChanges();
+		}		
 	}
 
 	@Override
