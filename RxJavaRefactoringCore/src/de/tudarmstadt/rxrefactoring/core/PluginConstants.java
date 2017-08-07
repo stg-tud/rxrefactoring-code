@@ -8,7 +8,6 @@ public final class PluginConstants {
 	
 	
 	
-	
 	//Cannot be instantiated
 	private PluginConstants() { }
 

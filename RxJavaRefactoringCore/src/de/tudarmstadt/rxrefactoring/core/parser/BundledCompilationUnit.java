@@ -39,7 +39,6 @@ import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.UndoEdit;
 
-import de.tudarmstadt.rxrefactoring.core.RefactoringApp;
 /**
  * Bundles a compilation unit together with its AST and AST rewriter.
  * 

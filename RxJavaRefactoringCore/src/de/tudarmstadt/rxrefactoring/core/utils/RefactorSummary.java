@@ -24,8 +24,10 @@ public class RefactorSummary {
 		this.projects = Sets.newHashSet();
 	}
 	
-	public void reportProject(IProject project, ProjectStatus status) {
-		projects.add(new ProjectSummary(project, status));
+	public ProjectSummary reportProject(IProject project) {
+		ProjectSummary result = new ProjectSummary(project);		
+		projects.add(result);
+		return result;
 	}
 	
 	public void reportStarted() {
@@ -44,18 +46,32 @@ public class RefactorSummary {
 	 */
 	public enum ProjectStatus {
 		UNDEFINED, ERROR, SKIPPED, COMPLETED
-	}
-	
+	}	
 	
 	public static class ProjectSummary {
 		
 		private final IProject project;
-		private final ProjectStatus status; 
+		private ProjectStatus status; 
 		
-		public ProjectSummary(IProject project, ProjectStatus status) {
+		private final Set<WorkerSummary> workers;
+		
+		ProjectSummary(IProject project) {
 			this.project = project;
-			this.status = status;
+			this.status = ProjectStatus.UNDEFINED;
+			
+			workers = Sets.newHashSet();
 		}		
+		
+		public void reportStatus(ProjectStatus status) {
+			Objects.requireNonNull(status);			
+			this.status = status;
+		}
+		
+		public WorkerSummary reportWorker(IWorker worker) {
+			WorkerSummary result = new WorkerSummary(worker);
+			workers.add(result);
+			return result;
+		}
 	}
 	
 	public enum WorkerStatus {
@@ -64,13 +80,13 @@ public class RefactorSummary {
 	
 	public static class WorkerSummary {
 		
-		private final IWorker worker;
+		private final IWorker<?,?> worker;
 		
 		private WorkerStatus status;
 		private final Map<String, CountEntry> entries;
 		
 		
-		public WorkerSummary(IWorker worker) {
+		WorkerSummary(IWorker<?,?> worker) {
 			this.worker = worker;
 			
 			this.status = WorkerStatus.UNDEFINED;			
@@ -86,6 +102,7 @@ public class RefactorSummary {
 		}
 		
 		public void setStatus(WorkerStatus status) {
+			Objects.requireNonNull(status);
 			this.status = status;
 		}
 		

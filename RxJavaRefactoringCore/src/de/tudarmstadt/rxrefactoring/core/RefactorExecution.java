@@ -1,7 +1,8 @@
-package de.tudarmstadt.rxrefactoring.core.handler;
+package de.tudarmstadt.rxrefactoring.core;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -14,6 +15,7 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
@@ -22,6 +24,8 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -29,16 +33,18 @@ import org.eclipse.text.edits.MalformedTreeException;
 
 import com.google.common.collect.Sets;
 
-import de.tudarmstadt.rxrefactoring.core.ConstantStrings;
+import de.tudarmstadt.rxrefactoring.core.handler.IUIIntegration;
 import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnitFactory;
 import de.tudarmstadt.rxrefactoring.core.parser.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.ProjectStatus;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.ProjectSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerStatus;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
+import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree;
 
 /**
  * This class is used to run the refactoring on all
@@ -85,45 +91,82 @@ public class RefactorExecution {
 			return;
 		}
 		
-		//Reports that the refactoring is starting
-		summary.reportStarted();
-			
-		//Iterate over all projects
-		for (IProject project : workspaceRoot.getProjects()) {
-			
-			//Try to refactor the project
-			try {
-				//Check whether the project is open and if it is a Java project
-				if (project.isOpen() && project.hasNature(JavaCore.NATURE_ID)) {
-					Log.info(getClass(), ">>> Refactor project: " + project.getName());
-					IJavaProject javaProject = JavaCore.create(project);
-					
-					//Adds the additional resource files to the project.
-					addResourceFiles(project, javaProject);
-					
-					//Finds all java files in the project and produces the according bundled unit.	
-					ProjectUnits units = findCompilationUnits(javaProject);
-					
-					//Performs the refactoring by applying the workers of the extension.
-					doRefactorProject(units, summary);
-					
-					//Reports a successful refactoring
-					summary.reportProject(project, ProjectStatus.COMPLETED);
-					Log.info(getClass(), "<<< Refactor project");
-				} else {
-					summary.reportProject(project, ProjectStatus.SKIPPED);
-					Log.info(getClass(), "Skipping project: " + project.getName());
-				}
-			} catch (Exception e) {
-				summary.reportProject(project, ProjectStatus.ERROR);
-				Log.error(getClass(), "### Error during the refactoring of " + project.getName() + " ###");
-				e.printStackTrace();
-				Log.error(getClass(), "### End ###");
-			}			
-		}
 		
-		//Reports that the refactoring is finished.
-		summary.reportFinished();
+		
+		ProgressMonitorDialog dialog = new ProgressMonitorDialog(shell);
+		
+		try {
+			dialog.run(true, false, new IRunnableWithProgress() {
+				
+				@Override
+				public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
+					
+					String description = env.getDescription();
+					Objects.requireNonNull(description, "The description of the environment may not be null.");
+					
+					IProject[] projects = workspaceRoot.getProjects();
+					
+					monitor.beginTask(env.getDescription(), projects.length);
+						
+					
+					
+					//Reports that the refactoring is starting
+					summary.reportStarted();
+						
+					//Iterate over all projects
+					for (IProject project : projects) {
+						
+						ProjectSummary projectSummary = summary.reportProject(project);
+						
+						//Try to refactor the project
+						try {
+							//Check whether the project is open and if it is a Java project
+							if (project.isOpen() && project.hasNature(JavaCore.NATURE_ID)) {
+								Log.info(getClass(), ">>> Refactor project: " + project.getName());
+								IJavaProject javaProject = JavaCore.create(project);
+								
+								//Adds the additional resource files to the project.
+								addResourceFiles(project, javaProject);
+								
+								//Finds all java files in the project and produces the according bundled unit.	
+								ProjectUnits units = findCompilationUnits(javaProject);
+								
+								//Performs the refactoring by applying the workers of the extension.
+								doRefactorProject(units, projectSummary);
+								
+								//Reports a successful refactoring
+								projectSummary.reportStatus(ProjectStatus.COMPLETED);
+								Log.info(getClass(), "<<< Refactor project");
+								
+							} else {								
+								projectSummary.reportStatus(ProjectStatus.SKIPPED);
+								Log.info(getClass(), "Skipping project: " + project.getName());
+							}
+						} catch (Exception e) {
+							projectSummary.reportStatus(ProjectStatus.ERROR);
+							Log.error(getClass(), "### Error during the refactoring of " + project.getName() + " ###");
+							e.printStackTrace();
+							Log.error(getClass(), "### End ###");
+						}
+						
+						monitor.worked(1);
+					}
+					
+					//Reports that the refactoring is finished.
+					summary.reportFinished();		
+					
+					monitor.done();
+				}				
+			});
+		} catch (InterruptedException e) {
+			//TODO: Handle case if the refactoring is cancelled.
+			e.printStackTrace();
+			
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+		} finally {
+			dialog.close();
+		}
 	}
 	
 
@@ -233,24 +276,14 @@ public class RefactorExecution {
 	
 	
 	
-	private void doRefactorProject(ProjectUnits units, RefactorSummary summary) throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
-		Set<IWorker> workers = env.workers();
-		
-		//TODO: Implement the refactoring.
+	private void doRefactorProject(ProjectUnits units, ProjectSummary projectSummary) throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
+				
+		//Produce the worker tree 
+		WorkerTree workerTree = new WorkerTree(units, projectSummary);
+		env.buildWorkers(workerTree);		
 		
 		//The workers add their changes to the bundled compilation units
-		for (IWorker worker: workers) {			
-			WorkerSummary workerSummary = new WorkerSummary(worker);
-			try {
-				worker.refactor(units, workerSummary);
-				workerSummary.setStatus(WorkerStatus.COMPLETED);
-			} catch (Exception e) {
-				workerSummary.setStatus(WorkerStatus.ERROR);
-				Log.error(getClass(), "## Error during the execution of " + worker.getName() + " ##");
-				e.printStackTrace();
-				Log.error(getClass(), "## End ##");
-			}				
-		}
+		workerTree.run();
 		
 		//The changes of the compilation units are applied
 		units.applyChanges();
