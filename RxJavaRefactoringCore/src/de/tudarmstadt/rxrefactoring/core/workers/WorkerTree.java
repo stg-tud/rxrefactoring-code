@@ -1,12 +1,14 @@
 package de.tudarmstadt.rxrefactoring.core.workers;
 
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
 
 import com.google.common.collect.Lists;
 
+import de.tudarmstadt.rxrefactoring.core.logging.Log;
 import de.tudarmstadt.rxrefactoring.core.parser.ProjectUnits;
-import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.ProjectSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerStatus;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
@@ -51,8 +53,14 @@ public class WorkerTree {
 			if (!hasResult) {
 				Input in = parent == null ? null : parent.getResult();		
 				//TODO: Pass the correct summary.
-				result = worker.refactor(in, units, workerSummary); 
+				result = worker.refactor(units, in, workerSummary);
+				hasResult = true;
 			}
+		}
+		
+		@Override
+		public String toString() {
+			return String.format("WorkerNode(worker = %s, parent = %s)", worker, parent);
 		}
 	}
 	
@@ -70,9 +78,7 @@ public class WorkerTree {
 	 * that use the results of this worker.
 	 */
 	public <Y> WorkerNode<Void,Y> addWorker(IWorker<Void,Y> worker) {		
-		WorkerNode<Void,Y> node = new WorkerNode<>(worker, root);
-		workers.add(node);
-		return node;
+		return addWorker(root, worker);
 	}
 	
 	/**
@@ -93,7 +99,7 @@ public class WorkerTree {
 	
 	public void run() {
 		
-		Stack<WorkerNode<?,?>> stack = new Stack<>();		
+		Deque<WorkerNode<?,?>> stack = new LinkedList<>();		
 		stack.add(root);
 		
 		while (!stack.isEmpty()) {			
@@ -114,12 +120,9 @@ public class WorkerTree {
 				
 			} catch (Exception e) {
 				workerSummary.setStatus(WorkerStatus.ERROR);
-				Log.error(getClass(), "## Error during the execution of " + current.worker.getName() + " ##");
-				e.printStackTrace();
-				Log.error(getClass(), "## End ##");
-			}				
-		}
-		
+				Log.handleException(getClass(), "execution of " + current.worker.getName(), e);				
+			}		
+		}		
 	}
 	
 	

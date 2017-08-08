@@ -29,9 +29,11 @@ import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.ChildListPropertyDescriptor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
+import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
@@ -58,7 +60,7 @@ public class BundledCompilationUnit implements ICompilationUnit {
 	private final ASTNode rootNode;
 	
 	/**
-	 * The ast rewriter to be used for this compilation unit.
+	 * The AST rewriter to be used for this compilation unit.
 	 */
 	private ASTRewrite writer;
 	
@@ -111,13 +113,13 @@ public class BundledCompilationUnit implements ICompilationUnit {
 	 * 
 	 * @return The root node of this compilation units AST. Cannot be null.
 	 */
-	public ASTNode root() {
+	public ASTNode getRoot() {
 		return rootNode;
 	}
 	
-	public AST ast() {
+	public AST getAST() {
 		if (ast == null) {
-			ast = root().getAST();
+			ast = getRoot().getAST();
 		}
 		
 		return ast;
@@ -126,7 +128,7 @@ public class BundledCompilationUnit implements ICompilationUnit {
 	
 	ASTRewrite writer() {
 		if (writer == null) {
-			writer = ASTRewrite.create(ast());
+			writer = ASTRewrite.create(getAST());
 		}
 		
 		return writer;
@@ -202,6 +204,32 @@ public class BundledCompilationUnit implements ICompilationUnit {
 		imports().removeImport(qualifiedTypeName);
 	}
 	
+	/**
+	 * Creates and returns a new rewriter for describing modifications to the
+	 * given list property of the given node.
+	 *
+	 * @param node the node
+	 * @param property the node's property; the child list property
+	 * @return a new list rewriter object
+	 * 
+	 * @throws IllegalArgumentException if the node or property is null, or if the node
+	 * is not part of this rewriter's AST, or if the property is not a node property,
+	 * or if the described modification is invalid
+	 * 
+	 * @see ASTRewrite#getListRewrite(ASTNode, ChildListPropertyDescriptor)
+	 */
+	public ListRewrite getListRewrite(ASTNode node, ChildListPropertyDescriptor property) {
+		return writer().getListRewrite(node, property);		
+	}
+	
+	@SuppressWarnings("unchecked")
+	public <V extends ASTNode> V copyNode(V node) {
+		return (V) writer().createCopyTarget(node);		
+	}
+	
+	public void remove(ASTNode node) {
+		writer().remove(node, null);
+	}
 		
 	
 	public void applyChanges() throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
@@ -218,7 +246,7 @@ public class BundledCompilationUnit implements ICompilationUnit {
 		Document document = new Document( sourceCode );
 		compilationUnitChange.getEdit().apply( document );
 		
-		TextEdit importsEdit = imports.rewriteImports(null); //We can add a progress monitor here.
+		TextEdit importsEdit = imports().rewriteImports(null); //We can add a progress monitor here.
 		importsEdit.apply( document );
 		String newSourceCode = document.get();
 		

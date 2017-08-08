@@ -1,45 +1,26 @@
 package de.tudarmstadt.rxrefactoring.ext.asynctask.builders2;
 
-import java.util.List;
 import java.util.Objects;
 
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.IExtendedModifier;
-import org.eclipse.jdt.core.dom.IMethodBinding;
-import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.SimpleType;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.dom.Statement;
-import org.eclipse.jdt.core.dom.SuperMethodInvocation;
-import org.eclipse.jdt.core.dom.Type;
-import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
-import com.google.common.collect.Lists;
-
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
-import de.tudarmstadt.rxrefactoring.core.utils.Log;
-import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
-import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 
 public class AnonymousClassBuilder extends AbstractBuilder {
 
 	private Expression node;
 	
-	public AnonymousClassBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer) {		
-		super(asyncTask, writer);
+	public AnonymousClassBuilder(AsyncTaskWrapper asyncTask) {		
+		super(asyncTask);
 		
 		/*
 		 * Builds
@@ -52,17 +33,17 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 		 */
 		//Define type: Callable
 		ParameterizedType tCallable = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Callable"))); //Callable<>
-		tCallable.typeArguments().add(copy(asyncTask.getResultTypeOrVoid())); //Callable<T>
+		tCallable.typeArguments().add(unit.copyNode(asyncTask.getResultTypeOrVoid())); //Callable<T>
 		
 				
 		//Define method: call()
 		MethodDeclaration callMethod = ast.newMethodDeclaration();
 		callMethod.setName(ast.newSimpleName("call"));
-		callMethod.setReturnType2(copy(asyncTask.getResultType()));
+		callMethod.setReturnType2(unit.copyNode(asyncTask.getResultType()));
 		callMethod.thrownExceptionTypes().add(ast.newSimpleType(ast.newSimpleName("Exception")));
 		callMethod.modifiers().add(createOverrideAnnotation());
 		callMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
-		callMethod.setBody(copy(asyncTask.getDoInBackgroundBlock()));
+		callMethod.setBody(unit.copyNode(asyncTask.getDoInBackgroundBlock()));
 		
 		//Define anonymous class
 		AnonymousClassDeclaration classDecl = ast.newAnonymousClassDeclaration();
@@ -111,8 +92,8 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 		return getExpression();
 	}
 	
-	public static Expression from(AsyncTaskWrapper asyncTask, UnitWriter writer) {
-		AnonymousClassBuilder builder = new AnonymousClassBuilder(asyncTask, writer);
+	public static Expression from(AsyncTaskWrapper asyncTask) {
+		AnonymousClassBuilder builder = new AnonymousClassBuilder(asyncTask);
 		return builder.create();
 	}
 	
@@ -151,7 +132,7 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 		
 		//Define type: Action1
 		ParameterizedType tAction1 = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Action1"))); //Callable<>
-		tAction1.typeArguments().add(copy(asyncTask.getResultTypeOrVoid()));				
+		tAction1.typeArguments().add(unit.copyNode(asyncTask.getResultTypeOrVoid()));				
 		
 				
 		//Define method: call()
@@ -161,9 +142,9 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 		callMethod.modifiers().add(createOverrideAnnotation());		
 		callMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
 		
-		callMethod.parameters().add(copy(asyncTask.getPostExecuteParameter()));		
+		callMethod.parameters().add(unit.copyNode(asyncTask.getPostExecuteParameter()));		
 		
-		callMethod.setBody(copy(preprocessBlock(asyncTask.getOnPostExecuteBlock(), "onPostExecute")));
+		callMethod.setBody(unit.copyNode(preprocessBlock(asyncTask.getOnPostExecuteBlock(), "onPostExecute")));
 		
 		//Define anonymous class
 		AnonymousClassDeclaration classDecl = ast.newAnonymousClassDeclaration();
@@ -198,7 +179,7 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 	public AnonymousClassBuilder addDoOnCompleted() {
 		checkInitialized();
 		
-		node = invokeWithAction0(node, "doOnCompleted", preprocessBlock(copy(asyncTask.getOnPostExecuteBlock()), "onPostExecute"));
+		node = invokeWithAction0(node, "doOnCompleted", preprocessBlock(unit.copyNode(asyncTask.getOnPostExecuteBlock()), "onPostExecute"));
 		return this;
 	}
 	
@@ -214,7 +195,7 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 	public AnonymousClassBuilder addDoOnSubscribe() {	
 		checkInitialized();
 		
-		node = invokeWithAction0(node, "doOnSubscribe", preprocessBlock(copy(asyncTask.getOnPreExecuteBlock()), "onPreExecute"));
+		node = invokeWithAction0(node, "doOnSubscribe", preprocessBlock(unit.copyNode(asyncTask.getOnPreExecuteBlock()), "onPreExecute"));
 		return this;
 	}
 	
@@ -230,7 +211,7 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 	public AnonymousClassBuilder addDoOnUnsubscribe() {	
 		checkInitialized();
 
-		node = invokeWithAction0(node, "doOnUnsubscribe", preprocessBlock(copy(asyncTask.getOnCancelled()), "onCancelled"));
+		node = invokeWithAction0(node, "doOnUnsubscribe", preprocessBlock(unit.copyNode(asyncTask.getOnCancelled()), "onCancelled"));
 		return this;
 	}
 	

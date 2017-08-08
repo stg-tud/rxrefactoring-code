@@ -11,21 +11,20 @@ import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import de.tudarmstadt.rxrefactoring.core.codegen.IdManager;
-import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 
 public class ObservableMethodBuilder extends AbstractBuilder {
 	
 	private final String id;
 	
-	public ObservableMethodBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer, String id) {
-		super(asyncTask, writer);
+	public ObservableMethodBuilder(AsyncTaskWrapper asyncTask, String id) {
+		super(asyncTask);
 		Objects.requireNonNull(id);
 		this.id = id;	
 	}
 	
-	public ObservableMethodBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer) {
-		this(asyncTask, writer, IdManager.getNextObservableId(writer.getUnit().getElementName()));
+	public ObservableMethodBuilder(AsyncTaskWrapper asyncTask) {
+		this(asyncTask, IdManager.getNextObservableId(asyncTask.getUnit().getElementName()));
 	}
 		
 		
@@ -43,7 +42,7 @@ public class ObservableMethodBuilder extends AbstractBuilder {
 		method.setName(ast.newSimpleName(RefactorNames.CREATE_OBSERVABLE_METHOD_NAME));
 		//Construct return type Observable<T>
 		ParameterizedType returnType = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Observable")));
-		returnType.typeArguments().add(copy(asyncTask.getResultTypeOrVoid()));
+		returnType.typeArguments().add(unit.copyNode(asyncTask.getResultTypeOrVoid()));
 		method.setReturnType2(returnType);		
 		method.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
 		
@@ -53,10 +52,10 @@ public class ObservableMethodBuilder extends AbstractBuilder {
 		doInBackground.parameters().forEach(parameter -> {
 			SingleVariableDeclaration variable = (SingleVariableDeclaration) parameter;
 			
-			ListRewrite modifierRewrite = astRewrite.getListRewrite(variable, SingleVariableDeclaration.MODIFIERS2_PROPERTY);
+			ListRewrite modifierRewrite = unit.getListRewrite(variable, SingleVariableDeclaration.MODIFIERS2_PROPERTY);
 			modifierRewrite.insertFirst(ast.newModifier(ModifierKeyword.FINAL_KEYWORD), null);		
 		
-			method.parameters().add(copy(variable));
+			method.parameters().add(unit.copyNode(variable));
 			
 			return;
 		});
@@ -64,7 +63,7 @@ public class ObservableMethodBuilder extends AbstractBuilder {
 		//Build body of create
 		Block methodBody = ast.newBlock();
 		ReturnStatement returnStatement = ast.newReturnStatement();
-		returnStatement.setExpression(AnonymousClassBuilder.from(asyncTask, writer));		
+		returnStatement.setExpression(AnonymousClassBuilder.from(asyncTask));		
 		methodBody.statements().add(returnStatement);
 		method.setBody(methodBody);
 		

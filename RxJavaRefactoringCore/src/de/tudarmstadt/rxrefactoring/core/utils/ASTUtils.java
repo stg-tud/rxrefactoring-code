@@ -1,6 +1,9 @@
 package de.tudarmstadt.rxrefactoring.core.utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -22,15 +25,14 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.TryStatement;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.UnionType;
 
-import de.tudarmstadt.rxrefactoring.core.codegen.ASTNodeFactory;
-import de.tudarmstadt.rxrefactoring.core.utils.visitors.TryStatementVisitor;
+import de.tudarmstadt.rxrefactoring.core.logging.Log;
+import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnit;
 
 /**
  * Description: Util class for {@link ASTNode}s<br>
@@ -293,7 +295,7 @@ public final class ASTUtils
 			case SIGNATURE_UNMATCH : 
 				return false;
 			case SIGNATURE_UNAVAILABLE : 
-				Log.error(ASTUtils.class, "Note: methodbinding for " + inv.getName().getIdentifier() + " not available!");
+				//Log.error(ASTUtils.class, "Note: methodbinding for " + inv.getName().getIdentifier() + " not available!");
 				return inv.getName().getIdentifier().equals(methodName);
 			default :
 				throw new IllegalStateException("Unexpected return value from matchSignature.");
@@ -552,28 +554,29 @@ public final class ASTUtils
 	 * @param <V>
 	 *            new node type
 	 */
-	public static void replaceInStatement( ASTNode originalNode, ASTNode newNode )
-	{
-		Block block = ASTUtils.findParent( originalNode, Block.class );
-		if ( block != null )
-		{
-			String originalNodeString = originalNode.toString();
-			String newNodeString = newNode.toString();
-
-			ASTNode originalStatement = originalNode;
-			if ( !( originalNode instanceof Statement ) )
-			{
-				originalStatement = ASTUtils.findParent( originalNode, Statement.class );
-			}
-			String originalStatementString = originalStatement.toString();
-			String newStatementString = originalStatementString.replace( originalNodeString, newNodeString );
-			Statement newStatement = ASTNodeFactory.createSingleStatementFromText( block.getAST(), newStatementString );
-
-			int position = block.statements().indexOf( originalStatement );
-			originalStatement.delete();
-			block.statements().add( position, newStatement );
-		}
-	}
+//	@Deprecated
+//	public static void replaceInStatement( ASTNode originalNode, ASTNode newNode )
+//	{
+//		Block block = ASTUtils.findParent( originalNode, Block.class );
+//		if ( block != null )
+//		{
+//			String originalNodeString = originalNode.toString();
+//			String newNodeString = newNode.toString();
+//
+//			ASTNode originalStatement = originalNode;
+//			if ( !( originalNode instanceof Statement ) )
+//			{
+//				originalStatement = ASTUtils.findParent( originalNode, Statement.class );
+//			}
+//			String originalStatementString = originalStatement.toString();
+//			String newStatementString = originalStatementString.replace( originalNodeString, newNodeString );
+//			Statement newStatement = ASTNodeFactory.createSingleStatementFromText( block.getAST(), newStatementString );
+//
+//			int position = block.statements().indexOf( originalStatement );
+//			originalStatement.delete();
+//			block.statements().add( position, newStatement );
+//		}
+//	}
 
 	/**
 	 * Removes all "super." char sequences from a given node. The node
@@ -584,13 +587,14 @@ public final class ASTUtils
 	 * @param <T>
 	 *            type of the node
 	 */
-	public static <T extends ASTNode> void removeSuperKeywordInStatement( T node )
-	{
-		Statement statement = ASTUtils.findParent( node, Statement.class );
-		String newStatementString = statement.toString().replace( "super.", "" );
-		Statement newStatement = ASTNodeFactory.createSingleStatementFromText( node.getAST(), newStatementString );
-		replaceInStatement( statement, newStatement );
-	}
+	
+//	public static <T extends ASTNode> void removeSuperKeywordInStatement( T node )
+//	{
+//		Statement statement = ASTUtils.findParent( node, Statement.class );
+//		String newStatementString = statement.toString().replace( "super.", "" );
+//		Statement newStatement = ASTNodeFactory.createSingleStatementFromText( node.getAST(), newStatementString );
+//		replaceInStatement( statement, newStatement );
+//	}
 
 	/**
 	 * Clones node remove the original parent, so the node can be added to
@@ -605,14 +609,15 @@ public final class ASTUtils
 	 *            type of the node inferred by the argument
 	 * @return a clone of type T without parent
 	 */
-	public static <T extends ASTNode> T clone( T node )
-	{
-		if ( node == null )
-		{
-			return null;
-		}
-		return (T) ASTNode.copySubtree( node.getAST(), node );
-	}
+//	@Deprecated
+//	public static <T extends ASTNode> T clone( T node )
+//	{
+//		if ( node == null )
+//		{
+//			return null;
+//		}
+//		return (T) ASTNode.copySubtree( node.getAST(), node );
+//	}
 
 	/**
 	 * Clones node remove the original parent, so the node can be added to
@@ -625,15 +630,15 @@ public final class ASTUtils
 	 *            node object. It must be castable to {@link ASTNode}
 	 * @return a clone of type {@link ASTNode} withot parent
 	 */
-	public static ASTNode clone( Object astNode )
-	{
-		if ( astNode == null )
-		{
-			return null;
-		}
-		ASTNode node = (ASTNode) astNode;
-		return clone( node );
-	}
+//	public static ASTNode clone( Object astNode )
+//	{
+//		if ( astNode == null )
+//		{
+//			return null;
+//		}
+//		ASTNode node = (ASTNode) astNode;
+//		return clone( node );
+//	}
 
 	/**
 	 * Replaces a node by a given block. The node must already be contained in a
@@ -649,23 +654,23 @@ public final class ASTUtils
 	 * @param <T>
 	 *            type of the node to be replaced
 	 */
-	public static <T extends ASTNode> void replaceByBlock( T node, Block block )
-	{
-		if ( node != null && block != null )
-		{
-			Block parentBlock = ASTUtils.findParent( node, Block.class );
-			if ( parentBlock == null )
-			{
-				throw new IllegalArgumentException( "The node " + node.toString() + " must be inside of a AST Block" );
-			}
-			int nodePosition = parentBlock.statements().indexOf( node );
-			node.delete();
-			for ( Object statementObject : block.statements() )
-			{
-				parentBlock.statements().add( nodePosition++, ASTUtils.clone( statementObject ) );
-			}
-		}
-	}
+//	public static <T extends ASTNode> void replaceByBlock( T node, Block block )
+//	{
+//		if ( node != null && block != null )
+//		{
+//			Block parentBlock = ASTUtils.findParent( node, Block.class );
+//			if ( parentBlock == null )
+//			{
+//				throw new IllegalArgumentException( "The node " + node.toString() + " must be inside of a AST Block" );
+//			}
+//			int nodePosition = parentBlock.statements().indexOf( node );
+//			node.delete();
+//			for ( Object statementObject : block.statements() )
+//			{
+//				parentBlock.statements().add( nodePosition++, ASTUtils.clone( statementObject ) );
+//			}
+//		}
+//	}
 
 	/**
 	 * Checks what exceptions are thrown inside of try-catch blocks and removes
@@ -674,8 +679,125 @@ public final class ASTUtils
 	 * @param block
 	 *            the block where the try-catch blocks are found
 	 */
-	public static void removeUnnecessaryCatchClauses( Block block )
+	public static void removeUnnecessaryCatchClauses(BundledCompilationUnit unit, Block block)
 	{
+		
+		class TryStatementVisitor extends ASTVisitor
+		{
+			private Map<TryStatement, Set<ITypeBinding>> neededExceptionsTypesMap;
+			private Map<TryStatement, Map<ITypeBinding, CatchClause>> caughtExceptionsMap;
+			private Map<TryStatement, Block> tryBodyMap;
+
+			public TryStatementVisitor()
+			{
+				neededExceptionsTypesMap = new HashMap<>();
+				caughtExceptionsMap = new HashMap<>();
+				tryBodyMap = new HashMap<>();
+			}
+
+			@Override
+			public boolean visit( TryStatement node )
+			{
+				TryBodyVisitor tryBodyVisitor = new TryBodyVisitor();
+				TryCatchClausesVisitor tryCatchClausesVisitor = new TryCatchClausesVisitor();
+				node.accept( tryBodyVisitor );
+				node.accept( tryCatchClausesVisitor );
+				neededExceptionsTypesMap.put( node, tryBodyVisitor.getNeededExceptionsTypes() );
+				caughtExceptionsMap.put( node, tryCatchClausesVisitor.getCaughtExceptionsMap() );
+				tryBodyMap.put( node, unit.copyNode( node.getBody() ) );
+				return true;
+			}
+
+			public Map<TryStatement, Set<ITypeBinding>> getNeededExceptionsTypesMap()
+			{
+				return neededExceptionsTypesMap;
+			}
+
+			public Map<TryStatement, Map<ITypeBinding, CatchClause>> getCaughtExceptionsMap()
+			{
+				return caughtExceptionsMap;
+			}
+
+			public Map<TryStatement, Block> getTryBodyMap()
+			{
+				return tryBodyMap;
+			}
+			
+			
+			/**
+			 * Description: Analyzes the body of a try catch block<br>
+			 * Author: Grebiel Jose Ifill Brito<br>
+			 * Created: 11/17/2016
+			 */
+			class TryBodyVisitor extends ASTVisitor
+			{
+				private Set<ITypeBinding> neededExceptionsTypes;
+
+				TryBodyVisitor()
+				{
+					neededExceptionsTypes = new HashSet<>();
+				}
+
+				@Override
+				public boolean visit( MethodInvocation node )
+				{
+					if ( isInTryBlock( node ) )
+					{
+						IMethodBinding methodBinding = node.resolveMethodBinding();
+						if ( methodBinding != null )
+						{
+							ITypeBinding[] exceptionTypes = methodBinding.getExceptionTypes();
+							neededExceptionsTypes.addAll( Arrays.asList( exceptionTypes ) );
+						}
+					}
+					return true;
+				}
+
+				Set<ITypeBinding> getNeededExceptionsTypes()
+				{
+					return neededExceptionsTypes;
+				}
+
+				private boolean isInTryBlock( MethodInvocation node )
+				{
+					return ASTUtils.findParent( node, CatchClause.class ) == null;
+				}
+			}
+			
+			
+			/**
+			 * Analyzes the catch clauses of a try-catch block.
+			 * 
+			 * @author grebiel, mirko
+			 *
+			 */
+			class TryCatchClausesVisitor extends ASTVisitor
+			{
+				private Map<ITypeBinding, CatchClause> caughtExceptionsMap;
+
+				TryCatchClausesVisitor()
+				{
+					caughtExceptionsMap = new HashMap<>();
+				}
+
+				@Override
+				public boolean visit( CatchClause node )
+				{
+					SingleVariableDeclaration exception = node.getException();
+					Type exceptionType = exception.getType();
+					ITypeBinding exceptionTypeBinding = exceptionType.resolveBinding();
+					caughtExceptionsMap.put( exceptionTypeBinding, node );
+					return true;
+				}
+
+				Map<ITypeBinding, CatchClause> getCaughtExceptionsMap()
+				{
+					return caughtExceptionsMap;
+				}
+			}
+
+		}
+		
 		if ( block != null )
 		{
 			TryStatementVisitor tryStatementVisitor = new TryStatementVisitor();
@@ -693,7 +815,8 @@ public final class ASTUtils
 				if ( catchClausesNeeded( neededExceptionsTypes, caughtExceptionsMap ) )
 				{
 					Block tryBody = tryBodyMap.get( tryStatement );
-					ASTUtils.replaceByBlock( tryStatement, tryBody );
+					//TODO: flatten block into other block here
+					unit.replace( tryStatement, tryBody );
 				}
 				else
 				{

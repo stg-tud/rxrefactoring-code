@@ -4,23 +4,12 @@ import java.util.Objects;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
-import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IExtendedModifier;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
-import org.eclipse.jdt.core.dom.ParameterizedType;
-import org.eclipse.jdt.core.dom.ReturnStatement;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
-import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import de.tudarmstadt.rxrefactoring.core.codegen.IdManager;
-import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 
 /**
@@ -50,8 +39,8 @@ public class InnerClassBuilder extends AbstractBuilder {
 	 * the async task resides.
 	 */
 	@SuppressWarnings("unchecked")
-	public InnerClassBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer, String id) {
-		super(asyncTask, writer);		
+	public InnerClassBuilder(AsyncTaskWrapper asyncTask, String id) {
+		super(asyncTask);		
 		this.id = id;
 		
 		/* 
@@ -82,25 +71,25 @@ public class InnerClassBuilder extends AbstractBuilder {
 		
 		asyncTask.getModifiers().forEach(x -> {
 			if (((IExtendedModifier) x).isModifier()) {
-				observableType.modifiers().add(copy((ASTNode) x));
+				observableType.modifiers().add(unit.copyNode((ASTNode) x));
 			}
 		});
 		//observableType.modifiers().add(ast.newModifier(ModifierKeyword.PRIVATE_KEYWORD));
 		
 		//Add field and additional method declarations
-		asyncTask.getFieldDeclarations().forEach(x -> observableType.bodyDeclarations().add(copy(x)));
-		asyncTask.getAdditionalMethodDeclarations().forEach(x -> observableType.bodyDeclarations().add(copy(x)));
+		asyncTask.getFieldDeclarations().forEach(x -> observableType.bodyDeclarations().add(unit.copyNode(x)));
+		asyncTask.getAdditionalMethodDeclarations().forEach(x -> observableType.bodyDeclarations().add(unit.copyNode(x)));
 		
 		
 		//Define method: create
-		ObservableMethodBuilder builder = new ObservableMethodBuilder(asyncTask, writer, id);
+		ObservableMethodBuilder builder = new ObservableMethodBuilder(asyncTask, id);
 		observableType.bodyDeclarations().add(builder.buildCreateMethod());
 		
 		node = observableType;
 	}
 	
-	public InnerClassBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer) {
-		this(asyncTask, writer, IdManager.getNextObservableId(writer.getUnit().getElementName()));
+	public InnerClassBuilder(AsyncTaskWrapper asyncTask) {
+		this(asyncTask, IdManager.getNextObservableId(asyncTask.getUnit().getElementName()));
 	}
 
 	
@@ -121,7 +110,7 @@ public class InnerClassBuilder extends AbstractBuilder {
 	 * }
 	 */ 
 	public TypeDeclaration buildInnerClass() {
-		return buildInnerClassWithSubscriber(new SubscriberBuilder(asyncTask, writer, getId()));
+		return buildInnerClassWithSubscriber(new SubscriberBuilder(asyncTask, getId()));
 	} 
 	
 	public TypeDeclaration buildInnerClassWithSubscriber(SubscriberBuilder builder) {
@@ -181,9 +170,9 @@ public class InnerClassBuilder extends AbstractBuilder {
 	 * 
 	 */
 	
-	public void replaceClassInstanceCreationsIn(UnitWriter writer) {
-		AST ast = writer.getAST();
-	}
+//	public void replaceClassInstanceCreationsIn() {
+//		AST ast = writer.getAST();
+//	}
 	
 	
 	

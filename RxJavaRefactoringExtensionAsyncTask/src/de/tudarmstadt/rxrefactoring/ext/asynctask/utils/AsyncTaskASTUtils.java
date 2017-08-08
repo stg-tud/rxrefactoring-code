@@ -13,20 +13,17 @@ import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.ThisExpression;
-import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.internal.corext.dom.Bindings;
 
 import com.google.common.collect.Sets;
 
+import de.tudarmstadt.rxrefactoring.core.logging.Log;
+import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
-import de.tudarmstadt.rxrefactoring.core.utils.Log;
-import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
 
 /**
  * Description: <br>
@@ -84,7 +81,7 @@ public class AsyncTaskASTUtils {
 		return result;
 	}
 
-	public static void replaceFieldsWithFullyQualifiedNameIn(ASTNode root, UnitWriter writer) {
+	public static void replaceFieldsWithFullyQualifiedNameIn(ASTNode root, BundledCompilationUnit unit) {
 
 		class FieldsVisitor extends ASTVisitor {
 			@Override
@@ -132,15 +129,15 @@ public class AsyncTaskASTUtils {
 						Log.info(getClass(), "Replace field...");
 						//variableName.setIdentifier(variable.getDeclaringClass().getQualifiedName() + ".this." + variableName);
 						
-						ThisExpression thisExp = writer.getAST().newThisExpression();
-						thisExp.setQualifier(writer.getAST().newName(variable.getDeclaringClass().getName()));
+						ThisExpression thisExp = unit.getAST().newThisExpression();
+						thisExp.setQualifier(unit.getAST().newName(variable.getDeclaringClass().getName()));
 						
-						FieldAccess fa = writer.getAST().newFieldAccess();
-						fa.setName(writer.getAST().newSimpleName(variableName.getIdentifier()));
+						FieldAccess fa = unit.getAST().newFieldAccess();
+						fa.setName(unit.getAST().newSimpleName(variableName.getIdentifier()));
 						fa.setExpression(thisExp);						
 						
 						
-						writer.replace(variableName, fa);
+						unit.replace(variableName, fa);
 						
 						
 					}

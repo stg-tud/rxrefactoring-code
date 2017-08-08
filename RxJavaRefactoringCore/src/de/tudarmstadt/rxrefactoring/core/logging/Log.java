@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core.utils;
+package de.tudarmstadt.rxrefactoring.core.logging;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -80,6 +80,12 @@ public final class Log {
 	
 	public static void errorInClient(Class<?> cls, Throwable throwable) {
 		error(PLUGIN_INFO, cls, "An error occured:", throwable);
+	}
+	
+	public static void handleException(Class<?> cls, String when, Throwable throwable) {
+		info(cls, "### ERROR DURING " + when + " ###");
+		throwable.printStackTrace(INFO);
+		info(cls, "### FINISH ###");
 	}
 		
 	private static String convertClassName(Class<?> cls) {

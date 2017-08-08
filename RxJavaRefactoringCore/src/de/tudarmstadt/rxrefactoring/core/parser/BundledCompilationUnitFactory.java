@@ -1,10 +1,7 @@
 package de.tudarmstadt.rxrefactoring.core.parser;
 
-import java.util.HashMap;
-
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 
 public class BundledCompilationUnitFactory {

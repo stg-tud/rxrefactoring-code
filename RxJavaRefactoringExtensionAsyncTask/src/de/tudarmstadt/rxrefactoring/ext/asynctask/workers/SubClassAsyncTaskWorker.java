@@ -4,9 +4,7 @@
 package de.tudarmstadt.rxrefactoring.ext.asynctask.workers;
 
 import java.util.Collection;
-import java.util.Map.Entry;
 
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -17,24 +15,22 @@ import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import com.google.common.collect.Multimap;
 
+import de.tudarmstadt.rxrefactoring.core.logging.Log;
+import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.parser.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
-import de.tudarmstadt.rxrefactoring.core.utils.Log;
-import de.tudarmstadt.rxrefactoring.core.workers.AbstractWorker;
-import de.tudarmstadt.rxrefactoring.core.workers.WorkerStatus;
-import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
-import de.tudarmstadt.rxrefactoring.core.writers.UnitWriters;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
+import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders2.InnerClassBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders2.RefactorNames;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders2.SubscriberBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.collect.AsyncTaskCollector;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
-import de.tudarmstadt.rxrefactoring.ext.asynctask.writers.UnitWriterExt;
 
 
 /**
@@ -44,7 +40,7 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.writers.UnitWriterExt;
  * Author: Ram<br>
  * Created: 11/12/2016
  */
-public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> implements WorkerEnvironment {
+public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>, WorkerEnvironment {
 	final String SUBSCRIPTION = "Subscription";
 	final String EXECUTE = "execute";
 	final String EXECUTE_ON_EXECUTOR = "executeOnExecutor";
@@ -69,26 +65,20 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 		return numOfAbstractClasses;
 	}
 
-	public SubClassAsyncTaskWorker(AsyncTaskCollector collector) {
-		super(collector);
-	}
 
 	@Override
-	public WorkerStatus refactor() {
+	public Void refactor(ProjectUnits units, AsyncTaskCollector collector, WorkerSummary summary) throws Exception {
+		
 		//Reset counters
 		numOfAsyncTasks = 0;
 		numOfAbstractClasses = 0;
 		
-		Multimap<ICompilationUnit, TypeDeclaration> cuAnonymousClassesMap = collector.getSubclasses();
-		int numCunits = collector.getNumberOfCompilationUnits();
-		monitor.beginTask(getClass().getSimpleName(), numCunits);
-		Log.info(getClass(), "METHOD=refactor - Number of compilation units: " + numCunits);
+		Multimap<BundledCompilationUnit, TypeDeclaration> cuAnonymousClassesMap = collector.getSubclasses();
 
-		for (ICompilationUnit unit : cuAnonymousClassesMap.keySet()) {
+		for (BundledCompilationUnit unit : cuAnonymousClassesMap.keySet()) {
 			Collection<TypeDeclaration> declarations = cuAnonymousClassesMap.get(unit);
 			for (TypeDeclaration asyncTaskDeclaration : declarations) {
 
-				Log.info(getClass(), "METHOD=refactor - Extract Information from AsyncTask: " + unit.getElementName());
 				AsyncTaskWrapper asyncTask = new AsyncTaskWrapper(asyncTaskDeclaration, unit);
 
 				if (asyncTask.getDoInBackgroundBlock() == null) {
@@ -97,39 +87,33 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 				}
 
 				AST ast = asyncTaskDeclaration.getAST();
-				ASTNode root = collector.getRootNode(unit);
-				UnitWriterExt writer = UnitWriters.getOrPut(unit,
-						() -> new UnitWriterExt(unit, ast));
-				
+				ASTNode root = unit.getRoot();
+							
 				
 				
 				updateUsage(collector.getRelevantUsages(), ast, asyncTaskDeclaration, unit);
-				writer.removeSuperClass(asyncTaskDeclaration);
+				removeSuperClass(unit, asyncTaskDeclaration);
 				
 				Log.info(getClass(), "METHOD=refactor - Updating imports: " + unit.getElementName());
-				updateImports(writer, asyncTask);
-				createLocalObservable(asyncTask, writer, asyncTaskDeclaration, root);
+				updateImports(asyncTask);
+				createLocalObservable(asyncTask, asyncTaskDeclaration, root);
 				//addProgressBlock(ast, unit, asyncTask, writer);
 				
-				Log.info(getClass(), "METHOD=refactor - Refactoring class: " + unit.getElementName());
 				
-				numOfAsyncTasks++;
-				execution.addUnitWriter(writer);
 			}
 
-			monitor.worked(1);
 		}
 		Log.info(getClass(), "Number of AsynckTasks Subclass=  " + numOfAsyncTasks);
 		Log.info(getClass(), "Number of Abstract AsynckTasks Subclass=  " + numOfAbstractClasses);
 
-		return WorkerStatus.OK;
+		return null;
 	}
 
-	private void updateUsage(Multimap<ICompilationUnit, MethodInvocation> relevantUsages, AST ast,
-			TypeDeclaration asyncTaskDeclaration, ICompilationUnit unit) {
+	private void updateUsage(Multimap<BundledCompilationUnit, MethodInvocation> relevantUsages, AST ast,
+			TypeDeclaration asyncTaskDeclaration, BundledCompilationUnit unit) {
 		
 		
-		for (ICompilationUnit usageUnit : relevantUsages.keySet()) {
+		for (BundledCompilationUnit usageUnit : relevantUsages.keySet()) {
 			TypeDeclaration tyDec = ast.newTypeDeclaration();
 
 			Log.info(getClass(), "METHOD=updateUsage - updating usage for class: " + unit.getElementName() + " in "
@@ -140,14 +124,12 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 						|| methodInvoke.getName().toString().equals(EXECUTE_ON_EXECUTOR)) {
 
 					if (unit.getElementName().equals(usageUnit.getElementName())) {
-						UnitWriterExt writer = UnitWriters.getOrPut(unit, () -> new UnitWriterExt(unit, ast));
-						replaceCancel(writer, relevantUsages, methodInvoke, unit, ast);
+						
+						replaceCancel(relevantUsages, methodInvoke, unit, ast);
 					} else {
 						tyDec = ASTUtils.findParent(methodInvoke, TypeDeclaration.class);
-						AST astInvoke = tyDec.getAST();
-						UnitWriterExt writer = UnitWriters.getOrPut(usageUnit, () -> new UnitWriterExt(usageUnit, astInvoke));
-						replaceCancel(writer, relevantUsages, methodInvoke, usageUnit, astInvoke);
-						execution.addUnitWriter(writer);
+						AST astInvoke = tyDec.getAST();						
+						replaceCancel(relevantUsages, methodInvoke, usageUnit, astInvoke);
 					}
 
 				}
@@ -160,8 +142,8 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 	/**
 	 * Replace asyncTask.cancel() method with Subscription.unsubscribe()
 	 */
-	void replaceCancel(UnitWriterExt writer, Multimap<ICompilationUnit, MethodInvocation> relevantUsages, MethodInvocation methodInvoke,
-			ICompilationUnit unit, AST astInvoke) {
+	void replaceCancel(Multimap<BundledCompilationUnit, MethodInvocation> relevantUsages, MethodInvocation methodInvoke,
+			BundledCompilationUnit unit, AST astInvoke) {
 		
 		
 		
@@ -173,15 +155,15 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 					isCancelPresent = true;
 					Log.info(getClass(), "METHOD=replaceCancel - updating cancel invocation for class: "
 							+ unit.getElementName());
-					replaceExecuteWithSubscription(writer, methodInvoke, astInvoke);
-					updateCancelInvocation(writer, methodReference, astInvoke);
+					replaceExecuteWithSubscription(unit, methodInvoke, astInvoke);
+					updateCancelInvocation(unit, methodReference, astInvoke);
 
 				}
 			}			
 		}
 		
 		if (!isCancelPresent) {
-			replaceExecute(writer, methodInvoke, unit, astInvoke);
+			replaceExecute(unit, methodInvoke, astInvoke);
 		}
 	}
 
@@ -189,7 +171,7 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 	 * Method to refactor method invocation statements with name execute EX: new
 	 * Task().execute();
 	 */
-	void replaceExecute(UnitWriterExt writer, MethodInvocation methodInvoke, ICompilationUnit unit, AST astInvoke) {
+	void replaceExecute(BundledCompilationUnit unit, MethodInvocation methodInvoke, AST astInvoke) {
 
 		AST methodAST = methodInvoke.getAST();
 		MethodInvocation execute = (MethodInvocation) ASTNode.copySubtree(methodAST, methodInvoke);
@@ -202,7 +184,7 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 		invocation.setExpression(execute);
 		invocation.setName(methodAST.newSimpleName(SUBSCRIBE));
 		// ASTUtil.replaceInStatement(methodInvoke, invocation);
-		writer.replace(methodInvoke, invocation);
+		unit.replace(methodInvoke, invocation);
 		// singleChangeWriter.replace(methodInvoke, invocation);
 	}
 
@@ -210,13 +192,11 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 	 * Method to refactor method invocation statements with name execute EX: new
 	 * Task().execute();
 	 */
-	void replaceExecuteWithSubscription(UnitWriterExt writer, MethodInvocation methodInvoke, AST astInvoke) {
+	void replaceExecuteWithSubscription(BundledCompilationUnit unit, MethodInvocation methodInvoke, AST astInvoke) {
 
 
-		Log.info(getClass(), "METHOD=replaceExecuteWithSubscription - replace Execute With Subscription for class: "
-				+ writer.getUnit().getElementName());
-		
-		createSubscriptionDeclaration(writer, methodInvoke);
+	
+		createSubscriptionDeclaration(unit, methodInvoke);
 
 		MethodInvocation execute = (MethodInvocation) ASTNode.copySubtree(astInvoke, methodInvoke);
 		execute.setName(astInvoke.newSimpleName(RefactorNames.CREATE_OBSERVABLE_METHOD_NAME));
@@ -229,10 +209,10 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 		initSubscription
 				.setLeftHandSide(astInvoke.newSimpleName(getVariableName(methodInvoke.getExpression()) + SUBSCRIPTION));
 		initSubscription.setRightHandSide(invocation);
-		writer.replace(methodInvoke, initSubscription);
+		unit.replace(methodInvoke, initSubscription);
 	}
 
-	void createSubscriptionDeclaration(UnitWriterExt writer, MethodInvocation methodInvoke) {
+	void createSubscriptionDeclaration(BundledCompilationUnit unit, MethodInvocation methodInvoke) {
 
 		
 		TypeDeclaration tyDec = ASTUtils.findParent(methodInvoke, TypeDeclaration.class);
@@ -245,8 +225,9 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 
 		FieldDeclaration subscription = astInvoke.newFieldDeclaration(variable);
 		subscription.setType(astInvoke.newSimpleType(astInvoke.newSimpleName(SUBSCRIPTION)));
-		writer.addStatementToClass(subscription, tyDec);
-		writer.addImport("rx.Subscription");
+		
+		addStatementToClass(unit, subscription, tyDec);
+		unit.addImport("rx.Subscription");
 	}
 
 	private String getVariableName(Expression e) {
@@ -259,68 +240,69 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 	/**
 	 * Add cancel method if AsyncTask.cacel() method was invoked
 	 */
-	private void updateCancelInvocation(UnitWriterExt writer, MethodInvocation methodInvoke, AST astInvoke) {
+	private void updateCancelInvocation(BundledCompilationUnit unit, MethodInvocation methodInvoke, AST astInvoke) {
 
-		Log.info(getClass(),
-				"METHOD=updateCancelInvocation - update Cancel Invocation for class: " + writer.getUnit().getElementName());
 		MethodInvocation unSubscribe = astInvoke.newMethodInvocation();
 		unSubscribe
 				.setExpression(astInvoke.newSimpleName(getVariableName(methodInvoke.getExpression()) + SUBSCRIPTION));
 		unSubscribe.setName(astInvoke.newSimpleName(UN_SUBSCRIBE));
-		writer.replace(methodInvoke, unSubscribe);
+		unit.replace(methodInvoke, unSubscribe);
 
 	}
 
-	private void updateImports(UnitWriterExt rewriter, AsyncTaskWrapper asyncTask) {
-		rewriter.addImport("rx.Observable");
-		rewriter.addImport("rx.schedulers.Schedulers");
-		rewriter.addImport("java.util.concurrent.Callable");
+	private void updateImports(AsyncTaskWrapper asyncTask) {
+		
+		BundledCompilationUnit unit = asyncTask.getUnit();
+		
+		unit.addImport("rx.Observable");
+		unit.addImport("rx.schedulers.Schedulers");
+		unit.addImport("java.util.concurrent.Callable");
 
 		if (numOfAbstractClasses == 0) {
-			rewriter.removeImport("android.os.AsyncTask");
+			unit.removeImport("android.os.AsyncTask");
 		}
 
 		if (asyncTask.getOnPostExecuteBlock() != null) {
-			rewriter.addImport("rx.functions.Action1");
-			rewriter.removeImport("java.util.concurrent.ExecutionException");
-			rewriter.removeImport("java.util.concurrent.TimeoutException");
+			unit.addImport("rx.functions.Action1");
+			unit.removeImport("java.util.concurrent.ExecutionException");
+			unit.removeImport("java.util.concurrent.TimeoutException");
 
 		}
 
 		if (asyncTask.getDoInBackgroundBlock() != null) {
-			rewriter.addImport("rx.Subscriber");
-			rewriter.addImport("java.util.Arrays");
-			rewriter.addImport("rx.Subscription");
-			rewriter.addImport("rx.functions.Action1");
+			unit.addImport("rx.Subscriber");
+			unit.addImport("java.util.Arrays");
+			unit.addImport("rx.Subscription");
+			unit.addImport("rx.functions.Action1");
 		}
 
 		if (asyncTask.getOnProgressUpdateBlock() != null) {
-			rewriter.addImport("java.util.Arrays");
+			unit.addImport("java.util.Arrays");
 		}
 
 		if (asyncTask.getOnCancelled() != null) {
-			rewriter.addImport("rx.functions.Action0");
+			unit.addImport("rx.functions.Action0");
 		}
 
 		if (asyncTask.getOnPreExecuteBlock() != null) {
-			rewriter.addImport("rx.functions.Action0");
+			unit.addImport("rx.functions.Action0");
 		}
 	}
 
-	private void createLocalObservable(AsyncTaskWrapper asyncTask, UnitWriterExt writer, TypeDeclaration taskObject, ASTNode root) {
+	private void createLocalObservable(AsyncTaskWrapper asyncTask, TypeDeclaration taskObject, ASTNode root) {
 		
 		//replacePublishInvocations(asyncTask, rewriter);
 		
-		SubscriberBuilder subscriberBuilder = new SubscriberBuilder(asyncTask, writer);
-		InnerClassBuilder innerClassBuilder = new InnerClassBuilder(asyncTask, writer, subscriberBuilder.getId());
+		SubscriberBuilder subscriberBuilder = new SubscriberBuilder(asyncTask);
+		InnerClassBuilder innerClassBuilder = new InnerClassBuilder(asyncTask, subscriberBuilder.getId());
 		
 		TypeDeclaration typeDecl = innerClassBuilder.buildInnerClassWithSubscriber(subscriberBuilder);
 		if (asyncTask.hasProgressUpdate()) {
-			replacePublishInvocations(asyncTask, writer, subscriberBuilder);
+			replacePublishInvocations(asyncTask, subscriberBuilder);
 		}
 		
 				
-		writer.replace(taskObject, typeDecl);
+		asyncTask.getUnit().replace(taskObject, typeDecl);
 		//replaceInstanceCreations(writer, innerClassBuilder, taskObject, root);
 		
 		//Define method
@@ -348,7 +330,7 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 	
 	}
 	
-	private void replaceInstanceCreations(UnitWriter writer, InnerClassBuilder builder, TypeDeclaration oldClass, ASTNode root) {
+	private void replaceInstanceCreations(BundledCompilationUnit unit, InnerClassBuilder builder, TypeDeclaration oldClass, ASTNode root) {
 		
 		
 		final ITypeBinding oldClassType = oldClass.resolveBinding();
@@ -371,7 +353,7 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 				//if (ASTUtils.isTypeOf(node.getType(), oldClassType)) {
 				if (type.getQualifiedName().equals(oldClassType.getQualifiedName())) {
 					System.out.println("Test");
-					writer.replace(node, builder.buildNewObservableWrapper());
+					unit.replace(node, builder.buildNewObservableWrapper());
 				}					
 				
 				return true;
@@ -382,7 +364,7 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 		//TODO: This only looks for subclasses that have been found until now. 
 		root.accept(new ClassInstanceCreationVisitor()); 
 		
-//		for (Entry<ICompilationUnit, ASTNode> entry : collector.getRootNodes().entrySet()) {
+//		for (Entry<BundledCompilationUnit, ASTNode> entry : collector.getRootNodes().entrySet()) {
 //			
 //			UnitWriter writer = UnitWriters.getOrPut(entry.getKey(), () -> new UnitWriterExt(entry.getKey(), entry.getValue().getAST()));
 //			
@@ -395,6 +377,8 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 		
 		
 	}
+
+
 
 
 //	private Expression createObservable(AsyncTaskWrapper asyncTask, UnitWriter writer) {
@@ -453,7 +437,7 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 //	/**
 //	 * If onUpdateProgressmethod exist method will add a new method to class
 //	 */
-//	private void addProgressBlock(AST ast, ICompilationUnit unit, AsyncTaskWrapper asyncTask,
+//	private void addProgressBlock(AST ast, BundledCompilationUnit unit, AsyncTaskWrapper asyncTask,
 //			UnitWriterExt singleChangeWriter) {
 //
 //		if (asyncTask.getOnProgressUpdateBlock() != null) {
@@ -525,11 +509,11 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 //	protected WorkerStatus refactor()
 //	{
 //		NUMBER_OF_ASYNC_TASKS = 0;
-//		Map<ICompilationUnit, List<TypeDeclaration>> cuAnonymousClassesMap = collector.getCuSubclassesMap();
+//		Map<BundledCompilationUnit, List<TypeDeclaration>> cuAnonymousClassesMap = collector.getCuSubclassesMap();
 //		int numCunits = collector.getNumberOfCompilationUnits();
 //		monitor.beginTask( getClass().getSimpleName(), numCunits );
 //		RxLogger.info( this, "METHOD=refactor - Number of compilation units: " + numCunits );
-//		for ( ICompilationUnit icu : cuAnonymousClassesMap.keySet() )
+//		for ( BundledCompilationUnit icu : cuAnonymousClassesMap.keySet() )
 //		{
 //			List<TypeDeclaration> declarations = cuAnonymousClassesMap.get( icu );
 //			for ( TypeDeclaration asyncTaskDeclaration : declarations )
@@ -569,11 +553,11 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 //		return WorkerStatus.OK;
 //	}
 //
-//	private void updateUsage( Map<ICompilationUnit, List<MethodInvocation>> cuRelevantUsagesMap, AST ast,
+//	private void updateUsage( Map<BundledCompilationUnit, List<MethodInvocation>> cuRelevantUsagesMap, AST ast,
 //			SingleUnitExtensionWriter SingleUnitExtensionWriter, TypeDeclaration asyncTaskDeclaration,
-//			ICompilationUnit icuOuter )
+//			BundledCompilationUnit icuOuter )
 //	{
-//		for ( ICompilationUnit icu : cuRelevantUsagesMap.keySet() )
+//		for ( BundledCompilationUnit icu : cuRelevantUsagesMap.keySet() )
 //		{
 //			TypeDeclaration tyDec = ast.newTypeDeclaration();
 //			SingleUnitExtensionWriter singleChangeWriterNew = null;
@@ -607,8 +591,8 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 //	/**
 //	 * Replace asyncTask.cancel() method with Subscription.unsubscribe()
 //	 */
-//	void replaceCancel( Map<ICompilationUnit, List<MethodInvocation>> cuRelevantUsagesMap, MethodInvocation methodInvoke,
-//			ICompilationUnit icu, AST astInvoke )
+//	void replaceCancel( Map<BundledCompilationUnit, List<MethodInvocation>> cuRelevantUsagesMap, MethodInvocation methodInvoke,
+//			BundledCompilationUnit icu, AST astInvoke )
 //	{
 //		boolean isCancelPresent = false;
 //		for ( MethodInvocation methodReference : cuRelevantUsagesMap.get( icu ) )
@@ -644,7 +628,7 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 //	 * Method to refactor method invocation statements with name execute EX: new
 //	 * Task().execute();
 //	 */
-//	void replaceExecute( MethodInvocation methodInvoke, ICompilationUnit icu, AST astInvoke )
+//	void replaceExecute( MethodInvocation methodInvoke, BundledCompilationUnit icu, AST astInvoke )
 //	{
 //		SingleUnitExtensionWriter writerTemplate = new SingleUnitExtensionWriter( icu, astInvoke, getClass().getSimpleName() );
 //		SingleUnitExtensionWriter singleChangeWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, writerTemplate );
@@ -668,7 +652,7 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 //	 * Method to refactor method invocation statements with name execute EX: new
 //	 * Task().execute();
 //	 */
-//	void replaceExecuteWithSubscription( MethodInvocation methodInvoke, ICompilationUnit icu, AST astInvoke )
+//	void replaceExecuteWithSubscription( MethodInvocation methodInvoke, BundledCompilationUnit icu, AST astInvoke )
 //	{
 //		SingleUnitExtensionWriter writerTemplate = new SingleUnitExtensionWriter( icu, astInvoke, getClass().getSimpleName() );
 //		SingleUnitExtensionWriter singleChangeWriter = RxSingleUnitWriterMapHolder.getSingleUnitWriter( icu, writerTemplate );
@@ -691,7 +675,7 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 //		singleChangeWriter.replace( methodInvoke, initSubscription );
 //	}
 //
-//	void createSubscriptionDeclaration( ICompilationUnit icu, MethodInvocation methodInvoke )
+//	void createSubscriptionDeclaration( BundledCompilationUnit icu, MethodInvocation methodInvoke )
 //	{
 //		RxLogger.info( this, "METHOD=createSubscriptionDeclaration - create Subscription Declaration for class: "
 //				+ icu.getElementName() );
@@ -721,7 +705,7 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 //	/**
 //	 * Add cancel method if AsyncTask.cacel() method was invoked
 //	 */
-//	private void updateCancelInvocation( ICompilationUnit icu, MethodInvocation methodInvoke, AST astInvoke )
+//	private void updateCancelInvocation( BundledCompilationUnit icu, MethodInvocation methodInvoke, AST astInvoke )
 //	{
 //
 //		SingleUnitExtensionWriter writerTemplate = new SingleUnitExtensionWriter( icu, astInvoke, getClass().getSimpleName() );
@@ -867,7 +851,7 @@ public class SubClassAsyncTaskWorker extends AbstractWorker<AsyncTaskCollector> 
 //	/**
 //	 * If onUpdateProgressmethod exist method will add a new method to class
 //	 */
-//	private void addProgressBlock( AST ast, ICompilationUnit icu, AsyncTaskVisitor asyncTaskVisitor,
+//	private void addProgressBlock( AST ast, BundledCompilationUnit icu, AsyncTaskVisitor asyncTaskVisitor,
 //			SingleUnitExtensionWriter singleChangeWriter )
 //	{
 //

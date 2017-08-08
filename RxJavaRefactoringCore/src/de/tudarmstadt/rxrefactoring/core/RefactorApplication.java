@@ -3,10 +3,16 @@ package de.tudarmstadt.rxrefactoring.core;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.core.resources.IProject;
@@ -14,8 +20,11 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
@@ -27,17 +36,21 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.text.edits.MalformedTreeException;
+import org.osgi.framework.Bundle;
+import org.osgi.service.packageadmin.PackageAdmin;
 
 import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.handler.IUIIntegration;
+import de.tudarmstadt.rxrefactoring.core.logging.Log;
 import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnitFactory;
 import de.tudarmstadt.rxrefactoring.core.parser.ProjectUnits;
-import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import de.tudarmstadt.rxrefactoring.core.utils.ConstantStrings;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.ProjectStatus;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.ProjectSummary;
@@ -53,7 +66,7 @@ import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree;
  * @author mirko
  *
  */
-public class RefactorExecution {
+public class RefactorApplication {
 	
 	/**
 	 * Defines the environment that is used for the refactoring.
@@ -66,7 +79,9 @@ public class RefactorExecution {
 	 */
 	private final IUIIntegration ui;
 	
-	public RefactorExecution(IUIIntegration log, RefactorEnvironment env) {
+
+	
+	public RefactorApplication(IUIIntegration log, RefactorEnvironment env) {
 		Objects.requireNonNull(env);
 		Objects.requireNonNull(log);
 		
@@ -78,7 +93,6 @@ public class RefactorExecution {
 	public void run() {
 			
 		IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-
 		
 		Shell shell = Display.getCurrent().getActiveShell();		
 		
@@ -93,8 +107,7 @@ public class RefactorExecution {
 		
 		
 		
-		ProgressMonitorDialog dialog = new ProgressMonitorDialog(shell);
-		
+		ProgressMonitorDialog dialog = new ProgressMonitorDialog(shell);		
 		try {
 			dialog.run(true, false, new IRunnableWithProgress() {
 				
@@ -126,12 +139,15 @@ public class RefactorExecution {
 								IJavaProject javaProject = JavaCore.create(project);
 								
 								//Adds the additional resource files to the project.
+								Log.info(getClass(), "Copy library resources...");	
 								addResourceFiles(project, javaProject);
 								
 								//Finds all java files in the project and produces the according bundled unit.	
-								ProjectUnits units = findCompilationUnits(javaProject);
+								Log.info(getClass(), "Parse compilation units...");	
+								ProjectUnits units = parseCompilationUnits(javaProject);
 								
 								//Performs the refactoring by applying the workers of the extension.
+								Log.info(getClass(), "Refactor units...");	
 								doRefactorProject(units, projectSummary);
 								
 								//Reports a successful refactoring
@@ -144,26 +160,24 @@ public class RefactorExecution {
 							}
 						} catch (Exception e) {
 							projectSummary.reportStatus(ProjectStatus.ERROR);
-							Log.error(getClass(), "### Error during the refactoring of " + project.getName() + " ###");
-							e.printStackTrace();
-							Log.error(getClass(), "### End ###");
+							Log.handleException(getClass(), "refactoring of " + project.getName() + " ###", e);
 						}
 						
 						monitor.worked(1);
 					}
 					
 					//Reports that the refactoring is finished.
+					Log.info(getClass(), "Finished.");
 					summary.reportFinished();		
-					
 					monitor.done();
 				}				
 			});
 		} catch (InterruptedException e) {
 			//TODO: Handle case if the refactoring is cancelled.
-			e.printStackTrace();
+			Log.handleException(getClass(), "Execution interrupted", e);
 			
 		} catch (InvocationTargetException e) {
-			e.printStackTrace();
+			Log.handleException(getClass(), "Something happened", e);
 		} finally {
 			dialog.close();
 		}
@@ -171,25 +185,32 @@ public class RefactorExecution {
 	
 
 	//TODO: What about exceptions?
-	private void addResourceFiles(IProject project, IJavaProject javaProject) throws IOException, CoreException {
+	private void addResourceFiles(IProject project, IJavaProject javaProject) throws IOException, CoreException, URISyntaxException {
 				
-		IPath resourcePath = env.getResourceDir();
+		IPath localResourcePath = env.getResourceDir();
 		IPath localDestPath = env.getDestinationDir();
 		
 		//Do not continue if there are no jars to add.
-		if (resourcePath == null || localDestPath == null) {
+		if (localResourcePath == null || localDestPath == null) {
 			return;
 		}
 		
+		//Produce the complete resource path
+		//Retrieve the location of the plugin eclipse project.
+		Bundle bundle = Platform.getBundle(env.getPlugInId());
+		URL url = FileLocator.resolve(bundle.getEntry("/"));				
+		File sourceDir = Paths.get(url.toURI()).resolve(localResourcePath.toOSString()).toFile(); //This is pretty ugly. Is there a better way to do it?
+		
 		//Produces the library path inside the project
 		IPath destPath = project.getLocation().append(localDestPath);
-
-		
-		File sourceJars = resourcePath.toFile();
 		File destDir = destPath.toFile();
+
+		//IPath s = ResourcesPlugin.getWorkspace().getPathVariableManager().resolveURI(resourcePath);
+		String s1 = sourceDir.getAbsolutePath();
 		
-		//Copy resource jars to library 		
-		FileUtils.copyDirectory(resourcePath.toFile(), destPath.toFile());
+		//Copy resource jars to library 
+		//TODO: Fix resource path, currently: /home/mirko/resources
+		FileUtils.copyDirectory(sourceDir, destDir);
 		
 		//Check if the destination does exist
 		if (!destDir.isDirectory() || !destDir.exists()) {
@@ -208,47 +229,81 @@ public class RefactorExecution {
 		
 //		List<String> sourceLibs = Observable.from(allLibs).filter(lib -> lib.contains("-sources.jar"))
 //					.map(lib -> lib.replace("-sources", "")).toList().toBlocking().single();
-
 		
+		List<IClasspathEntry> classPathEntries = new LinkedList<>();			
+		for (IClasspathEntry oldEntry : oldEntries) {
+			classPathEntries.add(0, oldEntry);
+		}
 		
-		List<IClasspathEntry> classPathEntries = new LinkedList<>();		
 		for (File destFile : destFiles) {
+					
+			//TODO: Include source files in the class path
+			if (destFile.getPath().endsWith("-sources.jar")) {
+				continue;
+			} else {
+				//TODO: Why is the library already added to the class path?
+				//classPathEntries.add(0, JavaCore.newLibraryEntry(destPath.append(destFile.getName()), null, null));
+			}
 			
-			classPathEntries.add(0, JavaCore.newLibraryEntry(destPath.append(destFile.getName()), null, null));
-			
-			//if
-			
-//			if (destFile.contains("-sources.jar")) {
-//				continue;
-//			}
-//						
-//			
 //			String ap = libs.getAbsolutePath() + File.separator + lib;
 //			IPath sourcesPath = null;
 //			if (sourceLibs.contains(lib)) {
 //				sourcesPath = Path.fromOSString(ap.replace(".jar", "-sources.jar"));
-//			}
-			
-					
+//			}					
 			
 		}
 				
-		for (IClasspathEntry oldEntry : oldEntries) {
-			classPathEntries.add(oldEntry);
-		}
+		
 		
 		javaProject.setRawClasspath(classPathEntries.toArray(new IClasspathEntry[classPathEntries.size()]), null);
 	}
+	
+	
+//	public static String getPluginDir( String pluginId )
+//	{
+//		// get bundle with the specified id
+//		Bundle bundle = Platform.getBundle( pluginId );
+//		if ( bundle == null )
+//			throw new RuntimeException( "Could not resolve plugin: " + pluginId + "\r\n" +
+//					"Probably the plugin has not been correctly installed.\r\n" +
+//					"Running eclipse from shell with -clean option may rectify installation." );
+//
+//		// resolve Bundle::getEntry to local URL
+//		URL pluginURL = null;
+//		try
+//		{
+//			pluginURL = Platform.resolve( bundle.getEntry( "/" ) );
+//		}
+//		catch ( IOException e )
+//		{
+//			throw new RuntimeException( "Could not get installation directory of the plugin: " + pluginId );
+//		}
+//		String pluginInstallDir = pluginURL.getPath().trim();
+//		if ( pluginInstallDir.length() == 0 )
+//			throw new RuntimeException( "Could not get installation directory of the plugin: " + pluginId );
+//
+//		/*
+//		 * since path returned by URL::getPath starts with a forward slash, that
+//		 * is not suitable to run commandlines on Windows-OS, but for Unix-based
+//		 * OSes it is needed. So strip one character for windows. There seems
+//		 * to be no other clean way of doing this.
+//		 */
+//		if ( Platform.getOS().compareTo( Platform.OS_WIN32 ) == 0 )
+//			pluginInstallDir = pluginInstallDir.substring( 1 );
+//
+//		return pluginInstallDir;
+//	}
 		
 	
-	private ProjectUnits findCompilationUnits(IJavaProject javaProject) throws JavaModelException {
+	private ProjectUnits parseCompilationUnits(IJavaProject javaProject) throws JavaModelException {
 		
 		IPackageFragmentRoot[] roots = javaProject.getAllPackageFragmentRoots();
+				
+		Set<BundledCompilationUnit> result = Sets.newConcurrentHashSet();		
 		
-		Log.info(getClass(), "Read compilation units...");		
-		
-		Set<BundledCompilationUnit> result = Sets.newHashSet();
-		BundledCompilationUnitFactory factory = new BundledCompilationUnitFactory();
+		//Initializes a new thread pool.
+		ExecutorService executor = env.createExecutorService();
+		Objects.requireNonNull(executor, "The environments executor service can not be null.");
 		
 		
 		for (IPackageFragmentRoot root : roots) {		
@@ -260,15 +315,35 @@ public class RefactorExecution {
 					//Check whether the element found was a package fragment
 					if (javaElement.getElementType() == IJavaElement.PACKAGE_FRAGMENT) {
 						IPackageFragment packageFragment = (IPackageFragment) javaElement;
-
-						//Find the compilation units, i.e. .java source files.
-						for (ICompilationUnit unit : packageFragment.getCompilationUnits()) {
-							result.add(factory.from(unit));
+						ICompilationUnit[] units = packageFragment.getCompilationUnits();
+											
+						if (units.length > 0) {							
+							//Asynchronously parse units
+							Log.info(getClass(), "Submit task for " + packageFragment.getElementName() + " (" + units.length + " compilation units)");
+							executor.submit(() -> {
+								
+								//Produces a new compilation unit factory.
+								BundledCompilationUnitFactory factory = new BundledCompilationUnitFactory();
+								
+								//Find the compilation units, i.e. .java source files.
+								for (ICompilationUnit unit : units) {
+									result.add(factory.from(unit));
+								}
+							});		
 						}
+											
 					}
 				}			
 			}
 		}
+		
+		//Wait for asynchronous operations to finish.
+		try {
+			executor.shutdown();		
+			executor.awaitTermination(3, TimeUnit.MINUTES);
+		} catch (InterruptedException e) {
+			throw new IllegalStateException(e);		
+		}		
 		
 		return new ProjectUnits(result);
 	

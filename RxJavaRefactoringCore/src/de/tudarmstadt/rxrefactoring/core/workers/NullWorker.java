@@ -6,8 +6,8 @@ import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
 public class NullWorker implements IWorker<Void, Void> {
 
 	@Override
-	public Void refactor(Void input, ProjectUnits units, WorkerSummary summary) throws Exception {		
+	public Void refactor(ProjectUnits units, Void input, WorkerSummary summary) throws Exception {		
 		return null;
 	}
-
+		
 }

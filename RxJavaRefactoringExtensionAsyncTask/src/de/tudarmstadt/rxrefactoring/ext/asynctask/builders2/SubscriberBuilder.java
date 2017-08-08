@@ -22,7 +22,6 @@ import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import de.tudarmstadt.rxrefactoring.core.codegen.IdManager;
-import de.tudarmstadt.rxrefactoring.core.writers.UnitWriter;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 
 public class SubscriberBuilder extends AbstractBuilder {
@@ -31,12 +30,12 @@ public class SubscriberBuilder extends AbstractBuilder {
 	
 	private final String id;
 
-	public SubscriberBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer) {
-		this(asyncTask, writer, IdManager.getNextObserverId(writer.getUnit().getElementName()));			
+	public SubscriberBuilder(AsyncTaskWrapper asyncTask) {
+		this(asyncTask, IdManager.getNextObserverId(asyncTask.getUnit().getElementName()));			
 	}
 	
-	public SubscriberBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer, String id) {
-		super(asyncTask, writer);		
+	public SubscriberBuilder(AsyncTaskWrapper asyncTask, String id) {
+		super(asyncTask);		
 		this.id = id;		
 	}
 
@@ -64,7 +63,7 @@ public class SubscriberBuilder extends AbstractBuilder {
 		
 		//Define variable: onNextParameter
 		SingleVariableDeclaration onNextParameter = ast.newSingleVariableDeclaration();
-		onNextParameter.setName(copy(asyncTask.getProgressParameter().getName()));
+		onNextParameter.setName(unit.copyNode(asyncTask.getProgressParameter().getName()));
 		onNextParameter.setType(getParameterType());
 		
 		//Define method: onNext()
@@ -75,7 +74,7 @@ public class SubscriberBuilder extends AbstractBuilder {
 		onNextMethod.parameters().add(onNextParameter);
 		onNextMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
 		onNextMethod.modifiers().add(createOverrideAnnotation());
-		onNextMethod.setBody(copy(asyncTask.getOnProgressUpdateBlock()));
+		onNextMethod.setBody(unit.copyNode(asyncTask.getOnProgressUpdateBlock()));
 		
 		
 		//Define method: onCompleted
@@ -193,7 +192,7 @@ public class SubscriberBuilder extends AbstractBuilder {
 	}
 	
 	public ArrayType getParameterType() {
-		return ast.newArrayType(copy(asyncTask.getProgressParameter().getType()));
+		return ast.newArrayType(unit.copyNode(asyncTask.getProgressParameter().getType()));
 	}
 	
 	public String getFieldName() {

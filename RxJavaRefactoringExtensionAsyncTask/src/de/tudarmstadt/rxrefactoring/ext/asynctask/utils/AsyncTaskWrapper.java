@@ -11,6 +11,7 @@ import org.eclipse.jdt.core.dom.*;
 
 import com.google.common.collect.Lists;
 
+import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.ClassDetails;
 
@@ -52,7 +53,7 @@ public class AsyncTaskWrapper extends ASTVisitor {
 	/**
 	 * The compilation unit that contains the declaration. 
 	 */
-	private final ICompilationUnit unit;
+	private final BundledCompilationUnit unit;
 
 	/**
 	 * Creates a new wrapper given the class declaration of a class that is an
@@ -63,7 +64,7 @@ public class AsyncTaskWrapper extends ASTVisitor {
 	 *            
 	 * @throws NullPointerException if either argument is null.
 	 */
-	public AsyncTaskWrapper(ASTNode declaration, ICompilationUnit unit) {
+	public AsyncTaskWrapper(ASTNode declaration, BundledCompilationUnit unit) {
 		Objects.requireNonNull(declaration);
 		Objects.requireNonNull(unit);
 		
@@ -229,7 +230,7 @@ public class AsyncTaskWrapper extends ASTVisitor {
 		return declaration instanceof TypeDeclaration && declaration.getParent() instanceof TypeDeclaration;
 	}
 	
-	public ICompilationUnit getUnit() {
+	public BundledCompilationUnit getUnit() {
 		return unit;
 	}
 	

@@ -6,6 +6,11 @@ import org.eclipse.core.runtime.Path;
 
 import de.tudarmstadt.rxrefactoring.core.RefactorEnvironment;
 import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree;
+import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree.WorkerNode;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.collect.AsyncTaskCollector;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.workers.AnonymAsyncTaskWorker;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.workers.CachedAnonymousTaskWorker;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.workers.SubClassAsyncTaskWorker;
 
 /**
  * Author: Template<br>
@@ -18,6 +23,11 @@ public class AsyncTaskEnvironment implements RefactorEnvironment {
 //
 //	private static final String RESOURCES_DIR_NAME = "resources";
 
+	@Override
+	public String getPlugInId() {		
+		return "de.tudarmstadt.rxrefactoring.ext.asynctask";
+	}
+	
 	@Override
 	public IPath getResourceDir() {
 		return new Path("./resources/");
@@ -35,7 +45,12 @@ public class AsyncTaskEnvironment implements RefactorEnvironment {
 
 	@Override
 	public void buildWorkers(WorkerTree workerTree) {
-		//TODO: Generate worker tree		
+		WorkerNode<Void,AsyncTaskCollector> a = workerTree.addWorker(new AsyncTaskCollector("AsyncTaskCollector"));	
+		workerTree.addWorker(a, new AnonymAsyncTaskWorker());
+		workerTree.addWorker(a, new CachedAnonymousTaskWorker());
+		workerTree.addWorker(a, new SubClassAsyncTaskWorker());
 	}
+
+	
 
 }
