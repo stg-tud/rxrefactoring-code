@@ -15,9 +15,15 @@ import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
-import de.tudarmstadt.rxrefactoring.ext.asynctask.builders2.SubscriberBuilder;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.SubscriberBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 
+/**
+ * Provides utility methods for workers.
+ * 
+ * @author mirko
+ *
+ */
 interface WorkerEnvironment {
 
 	/**

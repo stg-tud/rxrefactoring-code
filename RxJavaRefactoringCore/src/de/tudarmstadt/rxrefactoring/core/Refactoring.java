@@ -8,7 +8,7 @@ import org.eclipse.core.runtime.IPath;
 
 import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree;
 
-public interface RefactorEnvironment {
+public interface Refactoring {
 		
 	/**
 	 * Provides a comprehensible description of the
@@ -26,10 +26,10 @@ public interface RefactorEnvironment {
 	 * The worker tree models the dependency between the workers,
 	 * i.e. a worker can depend on the result of another worker. 
 	 * 
-	 * @return A non-null set of workers that should be used
-	 * for refactoring.
+	 * @param workerTree A worker tree where the workers
+	 * should be added to. 
 	 */
-	public void buildWorkers(WorkerTree workerTree);
+	public void addWorkersTo(WorkerTree workerTree);
 	
 	/**
 	 * Gets the symbolic name of the bundle of this
@@ -38,6 +38,7 @@ public interface RefactorEnvironment {
 	 * @return The symbolic bundle name defined as Bundle-SymbolicName
 	 * in the MANIFEST.MF.
 	 */
+	//TODO: Can this method be removed without changing the functionality?
 	public String getPlugInId();
 	
 	/**

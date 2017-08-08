@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.asynctask.builders2;
+package de.tudarmstadt.rxrefactoring.ext.asynctask.builders;
 
 public interface RefactorNames {
 	

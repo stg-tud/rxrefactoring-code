@@ -72,7 +72,7 @@ public class RefactorApplication {
 	 * Defines the environment that is used for the refactoring.
 	 * Usually this is given by the extension .
 	 */
-	private final RefactorEnvironment env;
+	private final Refactoring env;
 	
 	/**
 	 * Provides utility to communicate with the user.
@@ -81,7 +81,7 @@ public class RefactorApplication {
 	
 
 	
-	public RefactorApplication(IUIIntegration log, RefactorEnvironment env) {
+	public RefactorApplication(IUIIntegration log, Refactoring env) {
 		Objects.requireNonNull(env);
 		Objects.requireNonNull(log);
 		
@@ -355,7 +355,7 @@ public class RefactorApplication {
 				
 		//Produce the worker tree 
 		WorkerTree workerTree = new WorkerTree(units, projectSummary);
-		env.buildWorkers(workerTree);		
+		env.addWorkersTo(workerTree);		
 		
 		//The workers add their changes to the bundled compilation units
 		workerTree.run();

@@ -4,7 +4,7 @@ import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 
-import de.tudarmstadt.rxrefactoring.core.RefactorEnvironment;
+import de.tudarmstadt.rxrefactoring.core.Refactoring;
 import de.tudarmstadt.rxrefactoring.core.RefactorApplication;
 
 
@@ -19,16 +19,16 @@ public abstract class RefactoringHandler extends AbstractHandler {
 		
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		
-		RefactorApplication execution = new RefactorApplication(
+				
+		RefactorApplication app = new RefactorApplication(
 				new DefaultUI(), 
 				createEnvironment()
 			);		
-		execution.run();
+		app.run();
 		
 		return null;
 	}
 	
 	
-	public abstract RefactorEnvironment createEnvironment();
+	public abstract Refactoring createEnvironment();
 }

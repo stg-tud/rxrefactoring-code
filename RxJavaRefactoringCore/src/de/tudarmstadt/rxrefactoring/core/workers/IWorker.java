@@ -1,10 +1,7 @@
 package de.tudarmstadt.rxrefactoring.core.workers;
 
-import java.util.Formattable;
-
 import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.parser.ProjectUnits;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
 
 public interface IWorker<Input, Output> {

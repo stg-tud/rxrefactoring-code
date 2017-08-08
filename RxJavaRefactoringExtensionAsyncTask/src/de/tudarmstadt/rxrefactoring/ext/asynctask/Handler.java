@@ -1,6 +1,6 @@
 package de.tudarmstadt.rxrefactoring.ext.asynctask;
 
-import de.tudarmstadt.rxrefactoring.core.RefactorEnvironment;
+import de.tudarmstadt.rxrefactoring.core.Refactoring;
 import de.tudarmstadt.rxrefactoring.core.handler.RefactoringHandler;
 
 /**
@@ -10,9 +10,8 @@ import de.tudarmstadt.rxrefactoring.core.handler.RefactoringHandler;
 public class Handler extends RefactoringHandler {
 
 	@Override
-	public RefactorEnvironment createEnvironment() {
-		return new AsyncTaskEnvironment();
+	public Refactoring createEnvironment() {
+		return new AsyncTaskRefactoring();
 	}
-
 	
 }

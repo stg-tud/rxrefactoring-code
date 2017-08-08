@@ -23,10 +23,9 @@ import de.tudarmstadt.rxrefactoring.core.parser.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
-import de.tudarmstadt.rxrefactoring.ext.asynctask.builders2.AnonymousClassBuilder;
-import de.tudarmstadt.rxrefactoring.ext.asynctask.builders2.InnerClassBuilder;
-import de.tudarmstadt.rxrefactoring.ext.asynctask.builders2.SubscriberBuilder;
-import de.tudarmstadt.rxrefactoring.ext.asynctask.collect.AsyncTaskCollector;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.AnonymousClassBuilder;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.InnerClassBuilder;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.SubscriberBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 
