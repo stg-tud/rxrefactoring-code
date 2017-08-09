@@ -21,8 +21,9 @@ public interface Refactoring {
 	public String getDescription();
 	
 	/**
-	 * Creates a worker tree that includes all workers that
-	 * should be used for this refactoring.
+	 * Includes all workers that
+	 * should be used for this refactoring in the given worker
+	 * tree.
 	 * The worker tree models the dependency between the workers,
 	 * i.e. a worker can depend on the result of another worker. 
 	 * 

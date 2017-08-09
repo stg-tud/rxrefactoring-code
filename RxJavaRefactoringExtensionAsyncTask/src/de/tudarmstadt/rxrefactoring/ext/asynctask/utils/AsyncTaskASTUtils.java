@@ -103,8 +103,6 @@ public class AsyncTaskASTUtils {
 			}
 
 			private void processFieldExpression(Expression expr) {
-				Log.info(getClass(), "FieldExpr: " + expr);
-
 				TypeDeclaration t = ASTUtils.findParent(expr, TypeDeclaration.class);
 				if (Objects.isNull(t)) {
 					Log.error(AsyncTaskASTUtils.class, "Could not find enclosing type declaration.");
@@ -126,7 +124,6 @@ public class AsyncTaskASTUtils {
 					IVariableBinding variable = Bindings.findFieldInType(binding, variableName.getIdentifier());
 
 					if (variable != null && variable.isField()) {
-						Log.info(getClass(), "Replace field...");
 						//variableName.setIdentifier(variable.getDeclaringClass().getQualifiedName() + ".this." + variableName);
 						
 						ThisExpression thisExp = unit.getAST().newThisExpression();

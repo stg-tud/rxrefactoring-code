@@ -57,9 +57,6 @@ public class SubscriberBuilder extends AbstractBuilder {
 	@SuppressWarnings("unchecked")
 	public MethodDeclaration buildGetSubscriber() {
 		
-		//Define type: Subscriber
-		Type subscriberType = getSubscriberType();
-				
 		
 		//Define variable: onNextParameter
 		SingleVariableDeclaration onNextParameter = ast.newSingleVariableDeclaration();
@@ -108,13 +105,13 @@ public class SubscriberBuilder extends AbstractBuilder {
 		
 		//Define constructor call: new Subscriber() { ... }
 		ClassInstanceCreation constructorCall = ast.newClassInstanceCreation();
-		constructorCall.setType(subscriberType);
+		constructorCall.setType(getSubscriberType());
 		constructorCall.setAnonymousClassDeclaration(subscriberDeclaration);
 		
 		//Define method: getRxUpdateSubscriber
 		MethodDeclaration getSubscriber = ast.newMethodDeclaration();
 		getSubscriber.setName(ast.newSimpleName(getMethodName()));
-		getSubscriber.setReturnType2(subscriberType);
+		getSubscriber.setReturnType2(getSubscriberType());
 		
 		Block getSubscriberBlock = ast.newBlock();
 		getSubscriberBlock.statements().add(ast.newExpressionStatement(constructorCall));
@@ -167,7 +164,7 @@ public class SubscriberBuilder extends AbstractBuilder {
 		array.setType(getParameterType());
 		
 		ArrayInitializer arrayInit = ast.newArrayInitializer();
-		arrayInit.expressions().addAll(arguments);
+		arguments.forEach(argument -> arrayInit.expressions().add(unit.copyNode(argument)));
 		
 		array.setInitializer(arrayInit);
 		

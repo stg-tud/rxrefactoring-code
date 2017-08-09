@@ -1,11 +1,13 @@
 package de.tudarmstadt.rxrefactoring.core.utils;
 
+import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
-
+import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -38,6 +40,50 @@ public class RefactorSummary {
 		finishTime = System.nanoTime();
 	}
 	
+	private String getDurationAsString() {
+		if (startTime == 0 || finishTime == 0) {
+			return "undefined";
+		} else {
+			return String.format(Locale.ENGLISH, "%12.3fs", ((double)(finishTime - startTime)) / 1000 / 1000 / 1000);
+		}
+		
+	}
+	
+	private String getProjectCountAsString() {
+		int completed = 0, skipped = 0, error = 0;
+		
+		for (ProjectSummary project : projects) {
+			switch (project.status) {
+			case UNDEFINED: case SKIPPED:
+				skipped++;
+				break;
+			case ERROR:
+				error++;
+				break;
+			case COMPLETED:
+				completed++;
+				break;			
+			}
+		}
+		
+		return "completed/total: " + completed + "/" + (completed + skipped + error) + ", skipped or undefined: " + skipped + ", error: " + error; 
+	}
+	
+	@Override
+	public String toString() {
+		
+		String result =  ">>> Summary" +
+				"\n" + fromPadding(1) + "Duration: " + getDurationAsString() +
+				"\n" + fromPadding(1) + "Number of projects: " + getProjectCountAsString();
+				
+		for (ProjectSummary project : projects) {
+			result += "\n" + project.toString(1);
+		}
+				
+				
+		result += "\n" + "<<<";
+		return result;
+	}
 	
 	/**
 	 * Specifies a status that a refactoring may have.
@@ -67,9 +113,27 @@ public class RefactorSummary {
 			this.status = status;
 		}
 		
-		public WorkerSummary reportWorker(IWorker worker) {
+		public WorkerSummary reportWorker(IWorker<?,?> worker) {
 			WorkerSummary result = new WorkerSummary(worker);
 			workers.add(result);
+			return result;
+		}
+		
+		@Override
+		public String toString() {
+			return toString(0);
+		}
+		
+		public String toString(int padding) {
+			String pad = fromPadding(padding);
+			
+			String result = pad + ">>> Project: " + project.getName() +
+					"\n" + fromPadding(padding + 1) + "Status: " + status;
+			
+			for (WorkerSummary worker : workers) {
+				result += "\n" + worker.toString(padding + 1);
+			}
+			
 			return result;
 		}
 	}
@@ -101,6 +165,15 @@ public class RefactorSummary {
 			getEntryFor(key).addSkipped();			
 		}
 		
+
+		public void setCorrect(String key, int correct) {
+			getEntryFor(key).setCorrect(correct);
+		}
+		
+		public void setSkipped(String key, int skipped) {
+			getEntryFor(key).setSkipped(skipped);
+		}
+		
 		public void setStatus(WorkerStatus status) {
 			Objects.requireNonNull(status);
 			this.status = status;
@@ -119,6 +192,26 @@ public class RefactorSummary {
 			return entry;
 		}
 		
+		@Override
+		public String toString() {
+			return toString(0);
+		}
+		
+		public String toString(int padding) {
+			
+			String pad = fromPadding(padding);			
+			String result = pad + ">>> Worker: " + worker.getName() +
+					"\n" + fromPadding(padding + 1) + "Status: " + status;
+			
+			for (Entry<String, CountEntry> entry : entries.entrySet()) {
+				result += "\n" + fromPadding(padding + 1) + entry.getKey() + ": " + entry.getValue();
+			}
+			
+			//result += pad + "<<<";
+			return result;
+					
+		}
+		
 		class CountEntry {
 			private int correct = 0;
 			private int skipped = 0;
@@ -129,9 +222,25 @@ public class RefactorSummary {
 			
 			public void addSkipped() {
 				skipped++;				
-			}		
+			}	
 			
+			public void setCorrect(int correct) {
+				this.correct = correct;
+			}
+			
+			public void setSkipped(int skipped) {
+				this.skipped = skipped;
+			}
+			
+			@Override
+			public String toString() {
+				return correct + "/" + (correct + skipped);
+			}
 		}
+	}
+	
+	private static String fromPadding(int padding) {
+		return Strings.repeat("\t", padding); 
 	}
 	
 	

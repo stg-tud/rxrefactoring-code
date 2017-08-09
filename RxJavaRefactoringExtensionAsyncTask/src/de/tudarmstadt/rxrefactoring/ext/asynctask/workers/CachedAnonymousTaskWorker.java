@@ -258,6 +258,9 @@ public class CachedAnonymousTaskWorker implements IWorker<AsyncTaskCollector, Vo
 		invocation.setExpression(execute);
 		invocation.setName(methodAST.newSimpleName(SUBSCRIBE));
 		// ASTUtil.replaceInStatement(methodInvoke, invocation);
+		
+		Log.info(getClass(), "UNITNAME: " + unit.getElementName());
+		
 		if (!withSubscription) {
 			unit.replace(methodInvoke, invocation);
 		} else {
@@ -329,10 +332,16 @@ public class CachedAnonymousTaskWorker implements IWorker<AsyncTaskCollector, Vo
 	private void updateImports(AsyncTaskWrapper asyncTask) {
 		BundledCompilationUnit unit = asyncTask.getUnit();
 		
-		unit.addImport("rx.Observable");
+		unit.addImport("rx.android.schedulers.AndroidSchedulers");
 		unit.addImport("rx.schedulers.Schedulers");
+		
+		unit.addImport("rx.Observable");		
 		unit.addImport("java.util.concurrent.Callable");
-		// rewriter.removeImport("android.os.AsyncTask");
+
+		if (asyncTask.getOnPreExecuteBlock() != null) {
+			unit.addImport("rx.functions.Action0");
+		}
+		
 		if (asyncTask.getOnPostExecuteBlock() != null) {
 			unit.addImport("rx.functions.Action1");
 			unit.removeImport("java.util.concurrent.ExecutionException");

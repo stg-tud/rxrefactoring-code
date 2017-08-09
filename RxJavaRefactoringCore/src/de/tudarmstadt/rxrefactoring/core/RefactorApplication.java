@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
@@ -23,7 +22,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -33,15 +31,14 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.osgi.framework.Bundle;
-import org.osgi.service.packageadmin.PackageAdmin;
 
 import com.google.common.collect.Sets;
 
@@ -54,9 +51,6 @@ import de.tudarmstadt.rxrefactoring.core.utils.ConstantStrings;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.ProjectStatus;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.ProjectSummary;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerStatus;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
-import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
 import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree;
 
 /**
@@ -136,6 +130,9 @@ public class RefactorApplication {
 							//Check whether the project is open and if it is a Java project
 							if (project.isOpen() && project.hasNature(JavaCore.NATURE_ID)) {
 								Log.info(getClass(), ">>> Refactor project: " + project.getName());
+								//Reports the project as being refactored
+								
+								
 								IJavaProject javaProject = JavaCore.create(project);
 								
 								//Adds the additional resource files to the project.
@@ -181,6 +178,8 @@ public class RefactorApplication {
 		} finally {
 			dialog.close();
 		}
+		
+		Log.info(getClass(), "Print summary...\n" + summary.toString());
 	}
 	
 
@@ -319,9 +318,7 @@ public class RefactorApplication {
 											
 						if (units.length > 0) {							
 							//Asynchronously parse units
-							Log.info(getClass(), "Submit task for " + packageFragment.getElementName() + " (" + units.length + " compilation units)");
-							executor.submit(() -> {
-								
+							executor.submit(() -> {								
 								//Produces a new compilation unit factory.
 								BundledCompilationUnitFactory factory = new BundledCompilationUnitFactory();
 								
@@ -342,6 +339,7 @@ public class RefactorApplication {
 			executor.shutdown();		
 			executor.awaitTermination(3, TimeUnit.MINUTES);
 		} catch (InterruptedException e) {
+			//It should not be possible that the execution is interrupted.
 			throw new IllegalStateException(e);		
 		}		
 		

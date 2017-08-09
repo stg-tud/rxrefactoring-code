@@ -56,6 +56,7 @@ public class AsyncTaskCollector implements IWorker<Void,AsyncTaskCollector> {
 	@Override
 	public AsyncTaskCollector refactor(ProjectUnits units, Void input, WorkerSummary summary) throws Exception {	
 		units.forEach(unit -> processBundledCompilationUnit(unit));		
+		summary.setCorrect("numberOfCompilationUnits", units.size());
 		return this;
 	}	
 
@@ -123,7 +124,7 @@ public class AsyncTaskCollector implements IWorker<Void,AsyncTaskCollector> {
 	 * Grebiel Jose Ifill Brito<br>
 	 * Created: 11/11/2016
 	 */
-	public class UsagesVisitor extends ASTVisitor {
+	class UsagesVisitor extends ASTVisitor {
 
 		private final ClassDetails targetClass;
 		private final List<MethodInvocation> usages;
@@ -186,7 +187,7 @@ public class AsyncTaskCollector implements IWorker<Void,AsyncTaskCollector> {
 	 * Author: Grebiel Jose Ifill Brito<br>
 	 * Created: 11/11/2016
 	 */
-	public class DeclarationVisitor extends ASTVisitor {
+	class DeclarationVisitor extends ASTVisitor {
 		private final ClassDetails targetClass;
 		private final Set<TypeDeclaration> subclasses;
 		private final Set<AnonymousClassDeclaration> anonymousClasses;

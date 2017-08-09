@@ -1,6 +1,5 @@
 package de.tudarmstadt.rxrefactoring.ext.asynctask.domain;
 
-import rx.Scheduler;
 
 /**
  * Description: Enum to specify the scheduler to be used as parameter of

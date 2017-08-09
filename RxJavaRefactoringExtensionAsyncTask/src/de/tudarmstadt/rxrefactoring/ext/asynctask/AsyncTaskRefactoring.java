@@ -40,10 +40,12 @@ public class AsyncTaskRefactoring implements Refactoring {
 
 	@Override
 	public void addWorkersTo(WorkerTree workerTree) {
-		WorkerNode<Void,AsyncTaskCollector> a = workerTree.addWorker(new AsyncTaskCollector("AsyncTaskCollector"));	
+		WorkerNode<Void,AsyncTaskCollector> a = 
+				workerTree.addWorker(new AsyncTaskCollector("AsyncTaskCollector"));	
+		
 		workerTree.addWorker(a, new AnonymAsyncTaskWorker());
-		workerTree.addWorker(a, new CachedAnonymousTaskWorker());
-		workerTree.addWorker(a, new SubClassAsyncTaskWorker());
+		//workerTree.addWorker(a, new CachedAnonymousTaskWorker());
+		//workerTree.addWorker(a, new SubClassAsyncTaskWorker());
 	}
 
 	

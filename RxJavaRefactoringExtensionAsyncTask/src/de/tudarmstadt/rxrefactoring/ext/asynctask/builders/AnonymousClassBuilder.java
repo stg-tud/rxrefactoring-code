@@ -219,8 +219,8 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 		checkInitialized();
 		
 		MethodInvocation invokeScheduler = ast.newMethodInvocation();
-		invokeScheduler.setName(ast.newSimpleName("computation"));
-		invokeScheduler.setExpression(ast.newSimpleName("Schedulers"));
+		invokeScheduler.setName(ast.newSimpleName("mainThread"));
+		invokeScheduler.setExpression(ast.newSimpleName("AndroidSchedulers"));
 		
 		MethodInvocation invokeSubscribeOn = ast.newMethodInvocation();
 		invokeSubscribeOn.setName(ast.newSimpleName("subscribeOn"));
