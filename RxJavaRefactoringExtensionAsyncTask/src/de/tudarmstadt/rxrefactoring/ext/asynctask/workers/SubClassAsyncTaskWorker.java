@@ -22,7 +22,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.logging.Log;
-import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.parser.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.parser.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
@@ -73,15 +73,15 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 		numOfAsyncTasks = 0;
 		numOfAbstractClasses = 0;
 		
-		Multimap<BundledCompilationUnit, TypeDeclaration> cuAnonymousClassesMap = collector.getSubclasses();
+		Multimap<RewriteCompilationUnit, TypeDeclaration> cuAnonymousClassesMap = collector.getSubclasses();
 
-		for (BundledCompilationUnit unit : cuAnonymousClassesMap.keySet()) {
+		for (RewriteCompilationUnit unit : cuAnonymousClassesMap.keySet()) {
 			Collection<TypeDeclaration> declarations = cuAnonymousClassesMap.get(unit);
 			for (TypeDeclaration asyncTaskDeclaration : declarations) {
 
 				AsyncTaskWrapper asyncTask = new AsyncTaskWrapper(asyncTaskDeclaration, unit);
 
-				if (asyncTask.getDoInBackgroundBlock() == null) {
+				if (asyncTask.getDoInBackground() == null) {
 					numOfAbstractClasses++;
 					continue;
 				}
@@ -106,11 +106,11 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 		return null;
 	}
 
-	private void updateUsage(Multimap<BundledCompilationUnit, MethodInvocation> relevantUsages, AST ast,
-			TypeDeclaration asyncTaskDeclaration, BundledCompilationUnit unit) {
+	private void updateUsage(Multimap<RewriteCompilationUnit, MethodInvocation> relevantUsages, AST ast,
+			TypeDeclaration asyncTaskDeclaration, RewriteCompilationUnit unit) {
 		
 		
-		for (BundledCompilationUnit usageUnit : relevantUsages.keySet()) {
+		for (RewriteCompilationUnit usageUnit : relevantUsages.keySet()) {
 			TypeDeclaration tyDec = ast.newTypeDeclaration();
 
 						
@@ -137,8 +137,8 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 	/**
 	 * Replace asyncTask.cancel() method with Subscription.unsubscribe()
 	 */
-	void replaceCancel(Multimap<BundledCompilationUnit, MethodInvocation> relevantUsages, MethodInvocation methodInvoke,
-			BundledCompilationUnit unit, AST astInvoke) {
+	void replaceCancel(Multimap<RewriteCompilationUnit, MethodInvocation> relevantUsages, MethodInvocation methodInvoke,
+			RewriteCompilationUnit unit, AST astInvoke) {
 				
 		boolean isCancelPresent = false;
 		
@@ -164,7 +164,7 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 	 * Method to refactor method invocation statements with name execute EX: new
 	 * Task().execute();
 	 */
-	void replaceExecute(BundledCompilationUnit unit, MethodInvocation methodInvoke, AST astInvoke) {
+	void replaceExecute(RewriteCompilationUnit unit, MethodInvocation methodInvoke, AST astInvoke) {
 
 		AST methodAST = methodInvoke.getAST();
 		MethodInvocation execute = (MethodInvocation) ASTNode.copySubtree(methodAST, methodInvoke);
@@ -185,7 +185,7 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 	 * Method to refactor method invocation statements with name execute EX: new
 	 * Task().execute();
 	 */
-	void replaceExecuteWithSubscription(BundledCompilationUnit unit, MethodInvocation methodInvoke, AST astInvoke) {
+	void replaceExecuteWithSubscription(RewriteCompilationUnit unit, MethodInvocation methodInvoke, AST astInvoke) {
 
 
 	
@@ -205,7 +205,7 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 		unit.replace(methodInvoke, initSubscription);
 	}
 
-	void createSubscriptionDeclaration(BundledCompilationUnit unit, MethodInvocation methodInvoke) {
+	void createSubscriptionDeclaration(RewriteCompilationUnit unit, MethodInvocation methodInvoke) {
 
 		
 		TypeDeclaration tyDec = ASTUtils.findParent(methodInvoke, TypeDeclaration.class);
@@ -233,7 +233,7 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 	/**
 	 * Add cancel method if AsyncTask.cacel() method was invoked
 	 */
-	private void updateCancelInvocation(BundledCompilationUnit unit, MethodInvocation methodInvoke, AST astInvoke) {
+	private void updateCancelInvocation(RewriteCompilationUnit unit, MethodInvocation methodInvoke, AST astInvoke) {
 
 		MethodInvocation unSubscribe = astInvoke.newMethodInvocation();
 		unSubscribe
@@ -245,7 +245,7 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 
 	private void updateImports(AsyncTaskWrapper asyncTask) {
 		
-		BundledCompilationUnit unit = asyncTask.getUnit();
+		RewriteCompilationUnit unit = asyncTask.getUnit();
 		
 		unit.addImport("rx.android.schedulers.AndroidSchedulers");
 		unit.addImport("rx.schedulers.Schedulers");
@@ -257,21 +257,21 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 			unit.removeImport("android.os.AsyncTask");
 		}
 
-		if (asyncTask.getOnPostExecuteBlock() != null) {
+		if (asyncTask.getOnPostExecute() != null) {
 			unit.addImport("rx.functions.Action1");
 			unit.removeImport("java.util.concurrent.ExecutionException");
 			unit.removeImport("java.util.concurrent.TimeoutException");
 
 		}
 
-		if (asyncTask.getDoInBackgroundBlock() != null) {
+		if (asyncTask.getDoInBackground() != null) {
 			unit.addImport("rx.Subscriber");
 			unit.addImport("java.util.Arrays");
 			unit.addImport("rx.Subscription");
 			unit.addImport("rx.functions.Action1");
 		}
 
-		if (asyncTask.getOnProgressUpdateBlock() != null) {
+		if (asyncTask.getOnProgressUpdate() != null) {
 			unit.addImport("java.util.Arrays");
 		}
 
@@ -279,7 +279,7 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 			unit.addImport("rx.functions.Action0");
 		}
 
-		if (asyncTask.getOnPreExecuteBlock() != null) {
+		if (asyncTask.getOnPreExecute() != null) {
 			unit.addImport("rx.functions.Action0");
 		}
 	}
@@ -292,7 +292,7 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 		InnerClassBuilder innerClassBuilder = new InnerClassBuilder(asyncTask, subscriberBuilder.getId());
 		
 		TypeDeclaration typeDecl = innerClassBuilder.buildInnerClassWithSubscriber(subscriberBuilder);
-		if (asyncTask.hasProgressUpdate()) {
+		if (asyncTask.hasOnProgressUpdate()) {
 			replacePublishInvocations(asyncTask, subscriberBuilder);
 		}
 		
@@ -325,7 +325,7 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 	
 	}
 	
-	private void replaceInstanceCreations(BundledCompilationUnit unit, InnerClassBuilder builder, TypeDeclaration oldClass, ASTNode root) {
+	private void replaceInstanceCreations(RewriteCompilationUnit unit, InnerClassBuilder builder, TypeDeclaration oldClass, ASTNode root) {
 		
 		
 		final ITypeBinding oldClassType = oldClass.resolveBinding();

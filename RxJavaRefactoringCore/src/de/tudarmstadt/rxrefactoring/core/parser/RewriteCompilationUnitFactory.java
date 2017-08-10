@@ -4,20 +4,20 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 
-public class BundledCompilationUnitFactory {
+public class RewriteCompilationUnitFactory {
 
 	
 	private final ASTParser parser;
 		
 	
-	public BundledCompilationUnitFactory() {
+	public RewriteCompilationUnitFactory() {
 		parser  = ASTParser.newParser(AST.JLS8);		
 	}
 	
-	public BundledCompilationUnit from(ICompilationUnit unit) {
+	public RewriteCompilationUnit from(ICompilationUnit unit) {
 		initializeParser();
 		parser.setSource(unit);
-		return new BundledCompilationUnit(unit, parser.createAST(null));
+		return new RewriteCompilationUnit(unit, parser.createAST(null));
 	}
 	
 	private void initializeParser() {

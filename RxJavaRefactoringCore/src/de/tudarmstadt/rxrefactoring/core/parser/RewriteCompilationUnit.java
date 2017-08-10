@@ -47,7 +47,8 @@ import org.eclipse.text.edits.UndoEdit;
  * @author mirko
  *
  */
-public class BundledCompilationUnit implements ICompilationUnit {
+@SuppressWarnings("deprecation")
+public class RewriteCompilationUnit implements ICompilationUnit {
 
 	/**
 	 * The underlying compilation unit.
@@ -78,7 +79,7 @@ public class BundledCompilationUnit implements ICompilationUnit {
 	
 	/**
 	 * Bundles a compilation unit together with its root AST node.
-	 * Use {@link BundledCompilationUnitFactory} to generate
+	 * Use {@link RewriteCompilationUnitFactory} to generate
 	 * Bundled compilation units.
 	 * 
 	 * @param unit The compilation unit.
@@ -87,7 +88,7 @@ public class BundledCompilationUnit implements ICompilationUnit {
 	 * @throws NullPointerException if any argument is null. 
 	 * 
 	 */
-	BundledCompilationUnit(ICompilationUnit unit, ASTNode rootNode) {
+	RewriteCompilationUnit(ICompilationUnit unit, ASTNode rootNode) {
 		Objects.requireNonNull(unit);
 		Objects.requireNonNull(rootNode);
 		
@@ -158,7 +159,7 @@ public class BundledCompilationUnit implements ICompilationUnit {
 	 * not change the underlying AST graph.	 * 
 	 * <br>
 	 * <br>
-	 * This method does not change the AST until {@link BundledCompilationUnit#applyChanges(IProgressMonitor)}
+	 * This method does not change the AST until {@link RewriteCompilationUnit#applyChanges(IProgressMonitor)}
 	 * has been called.
 	 * 
 	 * 
@@ -176,7 +177,7 @@ public class BundledCompilationUnit implements ICompilationUnit {
 	 * No imports are added for types that are already known.
 	 * <br>
 	 * <br>
-	 * This method does not change the AST until {@link BundledCompilationUnit#applyChanges(IProgressMonitor)}
+	 * This method does not change the AST until {@link RewriteCompilationUnit#applyChanges(IProgressMonitor)}
 	 * has been called.
 	 *  
 	 * @param qualifiedTypeName The qualified name of the type
@@ -192,7 +193,7 @@ public class BundledCompilationUnit implements ICompilationUnit {
 	 * Removes an import from this compilation unit.
 	 * <br>
 	 * <br>
-	 * This method does not change the AST until {@link BundledCompilationUnit#applyChanges(IProgressMonitor)}
+	 * This method does not change the AST until {@link RewriteCompilationUnit#applyChanges(IProgressMonitor)}
 	 * has been called.
 	 *  
 	 * @param qualifiedTypeName The qualified name of the type
@@ -259,6 +260,10 @@ public class BundledCompilationUnit implements ICompilationUnit {
 		
 	}
 	
+	@Override
+	public String toString() {
+		return "RewriteCompilationUnit("+ getElementName() + ")" ;
+	}
 	
 	/*
 	 * Methods from ICompilationUnit 

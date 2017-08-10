@@ -1,6 +1,7 @@
 package de.tudarmstadt.rxrefactoring.ext.asynctask.workers;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -20,13 +21,14 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.logging.Log;
-import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.parser.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.parser.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.AnonymousClassBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.InnerClassBuilder;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.RefactorNames;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.SubscriberBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
@@ -48,18 +50,20 @@ public class CachedAnonymousTaskWorker implements IWorker<AsyncTaskCollector, Vo
 	
 	final String EXECUTE_ON_EXECUTOR = "executeOnExecutor";
 	
-	private String complexObservableclassName = "complexObservableclassName";
+//	private String complexObservableclassName = "complexObservableclassName";
 	private String subscription = "subscription";
-	private String asyncMethodName = "asyncMethodName";
+//	private String asyncMethodName = "asyncMethodName";
 	// private boolean isComplex = false;
+	
+	private InnerClassBuilder innerClassBuilder;
 
 	@Override
 	public Void refactor(ProjectUnits units, AsyncTaskCollector collector, WorkerSummary summary) throws Exception {
 		
 		
-		Multimap<BundledCompilationUnit, AnonymousClassDeclaration> cuAnonymousClassesMap = collector.getAnonymousCachedClasses();
+		Multimap<RewriteCompilationUnit, AnonymousClassDeclaration> cuAnonymousClassesMap = collector.getAnonymousCachedClasses();
 		
-		for (BundledCompilationUnit unit : cuAnonymousClassesMap.keySet()) {
+		for (RewriteCompilationUnit unit : cuAnonymousClassesMap.keySet()) {
 
 			Collection<AnonymousClassDeclaration> declarations = cuAnonymousClassesMap.get(unit);
 			for (AnonymousClassDeclaration asyncCachedTask : declarations) {
@@ -69,7 +73,7 @@ public class CachedAnonymousTaskWorker implements IWorker<AsyncTaskCollector, Vo
 
 				AsyncTaskWrapper asyncTask = new AsyncTaskWrapper(classInstance, unit);
 
-				if (asyncTask.getDoInBackgroundBlock() != null) {
+				if (asyncTask.getDoInBackground() != null) {
 					AST ast = asyncTaskDeclaration.getAST();
 					
 
@@ -103,8 +107,8 @@ public class CachedAnonymousTaskWorker implements IWorker<AsyncTaskCollector, Vo
 	 * @param ast
 	 * @param asyncTaskDeclaration
 	 */
-	private boolean checkForimplicitExecute(BundledCompilationUnit unit,
-			Multimap<BundledCompilationUnit, MethodInvocation> cuRelevantUsagesMap, AST ast,
+	private boolean checkForimplicitExecute(RewriteCompilationUnit unit,
+			Multimap<RewriteCompilationUnit, MethodInvocation> cuRelevantUsagesMap, AST ast,
 			AnonymousClassDeclaration asyncTaskDeclaration) {
 		String variableName;
 		MethodInvocation implicitExecute = null;
@@ -156,15 +160,14 @@ public class CachedAnonymousTaskWorker implements IWorker<AsyncTaskCollector, Vo
 	//
 	// }
 
-	private void updateUsage(Multimap<BundledCompilationUnit, MethodInvocation> cuRelevantUsagesMap, AST ast,
+	private void updateUsage(Multimap<RewriteCompilationUnit, MethodInvocation> cuRelevantUsagesMap, AST ast,
 			AnonymousClassDeclaration asyncTaskDeclaration,
-			BundledCompilationUnit icuOuter) {
-		for (BundledCompilationUnit unit : cuRelevantUsagesMap.keySet()) {
+			RewriteCompilationUnit icuOuter) {
+		for (RewriteCompilationUnit unit : cuRelevantUsagesMap.keySet()) {
 			// TypeDeclaration tyDec = ast.newTypeDeclaration();
 			// UnitWriterExt newWriter = null;
 			// AST astInvoke = ast;
-			Log.info(getClass(), "METHOD=updateUsage - updating usage for class: " + icuOuter.getElementName() + " in "
-					+ unit.getElementName());
+			
 			for (MethodInvocation methodInvoke : cuRelevantUsagesMap.get(unit)) {
 				if (methodInvoke.getName().toString().equals(EXECUTE)
 						|| methodInvoke.getName().toString().equals(EXECUTE_ON_EXECUTOR)) {
@@ -198,8 +201,8 @@ public class CachedAnonymousTaskWorker implements IWorker<AsyncTaskCollector, Vo
 	 * Replace asyncTask.cancel() method with Subscription.unsubscribe()
 	 *
 	 */
-	void replaceCancel(Multimap<BundledCompilationUnit, MethodInvocation> cuRelevantUsagesMap, MethodInvocation methodInvoke,
-			BundledCompilationUnit unit, AST astInvoke) {
+	void replaceCancel(Multimap<RewriteCompilationUnit, MethodInvocation> cuRelevantUsagesMap, MethodInvocation methodInvoke,
+			RewriteCompilationUnit unit, AST astInvoke) {
 		boolean isCancelPresent = false;
 		for (MethodInvocation methodReference : cuRelevantUsagesMap.get(unit)) {
 			try {
@@ -226,7 +229,7 @@ public class CachedAnonymousTaskWorker implements IWorker<AsyncTaskCollector, Vo
 	/**
 	 * Add cancel method if AsyncTask.cacel() method was invoked
 	 */
-	private void updateCancelInvocation(BundledCompilationUnit unit, MethodInvocation methodInvoke, AST astInvoke) {
+	private void updateCancelInvocation(RewriteCompilationUnit unit, MethodInvocation methodInvoke, AST astInvoke) {
 
 		MethodInvocation unSubscribe = astInvoke.newMethodInvocation();
 		unSubscribe
@@ -240,38 +243,48 @@ public class CachedAnonymousTaskWorker implements IWorker<AsyncTaskCollector, Vo
 	 * Method to refactor method invocation statements with name execute EX: new
 	 * Task().execute();
 	 */
-	void replaceExecute(MethodInvocation methodInvoke, BundledCompilationUnit unit, AST astInvoke, boolean withSubscription) {
+	void replaceExecute(			
+			MethodInvocation executeInvoke, //The invocation of .execute(...) on a AsyncTask
+			RewriteCompilationUnit unit, AST ast, boolean withSubscription) {
 
-//		UnitWriterExt singleChangeWriter = UnitWriters.getOrElse(unit,
-//				() -> new UnitWriterExt(unit, astInvoke, getClass().getSimpleName()));
-
-		AST methodAST = methodInvoke.getAST();
-		MethodInvocation execute = (MethodInvocation) ASTNode.copySubtree(methodAST, methodInvoke);
-		if (execute.getName().toString().equals(EXECUTE_ON_EXECUTOR)) {
-			execute.arguments().clear();
-		}
-		execute.setExpression(AsyncTaskASTUtils.getinstannceCreationStatement(methodAST, complexObservableclassName));
-		execute.setName(methodAST.newSimpleName(asyncMethodName));
-
-		MethodInvocation invocation = methodAST.newMethodInvocation();
-
-		invocation.setExpression(execute);
-		invocation.setName(methodAST.newSimpleName(SUBSCRIBE));
-		// ASTUtil.replaceInStatement(methodInvoke, invocation);
+		AST methodAST = executeInvoke.getAST();
 		
-		Log.info(getClass(), "UNITNAME: " + unit.getElementName());
+//		MethodInvocation execute = (MethodInvocation) ASTNode.copySubtree(methodAST, executeInvoke);
+//		if (execute.getName().toString().equals(EXECUTE_ON_EXECUTOR)) {
+//			execute.arguments().clear();
+//		}
+		
+		//new ObservableWrapper().create()
+		MethodInvocation createMethod = methodAST.newMethodInvocation();		
+		//TODO: Add 
+		List executeArguments = executeInvoke.arguments();
+		
+		List arguments;
+		if (executeInvoke.getName().toString().equals(EXECUTE_ON_EXECUTOR)) {
+			arguments = executeArguments.subList(1, executeArguments.size());
+		} else {
+			arguments = executeArguments;
+		}		
+		createMethod.setExpression(innerClassBuilder.buildNewObservableWrapper());
+		createMethod.setName(methodAST.newSimpleName(RefactorNames.CREATE_OBSERVABLE_METHOD_NAME));
+		arguments.forEach(createMethod.arguments()::add);
+
+		//new ObservableWrapper().create().subscribe()
+		MethodInvocation invocation = methodAST.newMethodInvocation();
+		invocation.setExpression(createMethod);
+		invocation.setName(methodAST.newSimpleName(SUBSCRIBE));
 		
 		if (!withSubscription) {
-			unit.replace(methodInvoke, invocation);
+			unit.replace(executeInvoke, invocation);
 		} else {
-			createSubscriptionDeclaration(unit, methodInvoke);
+			createSubscriptionDeclaration(unit, executeInvoke);
 			Assignment initSubscription = methodAST.newAssignment();
 
 			initSubscription.setLeftHandSide(
-					methodAST.newSimpleName(getVariableName(methodInvoke.getExpression()) + subscription));
+					methodAST.newSimpleName(getVariableName(executeInvoke.getExpression()) + subscription));
 			initSubscription.setRightHandSide(invocation);
 			// ASTUtil.replaceInStatement(methodInvoke, initSubscription);
-			unit.replace(methodInvoke, initSubscription);
+			unit.replace(executeInvoke, initSubscription);
 		}
 	}
 
@@ -279,33 +292,46 @@ public class CachedAnonymousTaskWorker implements IWorker<AsyncTaskCollector, Vo
 	 * Method to refactor method invocation statements with name execute EX: new
 	 * Task().execute();
 	 */
-	void replaceExecuteImplicit(BundledCompilationUnit unit, MethodInvocation methodInvoke,
+	void replaceExecuteImplicit(RewriteCompilationUnit unit, MethodInvocation executeInvoke,
 			boolean withSubscription, Statement referenceStatement) {
 
-		AST ast = unit.getAST();
-		MethodInvocation execute = (MethodInvocation) ASTNode.copySubtree(ast, methodInvoke);
+		AST methodAST = executeInvoke.getAST();
 		
-		if (execute.getName().toString().equals(EXECUTE_ON_EXECUTOR)) {
-			execute.arguments().clear();
-		}
-		execute.setExpression(AsyncTaskASTUtils.getinstannceCreationStatement(ast, complexObservableclassName));
-		execute.setName(ast.newSimpleName(asyncMethodName));
+//		MethodInvocation execute = (MethodInvocation) ASTNode.copySubtree(methodAST, executeInvoke);
+//		if (execute.getName().toString().equals(EXECUTE_ON_EXECUTOR)) {
+//			execute.arguments().clear();
+//		}
+		
+		//new ObservableWrapper().create()
+		MethodInvocation createMethod = methodAST.newMethodInvocation();		
+		//TODO: Add 
+		List executeArguments = executeInvoke.arguments();
+		
+		List arguments;
+		if (executeInvoke.getName().toString().equals(EXECUTE_ON_EXECUTOR)) {
+			arguments = executeArguments.subList(1, executeArguments.size());
+		} else {
+			arguments = executeArguments;
+		}		
+		createMethod.setExpression(innerClassBuilder.buildNewObservableWrapper());
+		createMethod.setName(methodAST.newSimpleName(RefactorNames.CREATE_OBSERVABLE_METHOD_NAME));
+		arguments.forEach(createMethod.arguments()::add);
 
-		MethodInvocation invocation = ast.newMethodInvocation();
-
-		invocation.setExpression(execute);
-		invocation.setName(ast.newSimpleName(SUBSCRIBE));
+		//new ObservableWrapper().create().subscribe()
+		MethodInvocation invocation = methodAST.newMethodInvocation();
+		invocation.setExpression(createMethod);
+		invocation.setName(methodAST.newSimpleName(SUBSCRIBE));
 		// ASTUtil.replaceInStatement(methodInvoke, invocation);
 		if (!withSubscription) {
 			unit.replace(referenceStatement, invocation);
 		} else {
-			createSubscriptionDeclaration(unit, methodInvoke);
-			Assignment initSubscription = ast.newAssignment();
+			createSubscriptionDeclaration(unit, executeInvoke);
+			Assignment initSubscription = methodAST.newAssignment();
 
 			initSubscription.setLeftHandSide(
-					ast.newSimpleName(getVariableName(methodInvoke.getExpression()) + subscription));
+					methodAST.newSimpleName(getVariableName(executeInvoke.getExpression()) + subscription));
 			initSubscription.setRightHandSide(invocation);
-			unit.replace(methodInvoke, initSubscription);
+			unit.replace(executeInvoke, initSubscription);
 		}
 	}
 
@@ -316,7 +342,7 @@ public class CachedAnonymousTaskWorker implements IWorker<AsyncTaskCollector, Vo
 			return e.toString();
 	}
 
-	void createSubscriptionDeclaration(BundledCompilationUnit unit, MethodInvocation methodInvoke) {
+	void createSubscriptionDeclaration(RewriteCompilationUnit unit, MethodInvocation methodInvoke) {
 		TypeDeclaration tyDec = ASTUtils.findParent(methodInvoke, TypeDeclaration.class);
 		AST ast = unit.getAST();
 
@@ -330,7 +356,7 @@ public class CachedAnonymousTaskWorker implements IWorker<AsyncTaskCollector, Vo
 	}
 
 	private void updateImports(AsyncTaskWrapper asyncTask) {
-		BundledCompilationUnit unit = asyncTask.getUnit();
+		RewriteCompilationUnit unit = asyncTask.getUnit();
 		
 		unit.addImport("rx.android.schedulers.AndroidSchedulers");
 		unit.addImport("rx.schedulers.Schedulers");
@@ -338,19 +364,19 @@ public class CachedAnonymousTaskWorker implements IWorker<AsyncTaskCollector, Vo
 		unit.addImport("rx.Observable");		
 		unit.addImport("java.util.concurrent.Callable");
 
-		if (asyncTask.getOnPreExecuteBlock() != null) {
+		if (asyncTask.getOnPreExecute() != null) {
 			unit.addImport("rx.functions.Action0");
 		}
 		
-		if (asyncTask.getOnPostExecuteBlock() != null) {
+		if (asyncTask.getOnPostExecute() != null) {
 			unit.addImport("rx.functions.Action1");
 			unit.removeImport("java.util.concurrent.ExecutionException");
 			unit.removeImport("java.util.concurrent.TimeoutException");
 		}
-		if (asyncTask.getDoInBackgroundBlock() != null) {
+		if (asyncTask.getDoInBackground() != null) {
 			unit.addImport("rx.functions.Action1");
 		}
-		if (asyncTask.getOnProgressUpdateBlock() != null) {
+		if (asyncTask.getOnProgressUpdate() != null) {
 			unit.addImport("rx.Subscriber");
 			unit.addImport("java.util.Arrays");
 		}
@@ -362,12 +388,12 @@ public class CachedAnonymousTaskWorker implements IWorker<AsyncTaskCollector, Vo
 
 	private void addRxObservable(AsyncTaskWrapper asyncTask, Statement referenceStatement) {
 		
-		BundledCompilationUnit unit = asyncTask.getUnit();
+		RewriteCompilationUnit unit = asyncTask.getUnit();
 		
 		AST ast = unit.getAST();
 		
 		boolean needInnerClassDecl = asyncTask.hasAdditionalAccess();
-		boolean onProgressUpdateBlock = asyncTask.getOnProgressUpdateBlock() != null;
+		boolean onProgressUpdateBlock = asyncTask.getOnProgressUpdate() != null;
 		
 		//removeSuperInvocations(asyncTask);
 
@@ -378,7 +404,7 @@ public class CachedAnonymousTaskWorker implements IWorker<AsyncTaskCollector, Vo
 //					asyncTask.getProgressParameter().toString());
 //		}
 
-		if (!needInnerClassDecl && asyncTask.getIsVoid()) {
+		if (!needInnerClassDecl && asyncTask.inputIsVoid()) {
 			
 			//Creates Observable.fromCallable ...
 			AnonymousClassBuilder anonymousClassBuilder = new AnonymousClassBuilder(asyncTask);
@@ -454,10 +480,12 @@ public class CachedAnonymousTaskWorker implements IWorker<AsyncTaskCollector, Vo
 //			String complexRxObservableClass = complexObservable.build();
 			// initialize class name which will be used for replacing execute
 			// method usage
-			complexObservableclassName = observableWrapper.getName().getIdentifier();
-
-			// initialize asyncmethodname to be used at execute
-			asyncMethodName = innerClassBuilder.getMethodName();
+			this.innerClassBuilder = innerClassBuilder; 
+			
+//			complexObservableclassName = observableWrapper.getName().getIdentifier();
+//
+//			// initialize asyncmethodname to be used at execute
+//			asyncMethodName = innerClassBuilder.getMethodName();
 
 			// initialize asyncmethodname to be used at execute
 			subscription = "subscription" + innerClassBuilder.getId();

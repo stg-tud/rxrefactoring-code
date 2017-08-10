@@ -1,6 +1,7 @@
 package de.tudarmstadt.rxrefactoring.ext.asynctask.workers;
 
 import java.util.Collection;
+import java.util.Objects;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -10,6 +11,7 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
@@ -18,13 +20,14 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.logging.Log;
-import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.parser.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.parser.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.AnonymousClassBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.InnerClassBuilder;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.RefactorNames;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.SubscriberBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
@@ -42,49 +45,53 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 	private final String SUBSCRIBE = "subscribe";
 	private final String UN_SUBSCRIBE = "unsubscribe";
 	final String EXECUTE_ON_EXECUTOR = "executeOnExecutor";
-	private String complexObservableclassName = "complexObservableclassName";
+//	private String complexObservableclassName = "complexObservableclassName";
 	private String subscription = "subscription";
-	private String asyncMethodName = "asyncMethodName";
+//	private String asyncMethodName = "asyncMethodName";
+	
+	private InnerClassBuilder innerClassBuilder = null;
 
 
 	@Override
 	public Void refactor(ProjectUnits units, AsyncTaskCollector collector, WorkerSummary summary) throws Exception {
-			
 		// All anonymous class declarations
-		Multimap<BundledCompilationUnit, AnonymousClassDeclaration> anonymousClasses = collector.getAnonymousClasses();
-		
+		Multimap<RewriteCompilationUnit, AnonymousClassDeclaration> anonymousClasses = collector.getAnonymousClasses();
 
 		// Iterate through all relevant compilation units
-		for (BundledCompilationUnit unit : anonymousClasses.keySet()) {
-
-			Collection<AnonymousClassDeclaration> declarations = anonymousClasses.get(unit);
-
+		for (RewriteCompilationUnit unit : anonymousClasses.keySet()) {
 			// Iterate through all anonymous AsyncTask declarations
-			for (AnonymousClassDeclaration asyncTaskDeclaration : declarations) {
+			for (AnonymousClassDeclaration asyncTaskDeclaration : anonymousClasses.get(unit)) {
 
 				//Retrieves information about the AsyncTask declaration
 				AsyncTaskWrapper asyncTask = new AsyncTaskWrapper(asyncTaskDeclaration, unit);
 
 				//If there is no doInBackground, then we can't do any refactoring
-				if (asyncTask.getDoInBackgroundBlock() == null)
+				if (asyncTask.getDoInBackground() == null)
 					continue;
-	
-							
-				AST ast = unit.getAST();
-
+				
+				//Retrieves the statement that defines the AsyncTask.
 				Statement referenceStatement = ASTUtils.findParent(asyncTaskDeclaration, Statement.class);
-
-				//Adds the observable
+							
+				//Gets the AST used for this compilation unit
+				AST ast = unit.getAST();
+				
+				//Update imports accordingly
+				updateImports(asyncTask, unit);	
+				
+				//Replace the anonymous AsyncTask declaration with an observable
 				addObservable(asyncTask, unit, referenceStatement, asyncTaskDeclaration);
+				
 
-				if (asyncTask.hasAdditionalAccess()) {
-					if (!checkForimplicitExecute(collector.getRelevantUsages(), ast, asyncTaskDeclaration,
-							unit))
+				//if (asyncTask.hasAdditionalAccess()) {
+				//innerClassBuilder != null, if there has to be a inner class for the observable (instead of an anonymous class).
+				if (innerClassBuilder != null) {
+					if (!checkForimplicitExecute(collector.getRelevantUsages(), ast, asyncTaskDeclaration,	unit))
 						unit.remove(asyncTaskDeclaration);
+						
 					updateUsage(collector.getRelevantUsages(), ast, asyncTaskDeclaration, unit);
 				}
 
-				updateImports(asyncTask, unit);				
+							
 			}
 		}
 
@@ -105,41 +112,32 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 	 * @param asyncTaskDeclaration
 	 * @param unit
 	 */
-	private boolean checkForimplicitExecute(Multimap<BundledCompilationUnit, MethodInvocation> cuRelevantUsagesMap, AST ast,
-			AnonymousClassDeclaration asyncTaskDeclaration, BundledCompilationUnit unit) {
+	private boolean checkForimplicitExecute(Multimap<RewriteCompilationUnit, MethodInvocation> cuRelevantUsagesMap, AST ast,
+			AnonymousClassDeclaration asyncTaskDeclaration, RewriteCompilationUnit unit) {
 		
 	//	String variableName = "getObservable";
 		
-		MethodInvocation implicitExecute = null;
+	//TODO: Does not find execute inovcation as the parent
+		MethodInvocation execute = ASTUtils.findParent(asyncTaskDeclaration, MethodInvocation.class); //AsyncTaskASTUtils.findOuterParent(asyncTaskDeclaration, MethodInvocation.class);
 		
-		//TODO: Does not find execute inovcation as the parent
-		ASTNode execute = ASTUtils.findParent(asyncTaskDeclaration, MethodInvocation.class); //AsyncTaskASTUtils.findOuterParent(asyncTaskDeclaration, MethodInvocation.class);
-		
-		if (execute != null) {
-			implicitExecute = (MethodInvocation) execute;	
-			
-			if (implicitExecute.getName().toString().equals(EXECUTE)
-					|| implicitExecute.getName().toString().equals(EXECUTE_ON_EXECUTOR)) {					
+		if (execute != null	 && (execute.getName().toString().equals(EXECUTE)
+					|| execute.getName().toString().equals(EXECUTE_ON_EXECUTOR))) {					
 				
-				Expression expr = createExecuteReplacement(unit);
-				unit.replace(implicitExecute, expr);
-				
-//				MethodInvocation me = ast.newMethodInvocation();
-//				me.setName(ast.newSimpleName(implicitExecute.getName().toString()));
-//				me.setExpression(ast.newSimpleName(variableName));
-				
-			
-//				replaceExecute(me, unit, false);
-				return true;
-			}
+			Expression expr = createExecuteReplacement(unit);
+			unit.replace(execute, expr);
+
+			return true;
 		}
+		
 		return false;
 	}
 
-	private void updateUsage(Multimap<BundledCompilationUnit, MethodInvocation> cuRelevantUsagesMap, AST ast,
-			AnonymousClassDeclaration asyncTaskDeclaration,	BundledCompilationUnit icuOuter) {
-		for (BundledCompilationUnit unit : cuRelevantUsagesMap.keySet()) {
+	private void updateUsage(Multimap<RewriteCompilationUnit, MethodInvocation> cuRelevantUsagesMap, AST ast,
+			AnonymousClassDeclaration asyncTaskDeclaration,	RewriteCompilationUnit icuOuter) {
+		
+		for (RewriteCompilationUnit unit : cuRelevantUsagesMap.keySet()) {
 			for (MethodInvocation methodInvoke : cuRelevantUsagesMap.get(unit)) {
+				
 				if (methodInvoke.getName().toString().equals(EXECUTE)
 						|| methodInvoke.getName().toString().equals(EXECUTE_ON_EXECUTOR)) {
 
@@ -182,8 +180,8 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 	 * @param unit
 	 * @param astInvoke
 	 */
-	void replaceCancel(Multimap<BundledCompilationUnit, MethodInvocation> cuRelevantUsagesMap, MethodInvocation methodInvoke,
-			BundledCompilationUnit unit, AST astInvoke) {
+	void replaceCancel(Multimap<RewriteCompilationUnit, MethodInvocation> cuRelevantUsagesMap, MethodInvocation methodInvoke,
+			RewriteCompilationUnit unit, AST astInvoke) {
 		boolean isCancelPresent = false;
 		for (MethodInvocation methodReference : cuRelevantUsagesMap.get(unit)) {
 			try {
@@ -209,12 +207,8 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 	/**
 	 * Add cancel method if AsyncTask.cacel() method was invoked
 	 */
-	private void updateCancelInvocation(BundledCompilationUnit unit, MethodInvocation methodInvoke, AST astInvoke) {
+	private void updateCancelInvocation(RewriteCompilationUnit unit, MethodInvocation methodInvoke, AST astInvoke) {
 
-//		UnitWriterExt writer = UnitWriters.getOrElse(unit,
-//				() -> new UnitWriterExt(unit, astInvoke, getClass().getSimpleName()));
-		
-		
 		MethodInvocation unSubscribe = astInvoke.newMethodInvocation();
 		unSubscribe
 				.setExpression(astInvoke.newSimpleName(getVariableName(methodInvoke.getExpression()) + subscription));
@@ -259,16 +253,21 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 //		}
 //	}
 
-	private MethodInvocation createExecuteReplacement(BundledCompilationUnit unit) {
+	private MethodInvocation createExecuteReplacement(RewriteCompilationUnit unit) {
+		//InnerClassBuilder should be initialized in the addObservable method.
+		Objects.requireNonNull(innerClassBuilder, "InnerClassBuilder has not been initialized.");
+		
+		//Initialize the AST used for this unit.
 		AST ast = unit.getAST();
 		
 		
 		//Builds: new ObservableWrapper()
-		ClassInstanceCreation constructor = AsyncTaskASTUtils.getinstannceCreationStatement(ast, complexObservableclassName);
+		ClassInstanceCreation constructor = innerClassBuilder.buildNewObservableWrapper(ast);		
+		//ClassInstanceCreation constructor = AsyncTaskASTUtils.getinstannceCreationStatement(ast, complexObservableclassName);
 		
 		//Builds: new ObservableWrapper().create()
 		MethodInvocation createInvoke = ast.newMethodInvocation();
-		createInvoke.setName(ast.newSimpleName(asyncMethodName));
+		createInvoke.setName(ast.newSimpleName(RefactorNames.CREATE_OBSERVABLE_METHOD_NAME));
 		createInvoke.setExpression(constructor);
 		
 		//TODO: Remove this part and produce a completely new expression
@@ -289,7 +288,7 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 		return subscribeInvoke;
 	}
 	
-	void addSubscribe(Expression expr, BundledCompilationUnit unit, boolean withSubscription) {
+	void addSubscribe(Expression expr, RewriteCompilationUnit unit, boolean withSubscription) {
 		AST ast = unit.getAST();
 		
 		MethodInvocation subscribe = ast.newMethodInvocation();
@@ -301,20 +300,21 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 	 * Method to refactor method invocation statements with name execute EX: new
 	 * Task().execute();
 	 */
-	void replaceExecute(MethodInvocation executeInvoke, BundledCompilationUnit unit, boolean withSubscription) {
-
-//		UnitWriterExt writer = UnitWriters.getOrElse(unit,
-//				() -> new UnitWriterExt(unit, ast, getClass().getSimpleName()));
+	void replaceExecute(MethodInvocation executeInvoke, RewriteCompilationUnit unit, boolean withSubscription) {
+		//InnerClassBuilder should be initialized in the addObservable method.
+		Objects.requireNonNull(innerClassBuilder, "InnerClassBuilder has not been initialized.");
 
 		AST ast = unit.getAST();
 		
 		
 		//Builds: new ObservableWrapper()
-		ClassInstanceCreation constructor = AsyncTaskASTUtils.getinstannceCreationStatement(ast, complexObservableclassName);
+		ClassInstanceCreation constructor = innerClassBuilder.buildNewObservableWrapper(ast);
+		
+		
 		
 		//Builds: new ObservableWrapper().create()
 		MethodInvocation createInvoke = ast.newMethodInvocation();
-		createInvoke.setName(ast.newSimpleName(asyncMethodName));
+		createInvoke.setName(ast.newSimpleName(RefactorNames.CREATE_OBSERVABLE_METHOD_NAME));
 		createInvoke.setExpression(constructor);
 		
 		//TODO: Remove this part and produce a completely new expression
@@ -354,12 +354,9 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 			return e.toString();
 	}
 
-	void createSubscriptionDeclaration(BundledCompilationUnit unit, MethodInvocation methodInvoke) {
+	void createSubscriptionDeclaration(RewriteCompilationUnit unit, MethodInvocation methodInvoke) {
 		TypeDeclaration tyDec = ASTUtils.findParent(methodInvoke, TypeDeclaration.class);
 		AST astInvoke = tyDec.getAST();
-
-//		UnitWriterExt writer = UnitWriters.getOrElse(unit,
-//				() -> new UnitWriterExt(unit, astInvoke, getClass().getSimpleName()));
 
 		VariableDeclarationFragment variable = astInvoke.newVariableDeclarationFragment();
 		variable.setName(astInvoke.newSimpleName(methodInvoke.getExpression().toString() + subscription));
@@ -370,7 +367,7 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 		unit.addImport("rx.Subscription");
 	}
 
-	private void updateImports(AsyncTaskWrapper asyncTask, BundledCompilationUnit unit) {
+	private void updateImports(AsyncTaskWrapper asyncTask, RewriteCompilationUnit unit) {
 		
 		unit.addImport("rx.android.schedulers.AndroidSchedulers");
 		unit.addImport("rx.schedulers.Schedulers");
@@ -378,22 +375,22 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 		unit.addImport("rx.Observable");		
 		unit.addImport("java.util.concurrent.Callable");
 
-		if (asyncTask.getOnPreExecuteBlock() != null) {
+		if (asyncTask.getOnPreExecute() != null) {
 			unit.addImport("rx.functions.Action0");
 		}
 		
-		if (asyncTask.getOnPostExecuteBlock() != null) {
+		if (asyncTask.getOnPostExecute() != null) {
 			unit.addImport("rx.functions.Action1");
 			unit.removeImport("java.util.concurrent.ExecutionException");
 			unit.removeImport("java.util.concurrent.TimeoutException");
 
 		}
 
-		if (asyncTask.getDoInBackgroundBlock() != null) {
+		if (asyncTask.getDoInBackground() != null) {
 			unit.addImport("rx.functions.Action1");
 		}
 
-		if (asyncTask.getOnProgressUpdateBlock() != null) {
+		if (asyncTask.getOnProgressUpdate() != null) {
 			unit.addImport("rx.Subscriber");
 			unit.addImport("java.util.Arrays");
 		}
@@ -404,11 +401,10 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 	}
 
 
-	private void addObservable(AsyncTaskWrapper asyncTask, BundledCompilationUnit unit,
-			Statement referenceStatement, AnonymousClassDeclaration anonymousCachedClassDecleration) {
+	private void addObservable(AsyncTaskWrapper asyncTask, RewriteCompilationUnit unit,
+			Statement referenceStatement, AnonymousClassDeclaration anonymousCachedClassDeclaration) {
 		
 		
-		boolean hasProgressUpdateBlock = asyncTask.getOnProgressUpdateBlock() != null;
 		//removeSuperInvocations(asyncTask);
 
 //		SubscriberHolder subscriberHolder = null;
@@ -422,19 +418,19 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 		
 		AST ast = referenceStatement.getAST();
 		
-		if (!asyncTask.hasAdditionalAccess() && asyncTask.getIsVoid()) {
+		//Build an anonymous class if possible
+		if (!asyncTask.hasAdditionalAccess() && asyncTask.inputIsVoid()) {
 			
 			//Produces the builder that creates the observable
 			//AnonymousClassBuilder builder = observableBuilder(asyncTask, writer, subscriberHolder);
-			
-			
+				
 			
 			//Adds the progress-update subscriber
-			if (hasProgressUpdateBlock) {
+			if (asyncTask.hasOnProgressUpdate()) {
 				SubscriberBuilder subscriberBuilder = new SubscriberBuilder(asyncTask);
 				
 				//Add the method that creates the subscriber (getRxSubscriber)
-				addMethodAfter(unit, subscriberBuilder.buildGetSubscriber(), anonymousCachedClassDecleration);
+				addMethodAfter(unit, subscriberBuilder.buildGetSubscriber(), anonymousCachedClassDeclaration);
 				//Adds the subscriber declaration
 				addStatementBefore(unit, subscriberBuilder.buildSubscriberDeclaration(), referenceStatement);
 				
@@ -444,8 +440,21 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 			
 			//Gets the observable expression and adds it to the observable.
 			Expression observable = AnonymousClassBuilder.from(asyncTask);			
-			Statement stmt = ast.newExpressionStatement(observable);
 			
+			
+			//Check whether there is an execute invoke.
+			MethodInvocation parentInvoke = ASTUtils.findParent(asyncTask.getDeclaration(), MethodInvocation.class);
+			if (parentInvoke != null && (parentInvoke.getName().toString().equals(EXECUTE)
+					|| parentInvoke.getName().toString().equals(EXECUTE_ON_EXECUTOR))) {
+				
+				MethodInvocation subscribeInvoke = ast.newMethodInvocation();
+				subscribeInvoke.setExpression(observable);
+				subscribeInvoke.setName(ast.newSimpleName(SUBSCRIBE));
+				
+				observable = subscribeInvoke;
+			}
+			
+			Statement stmt = ast.newExpressionStatement(observable);
 			unit.replace(referenceStatement, stmt);
 			
 			/*
@@ -500,10 +509,12 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 //			String complexRxObservableClass = complexObservable.build();
 			// initialize class name which will be used for replacing execute
 			// method usage
-			complexObservableclassName = observable.getName().getIdentifier();
+//			complexObservableclassName = observable.getName().getIdentifier();
 
 			// initialize asyncmethodname to be used at execute
-			asyncMethodName = builder.getMethodName();
+//			asyncMethodName = builder.getMethodName();
+			
+			innerClassBuilder = builder;
 
 			//subscription = complexObservable.getAsynSubscription();
 			subscription = "subscription" + builder.getId();

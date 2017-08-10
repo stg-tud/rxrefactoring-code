@@ -8,17 +8,17 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.text.edits.MalformedTreeException;
 
-public class ProjectUnits implements Set<BundledCompilationUnit> {
+public class ProjectUnits implements Set<RewriteCompilationUnit> {
 
-	private Set<BundledCompilationUnit> units;
+	private Set<RewriteCompilationUnit> units;
 	
 	
-	public ProjectUnits(Set<BundledCompilationUnit> units) {
+	public ProjectUnits(Set<RewriteCompilationUnit> units) {
 		this.units = units;
 	}
 	
 	public void applyChanges() throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
-		for (BundledCompilationUnit unit : units) {
+		for (RewriteCompilationUnit unit : units) {
 			unit.applyChanges();
 		}		
 	}
@@ -39,7 +39,7 @@ public class ProjectUnits implements Set<BundledCompilationUnit> {
 	}
 
 	@Override
-	public Iterator<BundledCompilationUnit> iterator() {
+	public Iterator<RewriteCompilationUnit> iterator() {
 		return units.iterator();
 	}
 
@@ -54,7 +54,7 @@ public class ProjectUnits implements Set<BundledCompilationUnit> {
 	}
 
 	@Override
-	public boolean add(BundledCompilationUnit e) {
+	public boolean add(RewriteCompilationUnit e) {
 		throw new UnsupportedOperationException("This class is not mutable.");
 	}
 
@@ -69,7 +69,7 @@ public class ProjectUnits implements Set<BundledCompilationUnit> {
 	}
 
 	@Override
-	public boolean addAll(Collection<? extends BundledCompilationUnit> c) {
+	public boolean addAll(Collection<? extends RewriteCompilationUnit> c) {
 		return units.addAll(c);
 	}
 

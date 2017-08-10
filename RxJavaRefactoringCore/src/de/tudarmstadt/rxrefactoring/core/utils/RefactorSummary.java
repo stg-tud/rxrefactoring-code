@@ -157,6 +157,10 @@ public class RefactorSummary {
 			this.entries = Maps.newHashMap();
 		}
 		
+		public static WorkerSummary createNullSummary() {
+			return new WorkerSummary(null);
+		}
+		
 		public void addCorrect(String key) {
 			getEntryFor(key).addCorrect();			
 		}

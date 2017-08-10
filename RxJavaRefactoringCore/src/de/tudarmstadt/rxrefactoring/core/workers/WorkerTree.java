@@ -104,7 +104,13 @@ public class WorkerTree {
 		
 		while (!stack.isEmpty()) {			
 			WorkerNode<?,?> current = stack.pop();	
-			WorkerSummary workerSummary = summary.reportWorker(current.worker);
+			
+			WorkerSummary workerSummary;
+			if (current == root) {
+				workerSummary = WorkerSummary.createNullSummary();
+			} else {
+				workerSummary = summary.reportWorker(current.worker);
+			} 				
 			
 			Log.info(getClass(), "Run worker: " + current.worker.getName());
 			

@@ -26,7 +26,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.logging.Log;
-import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.parser.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.parser.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
@@ -41,12 +41,12 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
  */
 public class AsyncTaskCollector implements IWorker<Void,AsyncTaskCollector> {
 
-	private final Multimap<BundledCompilationUnit, TypeDeclaration> subclassesMap;
-	private final Multimap<BundledCompilationUnit, AnonymousClassDeclaration> anonymousClassesMap;
-	private final Multimap<BundledCompilationUnit, AnonymousClassDeclaration> anonymousCachedClassesMap;
-	private final Multimap<BundledCompilationUnit, MethodInvocation> relevantUsagesMap;
+	private final Multimap<RewriteCompilationUnit, TypeDeclaration> subclassesMap;
+	private final Multimap<RewriteCompilationUnit, AnonymousClassDeclaration> anonymousClassesMap;
+	private final Multimap<RewriteCompilationUnit, AnonymousClassDeclaration> anonymousCachedClassesMap;
+	private final Multimap<RewriteCompilationUnit, MethodInvocation> relevantUsagesMap;
 	
-	public AsyncTaskCollector(String collectorName) {
+	public AsyncTaskCollector() {
 		subclassesMap = HashMultimap.create();
 		anonymousClassesMap = HashMultimap.create();
 		anonymousCachedClassesMap = HashMultimap.create();
@@ -60,35 +60,35 @@ public class AsyncTaskCollector implements IWorker<Void,AsyncTaskCollector> {
 		return this;
 	}	
 
-	public void addSubclasses(BundledCompilationUnit cu, Iterable<TypeDeclaration> subclasses) {
+	public void addSubclasses(RewriteCompilationUnit cu, Iterable<TypeDeclaration> subclasses) {
 		subclassesMap.putAll(cu, subclasses);
 	}
 
-	public void addAnonymClassDecl(BundledCompilationUnit cu, Iterable<AnonymousClassDeclaration> anonymDeclarations) {
+	public void addAnonymClassDecl(RewriteCompilationUnit cu, Iterable<AnonymousClassDeclaration> anonymDeclarations) {
 		anonymousClassesMap.putAll(cu, anonymDeclarations);
 	}
 
-	public void addAnonymCachedClassDecl(BundledCompilationUnit cu, Iterable<AnonymousClassDeclaration> anonymCachedDeclarations) {
+	public void addAnonymCachedClassDecl(RewriteCompilationUnit cu, Iterable<AnonymousClassDeclaration> anonymCachedDeclarations) {
 		anonymousCachedClassesMap.putAll(cu, anonymCachedDeclarations);
 	}
 
-	public void addRelevantUsages(BundledCompilationUnit cu, Iterable<MethodInvocation> usages) {
+	public void addRelevantUsages(RewriteCompilationUnit cu, Iterable<MethodInvocation> usages) {
 		relevantUsagesMap.putAll(cu, usages);
 	}
 
-	public Multimap<BundledCompilationUnit, TypeDeclaration> getSubclasses() {
+	public Multimap<RewriteCompilationUnit, TypeDeclaration> getSubclasses() {
 		return subclassesMap;
 	}
 
-	public Multimap<BundledCompilationUnit, AnonymousClassDeclaration> getAnonymousClasses() {
+	public Multimap<RewriteCompilationUnit, AnonymousClassDeclaration> getAnonymousClasses() {
 		return anonymousClassesMap;
 	}
 
-	public Multimap<BundledCompilationUnit, AnonymousClassDeclaration> getAnonymousCachedClasses() {
+	public Multimap<RewriteCompilationUnit, AnonymousClassDeclaration> getAnonymousCachedClasses() {
 		return anonymousCachedClassesMap;
 	}
 
-	public Multimap<BundledCompilationUnit, MethodInvocation> getRelevantUsages() {
+	public Multimap<RewriteCompilationUnit, MethodInvocation> getRelevantUsages() {
 		return relevantUsagesMap;
 	}
 
@@ -101,7 +101,7 @@ public class AsyncTaskCollector implements IWorker<Void,AsyncTaskCollector> {
 		return allCompilationUnits.size();
 	}
 
-	private void processBundledCompilationUnit(BundledCompilationUnit unit) {
+	private void processBundledCompilationUnit(RewriteCompilationUnit unit) {
 		ASTNode root = unit.getRoot();
 		
 		DeclarationVisitor declarationVisitor = new DeclarationVisitor(ClassDetails.ASYNC_TASK);

@@ -60,7 +60,7 @@ public class SubscriberBuilder extends AbstractBuilder {
 		
 		//Define variable: onNextParameter
 		SingleVariableDeclaration onNextParameter = ast.newSingleVariableDeclaration();
-		onNextParameter.setName(unit.copyNode(asyncTask.getProgressParameter().getName()));
+		onNextParameter.setName(unit.copyNode(asyncTask.getOnProgressUpdateParameter().getName()));
 		onNextParameter.setType(getParameterType());
 		
 		//Define method: onNext()
@@ -71,7 +71,9 @@ public class SubscriberBuilder extends AbstractBuilder {
 		onNextMethod.parameters().add(onNextParameter);
 		onNextMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
 		onNextMethod.modifiers().add(createOverrideAnnotation());
-		onNextMethod.setBody(unit.copyNode(asyncTask.getOnProgressUpdateBlock()));
+		
+		if (asyncTask.getOnProgressUpdate() != null)
+			onNextMethod.setBody(unit.copyNode(asyncTask.getOnProgressUpdate().getBody()));
 		
 		
 		//Define method: onCompleted
@@ -189,7 +191,7 @@ public class SubscriberBuilder extends AbstractBuilder {
 	}
 	
 	public ArrayType getParameterType() {
-		return ast.newArrayType(unit.copyNode(asyncTask.getProgressParameter().getType()));
+		return ast.newArrayType(unit.copyNode(asyncTask.getOnProgressUpdateParameter().getType()));
 	}
 	
 	public String getFieldName() {

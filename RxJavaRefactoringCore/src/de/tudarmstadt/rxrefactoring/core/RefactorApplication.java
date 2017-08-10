@@ -44,8 +44,8 @@ import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.handler.IUIIntegration;
 import de.tudarmstadt.rxrefactoring.core.logging.Log;
-import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnitFactory;
+import de.tudarmstadt.rxrefactoring.core.parser.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.parser.RewriteCompilationUnitFactory;
 import de.tudarmstadt.rxrefactoring.core.parser.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.utils.ConstantStrings;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary;
@@ -298,7 +298,7 @@ public class RefactorApplication {
 		
 		IPackageFragmentRoot[] roots = javaProject.getAllPackageFragmentRoots();
 				
-		Set<BundledCompilationUnit> result = Sets.newConcurrentHashSet();		
+		Set<RewriteCompilationUnit> result = Sets.newConcurrentHashSet();		
 		
 		//Initializes a new thread pool.
 		ExecutorService executor = env.createExecutorService();
@@ -320,7 +320,7 @@ public class RefactorApplication {
 							//Asynchronously parse units
 							executor.submit(() -> {								
 								//Produces a new compilation unit factory.
-								BundledCompilationUnitFactory factory = new BundledCompilationUnitFactory();
+								RewriteCompilationUnitFactory factory = new RewriteCompilationUnitFactory();
 								
 								//Find the compilation units, i.e. .java source files.
 								for (ICompilationUnit unit : units) {
@@ -359,6 +359,7 @@ public class RefactorApplication {
 		workerTree.run();
 		
 		//The changes of the compilation units are applied
+		Log.info(getClass(), "Write changes...");
 		units.applyChanges();
 		
 	}

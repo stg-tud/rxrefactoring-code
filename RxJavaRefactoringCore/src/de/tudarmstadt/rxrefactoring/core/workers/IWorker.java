@@ -1,6 +1,6 @@
 package de.tudarmstadt.rxrefactoring.core.workers;
 
-import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.parser.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.parser.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
 
@@ -14,7 +14,7 @@ public interface IWorker<Input, Output> {
 	 * The worker executes its refactoring on the given compilation
 	 * units and outputs of parent workers. 
 	 * The refactoring is defined by the AST-modifying methods
-	 * of the provided {@link BundledCompilationUnit}.
+	 * of the provided {@link RewriteCompilationUnit}.
 	 * @param units The units that are refactored.
 	 * @param input The result of the parent worker.
 	 * @param summary The worker summary to report the refactoring.

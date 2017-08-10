@@ -11,7 +11,7 @@ import org.eclipse.jdt.core.dom.*;
 
 import com.google.common.collect.Lists;
 
-import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.parser.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.ClassDetails;
 
@@ -53,7 +53,7 @@ public class AsyncTaskWrapper {
 	/**
 	 * The compilation unit that contains the declaration. 
 	 */
-	private final BundledCompilationUnit unit;
+	private final RewriteCompilationUnit unit;
 
 	/**
 	 * Creates a new wrapper given the class declaration of a class that is an
@@ -64,7 +64,7 @@ public class AsyncTaskWrapper {
 	 *            
 	 * @throws NullPointerException if either argument is null.
 	 */
-	public AsyncTaskWrapper(ASTNode declaration, BundledCompilationUnit unit) {
+	public AsyncTaskWrapper(ASTNode declaration, RewriteCompilationUnit unit) {
 		Objects.requireNonNull(declaration);
 		Objects.requireNonNull(unit);
 		
@@ -86,51 +86,46 @@ public class AsyncTaskWrapper {
 	 */
 	private class AsyncTaskVisitor extends ASTVisitor {
 
-		private Block doInBackgroundBlock;
-		private Block onPostExecuteBlock;
-		private Block onPreExecuteBlock;
-		private Block onProgressUpdateBlock;
-		private Block onCancelled = null;
+		private MethodDeclaration doInBackground;
+		private MethodDeclaration onPostExecute;
+		private MethodDeclaration onPreExecute;
+		private MethodDeclaration onProgressUpdate;
+		private MethodDeclaration onCancelled;
 
-		private Type resultType;
 
-		private String parameters;
-		private SingleVariableDeclaration progressParameter;
-		private SingleVariableDeclaration postExecuteParameter;
-		private MethodDeclaration doInBackgroundMethod;
-		private Type postExecuteType;
 		private List<MethodInvocation> publishInvocations = new ArrayList<>();
-
-		private Boolean isVoid;
 
 
 		@Override
-		public boolean visit(Block node) {
-			ASTNode parent = node.getParent();
+		public boolean visit(MethodDeclaration node) {
+			
+			
 			// Method which overloads AsyncTask method should have at least 2
-			// modifiers they are override and protectedÏ
-			if (parent instanceof MethodDeclaration && ((MethodDeclaration) parent).modifiers().size() > 1) {
-				MethodDeclaration methodDeclaration = (MethodDeclaration) parent;
-				String methodDeclarationName = methodDeclaration.getName().toString();
-				if (DO_IN_BACKGROUND.equals(methodDeclarationName)) {
-					doInBackgroundBlock = node;
-					resultType = methodDeclaration.getReturnType2();
-					parameters = methodDeclaration.parameters().toString().replace("[", "").replace("]", "");
-					isVoid = (parameters == null ? false : (parameters.contains("Void") ? true : false));
-					doInBackgroundMethod = methodDeclaration;
-				} else if (ON_POST_EXECUTE.equals(methodDeclarationName)) {
-					onPostExecuteBlock = node;
-					postExecuteType = ((SingleVariableDeclaration) methodDeclaration.parameters().get(0)).getType();
-					postExecuteParameter = (SingleVariableDeclaration) methodDeclaration.parameters().get(0);
-				} else if (ON_PRE_EXECUTE.equals(methodDeclarationName)) {
-					onPreExecuteBlock = node;
-				} else if (ON_PROGRESS_UPDATE.equals(methodDeclarationName)) {
-					onProgressUpdateBlock = node;
-					progressParameter = (SingleVariableDeclaration) methodDeclaration.parameters().get(0);
-				} else if (ON_CANCELLED.equals(methodDeclarationName)) {
-					onCancelled = node;
-				}
+			// modifiers they are override and protected
+			//if (node.modifiers().size() > 1) {
+								
+			String methodDeclarationName = node.getName().toString();
+			
+			if (Objects.equals(DO_IN_BACKGROUND, methodDeclarationName) && node.parameters().size() == 1) {
+				doInBackground = node;
+//					resultType = node.getReturnType2();
+////					parameters = methodDeclaration.parameters().toString().replace("[", "").replace("]", "");
+//					isVoid = (parameters == null ? false : (parameters.contains("Void") ? true : false));
+//					doInBackgroundMethod = methodDeclaration;
+			} else if (ON_POST_EXECUTE.equals(methodDeclarationName) && node.parameters().size() == 1) {
+				onPostExecute = node;
+//					postExecuteType = ((SingleVariableDeclaration) methodDeclaration.parameters().get(0)).getType();
+//					postExecuteParameter = (SingleVariableDeclaration) methodDeclaration.parameters().get(0);
+			} else if (ON_PRE_EXECUTE.equals(methodDeclarationName) && node.parameters().size() == 0) {
+				onPreExecute = node;
+			} else if (ON_PROGRESS_UPDATE.equals(methodDeclarationName) && node.parameters().size() == 1) {
+				onProgressUpdate = node;
+//					progressParameter = (SingleVariableDeclaration) methodDeclaration.parameters().get(0);
+			} else if (ON_CANCELLED.equals(methodDeclarationName) && node.parameters().size() == 1) {
+				onCancelled = node;
 			}
+			//}
+			
 			return true;
 		}
 
@@ -199,7 +194,7 @@ public class AsyncTaskWrapper {
 		return declaration instanceof TypeDeclaration && declaration.getParent() instanceof TypeDeclaration;
 	}
 	
-	public BundledCompilationUnit getUnit() {
+	public RewriteCompilationUnit getUnit() {
 		return unit;
 	}
 	
@@ -229,20 +224,80 @@ public class AsyncTaskWrapper {
 	/**
 	 * @return the isVoid
 	 */
-	public Boolean getIsVoid() {
-		return visitor.isVoid;
+	public Boolean inputIsVoid() {
+		if (getDoInBackground() == null)
+			return false;
+		
+		for (Object element : getDoInBackground().parameters()) {
+			SingleVariableDeclaration var = (SingleVariableDeclaration) element;
+			
+			if (typeIsVoid(var.getType())) {
+				return true;
+			}				
+		}
+		return false;
+	}
+	
+	private Boolean typeIsVoid(Type type) {
+		return type instanceof SimpleType && ((SimpleType) type).getName() instanceof SimpleName
+				&& ((SimpleName)((SimpleType) type).getName()).getIdentifier().equals("Void");
 	}
 
-	public String getParameters() {
-		return visitor.parameters;
+
+	
+	/**
+	 * Returns the doInBackground method declaration of
+	 * this AsyncTask.
+	 * 
+	 * @return The doInBackground declaration, or null
+	 * if there is none.
+	 */
+	public MethodDeclaration getDoInBackground() {
+		return visitor.doInBackground;
 	}
 
-	public Block getDoInBackgroundBlock() {
-		return visitor.doInBackgroundBlock;
+	/**
+	 * Returns the onPostExecute method declaration of
+	 * this AsyncTask.
+	 * 
+	 * @return The onPostExecute declaration, or null
+	 * if there is none.
+	 */
+	public MethodDeclaration getOnPostExecute() {
+		return visitor.onPostExecute;
+	}
+	
+	/**
+	 * Returns the onPreExecute method declaration of
+	 * this AsyncTask.
+	 * 
+	 * @return The onPreExecute declaration, or null
+	 * if there is none.
+	 */
+	public MethodDeclaration getOnPreExecute() {
+		return visitor.onPreExecute;
 	}
 
-	public Block getOnPostExecuteBlock() {
-		return visitor.onPostExecuteBlock;
+	/**
+	 * Returns the onPreExecute method declaration of
+	 * this AsyncTask.
+	 * 
+	 * @return The onPreExecute declaration, or null
+	 * if there is none.
+	 */
+	public MethodDeclaration getOnProgressUpdate() {
+		return visitor.onProgressUpdate;
+	}
+	
+	/**
+	 * Returns the onCancelled method declaration of
+	 * this AsyncTask.
+	 * 
+	 * @return The onCancelled declaration, or null
+	 * if there is none.
+	 */
+	public MethodDeclaration getOnCancelled() {
+		return visitor.onCancelled;
 	}
 
 	/**
@@ -251,45 +306,62 @@ public class AsyncTaskWrapper {
 	 * @return The type of the doInBackground method, or null if the type could not
 	 *         be resolved.
 	 */
-	public Type getResultType() {		
-		return visitor.resultType;
+	public Type getResultType() {
+		if (getDoInBackground() == null)
+			return null;
+		
+		return getDoInBackground().getReturnType2();
 	}
+	
+	/**
+	 * Returns the parameter declaration of the onPostExecute
+	 * method.
+	 * 
+	 * @return The declaration of the parameter, or null if
+	 * the method is not defined.
+	 */
+	public SingleVariableDeclaration getOnPostExecuteParameter() {
+		if (getOnPostExecute() == null)
+			return null;
+		
+		//The visitor checks if the number of parameters is 1. 
+		return (SingleVariableDeclaration) getOnPostExecute().parameters().get(0);
+	}
+	
+	/**
+	 * Returns the parameter declaration of the onProgressUpdate
+	 * method.
+	 * 
+	 * @return The declaration of the parameter, or null if
+	 * the method is not defined.
+	 */
+	public SingleVariableDeclaration getOnProgressUpdateParameter() {
+		if (getOnProgressUpdate() == null)
+			return null;
+		
+		//The visitor checks if the number of parameters is 1. 
+		return (SingleVariableDeclaration) getOnProgressUpdate().parameters().get(0);
+	}
+	
 
-	public MethodDeclaration getDoInBackgroundmethod() {
-		return visitor.doInBackgroundMethod;
-	}
-
-	public Block getOnPreExecuteBlock() {
-		return visitor.onPreExecuteBlock;
-	}
-
-	public Block getOnProgressUpdateBlock() {
-		return visitor.onProgressUpdateBlock;
-	}
-
-	public SingleVariableDeclaration getProgressParameter() {
-		return visitor.progressParameter;
-	}
-
-	public SingleVariableDeclaration getPostExecuteParameter() {
-		return visitor.postExecuteParameter;
-	}
+//	public SingleVariableDeclaration getProgressParameter() {
+//		return visitor.progressParameter;
+//	}
+//
+//	public SingleVariableDeclaration getPostExecuteParameter() {
+//		return visitor.postExecuteParameter;
+//	}
 
 	
 	/**
 	 * @return the postExecuteType
 	 */
-	public Type getPostExecuteType() {
-		return visitor.postExecuteType;
-	}
+//	public Type getPostExecuteType() {
+//		return visitor.postExecuteType;
+//	}
 
 	
-	/**
-	 * @return the onCancelled
-	 */
-	public Block getOnCancelled() {
-		return visitor.onCancelled;
-	}
+	
 
 	/**
 	 * @return the publishInvocations
@@ -306,7 +378,7 @@ public class AsyncTaskWrapper {
 	 */
 	public boolean hasAdditionalAccess() {
 		return !getFieldDeclarations().isEmpty() || !getAdditionalMethodDeclarations().isEmpty()
-				|| hasProgressUpdate();
+				|| hasOnProgressUpdate();
 	}
 	
 	/**
@@ -314,8 +386,8 @@ public class AsyncTaskWrapper {
 	 * 
 	 * @return {@code getOnProgressUpdateBlock() != null}
 	 */
-	public boolean hasProgressUpdate() {
-		return getOnProgressUpdateBlock() != null;
+	public boolean hasOnProgressUpdate() {
+		return getOnProgressUpdate() != null;
 	}
 
 	
@@ -385,6 +457,10 @@ public class AsyncTaskWrapper {
 		
 		return result;
 	}
+	
+	public BodyDeclaration getEnclosingDeclaration() {
+		return ASTUtils.findParent(declaration, BodyDeclaration.class);
+	}
 
 	/**
 	 * 
@@ -399,7 +475,7 @@ public class AsyncTaskWrapper {
 	
 	@Override
 	public String toString() {
-		return "AsyncTaskWrapper(unit = " + unit.getElementName() + ", anoynmous/inner class = " + isAnonymousClass() + "/" + isInnerClass() + "declaration =\n" + declaration.toString();
+		return "AsyncTaskWrapper(unit = " + unit.getElementName() + ", anoynmous/inner class = " + isAnonymousClass() + "/" + isInnerClass() + ", declaration =\n" + declaration.toString();
 	}
 
 }

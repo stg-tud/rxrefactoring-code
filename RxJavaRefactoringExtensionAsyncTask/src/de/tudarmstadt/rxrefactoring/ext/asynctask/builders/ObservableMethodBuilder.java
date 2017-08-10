@@ -47,7 +47,7 @@ public class ObservableMethodBuilder extends AbstractBuilder {
 		method.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
 		
 		//Add arguments of doInBackground to create. Add 'final' to each parameter.
-		MethodDeclaration doInBackground = asyncTask.getDoInBackgroundmethod();
+		MethodDeclaration doInBackground = asyncTask.getDoInBackground();
 		
 		doInBackground.parameters().forEach(parameter -> {
 			SingleVariableDeclaration variable = (SingleVariableDeclaration) parameter;

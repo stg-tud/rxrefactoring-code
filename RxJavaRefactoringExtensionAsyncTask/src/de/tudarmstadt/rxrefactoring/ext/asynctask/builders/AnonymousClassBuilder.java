@@ -43,7 +43,10 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 		callMethod.thrownExceptionTypes().add(ast.newSimpleType(ast.newSimpleName("Exception")));
 		callMethod.modifiers().add(createOverrideAnnotation());
 		callMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
-		callMethod.setBody(unit.copyNode(asyncTask.getDoInBackgroundBlock()));
+		
+		if (asyncTask.getDoInBackground() != null) {
+			callMethod.setBody(unit.copyNode(asyncTask.getDoInBackground().getBody()));
+		}
 		
 		//Define anonymous class
 		AnonymousClassDeclaration classDecl = ast.newAnonymousClassDeclaration();
@@ -63,12 +66,7 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 		node = invoke;
 	}
 	
-	
-	private void checkInitialized() {
-		Objects.requireNonNull(node, "Initialize the observable before adding functionality.");
-	}
-	
-	
+		
 	
 	
 	/*
@@ -101,10 +99,10 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 		addSubscribeOnComputation();
 		
 		//Adds the additional functionality to the observable
-		if (asyncTask.getOnPreExecuteBlock() != null) {
+		if (asyncTask.getOnPreExecute() != null) {
 			addDoOnSubscribe();
 		}		
-		if (asyncTask.getOnPostExecuteBlock() != null) {
+		if (asyncTask.getOnPostExecute() != null) {
 			addDoOnNext();
 		}
 		if (asyncTask.getOnCancelled() != null) {
@@ -127,7 +125,6 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 	 */
 	@SuppressWarnings("unchecked")
 	public AnonymousClassBuilder addDoOnNext() {
-		checkInitialized();
 	
 		
 		//Define type: Action1
@@ -140,11 +137,11 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 		callMethod.setName(ast.newSimpleName("call"));
 		callMethod.setReturnType2(ast.newPrimitiveType(PrimitiveType.VOID));
 		callMethod.modifiers().add(createOverrideAnnotation());		
-		callMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
+		callMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));		
+		callMethod.parameters().add(unit.copyNode(asyncTask.getOnPostExecuteParameter()));		
 		
-		callMethod.parameters().add(unit.copyNode(asyncTask.getPostExecuteParameter()));		
-		
-		callMethod.setBody(unit.copyNode(preprocessBlock(asyncTask.getOnPostExecuteBlock(), "onPostExecute")));
+		if (asyncTask.getOnPostExecute() != null)
+			callMethod.setBody(unit.copyNode(preprocessBlock(asyncTask.getOnPostExecute().getBody(), "onPostExecute")));
 		
 		//Define anonymous class
 		AnonymousClassDeclaration classDecl = ast.newAnonymousClassDeclaration();
@@ -176,12 +173,12 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 	 *     }
 	 * })
 	 */
-	public AnonymousClassBuilder addDoOnCompleted() {
-		checkInitialized();
-		
-		node = invokeWithAction0(node, "doOnCompleted", preprocessBlock(unit.copyNode(asyncTask.getOnPostExecuteBlock()), "onPostExecute"));
-		return this;
-	}
+//	public AnonymousClassBuilder addDoOnCompleted() {
+//		checkInitialized();
+//		
+//		node = invokeWithAction0(node, "doOnCompleted", preprocessBlock(unit.copyNode(asyncTask.getOnPostExecuteBlock().getBody()), "onPostExecute"));
+//		return this;
+//	}
 	
 	/*
 	 * Builds
@@ -193,9 +190,9 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 	 * })
 	 */
 	public AnonymousClassBuilder addDoOnSubscribe() {	
-		checkInitialized();
+		Objects.requireNonNull(asyncTask.getOnPreExecute(), "The AsyncTask needs to have an onPreExecute method in order to add an doOnSubscribe.");
 		
-		node = invokeWithAction0(node, "doOnSubscribe", preprocessBlock(unit.copyNode(asyncTask.getOnPreExecuteBlock()), "onPreExecute"));
+		node = invokeWithAction0(node, "doOnSubscribe", preprocessBlock(unit.copyNode(asyncTask.getOnPreExecute().getBody()), "onPreExecute"));
 		return this;
 	}
 	
@@ -209,15 +206,14 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 	 * })
 	 */
 	public AnonymousClassBuilder addDoOnUnsubscribe() {	
-		checkInitialized();
-
-		node = invokeWithAction0(node, "doOnUnsubscribe", preprocessBlock(unit.copyNode(asyncTask.getOnCancelled()), "onCancelled"));
+		Objects.requireNonNull(asyncTask.getOnCancelled(), "The AsyncTask needs to have an onCancelled method in order to add an doOnUnsubscribe.");
+		
+		node = invokeWithAction0(node, "doOnUnsubscribe", preprocessBlock(unit.copyNode(asyncTask.getOnCancelled().getBody()), "onCancelled"));
 		return this;
 	}
 	
 	public AnonymousClassBuilder addSubscribeOnComputation() {
-		checkInitialized();
-		
+			
 		MethodInvocation invokeScheduler = ast.newMethodInvocation();
 		invokeScheduler.setName(ast.newSimpleName("mainThread"));
 		invokeScheduler.setExpression(ast.newSimpleName("AndroidSchedulers"));
@@ -251,8 +247,8 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 		MethodDeclaration callMethod = ast.newMethodDeclaration();
 		callMethod.setName(ast.newSimpleName("call"));
 		callMethod.setReturnType2(ast.newPrimitiveType(PrimitiveType.VOID));
-		callMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
 		callMethod.modifiers().add(createOverrideAnnotation());
+		callMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));		
 		callMethod.setBody(actionBody);
 		
 		//Define anonymous class
@@ -279,7 +275,7 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 	 * observableRef.subscribe()
 	 */
 	public void addSubscribe() {
-		checkInitialized();
+		
 
 		//Define method invoke: observableRef.subscribe()
 		MethodInvocation invoke = ast.newMethodInvocation();

@@ -13,7 +13,7 @@ import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
-import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.parser.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.SubscriberBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
@@ -48,7 +48,7 @@ interface WorkerEnvironment {
 		
 	}
 	
-	default void addStatementBefore(BundledCompilationUnit unit, Statement newStatement, Statement referenceStatement) {
+	default void addStatementBefore(RewriteCompilationUnit unit, Statement newStatement, Statement referenceStatement) {
 		if (referenceStatement.getParent() instanceof Statement) {
 			unit.replace(referenceStatement, newStatement);
 		} else {
@@ -72,7 +72,7 @@ interface WorkerEnvironment {
 	 * @param referenceNode
 	 *            reference node
 	 */
-	default public void addMethodBefore(BundledCompilationUnit unit, MethodDeclaration methodDeclaration, ASTNode referenceNode) {
+	default public void addMethodBefore(RewriteCompilationUnit unit, MethodDeclaration methodDeclaration, ASTNode referenceNode) {
 		MethodDeclaration referenceMethod = ASTUtils.findParent(referenceNode, MethodDeclaration.class);
 		ListRewrite classBlock = getClassBlock(unit, referenceMethod);
 		classBlock.insertBefore(methodDeclaration, referenceMethod, null);
@@ -89,13 +89,13 @@ interface WorkerEnvironment {
 	 * @param referenceNode
 	 *            reference node
 	 */
-	default public void addMethodAfter(BundledCompilationUnit unit, MethodDeclaration methodDeclaration, ASTNode referenceNode) {
+	default public void addMethodAfter(RewriteCompilationUnit unit, MethodDeclaration methodDeclaration, ASTNode referenceNode) {
 		MethodDeclaration referenceMethod = ASTUtils.findParent(referenceNode, MethodDeclaration.class);
 		ListRewrite classBlock = getClassBlock(unit, referenceMethod);
 		classBlock.insertAfter(methodDeclaration, referenceMethod, null);
 	}
 	
-	default ListRewrite getClassBlock(BundledCompilationUnit unit, ASTNode referenceNode) {
+	default ListRewrite getClassBlock(RewriteCompilationUnit unit, ASTNode referenceNode) {
 		ASTNode currentClass = referenceNode.getParent();
 		
 		
@@ -121,7 +121,7 @@ interface WorkerEnvironment {
 	 * @param referenceNode
 	 *            reference node
 	 */
-	default void addInnerClassAfter(BundledCompilationUnit unit, TypeDeclaration typeDeclaration, ASTNode referenceNode) {
+	default void addInnerClassAfter(RewriteCompilationUnit unit, TypeDeclaration typeDeclaration, ASTNode referenceNode) {
 		if (referenceNode instanceof FieldDeclaration) {
 			ListRewrite classBlock = getClassBlock(unit, referenceNode);
 			classBlock.insertAfter(typeDeclaration, referenceNode, null);
@@ -136,12 +136,12 @@ interface WorkerEnvironment {
 		classBlock.insertAfter(typeDeclaration, referenceMethod, null);
 	}
 	
-	default void addStatementToClass(BundledCompilationUnit unit, ASTNode newStatement, TypeDeclaration type) {
+	default void addStatementToClass(RewriteCompilationUnit unit, ASTNode newStatement, TypeDeclaration type) {
 		ListRewrite statementsBlock = unit.getListRewrite(type, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
 		statementsBlock.insertFirst(newStatement, null);
 	}
 	
-	default void removeSuperClass(BundledCompilationUnit unit, TypeDeclaration classRef) {
+	default void removeSuperClass(RewriteCompilationUnit unit, TypeDeclaration classRef) {
 		unit.remove(classRef.getSuperclassType());
 	}
 }

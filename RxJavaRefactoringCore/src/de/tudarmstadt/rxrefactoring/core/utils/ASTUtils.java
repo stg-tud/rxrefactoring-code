@@ -1,9 +1,9 @@
 package de.tudarmstadt.rxrefactoring.core.utils;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
+import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
@@ -23,54 +24,62 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.TryStatement;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.UnionType;
+import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import de.tudarmstadt.rxrefactoring.core.logging.Log;
-import de.tudarmstadt.rxrefactoring.core.parser.BundledCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.parser.RewriteCompilationUnit;
 
 /**
- * Description: Util class for {@link ASTNode}s<br>
- * This class contains code from the tool
- * <a href="http://refactoring.info/tools/asyncdroid/">AsyncDroid</a>
- * Author: Grebiel Jose Ifill Brito<br>
- * Created: 11/11/2016
+ * Defines utility methods for ASTs.
+ *
+ * @see ASTNode
+ * 
+ * @author Grebiel Jose Ifill Brito, Mirko Köhler
  */
-public final class ASTUtils
-{
-	private ASTUtils()
-	{
+public final class ASTUtils {
+	
+	private ASTUtils() {
 		// This class should not be instantiated
 	}
 
 	/**
-	 * Find the parent of a node given the target class
+	 * Find the parent of a node given the target class.
+	 * If the given node is already of the target class,
+	 * then this node is returned.
 	 *
 	 * @param node
-	 *            source node
+	 *            The source node whose class should be found.
 	 * @param target
-	 *            target node. (i.e. VariableDeclaration.class)
+	 *            The class of the parent node that should be found (i.e. VariableDeclaration.class).
 	 * @param <T>
-	 *            Inferred from second parameter
-	 * @return parent node based on the target
+	 *            The type of the node that is returned.
+	 *            
+	 * @return The parent node based on the target, or the given node if it is already an
+	 * instance of the given class, or null if no matching parent could be found.
 	 */
-	public static <T extends ASTNode> T findParent( ASTNode node, Class<T> target )
-	{
-		if ( target.isInstance( node ) )
-		{
+	@SuppressWarnings("unchecked")
+	public static <T extends ASTNode> T findParent( ASTNode node, Class<T> target )	{
+		Objects.requireNonNull(node, "Argument node can not be null.");
+		Objects.requireNonNull(target, "Argument target can not be null.");
+		
+		//If node 
+		if (target.isInstance(node)) {
 			return (T) node;
 		}
 
 		ASTNode parent = node.getParent();
-		while ( parent != null && !target.isInstance( parent ) )
-		{
+		while ( parent != null && !target.isInstance(parent)) {
 			parent = parent.getParent();
 		}
+		
 		return (T) parent;
 	}
 
@@ -676,12 +685,12 @@ public final class ASTUtils
 
 	/**
 	 * Checks what exceptions are thrown inside of try-catch blocks and removes
-	 * unnecessary catch clauses
+	 * unnecessary catch clauses.
 	 * 
 	 * @param block
 	 *            the block where the try-catch blocks are found
 	 */
-	public static void removeUnnecessaryCatchClauses(BundledCompilationUnit unit, Block block)
+	public static void removeUnnecessaryCatchClauses(RewriteCompilationUnit unit, Block block)
 	{
 		
 		class TryStatementVisitor extends ASTVisitor
@@ -800,8 +809,8 @@ public final class ASTUtils
 
 		}
 		
-		if ( block != null )
-		{
+		if ( block != null ) {
+			
 			TryStatementVisitor tryStatementVisitor = new TryStatementVisitor();
 			block.accept( tryStatementVisitor );
 
@@ -822,11 +831,59 @@ public final class ASTUtils
 				}
 				else
 				{
-					removeIrrelevantCatchClauses( neededExceptionsTypes, caughtExceptionsMap );
+					removeIrrelevantCatchClauses(unit, neededExceptionsTypes, caughtExceptionsMap );
 
 				}
 			}
 		}
+	}
+	
+	public static Type typeFromBinding(AST ast, ITypeBinding typeBinding) {
+	    if( ast == null ) 
+	        throw new NullPointerException("ast is null");
+	    if( typeBinding == null )
+	        throw new NullPointerException("typeBinding is null");
+
+	    if( typeBinding.isPrimitive() ) {
+	        return ast.newPrimitiveType(
+	            PrimitiveType.toCode(typeBinding.getName()));
+	    }
+
+	    if( typeBinding.isCapture() ) {
+	        ITypeBinding wildCard = typeBinding.getWildcard();
+	        org.eclipse.jdt.core.dom.WildcardType capType = ast.newWildcardType();
+	        ITypeBinding bound = wildCard.getBound();
+	        if( bound != null ) {
+	            capType.setBound(typeFromBinding(ast, bound),
+	                wildCard.isUpperbound());
+	        }
+	        return capType;
+	    }
+
+	    if( typeBinding.isArray() ) {
+	        Type elType = typeFromBinding(ast, typeBinding.getElementType());
+	        return ast.newArrayType(elType, typeBinding.getDimensions());
+	    }
+
+	    if( typeBinding.isParameterizedType() ) {
+	        ParameterizedType type = ast.newParameterizedType(
+	            typeFromBinding(ast, typeBinding.getErasure()));
+
+	        @SuppressWarnings("unchecked")
+	        List<Type> newTypeArgs = type.typeArguments();
+	        for( ITypeBinding typeArg : typeBinding.getTypeArguments() ) {
+	            newTypeArgs.add(typeFromBinding(ast, typeArg));
+	        }
+
+	        return type;
+	    }
+
+	    // simple or raw type
+	    String qualName = typeBinding.getQualifiedName();
+	    if( "".equals(qualName) ) {
+	        throw new IllegalArgumentException("No name for type binding.");
+	    }
+	    return ast.newSimpleType(ast.newName(qualName));
 	}
 
 	// ### Private Methods ###
@@ -841,7 +898,7 @@ public final class ASTUtils
 		return neededExceptionsTypes.isEmpty() && !caughtExceptionsMap.isEmpty();
 	}
 
-	private static void removeIrrelevantCatchClauses( Set<ITypeBinding> neededExceptionsTypes, Map<ITypeBinding, CatchClause> caughtExceptionsMap )
+	private static void removeIrrelevantCatchClauses(RewriteCompilationUnit unit, Set<ITypeBinding> neededExceptionsTypes, Map<ITypeBinding, CatchClause> caughtExceptionsMap )
 	{
 		for ( ITypeBinding caughtExceptionTypeBinding : caughtExceptionsMap.keySet() )
 		{
@@ -851,57 +908,48 @@ public final class ASTUtils
 			if ( type instanceof UnionType )
 			{
 				// UnionType: i.e: catch (ExecutionException | TimeoutException e)
-				cleanUnionTypes( neededExceptionsTypes, catchClause, (UnionType) type );
+				cleanUnionTypes(unit, neededExceptionsTypes, catchClause, (UnionType) type );
 
 			}
 			else // SimpleType: i.e: catch (Exception e)
 			{
-				cleanSimpleTypes( neededExceptionsTypes, caughtExceptionTypeBinding, catchClause );
+				cleanSimpleTypes(unit, neededExceptionsTypes, caughtExceptionTypeBinding, catchClause );
 			}
 		}
 	}
 
-	private static void cleanUnionTypes( Set<ITypeBinding> neededExceptionsTypes, CatchClause catchClause, UnionType unionType )
-	{
-		List<Object> simpleTypes = unionType.types();
-		List<Object> removedTypes = new ArrayList<Object>();
-		for ( Object singleType : simpleTypes )
-		{
-			SimpleType simpleType = (SimpleType) singleType;
-			ITypeBinding simpleTypeBinding = simpleType.resolveBinding();
-			for ( ITypeBinding neededExceptionTypeBinding : neededExceptionsTypes )
-			{
-				if ( !ASTUtils.isTypeOf( neededExceptionTypeBinding, simpleTypeBinding.getBinaryName() ) )
-				{
-					removedTypes.add( singleType );
+	private static void cleanUnionTypes(RewriteCompilationUnit unit, Set<ITypeBinding> neededExceptionsTypes, CatchClause catchClause, UnionType unionType ) {
+		
+		List<?> elements = unionType.types();
+		List<Type> removedTypes = new LinkedList<Type>();
+		
+		for (Object element : elements )	{
+			Type type = (Type) element;	
+			
+			ITypeBinding simpleTypeBinding = type.resolveBinding();
+			
+			for ( ITypeBinding neededExceptionTypeBinding : neededExceptionsTypes )	{
+				if ( !ASTUtils.isTypeOf( neededExceptionTypeBinding, simpleTypeBinding.getBinaryName() ) ) {
+					removedTypes.add( type );
 				}
 			}
 		}
-		if ( removedTypes.size() == simpleTypes.size() )
-		{
-			catchClause.delete();
-		}
-		else
-		{
-			simpleTypes.removeAll( removedTypes );
+		
+		if ( removedTypes.size() == elements.size() ){
+			unit.remove(catchClause);
+		} else {
+			ListRewrite rewrite = unit.getListRewrite(unionType, UnionType.TYPES_PROPERTY);
+			removedTypes.forEach(type -> rewrite.remove(type, null));
+			//elements.removeAll( removedTypes );
 		}
 	}
 
-	private static void cleanSimpleTypes( Set<ITypeBinding> neededExceptionsTypes, ITypeBinding caughtExceptionTypeBinding, CatchClause catchClause )
-	{
-		boolean deleteCatchClause = true;
-		for ( ITypeBinding neededExceptionTypeBinding : neededExceptionsTypes )
-		{
-			if ( ASTUtils.isTypeOf( neededExceptionTypeBinding, caughtExceptionTypeBinding.getBinaryName() ) )
-			{
-				deleteCatchClause = false;
-				break;
+	private static void cleanSimpleTypes(RewriteCompilationUnit unit, Set<ITypeBinding> neededExceptionsTypes, ITypeBinding caughtExceptionTypeBinding, CatchClause catchClause ) {
+		for (ITypeBinding neededExceptionTypeBinding : neededExceptionsTypes)	{
+			if (ASTUtils.isTypeOf(neededExceptionTypeBinding, caughtExceptionTypeBinding.getBinaryName())) {
+				unit.remove(catchClause);
+				return;
 			}
-		}
-
-		if ( deleteCatchClause )
-		{
-			catchClause.delete();
 		}
 	}
 
@@ -912,9 +960,8 @@ public final class ASTUtils
 		}
 		
 		String bindingName = methodBinding.getName();
-		String className = methodBinding.getDeclaringClass().getBinaryName();
 
-		boolean result = methodName.equals( bindingName ) && isTypeOf(methodBinding.getDeclaringClass(), classBinaryName);
+		boolean result = Objects.equals(methodName, bindingName) && isTypeOf(methodBinding.getDeclaringClass(), classBinaryName);
 		
 		return result;
 	}
