@@ -30,7 +30,7 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.ClassDetails;
  * 
  * @since 11/11/2016
  */
-public class AsyncTaskWrapper extends ASTVisitor {
+public class AsyncTaskWrapper {
 
 	private static final String DO_IN_BACKGROUND = "doInBackground";
 	private static final String ON_POST_EXECUTE = "onPostExecute";
@@ -100,11 +100,9 @@ public class AsyncTaskWrapper extends ASTVisitor {
 		private MethodDeclaration doInBackgroundMethod;
 		private Type postExecuteType;
 		private List<MethodInvocation> publishInvocations = new ArrayList<>();
-		private List<SuperMethodInvocation> superClassMethodInvocation = new ArrayList<>();
+
 		private Boolean isVoid;
-		// for "stateful" classes
-		private List<FieldDeclaration> fieldDeclarations = new ArrayList<>();
-		private List<MethodDeclaration> additionalMethodDeclarations = new ArrayList<>();
+
 
 		@Override
 		public boolean visit(Block node) {
@@ -144,43 +142,6 @@ public class AsyncTaskWrapper extends ASTVisitor {
 			}
 			return true;
 		}
-
-		@Override
-		public boolean visit(FieldDeclaration node) {
-			fieldDeclarations.add(node);
-			return true;
-		}
-
-		@Override
-		public boolean visit(MethodDeclaration node) {
-			String methodDeclarationName = node.getName().toString();
-			if (!DO_IN_BACKGROUND.equals(methodDeclarationName) && !ON_POST_EXECUTE.equals(methodDeclarationName)
-					&& !ON_PRE_EXECUTE.equals(methodDeclarationName) && !ON_CANCELLED.equals(methodDeclarationName)
-					&& !ON_PROGRESS_UPDATE.equals(methodDeclarationName)) {
-				additionalMethodDeclarations.add(node);
-			}
-			return true;
-		}
-
-		@Override
-		public boolean visit(SuperMethodInvocation node) {
-			if (ASTUtils.matchesTargetMethod(node, "onCancelled", ClassDetails.ASYNC_TASK.getBinaryName())) {
-				superClassMethodInvocation.add(node);
-			}
-			
-			if (ASTUtils.matchesTargetMethod(node, "onPreExecute", ClassDetails.ASYNC_TASK.getBinaryName())) {
-				superClassMethodInvocation.add(node);
-			}
-			
-			if (ASTUtils.matchesTargetMethod(node, "onPostExecute", ClassDetails.ASYNC_TASK.getBinaryName())) {
-				superClassMethodInvocation.add(node);
-			}
-			
-			if (ASTUtils.matchesTargetMethod(node, "onProgressUpdate", ClassDetails.ASYNC_TASK.getBinaryName())) {
-				superClassMethodInvocation.add(node);
-			}
-			return true;
-		}
 	}
 
 	/**
@@ -192,8 +153,10 @@ public class AsyncTaskWrapper extends ASTVisitor {
 		return declaration;
 	}
 	
-	public List getModifiers() {
-		return doIfTypeDeclaration(d -> d.modifiers(), () -> Lists.newLinkedList());		
+	public List<?> getModifiers() {
+		return doWithDeclaration(
+				type -> type.modifiers(),
+				anon -> Lists.newLinkedList());		
 	}
 	
 	public <V> V doIfTypeDeclaration(Function<TypeDeclaration, V> function, Supplier<V> elseV) {
@@ -203,11 +166,17 @@ public class AsyncTaskWrapper extends ASTVisitor {
 			return elseV.get();
 	}
 	
-	public <V> V doIfAnonymousClassDeclaration(Function<AnonymousClassDeclaration, V> function) {
+	public <V> V doIfAnonymousClassDeclaration(Function<AnonymousClassDeclaration, V> function, Supplier<V> elseV) {
 		if (declaration instanceof AnonymousClassDeclaration)
 			return function.apply((AnonymousClassDeclaration) declaration);
-		
-		return null;
+		else
+			return elseV.get();
+	}
+	
+	public <V> V doWithDeclaration(Function<TypeDeclaration, V> ifTypeDeclaration, Function<AnonymousClassDeclaration, V> ifAnoynmousClassDeclaration) {
+		return doIfTypeDeclaration(ifTypeDeclaration, 
+				() -> doIfAnonymousClassDeclaration(ifAnoynmousClassDeclaration, 
+						() -> { throw new IllegalStateException("AsyncTaskWrapper has no valid declaration"); })); 	
 	}
 	
 	
@@ -314,14 +283,7 @@ public class AsyncTaskWrapper extends ASTVisitor {
 		return visitor.postExecuteType;
 	}
 
-	public List<SuperMethodInvocation> getSuperClassMethodInvocation() {
-		return visitor.superClassMethodInvocation;
-	}
-
-	public void setDoInBackGround(Block updatedDoInBackgroundBlock) {
-		visitor.doInBackgroundBlock = updatedDoInBackgroundBlock;
-	}
-
+	
 	/**
 	 * @return the onCancelled
 	 */
@@ -343,7 +305,7 @@ public class AsyncTaskWrapper extends ASTVisitor {
 	 * @return True, if the AsyncTask has additional functionality.
 	 */
 	public boolean hasAdditionalAccess() {
-		return !visitor.fieldDeclarations.isEmpty() || !visitor.additionalMethodDeclarations.isEmpty()
+		return !getFieldDeclarations().isEmpty() || !getAdditionalMethodDeclarations().isEmpty()
 				|| hasProgressUpdate();
 	}
 	
@@ -356,19 +318,74 @@ public class AsyncTaskWrapper extends ASTVisitor {
 		return getOnProgressUpdateBlock() != null;
 	}
 
-	public List<FieldDeclaration> getFieldDeclarations() {
-		return visitor.fieldDeclarations;
-	}
-
-	public List<MethodDeclaration> getAdditionalMethodDeclarations() {
-		return visitor.additionalMethodDeclarations;
-	}
-
-	public void setDoOnCompletedBlock(Block doOnCompleted) {
-		visitor.onPostExecuteBlock = doOnCompleted;
-
+	
+	/**
+	 * Returns a list of all body declarations.
+	 * 
+	 * @return The list of all body declarations (element type: {@link BodyDeclaration}).
+	 * 
+	 * @see TypeDeclaration#bodyDeclarations()
+	 * @see AnonymousClassDeclaration#bodyDeclarations()
+	 */
+	public List<?> getBodyDeclarations() {
+		return doWithDeclaration(
+				type -> type.bodyDeclarations(),
+				anon -> anon.bodyDeclarations());
 	}
 	
+	
+	/**
+	 * Creates a list of all field declarations that are present
+	 * in the body of the declaration of this AsyncTask.
+	 * 
+	 * @return A list of all field declaration. An empty list
+	 * if there are none.
+	 */
+	public List<FieldDeclaration> getFieldDeclarations() {
+		List<?> bodyDeclarations = getBodyDeclarations();
+		List<FieldDeclaration> result = Lists.newLinkedList();
+		
+		for (Object bodyDeclaration : bodyDeclarations) {
+			if (bodyDeclaration instanceof FieldDeclaration) {
+				result.add((FieldDeclaration) bodyDeclaration);
+			}
+		}	
+		
+		return result;
+	}
+	
+
+	/**
+	 * Creates a list of all method declarations that are present
+	 * in the body of the declaration of this AsyncTask.
+	 * Methods of the AsyncTask interface are omitted from
+	 * this list.
+	 * 
+	 * @return A list of all method declarations without those
+	 * that are defined by the AsyncTask interface.
+	 * An empty list if there are none.
+	 */
+	public List<MethodDeclaration> getAdditionalMethodDeclarations() {
+				
+		List<?> bodyDeclarations = getBodyDeclarations();
+		List<MethodDeclaration> result = Lists.newLinkedList();
+		
+		for (Object bodyDeclaration : bodyDeclarations) {
+			if (bodyDeclaration instanceof MethodDeclaration) {
+				MethodDeclaration method = (MethodDeclaration) bodyDeclaration;
+				String methodDeclarationName = method.getName().getIdentifier();
+				
+				if (!DO_IN_BACKGROUND.equals(methodDeclarationName) && !ON_POST_EXECUTE.equals(methodDeclarationName)
+						&& !ON_PRE_EXECUTE.equals(methodDeclarationName) && !ON_CANCELLED.equals(methodDeclarationName)
+						&& !ON_PROGRESS_UPDATE.equals(methodDeclarationName)) {
+					result.add(method);
+				}
+			}
+		}	
+		
+		return result;
+	}
+
 	/**
 	 * 
 	 * 

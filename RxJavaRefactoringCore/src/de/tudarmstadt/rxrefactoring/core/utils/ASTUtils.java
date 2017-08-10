@@ -539,6 +539,8 @@ public final class ASTUtils
 	public static boolean matchesTargetMethod(SuperMethodInvocation node, String methodName, String classBinaryName )
 	{
 		IMethodBinding methodBinding = node.resolveMethodBinding();
+		
+				
 		return matchesTargetMethod( methodName, classBinaryName, methodBinding );
 	}
 
@@ -905,14 +907,16 @@ public final class ASTUtils
 
 	private static boolean matchesTargetMethod( String methodName, String classBinaryName, IMethodBinding methodBinding )
 	{
-		if ( methodBinding == null )
-		{
+		if ( methodBinding == null ) {
 			return false;
 		}
+		
 		String bindingName = methodBinding.getName();
 		String className = methodBinding.getDeclaringClass().getBinaryName();
 
-		return methodName.equals( bindingName ) && classBinaryName.equals( className );
+		boolean result = methodName.equals( bindingName ) && isTypeOf(methodBinding.getDeclaringClass(), classBinaryName);
+		
+		return result;
 	}
 
 }
