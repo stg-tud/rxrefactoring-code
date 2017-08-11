@@ -3,12 +3,11 @@ package de.tudarmstadt.rxrefactoring.core.workers;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Stack;
 
 import com.google.common.collect.Lists;
 
+import de.tudarmstadt.rxrefactoring.core.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.logging.Log;
-import de.tudarmstadt.rxrefactoring.core.parser.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.ProjectSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerStatus;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
@@ -97,6 +96,12 @@ public class WorkerTree {
 		return node;
 	}
 	
+	/**
+	 * Executes the workers in this worker tree. 
+	 * <br>
+	 * <br>
+	 * This method should not be used by clients.
+	 */
 	public void run() {
 		
 		Deque<WorkerNode<?,?>> stack = new LinkedList<>();		

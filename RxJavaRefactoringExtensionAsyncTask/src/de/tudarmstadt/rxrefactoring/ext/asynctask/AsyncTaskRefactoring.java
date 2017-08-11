@@ -44,8 +44,8 @@ public class AsyncTaskRefactoring implements Refactoring {
 				workerTree.addWorker(new AsyncTaskCollector());	
 		
 		workerTree.addWorker(a, new AnonymAsyncTaskWorker());
-//		workerTree.addWorker(a, new CachedAnonymousTaskWorker());
-//		workerTree.addWorker(a, new SubClassAsyncTaskWorker());
+		workerTree.addWorker(a, new CachedAnonymousTaskWorker());
+		workerTree.addWorker(a, new SubClassAsyncTaskWorker());
 	}
 
 	

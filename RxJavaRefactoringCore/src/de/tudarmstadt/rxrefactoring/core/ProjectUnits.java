@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core.parser;
+package de.tudarmstadt.rxrefactoring.core;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -8,7 +8,14 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.text.edits.MalformedTreeException;
 
-public class ProjectUnits implements Set<RewriteCompilationUnit> {
+/**
+ * A set of {@link RewriteCompilationUnit} enhanced with
+ * utility methods.
+ * 
+ * @author mirko
+ *
+ */
+public final class ProjectUnits implements Set<RewriteCompilationUnit> {
 
 	private Set<RewriteCompilationUnit> units;
 	
@@ -17,12 +24,15 @@ public class ProjectUnits implements Set<RewriteCompilationUnit> {
 		this.units = units;
 	}
 	
-	public void applyChanges() throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
+	protected void applyChanges() throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
 		for (RewriteCompilationUnit unit : units) {
 			unit.applyChanges();
 		}		
 	}
 
+	/*
+	 * Methods defined by Set
+	 */
 	@Override
 	public int size() {
 		return units.size();

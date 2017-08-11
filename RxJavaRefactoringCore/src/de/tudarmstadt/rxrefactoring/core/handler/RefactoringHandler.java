@@ -5,14 +5,14 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 
 import de.tudarmstadt.rxrefactoring.core.Refactoring;
-import de.tudarmstadt.rxrefactoring.core.RefactorApplication;
+import de.tudarmstadt.rxrefactoring.core.ui.DefaultUI;
+import de.tudarmstadt.rxrefactoring.core.RefactorExecution;
 
 
 /**
- * Description: Starts {@link RefactoringApp} when the RxJ icon is
- * clicked.<br>
- * Author: Grebiel Jose Ifill Brito<br>
- * Created: 11/11/2016
+ * Starts the refactoring when the button is clicked by invoking a {@link RefactorExecution}.
+ * 
+ * @author Grebiel Jose Ifill Brito, Mirko Köhler
  */
 public abstract class RefactoringHandler extends AbstractHandler {
 
@@ -20,15 +20,20 @@ public abstract class RefactoringHandler extends AbstractHandler {
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 				
-		RefactorApplication app = new RefactorApplication(
+		RefactorExecution app = new RefactorExecution(
 				new DefaultUI(), 
-				createEnvironment()
+				createRefactoring()
 			);		
 		app.run();
 		
 		return null;
 	}
 	
-	
-	public abstract Refactoring createEnvironment();
+	/**
+	 * Creates a new refactoring that should be used
+	 * to run the refactoring execution.
+	 * 
+	 * @return A non-null refactoring.
+	 */
+	public abstract Refactoring createRefactoring();
 }

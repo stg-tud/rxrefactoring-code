@@ -21,8 +21,8 @@ import org.eclipse.jdt.internal.corext.dom.Bindings;
 
 import com.google.common.collect.Sets;
 
+import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.logging.Log;
-import de.tudarmstadt.rxrefactoring.core.parser.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 
 /**

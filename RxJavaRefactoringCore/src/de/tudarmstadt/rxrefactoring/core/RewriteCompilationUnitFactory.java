@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core.parser;
+package de.tudarmstadt.rxrefactoring.core;
 
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;

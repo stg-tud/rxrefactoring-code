@@ -31,7 +31,6 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.text.BadLocationException;
@@ -42,11 +41,8 @@ import org.osgi.framework.Bundle;
 
 import com.google.common.collect.Sets;
 
-import de.tudarmstadt.rxrefactoring.core.handler.IUIIntegration;
 import de.tudarmstadt.rxrefactoring.core.logging.Log;
-import de.tudarmstadt.rxrefactoring.core.parser.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.parser.RewriteCompilationUnitFactory;
-import de.tudarmstadt.rxrefactoring.core.parser.ProjectUnits;
+import de.tudarmstadt.rxrefactoring.core.ui.IUIIntegration;
 import de.tudarmstadt.rxrefactoring.core.utils.ConstantStrings;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.ProjectStatus;
@@ -60,7 +56,7 @@ import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree;
  * @author mirko
  *
  */
-public class RefactorApplication {
+public final class RefactorExecution implements Runnable {
 	
 	/**
 	 * Defines the environment that is used for the refactoring.
@@ -75,7 +71,7 @@ public class RefactorApplication {
 	
 
 	
-	public RefactorApplication(IUIIntegration log, Refactoring env) {
+	public RefactorExecution(IUIIntegration log, Refactoring env) {
 		Objects.requireNonNull(env);
 		Objects.requireNonNull(log);
 		
@@ -84,6 +80,9 @@ public class RefactorApplication {
 	}
 	
 	
+	/**
+	 * Executes the refactoring.
+	 */
 	public void run() {
 			
 		IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
@@ -99,8 +98,7 @@ public class RefactorApplication {
 			return;
 		}
 		
-		
-		
+		//Specifies the progress dialog that tracks the progress of the application.		
 		ProgressMonitorDialog dialog = new ProgressMonitorDialog(shell);		
 		try {
 			dialog.run(true, false, new IRunnableWithProgress() {
@@ -113,8 +111,7 @@ public class RefactorApplication {
 					
 					IProject[] projects = workspaceRoot.getProjects();
 					
-					monitor.beginTask(env.getDescription(), projects.length);
-						
+					monitor.beginTask(env.getDescription(), projects.length);						
 					
 					
 					//Reports that the refactoring is starting
@@ -171,8 +168,7 @@ public class RefactorApplication {
 			});
 		} catch (InterruptedException e) {
 			//TODO: Handle case if the refactoring is cancelled.
-			Log.handleException(getClass(), "Execution interrupted", e);
-			
+			Log.handleException(getClass(), "Execution interrupted", e);			
 		} catch (InvocationTargetException e) {
 			Log.handleException(getClass(), "Something happened", e);
 		} finally {
@@ -203,12 +199,8 @@ public class RefactorApplication {
 		//Produces the library path inside the project
 		IPath destPath = project.getLocation().append(localDestPath);
 		File destDir = destPath.toFile();
-
-		//IPath s = ResourcesPlugin.getWorkspace().getPathVariableManager().resolveURI(resourcePath);
-		String s1 = sourceDir.getAbsolutePath();
-		
+				
 		//Copy resource jars to library 
-		//TODO: Fix resource path, currently: /home/mirko/resources
 		FileUtils.copyDirectory(sourceDir, destDir);
 		
 		//Check if the destination does exist

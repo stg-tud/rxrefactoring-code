@@ -10,7 +10,7 @@ import de.tudarmstadt.rxrefactoring.core.handler.RefactoringHandler;
 public class Handler extends RefactoringHandler {
 
 	@Override
-	public Refactoring createEnvironment() {
+	public Refactoring createRefactoring() {
 		return new AsyncTaskRefactoring();
 	}
 	

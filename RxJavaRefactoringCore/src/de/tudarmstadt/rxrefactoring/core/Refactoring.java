@@ -8,6 +8,12 @@ import org.eclipse.core.runtime.IPath;
 
 import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree;
 
+/**
+ * This interface is for defining refactorings.
+ * 
+ * @author mirko
+ *
+ */
 public interface Refactoring {
 		
 	/**

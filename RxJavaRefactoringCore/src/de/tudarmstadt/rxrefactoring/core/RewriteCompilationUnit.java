@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core.parser;
+package de.tudarmstadt.rxrefactoring.core;
 
 import java.util.Objects;
 
@@ -34,7 +34,6 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
-import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.text.edits.MalformedTreeException;
@@ -48,7 +47,7 @@ import org.eclipse.text.edits.UndoEdit;
  *
  */
 @SuppressWarnings("deprecation")
-public class RewriteCompilationUnit implements ICompilationUnit {
+public final class RewriteCompilationUnit implements ICompilationUnit {
 
 	/**
 	 * The underlying compilation unit.
@@ -88,7 +87,7 @@ public class RewriteCompilationUnit implements ICompilationUnit {
 	 * @throws NullPointerException if any argument is null. 
 	 * 
 	 */
-	RewriteCompilationUnit(ICompilationUnit unit, ASTNode rootNode) {
+	protected RewriteCompilationUnit(ICompilationUnit unit, ASTNode rootNode) {
 		Objects.requireNonNull(unit);
 		Objects.requireNonNull(rootNode);
 		
@@ -148,9 +147,22 @@ public class RewriteCompilationUnit implements ICompilationUnit {
 	}
 	
 	
-	
+	/**
+	 * Checks whether this compilation unit is
+	 * marked for changes in either its AST or
+	 * imports.
+	 * 
+	 */
 	public boolean hasChanges() {
-		return writer != null || imports != null;
+		return hasImportChanges() || hasASTChanges();
+	}
+	
+	public boolean hasImportChanges() {
+		return imports != null;
+	}
+	
+	public boolean hasASTChanges() {
+		return writer != null;
 	}
 
 	/**
@@ -233,31 +245,43 @@ public class RewriteCompilationUnit implements ICompilationUnit {
 	}
 		
 	
-	public void applyChanges() throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
+	/**
+	 * Applies the changes marked in this compilation unit and
+	 * writes them to disk.
+	 * 
+	 * @return True, if the compilation unit did have changes.
+	 * 
+	 */
+	protected boolean applyChanges() throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
 		
-		//Apply the changes in the compilation unit
-		CompilationUnitChange compilationUnitChange = new CompilationUnitChange(getElementName(), unit);
-		TextEdit sourceCodeEdits = writer().rewriteAST();
-		compilationUnitChange.setEdit(sourceCodeEdits);
-					
-		// process source code
-		String sourceCode = compilationUnitChange.getCompilationUnit().getSource();
-
-		// load document and apply changes
-		Document document = new Document( sourceCode );
-		compilationUnitChange.getEdit().apply( document );
+		//Only do something if there are changes to the compilation unit
+		if (hasChanges()) {
+			//Initialize the document with the old source code
+			Document document = new Document(getSource());
+			
+			//Apply changes to the classes AST if there are any
+			if (hasASTChanges()) {
+				TextEdit edit = writer().rewriteAST();
+				edit.apply(document);
+			}
+			
+			//Apply changes to the classes imports if there are any
+			if (hasImportChanges()) {
+				TextEdit edit = imports().rewriteImports(null); //We can add a progress monitor here.
+				edit.apply(document);
+			}
+			
+			//Save the changes to disk
+			IBuffer buffer = unit.getBuffer();
+			buffer.setContents(document.get());	
+			//TODO: Fix this functionality if there is a test run.
+		//	if ( !RefactoringApp.isRunningForTests() ) 
+			buffer.save(null, false);
+			
+			return true;
+		}
 		
-		TextEdit importsEdit = imports().rewriteImports(null); //We can add a progress monitor here.
-		importsEdit.apply( document );
-		String newSourceCode = document.get();
-		
-		// save changes
-		IBuffer buffer = unit.getBuffer();
-		buffer.setContents( newSourceCode );	
-		//TODO: Fix this functionality if there is a test run.
-	//	if ( !RefactoringApp.isRunningForTests() ) 
-		buffer.save(null, false);
-		
+		return false;		
 	}
 	
 	@Override

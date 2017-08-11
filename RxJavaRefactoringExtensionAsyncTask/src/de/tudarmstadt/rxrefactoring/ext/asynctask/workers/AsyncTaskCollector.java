@@ -25,9 +25,9 @@ import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
+import de.tudarmstadt.rxrefactoring.core.ProjectUnits;
+import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.logging.Log;
-import de.tudarmstadt.rxrefactoring.core.parser.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.parser.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.workers.IWorker;

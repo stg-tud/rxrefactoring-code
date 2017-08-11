@@ -11,6 +11,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary.CountEntry;
 import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
 
 public class RefactorSummary {
@@ -80,8 +81,18 @@ public class RefactorSummary {
 			result += "\n" + project.toString(1);
 		}
 				
+		result += "\n" + fromPadding(1) + ">>> Workspace Total:"
+				+ WorkerSummary.mapToString(getTotal(), 2);
 				
 		result += "\n" + "<<<";
+		return result;
+	}
+	
+	public Map<String, CountEntry> getTotal() {
+		Map<String, CountEntry> result = Maps.newHashMap();
+		for (ProjectSummary project : projects) {
+			result = WorkerSummary.combine(project.getTotal(), result);
+		}
 		return result;
 	}
 	
@@ -124,15 +135,28 @@ public class RefactorSummary {
 			return toString(0);
 		}
 		
+		public Map<String, CountEntry> getTotal() {
+			Map<String, CountEntry> result = Maps.newHashMap();
+			for (WorkerSummary worker : workers) {
+				result = WorkerSummary.combine(worker.entries, result);
+			}
+			return result;
+		}
+		
 		public String toString(int padding) {
 			String pad = fromPadding(padding);
 			
 			String result = pad + ">>> Project: " + project.getName() +
 					"\n" + fromPadding(padding + 1) + "Status: " + status;
 			
+			
+			
 			for (WorkerSummary worker : workers) {
 				result += "\n" + worker.toString(padding + 1);
 			}
+			
+			result += "\n" + fromPadding(padding + 1) + ">>> Project Total:"
+					+ WorkerSummary.mapToString(getTotal(), padding + 2);
 			
 			return result;
 		}
@@ -167,8 +191,7 @@ public class RefactorSummary {
 		
 		public void addSkipped(String key) {
 			getEntryFor(key).addSkipped();			
-		}
-		
+		}		
 
 		public void setCorrect(String key, int correct) {
 			getEntryFor(key).setCorrect(correct);
@@ -176,6 +199,10 @@ public class RefactorSummary {
 		
 		public void setSkipped(String key, int skipped) {
 			getEntryFor(key).setSkipped(skipped);
+		}
+		
+		public boolean hasKey(String key) {
+			return entries.containsKey(key);
 		}
 		
 		public void setStatus(WorkerStatus status) {
@@ -207,16 +234,44 @@ public class RefactorSummary {
 			String result = pad + ">>> Worker: " + worker.getName() +
 					"\n" + fromPadding(padding + 1) + "Status: " + status;
 			
-			for (Entry<String, CountEntry> entry : entries.entrySet()) {
-				result += "\n" + fromPadding(padding + 1) + entry.getKey() + ": " + entry.getValue();
-			}
+			result += mapToString(entries, padding + 1);
 			
 			//result += pad + "<<<";
 			return result;
 					
 		}
 		
-		class CountEntry {
+		private static String mapToString(Map<String, CountEntry> map, int padding) {
+			String result = "";
+			for (Entry<String, CountEntry> entry : map.entrySet()) {
+				result += "\n" + fromPadding(padding) + entry.getKey() + ": " + entry.getValue();
+			}
+			return result;
+		}
+		
+		private static Map<String, CountEntry> combine(Map<String, CountEntry> a, Map<String, CountEntry> b) {
+			if (a == null) {
+				return b;
+			} else if (b == null) {
+				return a;
+			} else {
+				Map<String, CountEntry> result = Maps.newHashMap();
+				result.putAll(a);
+				
+				for (Entry<String, CountEntry> entry : b.entrySet()) {
+					CountEntry count = result.get(entry.getKey());
+					if (count == null) {
+						result.put(entry.getKey(), entry.getValue());
+					} else {
+						result.put(entry.getKey(), count.combineWith(entry.getValue()));
+					}
+				}
+				
+				return result;
+			}
+		} 
+		
+		static class CountEntry {
 			private int correct = 0;
 			private int skipped = 0;
 			
@@ -239,6 +294,14 @@ public class RefactorSummary {
 			@Override
 			public String toString() {
 				return correct + "/" + (correct + skipped);
+			}
+			
+			public CountEntry combineWith(CountEntry other) {
+				CountEntry result = new CountEntry();
+				result.setCorrect(correct + other.correct);
+				result.setSkipped(skipped + other.skipped);
+				
+				return result;
 			}
 		}
 	}

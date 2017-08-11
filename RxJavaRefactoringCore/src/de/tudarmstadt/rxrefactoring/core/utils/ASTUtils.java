@@ -34,8 +34,8 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.UnionType;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
+import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.logging.Log;
-import de.tudarmstadt.rxrefactoring.core.parser.RewriteCompilationUnit;
 
 /**
  * Defines utility methods for ASTs.

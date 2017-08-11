@@ -13,7 +13,7 @@ import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
-import de.tudarmstadt.rxrefactoring.core.parser.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.SubscriberBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;

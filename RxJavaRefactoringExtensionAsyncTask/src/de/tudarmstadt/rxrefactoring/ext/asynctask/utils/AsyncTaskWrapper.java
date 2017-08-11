@@ -11,7 +11,7 @@ import org.eclipse.jdt.core.dom.*;
 
 import com.google.common.collect.Lists;
 
-import de.tudarmstadt.rxrefactoring.core.parser.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.ClassDetails;
 
