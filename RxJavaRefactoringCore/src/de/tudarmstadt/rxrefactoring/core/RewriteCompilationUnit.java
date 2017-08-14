@@ -109,7 +109,7 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	/**
 	 * The root node of this compilation units AST.
 	 * Use {@link writer()} when you want to make
-	 * changes to the AST.	 * 
+	 * changes to the AST.	  
 	 * 
 	 * @return The root node of this compilation units AST. Cannot be null.
 	 */

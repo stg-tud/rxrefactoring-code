@@ -6,7 +6,6 @@ import java.util.Objects;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
@@ -18,11 +17,9 @@ import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
-import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 import com.google.common.collect.Lists;
 
@@ -83,9 +80,11 @@ public class InnerClassBuilder extends AbstractBuilder {
 		this.name = asyncTask.doWithDeclaration(
 				//Keep name if it is a type declaration
 				type -> type.getName().getIdentifier(),
+				//type -> RefactorNames.INNER_CLASS_TYPE_NAME, //TODO: Do not change class name if there is no need to
 				//Use default name if it is an anonymous class declaration
 				anon -> RefactorNames.INNER_CLASS_TYPE_NAME
 			);
+		
 		
 		//Sets the variables that are found in the enclosing block of the AsyncTask
 		setEnclosingVariables();
@@ -139,10 +138,14 @@ public class InnerClassBuilder extends AbstractBuilder {
 			constructor.getBody().statements().add(ast.newExpressionStatement(assignment));	
 		}
 		//Add constructor to type declaration
-		observableType.bodyDeclarations().add(constructor);
+		if (variables.size() > 0)
+			observableType.bodyDeclarations().add(constructor);
 		
 		//Add method declarations from the original type (below the constructor)
-		asyncTask.getAdditionalMethodDeclarations().forEach(x -> observableType.bodyDeclarations().add(unit.copyNode(x)));
+		asyncTask.getAdditionalMethodDeclarations().forEach(declaration -> {
+						observableType.bodyDeclarations().add(unit.copyNode(declaration));
+			
+		});
 		
 		
 		//Define method: create
@@ -215,6 +218,7 @@ public class InnerClassBuilder extends AbstractBuilder {
 		Objects.requireNonNull(builder);
 		
 		MethodDeclaration method = builder.buildGetSubscriber();
+		node.bodyDeclarations().add(builder.buildSubscriberDeclaration());
 		node.bodyDeclarations().add(method);
 		
 		return this;		
@@ -225,6 +229,7 @@ public class InnerClassBuilder extends AbstractBuilder {
 	 * 
 	 * new ObservableWrapper()
 	 */
+	@SuppressWarnings("unchecked")
 	public ClassInstanceCreation buildNewObservableWrapper(AST ast) {
 		ClassInstanceCreation constructor = ast.newClassInstanceCreation();
 		constructor.setType(ast.newSimpleType(ast.newSimpleName(getTypeName())));
@@ -281,7 +286,7 @@ public class InnerClassBuilder extends AbstractBuilder {
 	private void setEnclosingVariables() {
 		BodyDeclaration enclosingBody = asyncTask.getEnclosingDeclaration();
 		if (enclosingBody instanceof MethodDeclaration) {
-			List statements = ((MethodDeclaration) enclosingBody).getBody().statements();
+			List<?> statements = ((MethodDeclaration) enclosingBody).getBody().statements();
 			
 			for (Object element : statements) {
 				Statement statement = (Statement) element;

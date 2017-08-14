@@ -210,13 +210,9 @@ public class AsyncTaskWrapper {
 	 * @return the binding, or null if the binding cannot be resolved
 	 */
 	public ITypeBinding resolveTypeBinding() {
-		if (declaration instanceof TypeDeclaration) {
-			return ((TypeDeclaration) declaration).resolveBinding();
-		} else if (declaration instanceof AnonymousClassDeclaration) {
-			return ((AnonymousClassDeclaration) declaration).resolveBinding();			
-		}
-				
-		return null;
+		return doWithDeclaration(
+				type -> type.resolveBinding(),
+				anon -> anon.resolveBinding());		
 	}
 	
 	
@@ -343,26 +339,6 @@ public class AsyncTaskWrapper {
 		return (SingleVariableDeclaration) getOnProgressUpdate().parameters().get(0);
 	}
 	
-
-//	public SingleVariableDeclaration getProgressParameter() {
-//		return visitor.progressParameter;
-//	}
-//
-//	public SingleVariableDeclaration getPostExecuteParameter() {
-//		return visitor.postExecuteParameter;
-//	}
-
-	
-	/**
-	 * @return the postExecuteType
-	 */
-//	public Type getPostExecuteType() {
-//		return visitor.postExecuteType;
-//	}
-
-	
-	
-
 	/**
 	 * @return the publishInvocations
 	 */
@@ -389,6 +365,8 @@ public class AsyncTaskWrapper {
 	public boolean hasOnProgressUpdate() {
 		return getOnProgressUpdate() != null;
 	}
+	
+	
 
 	
 	/**
@@ -420,6 +398,22 @@ public class AsyncTaskWrapper {
 		for (Object bodyDeclaration : bodyDeclarations) {
 			if (bodyDeclaration instanceof FieldDeclaration) {
 				result.add((FieldDeclaration) bodyDeclaration);
+			}
+		}	
+		
+		return result;
+	}
+	
+	public List<MethodDeclaration> getConstructors() {
+		List<?> bodyDeclarations = getBodyDeclarations();
+		List<MethodDeclaration> result = Lists.newLinkedList();
+		
+		for (Object bodyDeclaration : bodyDeclarations) {
+			if (bodyDeclaration instanceof MethodDeclaration) {
+				MethodDeclaration method = (MethodDeclaration) bodyDeclaration;
+				if (method.isConstructor()) {
+					result.add(method);
+				}					
 			}
 		}	
 		

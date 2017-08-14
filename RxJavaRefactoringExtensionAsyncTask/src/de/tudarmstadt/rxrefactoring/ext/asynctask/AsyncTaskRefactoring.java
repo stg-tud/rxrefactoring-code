@@ -9,7 +9,6 @@ import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree;
 import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree.WorkerNode;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.workers.AnonymAsyncTaskWorker;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.workers.AsyncTaskCollector;
-import de.tudarmstadt.rxrefactoring.ext.asynctask.workers.CachedAnonymousTaskWorker;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.workers.SubClassAsyncTaskWorker;
 
 /**
@@ -44,7 +43,7 @@ public class AsyncTaskRefactoring implements Refactoring {
 				workerTree.addWorker(new AsyncTaskCollector());	
 		
 		workerTree.addWorker(a, new AnonymAsyncTaskWorker());
-		workerTree.addWorker(a, new CachedAnonymousTaskWorker());
+//		workerTree.addWorker(a, new CachedAnonymousTaskWorker());
 		workerTree.addWorker(a, new SubClassAsyncTaskWorker());
 	}
 

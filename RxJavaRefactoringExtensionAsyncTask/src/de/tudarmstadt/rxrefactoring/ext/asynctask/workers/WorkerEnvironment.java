@@ -49,15 +49,13 @@ interface WorkerEnvironment {
 	}
 	
 	default void addStatementBefore(RewriteCompilationUnit unit, Statement newStatement, Statement referenceStatement) {
-		if (referenceStatement.getParent() instanceof Statement) {
-			unit.replace(referenceStatement, newStatement);
-		} else {
-			Block parentBlock = ASTUtils.findParent(referenceStatement, Block.class);
-			ListRewrite statementsBlock = unit.getListRewrite(parentBlock, Block.STATEMENTS_PROPERTY);
-			//Statement placeHolder = (Statement) astRewriter.createStringPlaceholder("", ASTNode.EMPTY_STATEMENT);
-			statementsBlock.insertBefore(newStatement, referenceStatement, null);
-			//statementsBlock.insertAfter(placeHolder, newStatement, null);
-		}
+		
+		Block parentBlock = ASTUtils.findParent(referenceStatement, Block.class);
+		ListRewrite statementsBlock = unit.getListRewrite(parentBlock, Block.STATEMENTS_PROPERTY);
+		//Statement placeHolder = (Statement) astRewriter.createStringPlaceholder("", ASTNode.EMPTY_STATEMENT);
+		statementsBlock.insertBefore(newStatement, referenceStatement, null);
+		//statementsBlock.insertAfter(placeHolder, newStatement, null);
+		
 	}
 	
 	

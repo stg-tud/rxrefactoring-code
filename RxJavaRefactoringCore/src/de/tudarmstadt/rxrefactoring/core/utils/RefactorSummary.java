@@ -45,7 +45,10 @@ public class RefactorSummary {
 		if (startTime == 0 || finishTime == 0) {
 			return "undefined";
 		} else {
-			return String.format(Locale.ENGLISH, "%12.3fs", ((double)(finishTime - startTime)) / 1000 / 1000 / 1000);
+			long totalTime = finishTime - startTime;
+			return String.format(Locale.ENGLISH, "%12.3fs (%dms)", 
+					((double)(totalTime)) / 1000000000, 
+					totalTime / 1000000);
 		}
 		
 	}

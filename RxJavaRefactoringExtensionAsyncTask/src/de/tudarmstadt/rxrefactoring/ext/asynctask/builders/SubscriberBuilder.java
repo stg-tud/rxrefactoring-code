@@ -10,11 +10,13 @@ import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.PrimitiveType;
+import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.Type;
@@ -69,8 +71,9 @@ public class SubscriberBuilder extends AbstractBuilder {
 		onNextMethod.setReturnType2(ast.newPrimitiveType(PrimitiveType.VOID));
 		
 		onNextMethod.parameters().add(onNextParameter);
-		onNextMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
 		onNextMethod.modifiers().add(createOverrideAnnotation());
+		onNextMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
+		
 		
 		if (asyncTask.getOnProgressUpdate() != null)
 			onNextMethod.setBody(unit.copyNode(asyncTask.getOnProgressUpdate().getBody()));
@@ -104,6 +107,8 @@ public class SubscriberBuilder extends AbstractBuilder {
 		//Define anonymous class
 		AnonymousClassDeclaration subscriberDeclaration = ast.newAnonymousClassDeclaration();
 		subscriberDeclaration.bodyDeclarations().add(onNextMethod);
+		subscriberDeclaration.bodyDeclarations().add(onCompletedMethod);
+		subscriberDeclaration.bodyDeclarations().add(onErrorMethod);
 		
 		//Define constructor call: new Subscriber() { ... }
 		ClassInstanceCreation constructorCall = ast.newClassInstanceCreation();
@@ -116,7 +121,9 @@ public class SubscriberBuilder extends AbstractBuilder {
 		getSubscriber.setReturnType2(getSubscriberType());
 		
 		Block getSubscriberBlock = ast.newBlock();
-		getSubscriberBlock.statements().add(ast.newExpressionStatement(constructorCall));
+		ReturnStatement returnStatement = ast.newReturnStatement();
+		returnStatement.setExpression(constructorCall);
+		getSubscriberBlock.statements().add(returnStatement);
 		
 		getSubscriber.modifiers().add(ast.newModifier(ModifierKeyword.PRIVATE_KEYWORD));
 		getSubscriber.setBody(getSubscriberBlock);
@@ -131,25 +138,20 @@ public class SubscriberBuilder extends AbstractBuilder {
 	 * final Subscriber<T> rxUpdateSubscriber = getRxUpdateSubscriber();
 	 */
 	@SuppressWarnings("unchecked")
-	public Statement buildSubscriberDeclaration() {
-		
-		Assignment assignment = ast.newAssignment();		
-		
-		VariableDeclarationFragment variable = ast.newVariableDeclarationFragment();
-		variable.setName(ast.newSimpleName(getFieldName()));
-		
-		VariableDeclarationExpression expr = ast.newVariableDeclarationExpression(variable);
-		expr.setType(getSubscriberType());
-		expr.modifiers().add(ast.newModifier(ModifierKeyword.FINAL_KEYWORD));
-		
-		assignment.setLeftHandSide(expr);
+	public FieldDeclaration buildSubscriberDeclaration() {
 		
 		MethodInvocation invocation = ast.newMethodInvocation();
 		invocation.setName(ast.newSimpleName(getMethodName()));
 		
-		assignment.setRightHandSide(invocation);
+		VariableDeclarationFragment variable = ast.newVariableDeclarationFragment();
+		variable.setName(ast.newSimpleName(getFieldName()));
+		variable.setInitializer(invocation);
 		
-		return ast.newExpressionStatement(assignment);
+		FieldDeclaration field = ast.newFieldDeclaration(variable);	
+		field.setType(getSubscriberType());
+		field.modifiers().add(ast.newModifier(ModifierKeyword.FINAL_KEYWORD));
+			
+		return field;
 	}
 	
 	

@@ -217,11 +217,13 @@ public class AsyncTaskCollector implements IWorker<Void,AsyncTaskCollector> {
 				Expression parentExp = ASTUtils.findParent(node, Assignment.class);
 				Boolean isAssign = (parentExp instanceof Assignment ? true : false);
 
-				if (parent == null && !isAssign) {
-					anonymousClasses.add(node);
-				} else {
-					anonymousCachedClasses.add(node);
-				}
+//				if (parent == null && !isAssign) {
+//					anonymousClasses.add(node);
+//				} else {
+//					anonymousCachedClasses.add(node);
+//				}
+				
+				anonymousClasses.add(node);
 			}
 			return true;
 		}

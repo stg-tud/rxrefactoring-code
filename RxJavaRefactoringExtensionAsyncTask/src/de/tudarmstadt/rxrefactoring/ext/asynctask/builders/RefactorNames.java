@@ -6,9 +6,9 @@ public interface RefactorNames {
 	
 	public static final String CREATE_OBSERVABLE_METHOD_NAME = "create";
 	
-	public static final String CREATE_SUBSCRIBER_METHOD_NAME = "getRxUpdateSubscriber";
+	public static final String CREATE_SUBSCRIBER_METHOD_NAME = "getUpdateSubscriber";
 	
-	public static final String SUBSCRIBER_FIELD_NAME = "rxUpdateSubscriber";
+	public static final String SUBSCRIBER_FIELD_NAME = "updateSubscriber";
 	
 
 }

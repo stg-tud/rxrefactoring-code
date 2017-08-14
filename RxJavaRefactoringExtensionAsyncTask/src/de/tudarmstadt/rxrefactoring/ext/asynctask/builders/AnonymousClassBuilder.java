@@ -97,6 +97,7 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 	
 	public void addRelevantMethods() {
 		addSubscribeOnComputation();
+		addObserveOnMain();
 		
 		//Adds the additional functionality to the observable
 		if (asyncTask.getOnPreExecute() != null) {
@@ -215,11 +216,27 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 	public AnonymousClassBuilder addSubscribeOnComputation() {
 			
 		MethodInvocation invokeScheduler = ast.newMethodInvocation();
+		invokeScheduler.setName(ast.newSimpleName("computation"));
+		invokeScheduler.setExpression(ast.newSimpleName("Schedulers"));
+		
+		MethodInvocation invokeSubscribeOn = ast.newMethodInvocation();
+		invokeSubscribeOn.setName(ast.newSimpleName("subscribeOn"));
+		invokeSubscribeOn.setExpression(node);
+		invokeSubscribeOn.arguments().add(invokeScheduler);
+		
+		node = invokeSubscribeOn;
+		
+		return this;
+	}
+	
+	public AnonymousClassBuilder addObserveOnMain() {
+		
+		MethodInvocation invokeScheduler = ast.newMethodInvocation();
 		invokeScheduler.setName(ast.newSimpleName("mainThread"));
 		invokeScheduler.setExpression(ast.newSimpleName("AndroidSchedulers"));
 		
 		MethodInvocation invokeSubscribeOn = ast.newMethodInvocation();
-		invokeSubscribeOn.setName(ast.newSimpleName("subscribeOn"));
+		invokeSubscribeOn.setName(ast.newSimpleName("observeOn"));
 		invokeSubscribeOn.setExpression(node);
 		invokeSubscribeOn.arguments().add(invokeScheduler);
 		
