@@ -6,6 +6,7 @@ import java.util.Objects;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
@@ -17,9 +18,11 @@ import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import com.google.common.collect.Lists;
 
@@ -77,7 +80,7 @@ public class InnerClassBuilder extends AbstractBuilder {
 		 */ 
 		
 		//Set name of this innerclass
-		this.name = asyncTask.doWithDeclaration(
+		this.name = asyncTask.mapDeclaration(
 				//Keep name if it is a type declaration
 				type -> type.getName().getIdentifier(),
 				//type -> RefactorNames.INNER_CLASS_TYPE_NAME, //TODO: Do not change class name if there is no need to
@@ -101,13 +104,17 @@ public class InnerClassBuilder extends AbstractBuilder {
 			}
 		});
 		
+		//Retain interface implementations
+		asyncTask.doWithDeclaration(
+				type -> type.superInterfaceTypes().forEach(x -> observableType.superInterfaceTypes().add(unit.copyNode((Type) x))),
+				anon -> {}
+		);		
 		
-		
-		//Add field declaration from the original class
+		//Add field declarations from the original class
 		asyncTask.getFieldDeclarations().forEach(x -> observableType.bodyDeclarations().add(unit.copyNode(x)));
 		
 		
-		//TODO: Add variable declarations to the constructor (and add constructor)
+		//Add variable declarations to the constructor (and add constructor)
 		MethodDeclaration constructor = ast.newMethodDeclaration();
 		constructor.setConstructor(true);
 		constructor.setName(ast.newSimpleName(name));
@@ -126,8 +133,7 @@ public class InnerClassBuilder extends AbstractBuilder {
 			
 			
 			//Add assignment in constructor body
-			Assignment assignment = ast.newAssignment();
-			
+			Assignment assignment = ast.newAssignment();			
 			FieldAccess access = ast.newFieldAccess();
 			access.setExpression(ast.newThisExpression());
 			access.setName(ast.newSimpleName(variable.getName()));
@@ -137,22 +143,33 @@ public class InnerClassBuilder extends AbstractBuilder {
 			
 			constructor.getBody().statements().add(ast.newExpressionStatement(assignment));	
 		}
+		
 		//Add constructor to type declaration
 		if (variables.size() > 0)
 			observableType.bodyDeclarations().add(constructor);
 		
 		//Add method declarations from the original type (below the constructor)
 		asyncTask.getAdditionalMethodDeclarations().forEach(declaration -> {
-						observableType.bodyDeclarations().add(unit.copyNode(declaration));
+			//Remove override annotations
+			removeOverride(declaration);
 			
+			observableType.bodyDeclarations().add(unit.copyNode(declaration));			
 		});
 		
 		
 		//Define method: create
 		ObservableMethodBuilder builder = new ObservableMethodBuilder(asyncTask, id);
-		observableType.bodyDeclarations().add(builder.buildCreateMethod());
+		observableType.bodyDeclarations().add(builder.buildCreateMethod(getTypeName()));
 		
 		node = observableType;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void removeOverride(MethodDeclaration declaration) {		
+		declaration.modifiers().forEach(element -> {
+			if (element instanceof Annotation && ((Annotation) element).getTypeName().getFullyQualifiedName().equals("Override")) 
+				unit.getListRewrite(declaration, MethodDeclaration.MODIFIERS2_PROPERTY).remove((ASTNode) element, null);
+		});
 	}
 	
 	private SingleVariableDeclaration newSingleVariableDeclarationFrom(IVariableBinding binding) {

@@ -3,6 +3,7 @@ package de.tudarmstadt.rxrefactoring.ext.asynctask.utils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -149,31 +150,29 @@ public class AsyncTaskWrapper {
 	}
 	
 	public List<?> getModifiers() {
-		return doWithDeclaration(
+		return mapDeclaration(
 				type -> type.modifiers(),
 				anon -> Lists.newLinkedList());		
 	}
 	
-	public <V> V doIfTypeDeclaration(Function<TypeDeclaration, V> function, Supplier<V> elseV) {
+
+	public <V> V mapDeclaration(Function<TypeDeclaration, V> ifTypeDeclaration, Function<AnonymousClassDeclaration, V> ifAnoynmousClassDeclaration) {
 		if (declaration instanceof TypeDeclaration)
-			return function.apply((TypeDeclaration) declaration);
+			return ifTypeDeclaration.apply((TypeDeclaration) declaration);
+		else if (declaration instanceof AnonymousClassDeclaration)
+			return ifAnoynmousClassDeclaration.apply((AnonymousClassDeclaration) declaration);
 		else
-			return elseV.get();
+			throw new IllegalStateException("AsyncTaskWrapper has no valid declaration");			
 	}
 	
-	public <V> V doIfAnonymousClassDeclaration(Function<AnonymousClassDeclaration, V> function, Supplier<V> elseV) {
-		if (declaration instanceof AnonymousClassDeclaration)
-			return function.apply((AnonymousClassDeclaration) declaration);
+	public void doWithDeclaration(Consumer<TypeDeclaration> ifTypeDeclaration, Consumer<AnonymousClassDeclaration> ifAnoynmousClassDeclaration) {
+		if (declaration instanceof TypeDeclaration)
+			ifTypeDeclaration.accept((TypeDeclaration) declaration);
+		else if (declaration instanceof AnonymousClassDeclaration)
+			ifAnoynmousClassDeclaration.accept((AnonymousClassDeclaration) declaration);
 		else
-			return elseV.get();
+			throw new IllegalStateException("AsyncTaskWrapper has no valid declaration");
 	}
-	
-	public <V> V doWithDeclaration(Function<TypeDeclaration, V> ifTypeDeclaration, Function<AnonymousClassDeclaration, V> ifAnoynmousClassDeclaration) {
-		return doIfTypeDeclaration(ifTypeDeclaration, 
-				() -> doIfAnonymousClassDeclaration(ifAnoynmousClassDeclaration, 
-						() -> { throw new IllegalStateException("AsyncTaskWrapper has no valid declaration"); })); 	
-	}
-	
 	
 	
 	/**
@@ -210,7 +209,7 @@ public class AsyncTaskWrapper {
 	 * @return the binding, or null if the binding cannot be resolved
 	 */
 	public ITypeBinding resolveTypeBinding() {
-		return doWithDeclaration(
+		return mapDeclaration(
 				type -> type.resolveBinding(),
 				anon -> anon.resolveBinding());		
 	}
@@ -240,6 +239,7 @@ public class AsyncTaskWrapper {
 	}
 
 
+	
 	
 	/**
 	 * Returns the doInBackground method declaration of
@@ -378,7 +378,7 @@ public class AsyncTaskWrapper {
 	 * @see AnonymousClassDeclaration#bodyDeclarations()
 	 */
 	public List<?> getBodyDeclarations() {
-		return doWithDeclaration(
+		return mapDeclaration(
 				type -> type.bodyDeclarations(),
 				anon -> anon.bodyDeclarations());
 	}

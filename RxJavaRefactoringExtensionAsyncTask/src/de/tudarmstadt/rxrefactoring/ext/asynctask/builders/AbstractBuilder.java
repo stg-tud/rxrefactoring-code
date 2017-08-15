@@ -7,6 +7,7 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.MarkerAnnotation;
+import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 
@@ -51,15 +52,28 @@ abstract class AbstractBuilder {
 	}
 	
 	/**
-	 * Removes method invocations such as super.onCompleted() and
-	 * removes unnecessary catch clauses.
+	 * Removes method invocations such as super.onCompleted(),
+	 * removes unnecessary catch clauses, and replaces
+	 * this expressions with the new superclass name.
 	 * 
 	 * @param body The statement block.
 	 * @param methodName The super method to look for.
+	 * @param superClassName The name of the super class which
+	 * should be used to replace this expressions or null
+	 * if this expressions should not be replaced.
+	 * @param removeCatchClauses True, if unnecessary catch clauses
+	 * should be removed.
 	 * 
 	 * @return Returns the same block that has been given as argument.
 	 */
-	Block preprocessBlock(Block body, String methodName) {
+	Block preprocessBlock(Block body, String methodName, String superClassName, boolean removeCatchClauses) {
+		
+		/*
+		 * Replace this expression with superClassName.this
+		 */
+		if (superClassName != null) {
+			AsyncTaskASTUtils.replaceThisWithFullyQualifiedThisIn(body, unit, superClassName);
+		}
 		
 		/*
 		 * Remove super calls such as super.onCompleted()
@@ -86,7 +100,8 @@ abstract class AbstractBuilder {
 		/*
 		 * Remove unnecessary catch clauses.
 		 */
-		ASTUtils.removeUnnecessaryCatchClauses(unit, body);
+		if (removeCatchClauses)
+			ASTUtils.removeUnnecessaryCatchClauses(unit, body);
 		
 		/*
 		 * Replace field references with fully qualified name 

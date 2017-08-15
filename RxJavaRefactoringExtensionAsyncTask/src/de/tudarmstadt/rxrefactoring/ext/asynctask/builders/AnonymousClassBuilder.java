@@ -9,6 +9,7 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
+import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.SimpleType;
@@ -18,9 +19,19 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 public class AnonymousClassBuilder extends AbstractBuilder {
 
 	private Expression node;
+	/**
+	 * The name of the (new) superclass that contains
+	 * the anonymous class.
+	 * The name is used to correctly identify this
+	 * expressions.
+	 * Can be null, if there is no superclass. 
+	 */
+	private String superClassName;
 	
-	public AnonymousClassBuilder(AsyncTaskWrapper asyncTask) {		
+	public AnonymousClassBuilder(AsyncTaskWrapper asyncTask, String superClassName) {		
 		super(asyncTask);
+		
+		this.superClassName = superClassName;
 		
 		/*
 		 * Builds
@@ -45,7 +56,7 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 		callMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
 		
 		if (asyncTask.getDoInBackground() != null) {
-			callMethod.setBody(unit.copyNode(asyncTask.getDoInBackground().getBody()));
+			callMethod.setBody(unit.copyNode(preprocessBlock(asyncTask.getDoInBackground().getBody(), "doInBackground", superClassName, false)));
 		}
 		
 		//Define anonymous class
@@ -90,8 +101,8 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 		return getExpression();
 	}
 	
-	public static Expression from(AsyncTaskWrapper asyncTask) {
-		AnonymousClassBuilder builder = new AnonymousClassBuilder(asyncTask);
+	public static Expression from(AsyncTaskWrapper asyncTask, String superClassName) {
+		AnonymousClassBuilder builder = new AnonymousClassBuilder(asyncTask, superClassName);
 		return builder.create();
 	}
 	
@@ -142,7 +153,7 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 		callMethod.parameters().add(unit.copyNode(asyncTask.getOnPostExecuteParameter()));		
 		
 		if (asyncTask.getOnPostExecute() != null)
-			callMethod.setBody(unit.copyNode(preprocessBlock(asyncTask.getOnPostExecute().getBody(), "onPostExecute")));
+			callMethod.setBody(unit.copyNode(preprocessBlock(asyncTask.getOnPostExecute().getBody(), "onPostExecute", superClassName, true)));
 		
 		//Define anonymous class
 		AnonymousClassDeclaration classDecl = ast.newAnonymousClassDeclaration();
@@ -193,7 +204,7 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 	public AnonymousClassBuilder addDoOnSubscribe() {	
 		Objects.requireNonNull(asyncTask.getOnPreExecute(), "The AsyncTask needs to have an onPreExecute method in order to add an doOnSubscribe.");
 		
-		node = invokeWithAction0(node, "doOnSubscribe", preprocessBlock(unit.copyNode(asyncTask.getOnPreExecute().getBody()), "onPreExecute"));
+		node = invokeWithAction0(node, "doOnSubscribe", preprocessBlock(unit.copyNode(asyncTask.getOnPreExecute().getBody()), "onPreExecute", superClassName, true));
 		return this;
 	}
 	
@@ -209,7 +220,7 @@ public class AnonymousClassBuilder extends AbstractBuilder {
 	public AnonymousClassBuilder addDoOnUnsubscribe() {	
 		Objects.requireNonNull(asyncTask.getOnCancelled(), "The AsyncTask needs to have an onCancelled method in order to add an doOnUnsubscribe.");
 		
-		node = invokeWithAction0(node, "doOnUnsubscribe", preprocessBlock(unit.copyNode(asyncTask.getOnCancelled().getBody()), "onCancelled"));
+		node = invokeWithAction0(node, "doOnUnsubscribe", preprocessBlock(unit.copyNode(asyncTask.getOnCancelled().getBody()), "onCancelled", superClassName, true));
 		return this;
 	}
 	

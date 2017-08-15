@@ -55,7 +55,7 @@ public class AsyncTaskCollector implements IWorker<Void,AsyncTaskCollector> {
 	
 	@Override
 	public AsyncTaskCollector refactor(ProjectUnits units, Void input, WorkerSummary summary) throws Exception {	
-		units.forEach(unit -> processBundledCompilationUnit(unit));		
+		units.forEach(unit -> processUnit(unit));		
 		summary.setCorrect("numberOfCompilationUnits", units.size());
 		return this;
 	}	
@@ -101,7 +101,7 @@ public class AsyncTaskCollector implements IWorker<Void,AsyncTaskCollector> {
 		return allCompilationUnits.size();
 	}
 
-	private void processBundledCompilationUnit(RewriteCompilationUnit unit) {
+	private void processUnit(RewriteCompilationUnit unit) {
 		ASTNode root = unit.getRoot();
 		
 		DeclarationVisitor declarationVisitor = new DeclarationVisitor(ClassDetails.ASYNC_TASK);
@@ -114,6 +114,8 @@ public class AsyncTaskCollector implements IWorker<Void,AsyncTaskCollector> {
 		addAnonymClassDecl(unit, declarationVisitor.getAnonymousClasses());
 		addAnonymCachedClassDecl(unit, declarationVisitor.getAnonymousCachedClasses());
 		addRelevantUsages(unit, usagesVisitor.getUsages());	
+		
+		
 	}
 	
 	
@@ -213,9 +215,9 @@ public class AsyncTaskCollector implements IWorker<Void,AsyncTaskCollector> {
 		public boolean visit(AnonymousClassDeclaration node) {
 
 			if (checkClass(node)) {
-				VariableDeclaration parent = ASTUtils.findParent(node, VariableDeclaration.class);
-				Expression parentExp = ASTUtils.findParent(node, Assignment.class);
-				Boolean isAssign = (parentExp instanceof Assignment ? true : false);
+//				VariableDeclaration parent = ASTUtils.findParent(node, VariableDeclaration.class);
+//				Expression parentExp = ASTUtils.findParent(node, Assignment.class);
+//				Boolean isAssign = (parentExp instanceof Assignment ? true : false);
 
 //				if (parent == null && !isAssign) {
 //					anonymousClasses.add(node);

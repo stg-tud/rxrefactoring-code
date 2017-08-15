@@ -8,6 +8,7 @@ import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
+import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import de.tudarmstadt.rxrefactoring.core.codegen.IdManager;
@@ -36,7 +37,7 @@ public class ObservableMethodBuilder extends AbstractBuilder {
 	 * }
 	 */
 	@SuppressWarnings("unchecked")
-	public MethodDeclaration buildCreateMethod() {
+	public MethodDeclaration buildCreateMethod(String superClassName) {
 		//Define method: create
 		MethodDeclaration method = ast.newMethodDeclaration();
 		method.setName(ast.newSimpleName(RefactorNames.CREATE_OBSERVABLE_METHOD_NAME));
@@ -52,6 +53,7 @@ public class ObservableMethodBuilder extends AbstractBuilder {
 		doInBackground.parameters().forEach(parameter -> {
 			SingleVariableDeclaration variable = (SingleVariableDeclaration) parameter;
 			
+			
 			ListRewrite modifierRewrite = unit.getListRewrite(variable, SingleVariableDeclaration.MODIFIERS2_PROPERTY);
 			modifierRewrite.insertFirst(ast.newModifier(ModifierKeyword.FINAL_KEYWORD), null);		
 		
@@ -63,7 +65,7 @@ public class ObservableMethodBuilder extends AbstractBuilder {
 		//Build body of create
 		Block methodBody = ast.newBlock();
 		ReturnStatement returnStatement = ast.newReturnStatement();
-		returnStatement.setExpression(AnonymousClassBuilder.from(asyncTask));		
+		returnStatement.setExpression(AnonymousClassBuilder.from(asyncTask, superClassName));		
 		methodBody.statements().add(returnStatement);
 		method.setBody(methodBody);
 		

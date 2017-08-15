@@ -82,10 +82,10 @@ public class SubscriberBuilder extends AbstractBuilder {
 		//Define method: onCompleted
 		MethodDeclaration onCompletedMethod = ast.newMethodDeclaration();
 		onCompletedMethod.setName(ast.newSimpleName("onCompleted"));
-		onCompletedMethod.setReturnType2(ast.newPrimitiveType(PrimitiveType.VOID));		
-		onCompletedMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
+		onCompletedMethod.setReturnType2(ast.newPrimitiveType(PrimitiveType.VOID));	
 		onCompletedMethod.modifiers().add(createOverrideAnnotation());
-		onCompletedMethod.setBody(null);
+		onCompletedMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
+		onCompletedMethod.setBody(ast.newBlock());
 		
 		
 		//Define variable: onErrorParameter
@@ -99,9 +99,9 @@ public class SubscriberBuilder extends AbstractBuilder {
 		onErrorMethod.setReturnType2(ast.newPrimitiveType(PrimitiveType.VOID));
 		
 		onErrorMethod.parameters().add(onErrorParameter);
-		onErrorMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
 		onErrorMethod.modifiers().add(createOverrideAnnotation());
-		onErrorMethod.setBody(null);
+		onErrorMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
+		onErrorMethod.setBody(ast.newBlock());
 		
 		
 		//Define anonymous class

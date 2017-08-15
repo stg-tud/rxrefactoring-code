@@ -890,7 +890,7 @@ public final class ASTUtils {
 
 	private static boolean isClassOf( ITypeBinding classType, String target )
 	{
-		return classType != null && target.equals( classType.getBinaryName() );
+		return classType != null && target.equals(classType.getBinaryName());
 	}
 
 	private static boolean catchClausesNeeded( Set<ITypeBinding> neededExceptionsTypes, Map<ITypeBinding, CatchClause> caughtExceptionsMap )
@@ -900,8 +900,11 @@ public final class ASTUtils {
 
 	private static void removeIrrelevantCatchClauses(RewriteCompilationUnit unit, Set<ITypeBinding> neededExceptionsTypes, Map<ITypeBinding, CatchClause> caughtExceptionsMap )
 	{
-		for ( ITypeBinding caughtExceptionTypeBinding : caughtExceptionsMap.keySet() )
-		{
+		for ( ITypeBinding caughtExceptionTypeBinding : caughtExceptionsMap.keySet() )	{
+			
+			if (caughtExceptionTypeBinding == null)
+				continue;
+			
 			CatchClause catchClause = caughtExceptionsMap.get( caughtExceptionTypeBinding );
 			SingleVariableDeclaration declaration = catchClause.getException();
 			Type type = declaration.getType();
@@ -945,6 +948,8 @@ public final class ASTUtils {
 	}
 
 	private static void cleanSimpleTypes(RewriteCompilationUnit unit, Set<ITypeBinding> neededExceptionsTypes, ITypeBinding caughtExceptionTypeBinding, CatchClause catchClause ) {
+		
+		
 		for (ITypeBinding neededExceptionTypeBinding : neededExceptionsTypes)	{
 			if (ASTUtils.isTypeOf(neededExceptionTypeBinding, caughtExceptionTypeBinding.getBinaryName())) {
 				unit.remove(catchClause);

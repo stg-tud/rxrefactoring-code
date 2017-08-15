@@ -479,7 +479,7 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 			
 			
 			//Gets the observable expression and adds it to the observable.
-			Expression observable = AnonymousClassBuilder.from(asyncTask);			
+			Expression observable = AnonymousClassBuilder.from(asyncTask, null);			
 			
 			
 			//Check whether there is an execute invoke.

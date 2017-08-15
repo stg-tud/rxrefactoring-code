@@ -29,7 +29,7 @@ public class AsyncTaskRefactoring implements Refactoring {
 
 	@Override
 	public IPath getDestinationDir() {
-		return new Path("./app/libs/");
+		return new Path("./libs/");
 	}
 
 	@Override

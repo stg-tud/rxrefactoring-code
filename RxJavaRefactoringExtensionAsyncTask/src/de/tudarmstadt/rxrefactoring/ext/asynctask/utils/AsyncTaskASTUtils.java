@@ -1,5 +1,6 @@
 package de.tudarmstadt.rxrefactoring.ext.asynctask.utils;
 
+import java.lang.reflect.Modifier;
 import java.util.Objects;
 import java.util.Set;
 
@@ -13,6 +14,7 @@ import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.ThisExpression;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
@@ -62,13 +64,10 @@ public class AsyncTaskASTUtils {
 	 */
 	public static boolean containsForbiddenMethod(ASTNode root) {
 
-		// Log.info(AsyncTaskASTUtils.class, "### Contains");
-
 		boolean result = ASTUtils.containsNode(root, (n) -> {
 			if (n instanceof MethodInvocation) {
 				MethodInvocation inv = (MethodInvocation) n;
-				// Log.info(AsyncTaskASTUtils.class, inv.resolveMethodBinding() + " " +
-				// inv.resolveMethodBinding().getReturnType() );
+			
 				return ASTUtils.matchSignature(inv, "^android\\.os\\.AsyncTask(<.*>)?$", "isCancelled", "^boolean$")
 						|| ASTUtils.matchSignature(inv, "^android\\.os\\.AsyncTask(<.*>)?$", "getStatus",
 								"^android.os.AsyncTask.Status$");
@@ -77,29 +76,54 @@ public class AsyncTaskASTUtils {
 			return false;
 		});
 
-		// Log.info(AsyncTaskASTUtils.class, "### Result : " + node + ", " + result);
 		return result;
 	}
+	
+	public static void replaceThisWithFullyQualifiedThisIn(ASTNode root, RewriteCompilationUnit unit, String thisClassName) {
+		
+		final AST ast = unit.getAST();
+		
+		class ThisVisitor extends ASTVisitor {
+			public boolean visit(ThisExpression node) {
+				if (node.getQualifier() == null) {
+					ThisExpression thisExpr = ast.newThisExpression();
+					thisExpr.setQualifier(ast.newSimpleName(thisClassName));
+					
+					unit.replace(node, thisExpr);
+				}
+				
+				return true;
+			}
+		}
+		
+		root.accept(new ThisVisitor());
+	}
 
+	/**
+	 * Replaces all field retrieves with the fully qualified name
+	 * for the field, e.g. f = ... --> MyClass.this.f = ...
+	 * @param root
+	 * @param unit
+	 */
 	public static void replaceFieldsWithFullyQualifiedNameIn(ASTNode root, RewriteCompilationUnit unit) {
 
 		class FieldsVisitor extends ASTVisitor {
 			@Override
-			public void endVisit(Assignment node) {
+			public boolean visit(Assignment node) {
 
 				Expression lhs = node.getLeftHandSide();
 				processFieldExpression(lhs);
 
-				return;
+				return true;
 			}
 
 			@Override
-			public void endVisit(MethodInvocation node) {
+			public boolean visit(MethodInvocation node) {
 				Expression expr = node.getExpression();
 				
 				if (expr != null) processFieldExpression(expr);
 
-				return;
+				return true;
 			}
 
 			private void processFieldExpression(Expression expr) {
@@ -120,24 +144,29 @@ public class AsyncTaskASTUtils {
 				if (expr instanceof SimpleName) {
 					SimpleName variableName = (SimpleName) expr;
 
-					// TODO: Fix the warning.
-					IVariableBinding variable = Bindings.findFieldInType(binding, variableName.getIdentifier());
-
-					if (variable != null && variable.isField()) {
-						//variableName.setIdentifier(variable.getDeclaringClass().getQualifiedName() + ".this." + variableName);
+					
+					for (IVariableBinding variable : binding.getDeclaredFields()) {
 						
-						ThisExpression thisExp = unit.getAST().newThisExpression();
-						thisExp.setQualifier(unit.getAST().newName(variable.getDeclaringClass().getName()));
-						
-						FieldAccess fa = unit.getAST().newFieldAccess();
-						fa.setName(unit.getAST().newSimpleName(variableName.getIdentifier()));
-						fa.setExpression(thisExp);						
-						
-						
-						unit.replace(variableName, fa);
-						
-						
-					}
+						if (variable != null 
+								//Name is the same as the expression name								
+								&& variable.getName().equals(variableName.getIdentifier()) 
+								//The field is not static
+								&& ((variable.getModifiers() & Modifier.STATIC) == 0)) {
+							//variableName.setIdentifier(variable.getDeclaringClass().getQualifiedName() + ".this." + variableName);
+							
+							ThisExpression thisExp = unit.getAST().newThisExpression();
+							thisExp.setQualifier(unit.getAST().newName(variable.getDeclaringClass().getName()));
+							
+							FieldAccess fa = unit.getAST().newFieldAccess();
+							fa.setName(unit.getAST().newSimpleName(variableName.getIdentifier()));
+							fa.setExpression(thisExp);						
+							
+							
+							unit.replace(variableName, fa);
+							
+							
+						}
+					}				
 				}				
 				
 			}
