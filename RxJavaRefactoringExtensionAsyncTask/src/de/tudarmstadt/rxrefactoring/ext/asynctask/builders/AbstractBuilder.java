@@ -7,7 +7,6 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.MarkerAnnotation;
-import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 
@@ -100,8 +99,8 @@ abstract class AbstractBuilder {
 		/*
 		 * Remove unnecessary catch clauses.
 		 */
-		if (removeCatchClauses)
-			ASTUtils.removeUnnecessaryCatchClauses(unit, body);
+//		if (removeCatchClauses)
+//			ASTUtils.removeUnnecessaryCatchClauses(unit, body);
 		
 		/*
 		 * Replace field references with fully qualified name 

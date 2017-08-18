@@ -22,15 +22,12 @@ import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.InnerClassBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.RefactorNames;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.SubscriberBuilder;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 
 
 /**
- * Description: This worker is in charge of refactoring classes that extends
- * AsyncTasks that are assigned to a variable.<br>
- * Example: class Task extends AsyncTask<>{...}<br>
- * Author: Ram<br>
- * Created: 11/12/2016
+ * Refactors subclasses of AsyncTask that appear in the code.
  */
 public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>, WorkerEnvironment {
 	final String SUBSCRIPTION = "Subscription";
@@ -52,7 +49,7 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 
 				AsyncTaskWrapper asyncTask = new AsyncTaskWrapper(asyncTaskDeclaration, unit);
 
-				if (asyncTask.getDoInBackground() == null) {
+				if (!AsyncTaskASTUtils.canBeRefactored(asyncTask)) {
 					summary.addSkipped("asynctask-subclasses");
 					continue;
 				}

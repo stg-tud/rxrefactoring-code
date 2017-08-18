@@ -4,7 +4,7 @@
     <extension
             point="de.tudarmstadt.rxrefactoring.extensionpoint">
         <client
-                class="de.tudarmstadt.rxrefactoring.ext.asynctask.Extension">
+                class="de.tudarmstadt.rxrefactoring.ext.asynctask.AsyncTaskRefactoring">
         </client>
     </extension>
 

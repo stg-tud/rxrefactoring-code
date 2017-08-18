@@ -53,87 +53,86 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	 * The underlying compilation unit.
 	 */
 	private final ICompilationUnit unit;
-	
+
 	/**
 	 * The root node of the AST of the compilation unit.
 	 */
 	private final ASTNode rootNode;
-	
+
 	/**
 	 * The AST rewriter to be used for this compilation unit.
 	 */
 	private ASTRewrite writer;
-	
+
 	/**
 	 * The import rewriter to be used for this compilation unit.
 	 */
 	private ImportRewrite imports;
-	
+
 	/**
 	 * The AST that has been used to create the AST of this unit.
 	 */
 	private AST ast;
-	
-	
-	
+
 	/**
-	 * Bundles a compilation unit together with its root AST node.
-	 * Use {@link RewriteCompilationUnitFactory} to generate
-	 * Bundled compilation units.
+	 * Bundles a compilation unit together with its root AST node. Use
+	 * {@link RewriteCompilationUnitFactory} to generate Bundled compilation units.
 	 * 
-	 * @param unit The compilation unit.
-	 * @param rootNode The root node of the AST.
+	 * @param unit
+	 *            The compilation unit.
+	 * @param rootNode
+	 *            The root node of the AST.
 	 * 
-	 * @throws NullPointerException if any argument is null. 
+	 * @throws NullPointerException
+	 *             if any argument is null.
 	 * 
 	 */
 	protected RewriteCompilationUnit(ICompilationUnit unit, ASTNode rootNode) {
 		Objects.requireNonNull(unit);
 		Objects.requireNonNull(rootNode);
-		
+
 		this.unit = unit;
 		this.rootNode = rootNode;
 	}
-	
+
 	/**
 	 * Accepts a visitor for this compilation units AST.
 	 * 
-	 * @param visitor The visitor to use.
+	 * @param visitor
+	 *            The visitor to use.
 	 * 
 	 * @see ASTNode#accept(ASTVisitor)
 	 */
 	public void accept(ASTVisitor visitor) {
 		rootNode.accept(visitor);
 	}
-	
+
 	/**
-	 * The root node of this compilation units AST.
-	 * Use {@link writer()} when you want to make
-	 * changes to the AST.	  
+	 * The root node of this compilation units AST. Use {@link writer()} when you
+	 * want to make changes to the AST.
 	 * 
 	 * @return The root node of this compilation units AST. Cannot be null.
 	 */
 	public ASTNode getRoot() {
 		return rootNode;
 	}
-	
+
 	public AST getAST() {
 		if (ast == null) {
 			ast = getRoot().getAST();
 		}
-		
+
 		return ast;
 	}
-	
-	
+
 	ASTRewrite writer() {
 		if (writer == null) {
 			writer = ASTRewrite.create(getAST());
 		}
-		
+
 		return writer;
 	}
-	
+
 	ImportRewrite imports() {
 		if (imports == null) {
 			try {
@@ -142,156 +141,158 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 				throw new IllegalStateException(e);
 			}
 		}
-		
+
 		return imports;
 	}
-	
-	
+
 	/**
-	 * Checks whether this compilation unit is
-	 * marked for changes in either its AST or
-	 * imports.
+	 * Checks whether this compilation unit is marked for changes in either its AST
+	 * or imports.
 	 * 
 	 */
 	public boolean hasChanges() {
 		return hasImportChanges() || hasASTChanges();
 	}
-	
+
 	public boolean hasImportChanges() {
 		return imports != null;
 	}
-	
+
 	public boolean hasASTChanges() {
 		return writer != null;
 	}
 
 	/**
-	 * Replaces an AST node with another AST node.
-	 * This replacement is not immediate as it does
-	 * not change the underlying AST graph.	 * 
+	 * Replaces an AST node with another AST node. This replacement is not immediate
+	 * as it does not change the underlying AST graph. * <br>
 	 * <br>
-	 * <br>
-	 * This method does not change the AST until {@link RewriteCompilationUnit#applyChanges(IProgressMonitor)}
-	 * has been called.
+	 * This method does not change the AST until
+	 * {@link RewriteCompilationUnit#applyChanges(IProgressMonitor)} has been
+	 * called.
 	 * 
 	 * 
-	 * @param node The node that should be marked for replacement.
-	 * @param replacement The new node.
+	 * @param node
+	 *            The node that should be marked for replacement.
+	 * @param replacement
+	 *            The new node.
 	 * 
-	 * @see ASTRewrite#replace(ASTNode, ASTNode, org.eclipse.text.edits.TextEditGroup)
+	 * @see ASTRewrite#replace(ASTNode, ASTNode,
+	 *      org.eclipse.text.edits.TextEditGroup)
 	 */
 	public void replace(ASTNode node, ASTNode replacement) {
 		writer().replace(node, replacement, null);
 	}
-	
+
 	/**
-	 * Adds an import to this compilation unit.
-	 * No imports are added for types that are already known.
+	 * Adds an import to this compilation unit. No imports are added for types that
+	 * are already known. <br>
 	 * <br>
-	 * <br>
-	 * This method does not change the AST until {@link RewriteCompilationUnit#applyChanges(IProgressMonitor)}
-	 * has been called.
-	 *  
-	 * @param qualifiedTypeName The qualified name of the type
-	 * that should be imported.
+	 * This method does not change the AST until
+	 * {@link RewriteCompilationUnit#applyChanges(IProgressMonitor)} has been
+	 * called.
+	 * 
+	 * @param qualifiedTypeName
+	 *            The qualified name of the type that should be imported.
 	 * 
 	 * @see ImportRewrite#addImport(String)
 	 */
 	public void addImport(String qualifiedTypeName) {
 		imports().addImport(qualifiedTypeName);
 	}
-	
+
 	/**
-	 * Removes an import from this compilation unit.
+	 * Removes an import from this compilation unit. <br>
 	 * <br>
-	 * <br>
-	 * This method does not change the AST until {@link RewriteCompilationUnit#applyChanges(IProgressMonitor)}
-	 * has been called.
-	 *  
-	 * @param qualifiedTypeName The qualified name of the type
-	 * that should be removed.
+	 * This method does not change the AST until
+	 * {@link RewriteCompilationUnit#applyChanges(IProgressMonitor)} has been
+	 * called.
+	 * 
+	 * @param qualifiedTypeName
+	 *            The qualified name of the type that should be removed.
 	 * 
 	 * @see ImportRewrite#removeImport(String)
-	 */	
+	 */
 	public void removeImport(String qualifiedTypeName) {
 		imports().removeImport(qualifiedTypeName);
 	}
-	
+
 	/**
-	 * Creates and returns a new rewriter for describing modifications to the
-	 * given list property of the given node.
+	 * Creates and returns a new rewriter for describing modifications to the given
+	 * list property of the given node.
 	 *
-	 * @param node the node
-	 * @param property the node's property; the child list property
+	 * @param node
+	 *            the node
+	 * @param property
+	 *            the node's property; the child list property
 	 * @return a new list rewriter object
 	 * 
-	 * @throws IllegalArgumentException if the node or property is null, or if the node
-	 * is not part of this rewriter's AST, or if the property is not a node property,
-	 * or if the described modification is invalid
+	 * @throws IllegalArgumentException
+	 *             if the node or property is null, or if the node is not part of
+	 *             this rewriter's AST, or if the property is not a node property,
+	 *             or if the described modification is invalid
 	 * 
 	 * @see ASTRewrite#getListRewrite(ASTNode, ChildListPropertyDescriptor)
 	 */
 	public ListRewrite getListRewrite(ASTNode node, ChildListPropertyDescriptor property) {
-		return writer().getListRewrite(node, property);		
+		return writer().getListRewrite(node, property);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public <V extends ASTNode> V copyNode(V node) {
-		return (V) writer().createCopyTarget(node);		
+		return (V) writer().createCopyTarget(node);
 	}
-	
+
 	public void remove(ASTNode node) {
 		writer().remove(node, null);
 	}
-		
-	
+
 	/**
-	 * Applies the changes marked in this compilation unit and
-	 * writes them to disk.
+	 * Applies the changes marked in this compilation unit and writes them to disk.
 	 * 
 	 * @return True, if the compilation unit did have changes.
 	 * 
 	 */
-	protected boolean applyChanges() throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
-		
-		//Only do something if there are changes to the compilation unit
+	protected boolean applyChanges()
+			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
+
+		// Only do something if there are changes to the compilation unit
 		if (hasChanges()) {
-			//Initialize the document with the old source code
+			// Initialize the document with the old source code
 			Document document = new Document(getSource());
-			
-			//Apply changes to the classes AST if there are any
+
+			// Apply changes to the classes AST if there are any
 			if (hasASTChanges()) {
 				TextEdit edit = writer().rewriteAST();
 				edit.apply(document);
 			}
-			
-			//Apply changes to the classes imports if there are any
+
+			// Apply changes to the classes imports if there are any
 			if (hasImportChanges()) {
-				TextEdit edit = imports().rewriteImports(null); //We can add a progress monitor here.
+				TextEdit edit = imports().rewriteImports(null); // We can add a progress monitor here.
 				edit.apply(document);
 			}
-			
-			//Save the changes to disk
+
+			// Save the changes to disk
 			IBuffer buffer = unit.getBuffer();
-			buffer.setContents(document.get());	
-			//TODO: Fix this functionality if there is a test run.
-		//	if ( !RefactoringApp.isRunningForTests() ) 
+			buffer.setContents(document.get());
+			// TODO: Fix this functionality if there is a test run.
+			// if ( !RefactoringApp.isRunningForTests() )
 			buffer.save(null, false);
-			
+
 			return true;
 		}
-		
-		return false;		
+
+		return false;
 	}
-	
+
 	@Override
 	public String toString() {
-		return "RewriteCompilationUnit("+ getElementName() + ")" ;
+		return "RewriteCompilationUnit(" + getElementName() + ")";
 	}
-	
+
 	/*
-	 * Methods from ICompilationUnit 
-	 */	
+	 * Methods from RewriteCompilationUnit
+	 */
 	@Override
 	public IType findPrimaryType() {
 		return unit.findPrimaryType();
@@ -450,7 +451,7 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	@Override
 	public void open(IProgressMonitor progress) throws JavaModelException {
 		unit.open(progress);
-		
+
 	}
 
 	@Override
@@ -476,27 +477,27 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	@Override
 	@Deprecated
 	public void codeComplete(int offset, ICodeCompletionRequestor requestor) throws JavaModelException {
-		unit.codeComplete(offset, requestor);		
+		unit.codeComplete(offset, requestor);
 	}
 
 	@Override
 	@Deprecated
 	public void codeComplete(int offset, ICompletionRequestor requestor) throws JavaModelException {
 		unit.codeComplete(offset, requestor);
-		
+
 	}
 
 	@Override
 	public void codeComplete(int offset, CompletionRequestor requestor) throws JavaModelException {
 		unit.codeComplete(offset, requestor);
-		
+
 	}
 
 	@Override
 	public void codeComplete(int offset, CompletionRequestor requestor, IProgressMonitor monitor)
 			throws JavaModelException {
 		unit.codeComplete(offset, requestor, monitor);
-		
+
 	}
 
 	@Override
@@ -504,25 +505,25 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	public void codeComplete(int offset, ICompletionRequestor requestor, WorkingCopyOwner owner)
 			throws JavaModelException {
 		unit.codeComplete(offset, requestor, owner);
-		
+
 	}
 
 	@Override
 	public void codeComplete(int offset, CompletionRequestor requestor, WorkingCopyOwner owner)
 			throws JavaModelException {
 		unit.codeComplete(offset, requestor, owner);
-		
+
 	}
 
 	@Override
 	public void codeComplete(int offset, CompletionRequestor requestor, WorkingCopyOwner owner,
 			IProgressMonitor monitor) throws JavaModelException {
 		unit.codeComplete(offset, requestor, owner, monitor);
-		
+
 	}
 
 	@Override
-	public IJavaElement[] codeSelect(int offset, int length) throws JavaModelException {		
+	public IJavaElement[] codeSelect(int offset, int length) throws JavaModelException {
 		return unit.codeSelect(offset, length);
 	}
 
@@ -589,7 +590,7 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 
 	@Override
 	@Deprecated
-	public IMarker[] reconcile() throws JavaModelException {		
+	public IMarker[] reconcile() throws JavaModelException {
 		return unit.reconcile();
 	}
 
@@ -597,7 +598,7 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	@Deprecated
 	public void reconcile(boolean forceProblemDetection, IProgressMonitor monitor) throws JavaModelException {
 		unit.reconcile(forceProblemDetection, monitor);
-		
+
 	}
 
 	@Override
@@ -608,18 +609,18 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 
 	@Override
 	public void delete(boolean force, IProgressMonitor monitor) throws JavaModelException {
-		unit.delete(force, monitor);		
+		unit.delete(force, monitor);
 	}
 
 	@Override
 	public void move(IJavaElement container, IJavaElement sibling, String rename, boolean replace,
 			IProgressMonitor monitor) throws JavaModelException {
-		unit.move(container, sibling, rename, replace, monitor);		
+		unit.move(container, sibling, rename, replace, monitor);
 	}
 
 	@Override
 	public void rename(String name, boolean replace, IProgressMonitor monitor) throws JavaModelException {
-		unit.rename(name, replace, monitor);		
+		unit.rename(name, replace, monitor);
 	}
 
 	@Override
@@ -631,18 +632,18 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	@Deprecated
 	public void becomeWorkingCopy(IProblemRequestor problemRequestor, IProgressMonitor monitor)
 			throws JavaModelException {
-		unit.becomeWorkingCopy(problemRequestor, monitor);		
+		unit.becomeWorkingCopy(problemRequestor, monitor);
 	}
 
 	@Override
 	public void becomeWorkingCopy(IProgressMonitor monitor) throws JavaModelException {
 		unit.becomeWorkingCopy(monitor);
-		
+
 	}
 
 	@Override
 	public void commitWorkingCopy(boolean force, IProgressMonitor monitor) throws JavaModelException {
-		unit.commitWorkingCopy(force, monitor);		
+		unit.commitWorkingCopy(force, monitor);
 	}
 
 	@Override
@@ -778,9 +779,5 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	public void restore() throws JavaModelException {
 		unit.restore();
 	}
-	
-	
-	
-	
-	
+
 }

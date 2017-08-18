@@ -6,21 +6,17 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
-import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
-import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.eclipse.jdt.core.dom.VariableDeclaration;
 import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -93,7 +89,7 @@ public class AsyncTaskCollector implements IWorker<Void,AsyncTaskCollector> {
 	}
 
 	public int getNumberOfCompilationUnits() {
-		Set<ICompilationUnit> allCompilationUnits = new HashSet<>();
+		Set<RewriteCompilationUnit> allCompilationUnits = new HashSet<>();
 		allCompilationUnits.addAll(subclassesMap.keySet());
 		allCompilationUnits.addAll(anonymousClassesMap.keySet());
 		allCompilationUnits.addAll(anonymousCachedClassesMap.keySet());

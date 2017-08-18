@@ -8,18 +8,15 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
-import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.ThisExpression;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-import org.eclipse.jdt.internal.corext.dom.Bindings;
 
 import com.google.common.collect.Sets;
 
@@ -177,8 +174,6 @@ public class AsyncTaskASTUtils {
 	}
 	
 	
-	
-
 	public static Set<SimpleName> getVariableNames(Expression expr) {
 		class ExpressionVisitor extends ASTVisitor {
 
@@ -198,6 +193,25 @@ public class AsyncTaskASTUtils {
 		ExpressionVisitor v = new ExpressionVisitor();
 		expr.accept(v);
 		return v.names;
+	}
+	
+	public static boolean canBeRefactored(AsyncTaskWrapper asyncTask) {
+				
+		//The AsyncTask needs to have a doInBackground method. 
+		if (asyncTask.getDoInBackground() == null) {
+			return false;
+		}
+		
+		//Checks whether the implementation directly extends AsyncTask
+		//TODO: Activate this working code if we want to improve refactor detection.
+//		ITypeBinding superClass = asyncTask.getSuperClass();
+//		if (superClass == null || !Objects.equals(superClass.getErasure().getQualifiedName(), "android.os.AsyncTask")) {
+//			return false;
+//		}
+		
+				
+		
+		return true;
 	}
 
 }

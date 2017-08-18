@@ -1,5 +1,6 @@
 package de.tudarmstadt.rxrefactoring.ext.asynctask.domain;
 
+import com.google.common.util.concurrent.AbstractScheduledService.Scheduler;
 
 /**
  * Description: Enum to specify the scheduler to be used as parameter of

@@ -4,11 +4,11 @@ import java.util.Objects;
 
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
-import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import de.tudarmstadt.rxrefactoring.core.codegen.IdManager;
@@ -47,16 +47,19 @@ public class ObservableMethodBuilder extends AbstractBuilder {
 		method.setReturnType2(returnType);		
 		method.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
 		
-		//Add arguments of doInBackground to create. Add 'final' to each parameter.
+		//Add arguments of doInBackground to create. 
 		MethodDeclaration doInBackground = asyncTask.getDoInBackground();
 		
+		//Add 'final' to each parameter.
 		doInBackground.parameters().forEach(parameter -> {
 			SingleVariableDeclaration variable = (SingleVariableDeclaration) parameter;
-			
-			
-			ListRewrite modifierRewrite = unit.getListRewrite(variable, SingleVariableDeclaration.MODIFIERS2_PROPERTY);
-			modifierRewrite.insertFirst(ast.newModifier(ModifierKeyword.FINAL_KEYWORD), null);		
-		
+						
+			//Adds final modifier (if not already present) so that parameters can be referenced in the anonymous class.
+			if (!hasFinalModifier(variable)) {
+				ListRewrite modifierRewrite = unit.getListRewrite(variable, SingleVariableDeclaration.MODIFIERS2_PROPERTY);
+				modifierRewrite.insertFirst(ast.newModifier(ModifierKeyword.FINAL_KEYWORD), null);
+			}
+					
 			method.parameters().add(unit.copyNode(variable));
 			
 			return;
@@ -70,6 +73,15 @@ public class ObservableMethodBuilder extends AbstractBuilder {
 		method.setBody(methodBody);
 		
 		return method;
+	}
+	
+	private boolean hasFinalModifier(SingleVariableDeclaration variable) {
+		for (Object element : variable.modifiers()) {
+			if (element instanceof Modifier && ((Modifier) element).isFinal()) {				
+				return true;				
+			}			
+		}
+		return false;
 	}
 	
 	public String getId() {

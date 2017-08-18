@@ -4,7 +4,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 
 import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
@@ -29,11 +28,11 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.AnonymousClassBuilder
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.InnerClassBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.RefactorNames;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.SubscriberBuilder;
+import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 
 /**
- * Author: Template<br>
- * Created: 01/18/2017
+ * Refactors anonymous classes of AsyncTask.
  */
 public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>, WorkerEnvironment {
 
@@ -63,7 +62,7 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 				AsyncTaskWrapper asyncTask = new AsyncTaskWrapper(asyncTaskDeclaration, unit);
 
 				//If there is no doInBackground, then we can't do any refactoring
-				if (asyncTask.getDoInBackground() == null) {
+				if (!AsyncTaskASTUtils.canBeRefactored(asyncTask)) {
 					summary.addSkipped("asynctask-anonymous");
 					continue;
 				}
@@ -257,7 +256,7 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 	 * Method to refactor method invocation statements with name execute EX: new
 	 * Task().execute();
 	 */
-//	void replaceExecute(UnitWriterExt writer, MethodInvocation methodInvoke, ICompilationUnit unit, AST astInvoke, boolean withSubscription) {
+//	void replaceExecute(UnitWriterExt writer, MethodInvocation methodInvoke, RewriteCompilationUnit unit, AST astInvoke, boolean withSubscription) {
 //
 ////		UnitWriterExt writer = UnitWriters.getOrElse(unit,
 ////				() -> new UnitWriterExt(unit, astInvoke, getClass().getSimpleName()));

@@ -1,17 +1,33 @@
 package de.tudarmstadt.rxrefactoring.ext.asynctask.utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
+import org.eclipse.jdt.core.dom.BodyDeclaration;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
+import de.tudarmstadt.rxrefactoring.core.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.ClassDetails;
@@ -420,6 +436,24 @@ public class AsyncTaskWrapper {
 		return result;
 	}
 	
+	
+	public ITypeBinding getSuperClass() {
+		return mapDeclaration(
+				type -> {
+					ITypeBinding typeBinding = type.resolveBinding();
+					if (typeBinding != null)
+						return typeBinding.getSuperclass();
+					else
+						return null;
+				},
+				anon -> {
+					ITypeBinding typeBinding = anon.resolveBinding();
+					if (typeBinding != null)
+						return typeBinding.getSuperclass();
+					else
+						return null;
+				});
+	}
 
 	/**
 	 * Creates a list of all method declarations that are present
@@ -454,6 +488,57 @@ public class AsyncTaskWrapper {
 	
 	public BodyDeclaration getEnclosingDeclaration() {
 		return ASTUtils.findParent(declaration, BodyDeclaration.class);
+	}
+	
+	
+	/**
+	 * Finds all class instance creation expressions where this task
+	 * is created.
+	 * 
+	 * @param units The units where to search for class instance creations.
+	 * Can only be null, if the declaration of this AsyncTaskWrapper is
+	 * an anonymous class.
+	 * 
+	 * @return A set of all class instance creation expressions that create
+	 * this AsyncTask. The set is empty if there are no such expressions. 
+	 */
+	public Set<ClassInstanceCreation> findClassInstanceCreationsIn(ProjectUnits units) {		
+		
+		class InstanceCreationVisitor extends ASTVisitor {
+			
+			final Set<ClassInstanceCreation> classInstanceCreations = Sets.newHashSet();
+			final ITypeBinding asyncTaskBinding = resolveTypeBinding();			
+			
+			public boolean visit(ClassInstanceCreation node) {
+				ITypeBinding nodeType = node.resolveTypeBinding();
+				if (nodeType != null && nodeType.isEqualTo(asyncTaskBinding)) {
+					classInstanceCreations.add(node);
+				}
+				return true;
+			}
+		}
+		
+		return mapDeclaration(
+				type -> {					
+					Objects.requireNonNull(units, "units can not be null.");
+					
+					InstanceCreationVisitor visitor = new InstanceCreationVisitor();
+					units.accept(visitor);					
+					return visitor.classInstanceCreations;
+				}, 
+				anon -> {
+					ASTNode parent = anon.getParent();
+					if (parent != null && parent instanceof ClassInstanceCreation) {
+						return Sets.newHashSet((ClassInstanceCreation) parent);
+					} else {
+						return Collections.emptySet();
+					}
+				});
+	}
+	
+	
+	public Set<MethodInvocation> findUsagesIn(ProjectUnits units) {
+		return null;
 	}
 
 	/**
