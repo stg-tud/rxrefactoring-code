@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+    <extension
+            point="de.tudarmstadt.rxrefactoring.extensionpoint">
+        <client
+                class="de.tudarmstadt.rxrefactoring.ext.akkafuture.AkkaFutureRefactoring">
+        </client>
+    </extension>
+
+    <extension
+            point="org.eclipse.ui.commands">
+        <category
+                name="Rx Refactoring"
+                id="rxRefactoring.commands.rxrefactoring">
+        </category>
+        <command
+                name="Akka Future to RxJava"
+                categoryId="rxRefactoring.commands.rxrefactoring"
+                id="rxRefactoring.commands.rxJavaRefactoringAkkaFuture">
+        </command>
+    </extension>
+    
+    <extension
+            point="org.eclipse.ui.handlers">
+        <handler
+                commandId="rxRefactoring.commands.rxJavaRefactoringAkkaFuture"
+                class="de.tudarmstadt.rxrefactoring.ext.akkafuture.Handler">
+        </handler>
+    </extension>
+
+    <extension
+            point="org.eclipse.ui.menus">
+        <menuContribution
+                locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+            <menu
+                    label="2Rx"
+                    mnemonic="R"
+                    id="rxRefactoring.menus.rxJavaRefactorings">
+                <command
+                        commandId="rxRefactoring.commands.rxJavaRefactoringAkkaFuture"
+                        mnemonic="1"
+                        id="rxRefactoring.menus.rxJavaRefactorings">
+                </command>
+            </menu>
+        </menuContribution>
+    </extension>
+
+</plugin>

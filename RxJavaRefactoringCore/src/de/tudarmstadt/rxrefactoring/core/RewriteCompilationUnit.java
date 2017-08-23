@@ -239,6 +239,9 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 
 	@SuppressWarnings("unchecked")
 	public <V extends ASTNode> V copyNode(V node) {
+		if (node.getParent() == null)
+			return node;
+		
 		return (V) writer().createCopyTarget(node);
 	}
 

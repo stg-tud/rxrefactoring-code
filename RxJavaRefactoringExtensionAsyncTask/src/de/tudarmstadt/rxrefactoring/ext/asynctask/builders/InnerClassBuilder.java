@@ -190,7 +190,7 @@ public class InnerClassBuilder extends AbstractBuilder {
 	
 	
 	public InnerClassBuilder(AsyncTaskWrapper asyncTask) {
-		this(asyncTask, IdManager.getNextObservableId(asyncTask.getUnit().getElementName()));
+		this(asyncTask, IdManager.getNextObservableId(asyncTask.getUnit()));
 	}
 
 	

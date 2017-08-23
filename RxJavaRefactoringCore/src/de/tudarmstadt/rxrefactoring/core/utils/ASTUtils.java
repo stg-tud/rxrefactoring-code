@@ -32,11 +32,15 @@ import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.TryStatement;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.UnionType;
+import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
@@ -806,6 +810,16 @@ public final class ASTUtils {
 		}
 	}
 
+	/**
+	 * Produces a new type from a given type binding. The implementation
+	 * is taken from 
+	 * <a href="https://stackoverflow.com/questions/11091791/convert-eclipse-jdt-itypebinding-to-a-type">https://stackoverflow.com/questions/11091791/convert-eclipse-jdt-itypebinding-to-a-type</a>.
+	 *
+	 * @param ast The AST used to build the new type.
+	 * @param typeBinding The type binding to convert.
+	 * 
+	 * @return The type from the type binding.
+	 */
 	public static Type typeFromBinding(AST ast, ITypeBinding typeBinding) {
 		if (ast == null)
 			throw new NullPointerException("ast is null");
@@ -1042,6 +1056,30 @@ public final class ASTUtils {
 		}
 
 		return false;
+	}
+	
+	public static void addStatementBefore(RewriteCompilationUnit unit, Statement newStatement, Statement referenceStatement) {		
+		Block parentBlock = ASTUtils.findParent(referenceStatement, Block.class);
+		ListRewrite statementsBlock = unit.getListRewrite(parentBlock, Block.STATEMENTS_PROPERTY);
+		statementsBlock.insertBefore(newStatement, referenceStatement, null);		
+	}
+	
+	public static void addStatementAfter(RewriteCompilationUnit unit, Statement newStatement, Statement referenceStatement) {		
+		Block parentBlock = ASTUtils.findParent(referenceStatement, Block.class);
+		ListRewrite statementsBlock = unit.getListRewrite(parentBlock, Block.STATEMENTS_PROPERTY);
+		statementsBlock.insertAfter(newStatement, referenceStatement, null);		
+	}
+	
+	public static Type typeOfVariableFragment(VariableDeclarationFragment variable) {
+		
+		ASTNode parent = variable.getParent();
+		if (parent instanceof VariableDeclarationExpression) {
+			return ((VariableDeclarationExpression) parent).getType();
+		} else if (parent instanceof VariableDeclarationStatement) {
+			return ((VariableDeclarationStatement) parent).getType();
+		} 
+		
+		return null;
 	}
 
 }

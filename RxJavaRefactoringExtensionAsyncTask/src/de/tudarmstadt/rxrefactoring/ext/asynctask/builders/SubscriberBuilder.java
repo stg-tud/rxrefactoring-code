@@ -29,7 +29,7 @@ public class SubscriberBuilder extends AbstractBuilder {
 	private final String id;
 
 	public SubscriberBuilder(AsyncTaskWrapper asyncTask) {
-		this(asyncTask, IdManager.getNextObserverId(asyncTask.getUnit().getElementName()));			
+		this(asyncTask, IdManager.getNextObserverId(asyncTask.getUnit()));			
 	}
 	
 	public SubscriberBuilder(AsyncTaskWrapper asyncTask, String id) {

@@ -25,7 +25,7 @@ public class ObservableMethodBuilder extends AbstractBuilder {
 	}
 	
 	public ObservableMethodBuilder(AsyncTaskWrapper asyncTask) {
-		this(asyncTask, IdManager.getNextObservableId(asyncTask.getUnit().getElementName()));
+		this(asyncTask, IdManager.getNextObservableId(asyncTask.getUnit()));
 	}
 		
 		

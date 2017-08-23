@@ -3,6 +3,8 @@ package de.tudarmstadt.rxrefactoring.core.codegen;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.eclipse.jdt.core.ICompilationUnit;
+
 /**
  * Description: This class is responsible for generating next ids for new
  * elements thread safely. The ids are unique for a compilation unit<br>
@@ -13,8 +15,8 @@ public final class IdManager {
 	private static final String EMPTY = "";
 	private static final int INITIAL_ID = 0;
 
-	private static Map<String, Integer> observerCounter = new ConcurrentHashMap<>();
-	private static Map<String, Integer> observableCounter = new ConcurrentHashMap<>();
+	private static Map<ICompilationUnit, Integer> observerCounter = new ConcurrentHashMap<>();
+	private static Map<ICompilationUnit, Integer> observableCounter = new ConcurrentHashMap<>();
 
 	public static void reset() {
 		observableCounter = new ConcurrentHashMap<>();
@@ -29,7 +31,7 @@ public final class IdManager {
 	 *            name of the compilation unit
 	 * @return next id
 	 */
-	public static String getNextObserverId(String icuName) {
+	public static String getNextObserverId(ICompilationUnit icuName) {
 		incAndGetCounter(icuName, IdManager.observerCounter);
 		return getId(icuName, IdManager.observerCounter);
 	}
@@ -42,7 +44,7 @@ public final class IdManager {
 	 *            name of the compilation unit
 	 * @return next id
 	 */
-	public static String getNextObservableId(String icuName) {
+	public static String getNextObservableId(ICompilationUnit icuName) {
 		incAndGetCounter(icuName, IdManager.observableCounter);
 		return getId(icuName, IdManager.observableCounter);
 	}
@@ -54,13 +56,13 @@ public final class IdManager {
 	 * @param icuName
 	 * @return
 	 */
-	public static String getLastObservableId(String icuName) {
+	public static String getLastObservableId(ICompilationUnit icuName) {
 		return getId(icuName, IdManager.observableCounter);
 	}
 
 	// ### Private Methods ###
 
-	private static String getId(String icuName, Map<String, Integer> map) {
+	private static String getId(ICompilationUnit icuName, Map<ICompilationUnit, Integer> map) {
 		Integer integer = map.get(icuName);
 		if (integer == null || integer == INITIAL_ID) {
 			return EMPTY;
@@ -69,7 +71,7 @@ public final class IdManager {
 		}
 	}
 
-	private static void incAndGetCounter(String icuName, Map<String, Integer> map) {
+	private static void incAndGetCounter(ICompilationUnit icuName, Map<ICompilationUnit, Integer> map) {
 		Integer integer = map.get(icuName);
 		if (integer == null) {
 			map.put(icuName, INITIAL_ID);
