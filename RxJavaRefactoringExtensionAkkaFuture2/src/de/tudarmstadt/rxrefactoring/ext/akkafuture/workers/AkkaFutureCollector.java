@@ -7,12 +7,14 @@ import java.util.Objects;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
@@ -92,7 +94,9 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 			List<CollectorVisitor> visitors =
 					Lists.newArrayList(
 							new MethodInvocationVisitor(unit),
-							new TypeVisitor(unit)
+							new TypeVisitor(unit),
+							new ReturnVisitor(unit),
+							new ClassInstanceCreationVisitor(unit)
 							);
 			
 			for (CollectorVisitor v : visitors) {
@@ -134,6 +138,38 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 						
 			return false;
 		}
+	}
+	
+	private class ReturnVisitor extends CollectorVisitor {
+
+		public ReturnVisitor(RewriteCompilationUnit unit) {
+			super(unit);
+		}
+		
+		public boolean visit(ReturnStatement node) {
+			Expression expr = node.getExpression();
+			
+			
+			if (expr != null && FutureTypeWrapper.isAkkaFuture(expr.resolveTypeBinding())) {
+				unrefactorableFutureReferences.put(unit, expr);
+			}
+				
+			return true;
+		}
+		
+	}
+	
+	private class ClassInstanceCreationVisitor extends CollectorVisitor {
+
+		public ClassInstanceCreationVisitor(RewriteCompilationUnit unit) {
+			super(unit);
+		}
+		
+		public boolean visit(ClassInstanceCreation node) {
+			unrefactorableFutureReferences.putAll(unit, AkkaFutureASTUtils.futureReferencesInClassInstanceCreation(node));
+			return true;
+		}
+		
 	}
 	
 	private class MethodInvocationVisitor extends CollectorVisitor {

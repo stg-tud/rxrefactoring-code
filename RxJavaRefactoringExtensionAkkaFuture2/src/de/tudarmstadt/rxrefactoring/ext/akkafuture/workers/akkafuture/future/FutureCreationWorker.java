@@ -50,25 +50,28 @@ public class FutureCreationWorker extends AbstractAkkaWorker<AkkaFutureCollector
 	}
 
 	@Override
-	protected void endRefactorNode(RewriteCompilationUnit unit) {
-		addObservableImport(unit);
-		addSubjectImport(unit);
-		addCallableImport(unit);
-		addSchedulersImport(unit);
-		addAwaitImport(unit);
-		
-		super.endRefactorNode(unit);
-	}
-	
-	@Override
 	protected void refactorNode(RewriteCompilationUnit unit, FutureCreationWrapper wrapper) {		
 		
 		Expression expr = wrapper.getExpression();
 		ASTNode parent = expr.getParent();
 		
 		if (expr.getParent() instanceof VariableDeclarationFragment) {
+			addObservableImport(unit);
+			addSubjectImport(unit);
+			addCallableImport(unit);
+			addSchedulersImport(unit);
+			addAwaitImport(unit);
+			addDurationImport(unit);
+			
 			refactorCreateInvocationWithAssignment(unit, (VariableDeclarationFragment) parent, wrapper);
 		} else {
+			addObservableImport(unit);
+			addSubjectImport(unit);
+			addCallableImport(unit);
+			addSchedulersImport(unit);
+			addAwaitImport(unit);
+			addDurationImport(unit);
+			
 			refactorCreateInvocationWithoutAssignment(unit, wrapper);		
 		}
 		
@@ -104,13 +107,8 @@ public class FutureCreationWorker extends AbstractAkkaWorker<AkkaFutureCollector
 		 * 
 		 * ... f1 ...
 		 * 
-		 */	
-		
-		
-		
-		
-		
-		
+		 */			
+				
 		//New observable variable name
 		String observableName = "observable" + IdManager.getNextObservableId(unit);
 		
@@ -135,6 +133,8 @@ public class FutureCreationWorker extends AbstractAkkaWorker<AkkaFutureCollector
 		 *     return Await.result(rhs, Duration.Inf());
 		 * }
 		 */
+		AkkaFutureASTUtils.replaceThisWithFullyQualifiedThisIn(expr, unit);
+		
 		MethodInvocation durationInf = ast.newMethodInvocation();
 		durationInf.setExpression(ast.newSimpleName("Duration"));
 		durationInf.setName(ast.newSimpleName("Inf"));
@@ -177,8 +177,9 @@ public class FutureCreationWorker extends AbstractAkkaWorker<AkkaFutureCollector
 		subscribe.arguments().add(ast.newSimpleName(observableName));
 		
 		
-		//Replace argument in add method		
-		unit.replace(expr, ast.newSimpleName(observableName));
+		//Replace argument in add method	
+		if (!(expr.getParent() instanceof Statement))
+			unit.replace(expr, ast.newSimpleName(observableName));
 		
 		
 		/*
@@ -287,6 +288,8 @@ public class FutureCreationWorker extends AbstractAkkaWorker<AkkaFutureCollector
 		 *     return Await.result(rhs, Duration.Inf());
 		 * }
 		 */
+		AkkaFutureASTUtils.replaceThisWithFullyQualifiedThisIn(expr, unit);
+		
 		MethodInvocation durationInf = ast.newMethodInvocation();
 		durationInf.setExpression(ast.newSimpleName("Duration"));
 		durationInf.setName(ast.newSimpleName("Inf"));

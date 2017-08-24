@@ -80,6 +80,8 @@ public class UnrefactorableReferencesWorker extends AbstractAkkaWorker<AkkaFutur
 		 * 
 		 * FUTURE 
 		 */
+		
+		AkkaFutureASTUtils.doWithVariablesFromExpression(unit, expr, stmt -> ASTUtils.addStatementBefore(unit, stmt, ASTUtils.findParent(expr, Statement.class)));
 			
 		MethodInvocation futuresFuture = ast.newMethodInvocation();
 		futuresFuture.setName(ast.newSimpleName("future"));
@@ -111,10 +113,8 @@ public class UnrefactorableReferencesWorker extends AbstractAkkaWorker<AkkaFutur
 		//Add imports
 		addFuturesImport(unit);
 		addCallableImport(unit);
-		addExecutionContextsImport(unit);
-
+		addExecutionContextsImport(unit);		
 		
-		AkkaFutureASTUtils.doWithVariablesFromExpression(unit, expr, stmt -> ASTUtils.addStatementBefore(unit, stmt, ASTUtils.findParent(expr, Statement.class)));
 		
 		//Replace original expr
 		unit.replace(expr, futuresFuture);		
