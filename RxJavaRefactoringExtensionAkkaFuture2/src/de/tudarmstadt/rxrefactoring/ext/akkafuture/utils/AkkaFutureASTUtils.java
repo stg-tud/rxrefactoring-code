@@ -1,5 +1,6 @@
 package de.tudarmstadt.rxrefactoring.ext.akkafuture.utils;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -19,8 +20,11 @@ import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.Type;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureTypeWrapper;
 
 import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
+
+import com.google.common.collect.Lists;
 
 public class AkkaFutureASTUtils {
 
@@ -62,7 +66,7 @@ public class AkkaFutureASTUtils {
 		callMethod.setName(ast.newSimpleName("call"));
 		callMethod.setReturnType2(returnType.get());
 		callMethod.thrownExceptionTypes().add(ast.newSimpleType(ast.newSimpleName("Exception")));
-		callMethod.modifiers().add(createOverrideAnnotation(ast));
+		//callMethod.modifiers().add(createOverrideAnnotation(ast));
 		callMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
 		
 				
@@ -111,6 +115,23 @@ public class AkkaFutureASTUtils {
 		return invoke;		
 	}
 	
+	public static List<Expression> futureReferencesInMethodInvocation(MethodInvocation method) {
+		List<Expression> result = Lists.newLinkedList();
+		
+		Expression expr = method.getExpression();		
+		if (expr != null && FutureTypeWrapper.isAkkaFuture(expr.resolveTypeBinding())) {
+			result.add(expr);
+		}
+		
+		for (Object element : method.arguments()) {
+			Expression e = (Expression) element;
+			if (FutureTypeWrapper.isAkkaFuture(e.resolveTypeBinding())) {
+				result.add(e);
+			}
+		}
+		
+		return result;
+	}
 	
 	
 	

@@ -1,10 +1,19 @@
 package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.future;
 
+import java.util.List;
+import java.util.Set;
+
 import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.IBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
@@ -13,8 +22,11 @@ import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
@@ -29,7 +41,7 @@ import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FuturesSequenceWrappe
 
 public class VariableFragmentWorker extends AbstractAkkaWorker<AkkaFutureCollector, VariableDeclarationFragment> {
 	public VariableFragmentWorker() {
-		super("Assignment");
+		super("VaribaleFragment");
 	}
 
 	@Override
@@ -117,7 +129,9 @@ public class VariableFragmentWorker extends AbstractAkkaWorker<AkkaFutureCollect
 		 *	.subscribe(f1);
 		 */	
 		
-		AST ast = unit.getAST();		
+		AST ast = unit.getAST();	
+		
+		Statement referenceStatement = ASTUtils.findParent(variable, Statement.class);
 		
 		//The name of the left-hand-side variable
 		Type typeArgument = null;			
@@ -137,6 +151,7 @@ public class VariableFragmentWorker extends AbstractAkkaWorker<AkkaFutureCollect
 		subjectCreate.setExpression(ast.newSimpleName("ReplaySubject"));
 		
 		unit.replace(expr, subjectCreate);
+			
 		
 		/*
 		 * Build
@@ -150,7 +165,7 @@ public class VariableFragmentWorker extends AbstractAkkaWorker<AkkaFutureCollect
 		
 		MethodInvocation awaitResult = ast.newMethodInvocation();
 		awaitResult.setExpression(ast.newSimpleName("Await"));
-		awaitResult.setName(ast.newSimpleName("result"));
+		awaitResult.setName(ast.newSimpleName("result"));		
 		awaitResult.arguments().add(unit.copyNode(expr));
 		awaitResult.arguments().add(durationInf);
 		
@@ -181,7 +196,53 @@ public class VariableFragmentWorker extends AbstractAkkaWorker<AkkaFutureCollect
 		subscribe.arguments().add(unit.copyNode(variable.getName()));
 		
 		
-		ASTUtils.addStatementAfter(unit, ast.newExpressionStatement(subscribe), ASTUtils.findParent(variable, Statement.class));
+		ASTUtils.addStatementAfter(unit, ast.newExpressionStatement(subscribe), referenceStatement);
+		
+		
+		/*
+		 * Build
+		 * 
+		 * final var1Final = var;
+		 * ...
+		 */
+		List<SimpleName> variables = ASTUtils.findVariablesIn(expr);
+		Set<String> alreadyDeclared = Sets.newHashSet();
+		
+		for(SimpleName var : variables) {
+			
+			IBinding binding = var.resolveBinding();			
+			//If the variable is already final, do nothing
+			if (binding != null && (binding.getModifiers() & Modifier.FINAL) != 0) {
+				continue;
+			}
+			
+			ITypeBinding varType = var.resolveTypeBinding();
+			if (varType == null) {
+				continue;
+			}
+			
+			String newVarName = var.getIdentifier() + "Final";
+			
+			//If variable has not been declared already, then add a declaration.
+			if (!alreadyDeclared.contains(newVarName)) {					
+				
+				//Add the variable declaration.
+				VariableDeclarationFragment fragment = ast.newVariableDeclarationFragment();
+				fragment.setName(ast.newSimpleName(newVarName));
+				fragment.setInitializer(ast.newSimpleName(var.getIdentifier()));
+				
+				VariableDeclarationStatement varStatement = ast.newVariableDeclarationStatement(fragment);
+				varStatement.setType(ASTUtils.typeFromBinding(ast, varType));
+				varStatement.modifiers().add(ast.newModifier(ModifierKeyword.FINAL_KEYWORD));
+				
+				ASTUtils.addStatementAfter(unit, varStatement, referenceStatement);
+				
+				alreadyDeclared.add(newVarName);
+			}
+			
+			//Replace variable reference with new variable name
+			unit.replace(var, ast.newSimpleName(newVarName));			
+		}
 		
 		summary.addCorrect("futureCreation");
 	}
@@ -200,5 +261,8 @@ public class VariableFragmentWorker extends AbstractAkkaWorker<AkkaFutureCollect
 		
 		return newType;
 	}
+	
+	
+	
 }
 

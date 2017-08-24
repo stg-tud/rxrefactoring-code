@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
@@ -53,6 +54,11 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 	 * All future method usages, e.g., future.map
 	 */
 	public final Multimap<RewriteCompilationUnit, FutureMethodWrapper> futureUsages = HashMultimap.create();
+	
+	/**
+	 * All future references that can not be refactored, e.g., pipe(future, ...)
+	 */
+	public final Multimap<RewriteCompilationUnit, Expression> unrefactorableFutureReferences = HashMultimap.create();
 	
 	@Override
 	public AkkaFutureCollector refactor(ProjectUnits units, Void input, WorkerSummary summary) throws Exception {
@@ -147,10 +153,13 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 		public boolean visit(MethodInvocation node) {
 			if (FutureCreationWrapper.isFutureCreation(node)) {
 				futureCreations.put(unit, FutureCreationWrapper.create(node));
-			}
-			if (FutureMethodWrapper.isFutureMethod(node)) {
+			} else if (FutureMethodWrapper.isFutureMethod(node)) {
 				futureUsages.put(unit, FutureMethodWrapper.createFromExpression(node));
+			} else {				
+				unrefactorableFutureReferences.putAll(unit, AkkaFutureASTUtils.futureReferencesInMethodInvocation(node));				
 			}
+			
+			
 			
 			return true;
 		}

@@ -43,6 +43,8 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
+import com.google.common.collect.Lists;
+
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.logging.Log;
 
@@ -1080,6 +1082,42 @@ public final class ASTUtils {
 		} 
 		
 		return null;
+	}
+	
+	
+	/**
+	 * Finds all variable references in the given expression.
+	 * @param expr
+	 * @return
+	 */
+	public static List<SimpleName> findVariablesIn(Expression expr) {		
+		
+		List<SimpleName> variableNodes = Lists.newLinkedList();
+		
+		
+		class VariableVisitor extends ASTVisitor {
+			
+			@Override
+			public boolean visit(SimpleName node) {
+				
+				ASTNode parent = node.getParent();
+				
+				//Ignore if the variable is declared inside the expression
+				if (parent instanceof VariableDeclarationFragment)
+					return false;
+				
+				IBinding binding = node.resolveBinding();				
+				if (binding != null && binding.getKind() == IBinding.VARIABLE) {
+					variableNodes.add(node);
+				}
+				
+				return false;
+			}			
+		}
+		
+		expr.accept(new VariableVisitor());
+		
+		return variableNodes;		
 	}
 
 }
