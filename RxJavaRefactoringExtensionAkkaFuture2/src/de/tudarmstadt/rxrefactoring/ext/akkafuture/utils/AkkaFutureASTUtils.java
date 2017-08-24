@@ -2,30 +2,42 @@ package de.tudarmstadt.rxrefactoring.ext.akkafuture.utils;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.ReturnStatement;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.ThisExpression;
 import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureTypeWrapper;
 
 import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class AkkaFutureASTUtils {
 
@@ -132,6 +144,32 @@ public class AkkaFutureASTUtils {
 		initCallable.setAnonymousClassDeclaration(classDecl);
 		
 		return initCallable;
+	}
+	
+	public static void replaceThisWithFullyQualifiedThisIn(ASTNode root, RewriteCompilationUnit unit) {
+		
+		final AST ast = unit.getAST();
+		
+		class ThisVisitor extends ASTVisitor {
+			public boolean visit(ThisExpression node) {
+				
+				
+				
+				if (node.getQualifier() == null) {
+					
+					ITypeBinding thisBinding = node.resolveTypeBinding().getErasure();
+					
+					ThisExpression thisExpr = ast.newThisExpression();
+					thisExpr.setQualifier(ast.newName(ASTUtils.typeFromBinding(ast, thisBinding).toString()));
+					
+					unit.replace(node, thisExpr);
+				}
+				
+				return true;
+			}
+		}
+		
+		root.accept(new ThisVisitor());
 	}
 	
 	/*
@@ -242,5 +280,69 @@ public class AkkaFutureASTUtils {
 		}
 		
 		return false;
+	}
+	
+	
+	/**
+	 * Calls the consumer for every variable access in the expression.
+	 * Can be used to see which variables have to be declared final
+	 * in the anonymous class.
+	 * 
+	 * @param unit
+	 * @param expr
+	 * @param addStatement
+	 */
+	public static void doWithVariablesFromExpression(RewriteCompilationUnit unit, Expression expr, Consumer<Statement> addStatement) {
+		
+		AST ast = unit.getAST();
+		
+		/*
+		 * Build
+		 * 
+		 * final var1Final = var;
+		 * ...
+		 */
+		List<SimpleName> variables = ASTUtils.findVariablesIn(expr);
+		Set<String> alreadyDeclared = Sets.newHashSet();
+		
+		for(SimpleName var : variables) {
+			
+			//If the variable is already final or a field, do nothing
+			IBinding binding = var.resolveBinding();			
+			if (binding != null) {
+				int modifiers = binding.getModifiers(); 
+				
+				if (Modifier.isFinal(modifiers) || (modifiers & Modifier.FIELD_ACCESS) != 0)
+					continue;
+			}		
+					
+			
+			ITypeBinding varType = var.resolveTypeBinding();
+			if (varType == null) {
+				continue;
+			}
+			
+			String newVarName = var.getIdentifier() + "Final";
+			
+			//If variable has not been declared already, then add a declaration.
+			if (!alreadyDeclared.contains(newVarName)) {					
+				
+				//Add the variable declaration.
+				VariableDeclarationFragment fragment = ast.newVariableDeclarationFragment();
+				fragment.setName(ast.newSimpleName(newVarName));
+				fragment.setInitializer(ast.newSimpleName(var.getIdentifier()));
+				
+				VariableDeclarationStatement varStatement = ast.newVariableDeclarationStatement(fragment);
+				varStatement.setType(ASTUtils.typeFromBinding(ast, varType));
+				varStatement.modifiers().add(ast.newModifier(ModifierKeyword.FINAL_KEYWORD));
+				
+				addStatement.accept(varStatement);
+				
+				alreadyDeclared.add(newVarName);
+			}
+			
+			//Replace variable reference with new variable name
+			unit.replace(var, ast.newSimpleName(newVarName));			
+		}
 	}
 }

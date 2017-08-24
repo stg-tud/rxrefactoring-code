@@ -36,12 +36,11 @@ import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureTypeWrapper;
 
 public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 
-	public final Multimap<RewriteCompilationUnit, Assignment> assignments = HashMultimap.create();
 	
 	/**
 	 * All variable declarations Future<...> futureVaribale = ...
 	 */
-	public final Multimap<RewriteCompilationUnit, VariableDeclarationFragment> variableDeclarations = HashMultimap.create();
+//	public final Multimap<RewriteCompilationUnit, VariableDeclarationFragment> variableDeclarations = HashMultimap.create();
 	
 	/**
 	 * All invocations of Await.result(...)
@@ -92,8 +91,6 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 			
 			List<CollectorVisitor> visitors =
 					Lists.newArrayList(
-							new AssignmentVisitor(unit),
-							new VariableDeclarationVisitor(unit),
 							new MethodInvocationVisitor(unit),
 							new TypeVisitor(unit)
 							);
@@ -102,6 +99,8 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 				unit.accept(v);
 			}
 		}
+		
+		summary.setCorrect("numberOfCompilationUnits", units.size());
 		
 		return this;
 	}
@@ -116,40 +115,7 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 	}
 	
 
-	private class AssignmentVisitor extends CollectorVisitor  {
-		
-		public AssignmentVisitor(RewriteCompilationUnit unit) {
-			super(unit);		
-		}
-		
-		@Override
-		public boolean visit(Assignment assignment) {
-			ITypeBinding lhsType = assignment.getLeftHandSide().resolveTypeBinding();
-			if (Objects.equals(lhsType.getBinaryName(), ClassInfos.AkkaFuture.getBinaryName())) {
-				assignments.put(unit, assignment);
-			}
-			return true;
-		}
-	}
-	
-	
-	private class VariableDeclarationVisitor extends CollectorVisitor {
-		
-		public VariableDeclarationVisitor(RewriteCompilationUnit unit) {
-			super(unit);
-		}
-				
-		@Override
-		public boolean visit(VariableDeclarationFragment node) {
-			IVariableBinding variable = node.resolveBinding();
-			
-			if (FutureTypeWrapper.isAkkaFuture(variable.getType())) {
-				variableDeclarations.put(unit, node);				
-			}
-			
-			return true;
-		}
-	}
+
 	
 	private class TypeVisitor extends CollectorVisitor {
 		

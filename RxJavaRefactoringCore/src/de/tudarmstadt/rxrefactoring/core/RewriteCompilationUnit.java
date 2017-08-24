@@ -1,5 +1,6 @@
 package de.tudarmstadt.rxrefactoring.core;
 
+import java.util.List;
 import java.util.Objects;
 
 import org.eclipse.core.resources.IMarker;
@@ -31,6 +32,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ChildListPropertyDescriptor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
@@ -147,6 +149,38 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 		return imports;
 	}
 
+	
+	
+	/**
+	 * Returns the rewritten node of the given node. If the node
+	 * has not been rewritten, then it returns the original node.
+	 * If the node is located in a list, then the index of the node
+	 * has to be given as well.
+	 * 
+	 * @param node The node to check.
+	 * @param index The index of the enclosing list (if any).
+	 * @return The possible rewriting of the original node, or
+	 * the original node.
+	 */
+	public ASTNode getRewrittenNode(ASTNode node, int index) {		
+		Objects.requireNonNull(node, "node can not be null.");
+		
+		StructuralPropertyDescriptor descriptor = node.getLocationInParent();
+		ASTNode parent = node.getParent();
+		
+		if (parent == null || descriptor == null)
+			throw new IllegalStateException("parent or descriptor are null.");
+		
+		if (descriptor instanceof ChildListPropertyDescriptor) {
+			ChildListPropertyDescriptor clpd = (ChildListPropertyDescriptor) descriptor;
+			ListRewrite l = writer().getListRewrite(parent, clpd);
+			return (ASTNode) l.getRewrittenList().get(index);			
+		} else {
+			return (ASTNode) writer().get(node, descriptor);
+		}
+	}
+	
+	
 	/**
 	 * Checks whether this compilation unit is marked for changes in either its AST
 	 * or imports.

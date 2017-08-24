@@ -8,6 +8,7 @@ import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractAkkaWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureMethodWrapper;
+import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureOnFailureWrapper;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FuturesMapWrapper;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FuturesSequenceWrapper;
 
@@ -51,6 +52,14 @@ public class MethodUsageWorker extends AbstractAkkaWorker<AkkaFutureCollector, F
 			//Update future usage
 			FuturesMapWrapper w = (FuturesMapWrapper) wrapper;			
 			MethodInvocation m = w.createMapExpression(unit);			
+			unit.replace(w.getExpression(), m);			
+		} else if (wrapper instanceof FutureOnFailureWrapper) {
+			//Update imports
+			addAction1Import(unit);
+			
+			//Update future usage
+			FutureOnFailureWrapper w = (FutureOnFailureWrapper) wrapper;			
+			MethodInvocation m = w.createOnErrorExpression(unit);			
 			unit.replace(w.getExpression(), m);			
 		}
 	}	

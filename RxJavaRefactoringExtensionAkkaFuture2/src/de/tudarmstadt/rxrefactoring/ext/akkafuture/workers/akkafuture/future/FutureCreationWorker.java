@@ -2,6 +2,7 @@ package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.future;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -155,7 +156,13 @@ public class FutureCreationWorker extends AbstractAkkaWorker<AkkaFutureCollector
 		 * 
 		 * Observable.fromCallable(...)
 		 */
-		MethodInvocation fromCallable = AkkaFutureASTUtils.buildFromCallable(unit, () -> (Type) ASTNode.copySubtree(ast, futureType), () -> block);
+		MethodInvocation fromCallable = AkkaFutureASTUtils.buildFromCallable(
+				unit, 
+				() -> (Type) ASTNode.copySubtree(ast, futureType), 
+				() -> {
+					AkkaFutureASTUtils.replaceThisWithFullyQualifiedThisIn(block, unit);
+					return block;			
+				});
 		
 		//Add subscribeOn(Schedulers.io())
 		MethodInvocation subscribeOn = ast.newMethodInvocation();
@@ -180,45 +187,46 @@ public class FutureCreationWorker extends AbstractAkkaWorker<AkkaFutureCollector
 		 * final var1Final = var;
 		 * ...
 		 */
-		List<SimpleName> variables = ASTUtils.findVariablesIn(expr);
-		Set<String> alreadyDeclared = Sets.newHashSet();
-		
-		for(SimpleName var : variables) {
-			
-			IBinding varBinding = var.resolveBinding();			
-			//If the variable is already final, do nothing
-			if (varBinding != null && (varBinding.getModifiers() & Modifier.FINAL) != 0) {
-				continue;
-			}
-			
-			ITypeBinding varType = var.resolveTypeBinding();
-			if (varType == null) {
-				continue;
-			}
-			
-			String newVarName = var.getIdentifier() + "Final" + IdManager.getNextObserverId(unit);
-			
-			//If variable has not been declared already, then add a declaration.
-			if (!alreadyDeclared.contains(newVarName)) {					
-				
-				//Add the variable declaration.
-				VariableDeclarationFragment fragment = ast.newVariableDeclarationFragment();
-				fragment.setName(ast.newSimpleName(newVarName));
-				fragment.setInitializer(ast.newSimpleName(var.getIdentifier()));
-				
-				VariableDeclarationStatement varStatement = ast.newVariableDeclarationStatement(fragment);
-				varStatement.setType(ASTUtils.typeFromBinding(ast, varType));
-				varStatement.modifiers().add(ast.newModifier(ModifierKeyword.FINAL_KEYWORD));
-				
-				ASTUtils.addStatementBefore(unit, varStatement, referenceStatement);
-				
-				alreadyDeclared.add(newVarName);
-			}
-			
-			//Replace variable reference with new variable name
-			unit.replace(var, ast.newSimpleName(newVarName));			
-		}
-		
+//		List<SimpleName> variables = ASTUtils.findVariablesIn(expr);
+//		Set<String> alreadyDeclared = Sets.newHashSet();
+//		
+//		for(SimpleName var : variables) {
+//			
+//			IBinding varBinding = var.resolveBinding();			
+//			//If the variable is already final, do nothing
+//			if (varBinding != null && (varBinding.getModifiers() & Modifier.FINAL) != 0) {
+//				continue;
+//			}
+//			
+//			ITypeBinding varType = var.resolveTypeBinding();
+//			if (varType == null) {
+//				continue;
+//			}
+//			
+//			String newVarName = var.getIdentifier() + "Final" + IdManager.getNextObserverId(unit);
+//			
+//			//If variable has not been declared already, then add a declaration.
+//			if (!alreadyDeclared.contains(newVarName)) {					
+//				
+//				//Add the variable declaration.
+//				VariableDeclarationFragment fragment = ast.newVariableDeclarationFragment();
+//				fragment.setName(ast.newSimpleName(newVarName));
+//				fragment.setInitializer(ast.newSimpleName(var.getIdentifier()));
+//				
+//				VariableDeclarationStatement varStatement = ast.newVariableDeclarationStatement(fragment);
+//				varStatement.setType(ASTUtils.typeFromBinding(ast, varType));
+//				varStatement.modifiers().add(ast.newModifier(ModifierKeyword.FINAL_KEYWORD));
+//				
+//				ASTUtils.addStatementBefore(unit, varStatement, referenceStatement);
+//				
+//				alreadyDeclared.add(newVarName);
+//			}
+//			
+//			//Replace variable reference with new variable name
+//			unit.replace(var, ast.newSimpleName(newVarName));			
+//		}
+		AkkaFutureASTUtils.doWithVariablesFromExpression(unit, expr, stmt -> ASTUtils.addStatementBefore(unit, stmt, referenceStatement));
+
 		
 		//Add Observable.fromCallable statement 
 		ASTUtils.addStatementBefore(unit, ast.newExpressionStatement(subscribe), referenceStatement);
@@ -301,7 +309,13 @@ public class FutureCreationWorker extends AbstractAkkaWorker<AkkaFutureCollector
 		 * Observable.fromCallable(...)
 		 */
 		final Type typeArgumentFinal = typeArgument;
-		MethodInvocation fromCallable = AkkaFutureASTUtils.buildFromCallable(unit, () -> unit.copyNode(typeArgumentFinal), () -> block);
+		MethodInvocation fromCallable = AkkaFutureASTUtils.buildFromCallable(
+				unit, 
+				() -> unit.copyNode(typeArgumentFinal), 
+				() -> {
+					AkkaFutureASTUtils.replaceThisWithFullyQualifiedThisIn(block, unit);
+					return block;			
+				});
 		
 		//Add subscribeOn(Schedulers.io())
 		MethodInvocation subscribeOn = ast.newMethodInvocation();
@@ -325,47 +339,50 @@ public class FutureCreationWorker extends AbstractAkkaWorker<AkkaFutureCollector
 		 * final var1Final = var;
 		 * ...
 		 */
-		List<SimpleName> variables = ASTUtils.findVariablesIn(expr);
-		Set<String> alreadyDeclared = Sets.newHashSet();
+//		List<SimpleName> variables = ASTUtils.findVariablesIn(expr);
+//		Set<String> alreadyDeclared = Sets.newHashSet();
+//		
+//		for(SimpleName var : variables) {
+//			
+//			IBinding binding = var.resolveBinding();			
+//			//If the variable is already final, do nothing
+//			if (binding != null && (binding.getModifiers() & Modifier.FINAL) != 0) {
+//				continue;
+//			}
+//			
+//			ITypeBinding varType = var.resolveTypeBinding();
+//			if (varType == null) {
+//				continue;
+//			}
+//			
+//			String newVarName = var.getIdentifier() + "Final";
+//			
+//			//If variable has not been declared already, then add a declaration.
+//			if (!alreadyDeclared.contains(newVarName)) {					
+//				
+//				//Add the variable declaration.
+//				VariableDeclarationFragment fragment = ast.newVariableDeclarationFragment();
+//				fragment.setName(ast.newSimpleName(newVarName));
+//				fragment.setInitializer(ast.newSimpleName(var.getIdentifier()));
+//				
+//				VariableDeclarationStatement varStatement = ast.newVariableDeclarationStatement(fragment);
+//				varStatement.setType(ASTUtils.typeFromBinding(ast, varType));
+//				varStatement.modifiers().add(ast.newModifier(ModifierKeyword.FINAL_KEYWORD));
+//				
+//				ASTUtils.addStatementAfter(unit, varStatement, referenceStatement);
+//				
+//				alreadyDeclared.add(newVarName);
+//			}
+//			
+//			//Replace variable reference with new variable name
+//			unit.replace(var, ast.newSimpleName(newVarName));			
+//		}
 		
-		for(SimpleName var : variables) {
-			
-			IBinding binding = var.resolveBinding();			
-			//If the variable is already final, do nothing
-			if (binding != null && (binding.getModifiers() & Modifier.FINAL) != 0) {
-				continue;
-			}
-			
-			ITypeBinding varType = var.resolveTypeBinding();
-			if (varType == null) {
-				continue;
-			}
-			
-			String newVarName = var.getIdentifier() + "Final";
-			
-			//If variable has not been declared already, then add a declaration.
-			if (!alreadyDeclared.contains(newVarName)) {					
-				
-				//Add the variable declaration.
-				VariableDeclarationFragment fragment = ast.newVariableDeclarationFragment();
-				fragment.setName(ast.newSimpleName(newVarName));
-				fragment.setInitializer(ast.newSimpleName(var.getIdentifier()));
-				
-				VariableDeclarationStatement varStatement = ast.newVariableDeclarationStatement(fragment);
-				varStatement.setType(ASTUtils.typeFromBinding(ast, varType));
-				varStatement.modifiers().add(ast.newModifier(ModifierKeyword.FINAL_KEYWORD));
-				
-				ASTUtils.addStatementAfter(unit, varStatement, referenceStatement);
-				
-				alreadyDeclared.add(newVarName);
-			}
-			
-			//Replace variable reference with new variable name
-			unit.replace(var, ast.newSimpleName(newVarName));			
-		}
+		AkkaFutureASTUtils.doWithVariablesFromExpression(unit, expr, stmt -> ASTUtils.addStatementAfter(unit, stmt, referenceStatement));
 		
 		summary.addCorrect("futureCreation");
 	}
+	
 	
 	protected Type newSubjectType(AST ast, Type typeArgument1, Type typeArgument2) {
 		ParameterizedType newType = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Subject")));

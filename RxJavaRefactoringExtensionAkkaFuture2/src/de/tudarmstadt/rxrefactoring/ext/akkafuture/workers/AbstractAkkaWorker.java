@@ -28,7 +28,7 @@ public abstract class AbstractAkkaWorker<CollectorType, RefactorType> extends Ab
 	}
 	
 	protected void addAwaitImport(RewriteCompilationUnit unit) {
-		unit.addImport("scala.concurrent.Await");		
+		unit.addImport("akka.dispatch.Await");		
 	}
 		
 	protected void addArraysImport(RewriteCompilationUnit unit) {
@@ -41,6 +41,10 @@ public abstract class AbstractAkkaWorker<CollectorType, RefactorType> extends Ab
 	
 	protected void addFunc1Import(RewriteCompilationUnit unit) {
 		unit.addImport("rx.functions.Func1");		
+	}
+	
+	protected void addAction1Import(RewriteCompilationUnit unit) {
+		unit.addImport("rx.functions.Action1");		
 	}
 	
 	protected void addExecutionContextsImport(RewriteCompilationUnit unit) {

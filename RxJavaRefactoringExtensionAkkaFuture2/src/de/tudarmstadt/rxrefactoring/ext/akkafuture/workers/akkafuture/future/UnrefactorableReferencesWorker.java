@@ -114,6 +114,8 @@ public class UnrefactorableReferencesWorker extends AbstractAkkaWorker<AkkaFutur
 		addExecutionContextsImport(unit);
 
 		
+		AkkaFutureASTUtils.doWithVariablesFromExpression(unit, expr, stmt -> ASTUtils.addStatementBefore(unit, stmt, ASTUtils.findParent(expr, Statement.class)));
+		
 		//Replace original expr
 		unit.replace(expr, futuresFuture);		
 	}

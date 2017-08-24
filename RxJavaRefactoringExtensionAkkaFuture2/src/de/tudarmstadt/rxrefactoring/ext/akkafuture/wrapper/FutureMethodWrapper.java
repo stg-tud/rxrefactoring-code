@@ -12,14 +12,17 @@ public interface FutureMethodWrapper {
 
 	public static boolean isFutureMethod(Expression method) {
 		return FuturesSequenceWrapper.isFuturesSequence(method) ||
-				FuturesMapWrapper.isFutureMap(method);
+				FuturesMapWrapper.isFutureMap(method) ||
+				FutureOnFailureWrapper.isFutureOnFailure(method);
 	}
 	
 	public static FutureMethodWrapper createFromExpression(Expression method) {
 		if (FuturesSequenceWrapper.isFuturesSequence(method))
 			return FuturesSequenceWrapper.create(method);
 		else if (FuturesMapWrapper.isFutureMap(method))
-			return FuturesMapWrapper.create(method);		
+			return FuturesMapWrapper.create(method);
+		else if (FutureOnFailureWrapper.isFutureOnFailure(method))
+			return FutureOnFailureWrapper.create(method);
 			
 		
 		return null;

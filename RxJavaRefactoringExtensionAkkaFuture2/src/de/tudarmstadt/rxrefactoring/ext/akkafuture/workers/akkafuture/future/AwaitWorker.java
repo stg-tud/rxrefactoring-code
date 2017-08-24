@@ -57,10 +57,10 @@ public class AwaitWorker extends AbstractAkkaWorker<AkkaFutureCollector, AwaitBi
 		toBlocking.setName(ast.newSimpleName("toBlocking"));		
 		
 		Expression expr = await.getFuture();
-		ChildListPropertyDescriptor clpd = (ChildListPropertyDescriptor) expr.getLocationInParent();
-		ListRewrite l = unit.writer().getListRewrite(expr.getParent(), clpd);
-		List list = l.getRewrittenList();
-		toBlocking.setExpression((Expression) list.get(0));
+//		ChildListPropertyDescriptor clpd = (ChildListPropertyDescriptor) expr.getLocationInParent();
+//		ListRewrite l = unit.writer().getListRewrite(expr.getParent(), clpd);
+//		List list = l.getRewrittenList();		
+		toBlocking.setExpression(unit.copyNode((Expression) unit.getRewrittenNode(expr, 0)));
 		
 		
 		//.single()
