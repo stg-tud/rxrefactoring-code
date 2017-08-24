@@ -24,17 +24,17 @@ import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractAkkaWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractFutureWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaListCollector;
+import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureCollectionAccessWrapper;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureCreationWrapper;
 
-public class AddMethodWorker extends AbstractAkkaWorker<AkkaListCollector, MethodInvocation> {
+public class AddMethodWorker extends AbstractAkkaWorker<AkkaFutureCollector, FutureCollectionAccessWrapper> {
 	public AddMethodWorker() {
 		super("Assignment");
 	}
 
 	@Override
-	protected Multimap<RewriteCompilationUnit, MethodInvocation> getNodesMap() {
-		return collector.addInvocation;
+	protected Multimap<RewriteCompilationUnit, FutureCollectionAccessWrapper> getNodesMap() {
+		return collector.collectionAccess;
 	}
 
 	@Override
@@ -49,11 +49,18 @@ public class AddMethodWorker extends AbstractAkkaWorker<AkkaListCollector, Metho
 	}
 	
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, MethodInvocation method) {
+	protected void refactorNode(RewriteCompilationUnit unit, FutureCollectionAccessWrapper wrapper) {
 		
-		//method should be of kind collection.add(ARG)
-		if (method.arguments().size() != 1 || method.getExpression() == null)
-			return;
+		if (wrapper.isAdd()) {
+			refactorAddInvocation(unit, wrapper);
+			
+		}		
+	}
+	
+	private void refactorAddInvocation(RewriteCompilationUnit unit, FutureCollectionAccessWrapper wrapper) {
+		
+		MethodInvocation method = wrapper.getMethodInvocation();
+		
 		
 		Expression argument = (Expression) method.arguments().get(0);
 		Expression expr = method.getExpression();
@@ -127,7 +134,7 @@ public class AddMethodWorker extends AbstractAkkaWorker<AkkaListCollector, Metho
 			 * 
 			 * Observable.fromCallable(...)
 			 */
-			MethodInvocation fromCallable = AkkaFutureASTUtils.buildFromCallable(unit, () -> (Type) ASTNode.copySubtree(ast, futureType), block);
+			MethodInvocation fromCallable = AkkaFutureASTUtils.buildFromCallable(unit, () -> (Type) ASTNode.copySubtree(ast, futureType), () -> block);
 			
 			//Add subscribeOn(Schedulers.io())
 			MethodInvocation subscribeOn = ast.newMethodInvocation();
@@ -146,11 +153,9 @@ public class AddMethodWorker extends AbstractAkkaWorker<AkkaListCollector, Metho
 			
 			//Replace argument in add method
 			unit.replace(argument, ast.newSimpleName(observableName));
-		}
 			
-				
-				
-		summary.addCorrect("futureCreation");
+			summary.addCorrect("futureCreation");
+		}
 	}
 	
 	protected Type newSubjectType(AST ast, Type typeArgument1, Type typeArgument2) {

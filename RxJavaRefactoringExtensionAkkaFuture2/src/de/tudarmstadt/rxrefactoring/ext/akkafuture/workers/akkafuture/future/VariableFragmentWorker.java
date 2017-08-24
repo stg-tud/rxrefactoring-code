@@ -181,7 +181,7 @@ public class VariableFragmentWorker extends AbstractAkkaWorker<AkkaFutureCollect
 		 * Observable.fromCallable(...)
 		 */
 		final Type typeArgumentFinal = typeArgument;
-		MethodInvocation fromCallable = AkkaFutureASTUtils.buildFromCallable(unit, () -> unit.copyNode(typeArgumentFinal), block);
+		MethodInvocation fromCallable = AkkaFutureASTUtils.buildFromCallable(unit, () -> unit.copyNode(typeArgumentFinal), () -> block);
 		
 		//Add subscribeOn(Schedulers.io())
 		MethodInvocation subscribeOn = ast.newMethodInvocation();

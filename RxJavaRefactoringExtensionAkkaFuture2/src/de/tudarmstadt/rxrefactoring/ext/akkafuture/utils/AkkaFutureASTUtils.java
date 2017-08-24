@@ -17,6 +17,7 @@ import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.Type;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
@@ -50,27 +51,75 @@ public class AkkaFutureASTUtils {
 	 * block has to be a "fresh" node (without parent, e.g., a copied node).
 	 * returnType is copied by the method.
 	 */	
-	public static MethodInvocation buildFromCallable(RewriteCompilationUnit unit, Supplier<Type> returnType, Block block) {
+	public static MethodInvocation buildFromCallable(RewriteCompilationUnit unit, Supplier<Type> returnType, Supplier<Block> block) {
 		
 		AST ast = unit.getAST();
 		
-		LambdaExpression lambda = ast.newLambdaExpression();
 		
-		//Define type: Callable
+//		//Define type: Callable
+//		ParameterizedType tCallable = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Callable"))); //Callable<>
+//		tCallable.typeArguments().add(returnType.get()); //Callable<T>
+//		
+//				
+//		//Define method: call()
+//		MethodDeclaration callMethod = ast.newMethodDeclaration();
+//		callMethod.setName(ast.newSimpleName("call"));
+//		callMethod.setReturnType2(returnType.get());
+//		callMethod.thrownExceptionTypes().add(ast.newSimpleType(ast.newSimpleName("Exception")));
+//		//callMethod.modifiers().add(createOverrideAnnotation(ast));
+//		callMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
+//		
+//				
+//		callMethod.setBody(block);
+//		
+//		
+//		//Define anonymous class
+//		AnonymousClassDeclaration classDecl = ast.newAnonymousClassDeclaration();
+//		classDecl.bodyDeclarations().add(callMethod);
+//		
+//		//Define constructor call: new Callable() { ... }
+//		ClassInstanceCreation initCallable = ast.newClassInstanceCreation();
+//		initCallable.setType(tCallable);
+//		initCallable.setAnonymousClassDeclaration(classDecl);
+		
+		ClassInstanceCreation initCallable = buildCallableFromBlock(unit, returnType, block);
+		
+		//Define method invoke: Observable.fromCallable(new Callable ...)
+		MethodInvocation invoke = ast.newMethodInvocation();
+		invoke.setName(ast.newSimpleName("fromCallable"));
+		invoke.setExpression(ast.newSimpleName("Observable"));
+		invoke.arguments().add(initCallable);
+		
+		return invoke;		
+	}
+	
+	/*
+	 * Builds
+	 * new Callable<TYPE> () {
+	 *  @Override
+	 *     public TYPE call() throws Exception {
+	 *         BLOCK;
+	 *     }
+	 * }
+	 */
+	public static ClassInstanceCreation buildCallableFromBlock(RewriteCompilationUnit unit, Supplier<Type> type, Supplier<Block> block) {
+		
+		AST ast = unit.getAST();
+		
 		ParameterizedType tCallable = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Callable"))); //Callable<>
-		tCallable.typeArguments().add(returnType.get()); //Callable<T>
+		tCallable.typeArguments().add(type.get()); //Callable<T>
 		
 				
 		//Define method: call()
 		MethodDeclaration callMethod = ast.newMethodDeclaration();
 		callMethod.setName(ast.newSimpleName("call"));
-		callMethod.setReturnType2(returnType.get());
+		callMethod.setReturnType2(type.get());
 		callMethod.thrownExceptionTypes().add(ast.newSimpleType(ast.newSimpleName("Exception")));
 		//callMethod.modifiers().add(createOverrideAnnotation(ast));
 		callMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
 		
 				
-		callMethod.setBody(block);
+		callMethod.setBody(block.get());
 		
 		
 		//Define anonymous class
@@ -82,13 +131,29 @@ public class AkkaFutureASTUtils {
 		initCallable.setType(tCallable);
 		initCallable.setAnonymousClassDeclaration(classDecl);
 		
-		//Define method invoke: Observable.fromCallable(new Callable ...)
-		MethodInvocation invoke = ast.newMethodInvocation();
-		invoke.setName(ast.newSimpleName("fromCallable"));
-		invoke.setExpression(ast.newSimpleName("Observable"));
-		invoke.arguments().add(initCallable);
+		return initCallable;
+	}
+	
+	/*
+	 * Builds
+	 * new Callable<TYPE> () {
+	 *  @Override
+	 *     public TYPE call() throws Exception {
+	 *         return EXPR;
+	 *     }
+	 * }
+	 */
+	public static ClassInstanceCreation buildCallableFromExpr(RewriteCompilationUnit unit, Supplier<Type> type, Supplier<Expression> expr) {
 		
-		return invoke;		
+		AST ast = unit.getAST();
+		
+		ReturnStatement returnStmt = ast.newReturnStatement();
+		returnStmt.setExpression(expr.get());
+		
+		Block block = ast.newBlock();
+		block.statements().add(returnStmt);
+		
+		return buildCallableFromBlock(unit, type, () -> block);
 	}
 	
 	/*
@@ -165,5 +230,17 @@ public class AkkaFutureASTUtils {
 		method.setName(ast.newSimpleName("io"));
 		
 		return method;
+	}
+	
+	public static boolean isCollectionOfFuture(ITypeBinding binding) {
+		if (binding == null || binding.getTypeArguments().length != 1 || !FutureTypeWrapper.isAkkaFuture(binding.getTypeArguments()[0]))
+			return false;
+									
+		//TODO: Check for other collection types
+		if (Objects.equals(binding.getBinaryName(), "java.util.ArrayList")) {
+			return true;
+		}
+		
+		return false;
 	}
 }

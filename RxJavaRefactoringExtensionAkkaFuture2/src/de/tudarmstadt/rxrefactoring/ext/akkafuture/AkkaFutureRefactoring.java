@@ -9,11 +9,11 @@ import de.tudarmstadt.rxrefactoring.core.Refactoring;
 import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree;
 import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree.WorkerNode;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaListCollector;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.collection.AddMethodWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.collection.ListTypeWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.future.AwaitWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.future.MethodUsageWorker;
+import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.future.UnrefactorableReferencesWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.future.VariableFragmentWorker;
 
 /**
@@ -48,7 +48,6 @@ public class AkkaFutureRefactoring implements Refactoring {
 	@Override
 	public void addWorkersTo(WorkerTree workerTree) {
 		WorkerNode<Void, AkkaFutureCollector> futureCollectorRef = workerTree.addWorker(new AkkaFutureCollector());
-		WorkerNode<Void, AkkaListCollector> listCollectorRef = workerTree.addWorker(new AkkaListCollector());
 
 		
 		if(options.contains(RefactoringOptions.AKKA_FUTURE)) {
@@ -57,10 +56,11 @@ public class AkkaFutureRefactoring implements Refactoring {
 			workerTree.addWorker(futureCollectorRef, new VariableFragmentWorker());
 			workerTree.addWorker(futureCollectorRef, new AwaitWorker());
 			workerTree.addWorker(futureCollectorRef, new MethodUsageWorker());
+			workerTree.addWorker(futureCollectorRef, new UnrefactorableReferencesWorker());
 			
 			//Collection workers
-			workerTree.addWorker(listCollectorRef, new ListTypeWorker());
-			workerTree.addWorker(listCollectorRef, new AddMethodWorker());
+			workerTree.addWorker(futureCollectorRef, new ListTypeWorker());
+			workerTree.addWorker(futureCollectorRef, new AddMethodWorker());
 			
 			
 //			workerTree.addWorker(collector, new de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.futurewrapper.VariableDeclStatementWorker());

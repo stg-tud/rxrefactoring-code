@@ -6,8 +6,10 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
@@ -61,8 +63,51 @@ public class UnrefactorableReferencesWorker extends AbstractAkkaWorker<AkkaFutur
 	}
 	
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, Expression variable) {
+	protected void refactorNode(RewriteCompilationUnit unit, Expression expr) {
 		
+		AST ast = unit.getAST();
+		
+		ITypeBinding typeBinding = expr.resolveTypeBinding();
+		if (typeBinding == null)
+			return;
+		
+		/*
+		 * builds
+		 * 
+		 * Futures.future(new Callable<FUTURE_TYPE>() {
+				@Override
+				public FUTURE_TYPE call() throws Exception {					
+					return FUTURE.toBlocking().single();
+				}
+			
+			}, ExecutionContexts.global())
+		 * 
+		 * from
+		 * 
+		 * FUTURE 
+		 */
+		
+			
+		MethodInvocation futuresFuture = ast.newMethodInvocation();
+		futuresFuture.setName(ast.newSimpleName("future"));
+		futuresFuture.setExpression(ast.newSimpleName("Future"));
+				
+		//new Callable...
+		ClassInstanceCreation newCallable = AkkaFutureASTUtils.buildCallableFromExpr(unit, () -> ASTUtils.typeFromBinding(ast, typeBinding), () -> unit.copyNode(expr)); 
+			
+		//first argument		
+		futuresFuture.arguments().add(newCallable);
+		
+		MethodInvocation executionContextGlobal = ast.newMethodInvocation();
+		executionContextGlobal.setName(ast.newSimpleName("global"));
+		executionContextGlobal.setExpression(ast.newSimpleName("ExecutionContexts"));
+		
+		//2nd argument
+		futuresFuture.arguments().add(executionContextGlobal);
+		
+		
+		//Replace original expr
+		unit.replace(expr, futuresFuture);		
 	}
 }
 

@@ -11,9 +11,9 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractAkkaWorker;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaListCollector;
+import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
 
-public class ListTypeWorker extends AbstractAkkaWorker<AkkaListCollector, ParameterizedType> {
+public class ListTypeWorker extends AbstractAkkaWorker<AkkaFutureCollector, ParameterizedType> {
 	public ListTypeWorker() {
 		super("Await.result");
 	}

@@ -11,6 +11,7 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
@@ -27,6 +28,7 @@ import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.domain.AwaitBinding;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.domain.ClassInfos;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
+import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureCollectionAccessWrapper;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureCreationWrapper;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureMethodWrapper;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureTypeWrapper;
@@ -60,6 +62,18 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 	 */
 	public final Multimap<RewriteCompilationUnit, Expression> unrefactorableFutureReferences = HashMultimap.create();
 	
+	
+	/**
+	 * All types CollectionType<Future<...>>
+	 */
+	public final Multimap<RewriteCompilationUnit, ParameterizedType> collectionTypes = HashMultimap.create();
+	
+	/**
+	 * All invocations to collectionOfFutures.add(...)
+	 */
+	public final Multimap<RewriteCompilationUnit, FutureCollectionAccessWrapper> collectionAccess = HashMultimap.create();
+	
+	
 	@Override
 	public AkkaFutureCollector refactor(ProjectUnits units, Void input, WorkerSummary summary) throws Exception {
 		
@@ -69,8 +83,8 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 					Lists.newArrayList(
 							new AssignmentVisitor(unit),
 							new VariableDeclarationVisitor(unit),
-							new AwaitVisitor(unit),
-							new MethodInvocationVisitor(unit)
+							new MethodInvocationVisitor(unit),
+							new TypeVisitor(unit)
 							);
 			
 			for (CollectorVisitor v : visitors) {
@@ -107,24 +121,6 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 		}
 	}
 	
-		
-	private class AwaitVisitor extends CollectorVisitor {
-
-		public AwaitVisitor(RewriteCompilationUnit unit) {
-			super(unit);			
-		}
-		
-		public boolean visit(MethodInvocation node) {
-			AwaitBinding await = AwaitBinding.create(node);
-			if (await != null) {
-				awaits.put(unit, await);
-			}
-			
-			return true;
-		}
-		
-	}
-	
 	
 	private class VariableDeclarationVisitor extends CollectorVisitor {
 		
@@ -144,6 +140,25 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 		}
 	}
 	
+	private class TypeVisitor extends CollectorVisitor {
+		
+		public TypeVisitor(RewriteCompilationUnit unit) {
+			super(unit);			
+		}		
+		
+		@Override
+		public boolean visit(ParameterizedType node) {
+			
+			ITypeBinding typeBinding = node.getType().resolveBinding();										
+			
+			if (AkkaFutureASTUtils.isCollectionOfFuture(typeBinding)) {
+				collectionTypes.put(unit, node);
+			}
+						
+			return false;
+		}
+	}
+	
 	private class MethodInvocationVisitor extends CollectorVisitor {
 
 		public MethodInvocationVisitor(RewriteCompilationUnit unit) {
@@ -151,15 +166,19 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 		}
 		
 		public boolean visit(MethodInvocation node) {
-			if (FutureCreationWrapper.isFutureCreation(node)) {
+			
+			AwaitBinding await = AwaitBinding.create(node);
+			if (await != null) {
+				awaits.put(unit, await);
+			} else if (FutureCreationWrapper.isFutureCreation(node)) {
 				futureCreations.put(unit, FutureCreationWrapper.create(node));
 			} else if (FutureMethodWrapper.isFutureMethod(node)) {
 				futureUsages.put(unit, FutureMethodWrapper.createFromExpression(node));
+			} else if (FutureCollectionAccessWrapper.isCollectionAccess(node)) {
+				collectionAccess.put(unit, FutureCollectionAccessWrapper.create(node));
 			} else {				
 				unrefactorableFutureReferences.putAll(unit, AkkaFutureASTUtils.futureReferencesInMethodInvocation(node));				
-			}
-			
-			
+			}	
 			
 			return true;
 		}
