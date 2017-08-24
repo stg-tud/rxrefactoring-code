@@ -2,6 +2,7 @@ package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.future;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -38,6 +39,7 @@ import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractFutureWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureCreationWrapper;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureMethodWrapper;
+import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureTypeWrapper;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FuturesMapWrapper;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FuturesSequenceWrapper;
 
@@ -51,25 +53,17 @@ public class UnrefactorableReferencesWorker extends AbstractAkkaWorker<AkkaFutur
 		return collector.unrefactorableFutureReferences;
 	}
 
-	@Override
-	protected void endRefactorNode(RewriteCompilationUnit unit) {
-		addObservableImport(unit);
-		addSubjectImport(unit);
-		addCallableImport(unit);
-		addSchedulersImport(unit);
-		addAwaitImport(unit);
-		
-		super.endRefactorNode(unit);
-	}
-	
+
 	@Override
 	protected void refactorNode(RewriteCompilationUnit unit, Expression expr) {
 		
 		AST ast = unit.getAST();
 		
 		ITypeBinding typeBinding = expr.resolveTypeBinding();
-		if (typeBinding == null)
+		if (!FutureTypeWrapper.isAkkaFuture(typeBinding))
 			return;
+		
+		Supplier<Type> typeSupplier = () -> ASTUtils.typeFromBinding(ast, FutureTypeWrapper.create(typeBinding).getTypeParameter(ast));
 		
 		/*
 		 * builds
@@ -86,14 +80,22 @@ public class UnrefactorableReferencesWorker extends AbstractAkkaWorker<AkkaFutur
 		 * 
 		 * FUTURE 
 		 */
-		
 			
 		MethodInvocation futuresFuture = ast.newMethodInvocation();
 		futuresFuture.setName(ast.newSimpleName("future"));
-		futuresFuture.setExpression(ast.newSimpleName("Future"));
+		futuresFuture.setExpression(ast.newSimpleName("Futures"));
 				
+		//FUTURE.toBlocking().single()
+		MethodInvocation toBlocking = ast.newMethodInvocation();
+		toBlocking.setName(ast.newSimpleName("toBlocking"));
+		toBlocking.setExpression(unit.copyNode(expr));
+		
+		MethodInvocation single = ast.newMethodInvocation();
+		single.setName(ast.newSimpleName("single"));
+		single.setExpression(toBlocking);
+		
 		//new Callable...
-		ClassInstanceCreation newCallable = AkkaFutureASTUtils.buildCallableFromExpr(unit, () -> ASTUtils.typeFromBinding(ast, typeBinding), () -> unit.copyNode(expr)); 
+		ClassInstanceCreation newCallable = AkkaFutureASTUtils.buildCallableFromExpr(unit, typeSupplier, () -> single); 
 			
 		//first argument		
 		futuresFuture.arguments().add(newCallable);
@@ -105,6 +107,12 @@ public class UnrefactorableReferencesWorker extends AbstractAkkaWorker<AkkaFutur
 		//2nd argument
 		futuresFuture.arguments().add(executionContextGlobal);
 		
+		
+		//Add imports
+		addFuturesImport(unit);
+		addCallableImport(unit);
+		addExecutionContextsImport(unit);
+
 		
 		//Replace original expr
 		unit.replace(expr, futuresFuture);		

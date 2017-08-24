@@ -39,6 +39,7 @@ import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureMethodWrapper;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FuturesMapWrapper;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FuturesSequenceWrapper;
 
+@Deprecated
 public class VariableFragmentWorker extends AbstractAkkaWorker<AkkaFutureCollector, VariableDeclarationFragment> {
 	public VariableFragmentWorker() {
 		super("VaribaleFragment");
@@ -71,7 +72,7 @@ public class VariableFragmentWorker extends AbstractAkkaWorker<AkkaFutureCollect
 		if (FutureCreationWrapper.isFutureCreation(expr)) {				
 			refactorFutureCreation(unit, variable, type, expr);
 		} else if (FutureMethodWrapper.isFutureMethod(expr)) {
-			refactorFutureMethod(unit, variable, type,expr);
+		//	refactorFutureMethod(unit, variable, type,expr);
 		}
 	}
 	

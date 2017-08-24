@@ -8,6 +8,7 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Statement;
 
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
@@ -82,6 +83,10 @@ public class FutureCreationWrapper {
 		return null;
 	}
 	
+	public Statement getReferenceStatement() {
+		return ASTUtils.findParent(expression, Statement.class);
+	}
+	
 	public static boolean isFutureCreation(Expression expression) {
 		if (expression == null)
 			return false;
@@ -89,17 +94,22 @@ public class FutureCreationWrapper {
 		ITypeBinding returnType = expression.resolveTypeBinding();
 		
 		if (returnType != null && FutureTypeWrapper.isAkkaFuture(returnType) && expression instanceof MethodInvocation) {
-			MethodInvocation method = (MethodInvocation) expression;
-			IMethodBinding binding = method.resolveMethodBinding();
-			
-			if (binding != null && Objects.equals(method.getName().getIdentifier(), "ask") && AkkaFutureASTUtils.isPatterns(binding.getDeclaringClass()))
-				return true;
-			
-			if (binding != null && Objects.equals(method.getName().getIdentifier(), "future") && AkkaFutureASTUtils.isFutures(binding.getDeclaringClass()))
-				return true;
+//			MethodInvocation method = (MethodInvocation) expression;
+//			IMethodBinding binding = method.resolveMethodBinding();
+//			
+//			if (binding != null && Objects.equals(method.getName().getIdentifier(), "ask") && AkkaFutureASTUtils.isPatterns(binding.getDeclaringClass()))
+//				return true;
+//			
+//			if (binding != null && Objects.equals(method.getName().getIdentifier(), "future") && AkkaFutureASTUtils.isFutures(binding.getDeclaringClass()))
+//				return true;
+			return true;
 		}		
 		
 		return false;
 		
+	}
+	
+	public String toString() {
+		return "FutureCreationWrapper(" + expression.toString() + ")";
 	}
 }

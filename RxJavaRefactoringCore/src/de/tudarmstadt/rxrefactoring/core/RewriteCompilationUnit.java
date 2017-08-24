@@ -105,6 +105,8 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	 */
 	public void accept(ASTVisitor visitor) {
 		rootNode.accept(visitor);
+		
+		
 	}
 
 	/**
@@ -125,7 +127,7 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 		return ast;
 	}
 
-	ASTRewrite writer() {
+	public ASTRewrite writer() {
 		if (writer == null) {
 			writer = ASTRewrite.create(getAST());
 		}

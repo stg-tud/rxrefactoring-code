@@ -11,7 +11,7 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
 
-public class FutureCollectionAccessWrapper {
+public class FutureCollectionAccessWrapper implements FutureMethodWrapper {
 	
 	/**
 	 * The collection access method, e.g., coll.add(FUTURE)
@@ -24,11 +24,11 @@ public class FutureCollectionAccessWrapper {
 		
 	}
 	
-	public static FutureCollectionAccessWrapper create(MethodInvocation expression) {
+	public static FutureCollectionAccessWrapper create(Expression expression) {
 		if (!isCollectionAccess(expression))
 			throw new IllegalArgumentException("You need to specify a collection access as parameter, but was: " + expression);
 		
-		return new FutureCollectionAccessWrapper(expression);
+		return new FutureCollectionAccessWrapper((MethodInvocation) expression);
 	}
 	
 	
@@ -40,8 +40,11 @@ public class FutureCollectionAccessWrapper {
 		return Objects.equals(method.getName().getIdentifier(), "add");
 	}
 	
-	public static boolean isCollectionAccess(MethodInvocation method) {
-		if (method == null)	return false;
+	public static boolean isCollectionAccess(Expression expression) {
+		if (!(expression instanceof MethodInvocation) && expression == null)	
+			return false;
+		
+		MethodInvocation method = (MethodInvocation) expression;
 		
 		if (method.getExpression() != null && AkkaFutureASTUtils.isCollectionOfFuture(method.getExpression().resolveTypeBinding()) && Objects.equals(method.getName().getIdentifier(), "add")) {
 			return true;

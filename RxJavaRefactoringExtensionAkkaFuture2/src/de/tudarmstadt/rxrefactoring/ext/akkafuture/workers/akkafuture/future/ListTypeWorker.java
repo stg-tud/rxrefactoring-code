@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.collection;
+package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.future;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;

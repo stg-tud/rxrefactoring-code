@@ -19,7 +19,8 @@ public interface FutureMethodWrapper {
 		if (FuturesSequenceWrapper.isFuturesSequence(method))
 			return FuturesSequenceWrapper.create(method);
 		else if (FuturesMapWrapper.isFutureMap(method))
-			return FuturesMapWrapper.create(method);
+			return FuturesMapWrapper.create(method);		
+			
 		
 		return null;
 	}

@@ -43,4 +43,12 @@ public abstract class AbstractAkkaWorker<CollectorType, RefactorType> extends Ab
 		unit.addImport("rx.functions.Func1");		
 	}
 	
+	protected void addExecutionContextsImport(RewriteCompilationUnit unit) {
+		unit.addImport("akka.dispatch.ExecutionContexts");		
+	}
+	
+	protected void addFuturesImport(RewriteCompilationUnit unit) {
+		unit.addImport("akka.dispatch.Futures");		
+	}
+	
 }

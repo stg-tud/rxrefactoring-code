@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Expression;
@@ -25,9 +26,9 @@ import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.domain.AwaitBinding;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.domain.ClassInfos;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
+import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.AwaitBinding;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureCollectionAccessWrapper;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureCreationWrapper;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureMethodWrapper;
@@ -71,7 +72,17 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 	/**
 	 * All invocations to collectionOfFutures.add(...)
 	 */
-	public final Multimap<RewriteCompilationUnit, FutureCollectionAccessWrapper> collectionAccess = HashMultimap.create();
+//	public final Multimap<RewriteCompilationUnit, FutureCollectionAccessWrapper> collectionAccess = HashMultimap.create();
+	
+	
+	/**
+	 * All variable declarations that should be changed to Observable
+	 */
+	public final Multimap<RewriteCompilationUnit, VariableDeclarationFragment> variableDeclarationToObservable = HashMultimap.create();
+	/**
+	 * All variable declarations that should be changed to Subject.
+	 */
+	public final Multimap<RewriteCompilationUnit, VariableDeclarationFragment> variableDeclarationToSubject = HashMultimap.create();
 	
 	
 	@Override
@@ -170,13 +181,25 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 			AwaitBinding await = AwaitBinding.create(node);
 			if (await != null) {
 				awaits.put(unit, await);
+			}
+			
+			VariableDeclarationFragment parent = node.getParent() instanceof VariableDeclarationFragment ? (VariableDeclarationFragment) node.getParent() : null;
+				
+			if (FutureMethodWrapper.isFutureMethod(node)) {
+				futureUsages.put(unit, FutureMethodWrapper.createFromExpression(node));
+				
+				if (parent != null) {
+					variableDeclarationToObservable.put(unit, parent);
+				}
+//			
 			} else if (FutureCreationWrapper.isFutureCreation(node)) {
 				futureCreations.put(unit, FutureCreationWrapper.create(node));
-			} else if (FutureMethodWrapper.isFutureMethod(node)) {
-				futureUsages.put(unit, FutureMethodWrapper.createFromExpression(node));
-			} else if (FutureCollectionAccessWrapper.isCollectionAccess(node)) {
-				collectionAccess.put(unit, FutureCollectionAccessWrapper.create(node));
-			} else {				
+				
+				if (parent != null) {
+					variableDeclarationToSubject.put(unit, parent);
+				}
+				
+			} else if (await == null && !FutureCollectionAccessWrapper.isCollectionAccess(node)) {				
 				unrefactorableFutureReferences.putAll(unit, AkkaFutureASTUtils.futureReferencesInMethodInvocation(node));				
 			}	
 			
