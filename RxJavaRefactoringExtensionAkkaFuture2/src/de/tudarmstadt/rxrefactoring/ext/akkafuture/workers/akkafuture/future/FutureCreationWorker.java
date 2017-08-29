@@ -226,7 +226,7 @@ public class FutureCreationWorker extends AbstractAkkaWorker<AkkaFutureCollector
 //			//Replace variable reference with new variable name
 //			unit.replace(var, ast.newSimpleName(newVarName));			
 //		}
-		AkkaFutureASTUtils.doWithVariablesFromExpression(unit, expr, stmt -> ASTUtils.addStatementBefore(unit, stmt, referenceStatement));
+		AkkaFutureASTUtils.transformVariablesInExpressionToFinal(unit, expr, stmt -> ASTUtils.addStatementBefore(unit, stmt, referenceStatement));
 
 		
 		//Add Observable.fromCallable statement 
@@ -381,7 +381,7 @@ public class FutureCreationWorker extends AbstractAkkaWorker<AkkaFutureCollector
 //			unit.replace(var, ast.newSimpleName(newVarName));			
 //		}
 		
-		AkkaFutureASTUtils.doWithVariablesFromExpression(unit, expr, stmt -> ASTUtils.addStatementAfter(unit, stmt, referenceStatement));
+		AkkaFutureASTUtils.transformVariablesInExpressionToFinal(unit, expr, stmt -> ASTUtils.addStatementAfter(unit, stmt, referenceStatement));
 		
 		summary.addCorrect("futureCreation");
 	}

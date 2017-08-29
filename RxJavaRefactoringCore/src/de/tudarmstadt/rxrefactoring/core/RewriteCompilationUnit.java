@@ -162,7 +162,7 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	 * @return The possible rewriting of the original node, or
 	 * the original node.
 	 */
-	public ASTNode getRewrittenNode(ASTNode node, int index) {		
+	public ASTNode getRewrittenNode(ASTNode node) {		
 		Objects.requireNonNull(node, "node can not be null.");
 		
 		StructuralPropertyDescriptor descriptor = node.getLocationInParent();
@@ -174,6 +174,38 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 		if (descriptor instanceof ChildListPropertyDescriptor) {
 			ChildListPropertyDescriptor clpd = (ChildListPropertyDescriptor) descriptor;
 			ListRewrite l = writer().getListRewrite(parent, clpd);
+			
+			List rewritten = l.getRewrittenList();
+			List original = l.getOriginalList();
+			
+			for (int i = 0; i < original.size(); i++) {
+				if (Objects.equals(original.get(i), node)) {
+					try {
+						return (ASTNode) rewritten.get(i);
+					} catch (IndexOutOfBoundsException e) {
+						return node;
+					}					
+				}
+			}
+			
+			return node;			
+		} else {
+			return (ASTNode) writer().get(node, descriptor);
+		}
+	}
+	
+	public ASTNode getRewrittenNode(ASTNode node, int index) {		
+		Objects.requireNonNull(node, "node can not be null.");
+		
+		StructuralPropertyDescriptor descriptor = node.getLocationInParent();
+		ASTNode parent = node.getParent();
+		
+		if (parent == null || descriptor == null)
+			throw new IllegalStateException("parent or descriptor are null.");
+		
+		if (descriptor instanceof ChildListPropertyDescriptor) {
+			ChildListPropertyDescriptor clpd = (ChildListPropertyDescriptor) descriptor;
+			ListRewrite l = writer().getListRewrite(parent, clpd);								
 			return (ASTNode) l.getRewrittenList().get(index);			
 		} else {
 			return (ASTNode) writer().get(node, descriptor);

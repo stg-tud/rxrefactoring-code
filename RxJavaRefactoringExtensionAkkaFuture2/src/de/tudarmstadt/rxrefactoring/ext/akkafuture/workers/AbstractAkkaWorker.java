@@ -28,7 +28,7 @@ public abstract class AbstractAkkaWorker<CollectorType, RefactorType> extends Ab
 	}
 	
 	protected void addAwaitImport(RewriteCompilationUnit unit) {
-		unit.addImport("akka.dispatch.Await");		
+		unit.addImport("scala.concurrent.Await");		
 	}
 	
 	protected void addDurationImport(RewriteCompilationUnit unit) {

@@ -39,6 +39,13 @@ public class FutureTypeWrapper {
 		
 	}
 	
+	public Type toObservableType(AST ast) {
+		ParameterizedType type = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Observable")));
+		type.typeArguments().add(ASTUtils.typeFromBinding(ast, getTypeParameter(ast)));
+		
+		return type;
+	}
+	
 	public ITypeBinding getTypeParameter(AST ast) {
 		ITypeBinding[] types = futureType.getTypeArguments();
 		

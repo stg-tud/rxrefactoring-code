@@ -32,6 +32,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.codegen.IdManager;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractAkkaWorker;
@@ -81,16 +82,81 @@ public class UnrefactorableReferencesWorker extends AbstractAkkaWorker<AkkaFutur
 		 * FUTURE 
 		 */
 		
-		AkkaFutureASTUtils.doWithVariablesFromExpression(unit, expr, stmt -> ASTUtils.addStatementBefore(unit, stmt, ASTUtils.findParent(expr, Statement.class)));
+		/*
+		 * Build
+		 * 
+		 * final var1Final = var;
+		 * ...
+		 */
+		List<SimpleName> variables = ASTUtils.findVariablesIn(expr);
+		Set<String> alreadyDeclared = Sets.newHashSet();
+		
+		String id = IdManager.getNextObserverId(unit);
+		
+		Expression newExpr = null;
+		
+		for(SimpleName var : variables) {
+			
+			//If the variable is already final or a field, do nothing
+			IBinding binding = var.resolveBinding();			
+			if (binding != null) {
+				int modifiers = binding.getModifiers(); 	
+				
+				if (binding.getKind() != IBinding.VARIABLE || Modifier.isFinal(modifiers) || (modifiers & Modifier.FIELD_ACCESS) != 0) //|| isParameter(var))
+					continue;
+			}		
+					
+			
+			ITypeBinding varType = var.resolveTypeBinding();
+			if (varType == null) {
+				continue;
+			}
+			
+			String newVarName = var.getIdentifier() + "Final" + id;
+			
+			//If variable has not been declared already, then add a declaration.
+			if (!alreadyDeclared.contains(newVarName)) {					
+				
+				//Add the variable declaration.
+				VariableDeclarationFragment fragment = ast.newVariableDeclarationFragment();
+				fragment.setName(ast.newSimpleName(newVarName));
+				fragment.setInitializer(ast.newSimpleName(var.getIdentifier()));
+				
+				VariableDeclarationStatement varStatement = ast.newVariableDeclarationStatement(fragment);				
+				if (FutureTypeWrapper.isAkkaFuture(varType)) {
+					varStatement.setType(FutureTypeWrapper.create(varType).toObservableType(ast));
+				} else {
+					varStatement.setType(ASTUtils.typeFromBinding(ast, varType));
+				}				
+				varStatement.modifiers().add(ast.newModifier(ModifierKeyword.FINAL_KEYWORD));
+				
+				ASTUtils.addStatementBefore(unit, varStatement, ASTUtils.findParent(expr, Statement.class));
+				
+				alreadyDeclared.add(newVarName);
+			}
+			
+//			//Replace variable reference with new variable name
+			if (var == expr) {
+				newExpr = ast.newSimpleName(newVarName);
+			} else {
+				unit.replace(var, ast.newSimpleName(newVarName));	
+			}
+			
+						
+		}
+		
+		
+		
 			
 		MethodInvocation futuresFuture = ast.newMethodInvocation();
 		futuresFuture.setName(ast.newSimpleName("future"));
 		futuresFuture.setExpression(ast.newSimpleName("Futures"));
 				
+		
 		//FUTURE.toBlocking().single()
 		MethodInvocation toBlocking = ast.newMethodInvocation();
 		toBlocking.setName(ast.newSimpleName("toBlocking"));
-		toBlocking.setExpression(unit.copyNode(expr));
+		toBlocking.setExpression(newExpr != null ? newExpr : unit.copyNode(expr));
 		
 		MethodInvocation single = ast.newMethodInvocation();
 		single.setName(ast.newSimpleName("single"));

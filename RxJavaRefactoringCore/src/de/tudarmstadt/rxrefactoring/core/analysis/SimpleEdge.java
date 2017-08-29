@@ -1,11 +1,11 @@
 package de.tudarmstadt.rxrefactoring.core.analysis;
 
-public class DefaultEdge<V> implements Edge<V> {
+public class SimpleEdge<V> implements Edge<V> {
 
 	private final V head;
 	private final V tail;
 
-	public DefaultEdge(V head, V tail) {
+	public SimpleEdge(V head, V tail) {
 		this.head = head;
 		this.tail = tail;
 	}
@@ -18,6 +18,11 @@ public class DefaultEdge<V> implements Edge<V> {
 	@Override
 	public V getTail() {
 		return tail;
+	}
+	
+	@Override
+	public String toString() {
+		return "Edge(" + head + ", " + tail + ")";
 	}
 
 }

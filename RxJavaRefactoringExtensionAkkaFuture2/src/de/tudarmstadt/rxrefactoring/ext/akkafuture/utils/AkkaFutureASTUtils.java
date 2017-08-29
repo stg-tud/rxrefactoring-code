@@ -316,9 +316,9 @@ public class AkkaFutureASTUtils {
 	 * 
 	 * @param unit
 	 * @param expr
-	 * @param addStatement
+	 * @param variableDeclarationStatement
 	 */
-	public static void doWithVariablesFromExpression(RewriteCompilationUnit unit, Expression expr, Consumer<Statement> addStatement) {
+	public static void transformVariablesInExpressionToFinal(RewriteCompilationUnit unit, Expression expr, Consumer<Statement> variableDeclarationStatement) {
 		
 		AST ast = unit.getAST();
 		
@@ -362,11 +362,15 @@ public class AkkaFutureASTUtils {
 				fragment.setName(ast.newSimpleName(newVarName));
 				fragment.setInitializer(ast.newSimpleName(var.getIdentifier()));
 				
-				VariableDeclarationStatement varStatement = ast.newVariableDeclarationStatement(fragment);
-				varStatement.setType(ASTUtils.typeFromBinding(ast, varType));
+				VariableDeclarationStatement varStatement = ast.newVariableDeclarationStatement(fragment);				
+				if (FutureTypeWrapper.isAkkaFuture(varType)) {
+					varStatement.setType(FutureTypeWrapper.create(varType).toObservableType(ast));
+				} else {
+					varStatement.setType(ASTUtils.typeFromBinding(ast, varType));
+				}				
 				varStatement.modifiers().add(ast.newModifier(ModifierKeyword.FINAL_KEYWORD));
 				
-				addStatement.accept(varStatement);
+				variableDeclarationStatement.accept(varStatement);
 				
 				alreadyDeclared.add(newVarName);
 			}
@@ -374,6 +378,8 @@ public class AkkaFutureASTUtils {
 			//Replace variable reference with new variable name
 			unit.replace(var, ast.newSimpleName(newVarName));			
 		}
+		
+		return;
 	}
 	
 	public static boolean isParameter(Expression expr) {
