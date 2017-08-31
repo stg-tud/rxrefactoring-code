@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.BreakStatement;
@@ -18,12 +19,15 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 import org.jgrapht.DirectedGraph;
+import org.jgrapht.alg.util.Pair;
 import org.jgrapht.graph.AbstractBaseGraph;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.ObjectArrays;
+import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.logging.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
@@ -109,17 +113,31 @@ public class ControlFlowGraph extends AbstractBaseGraph<Statement, Edge<Statemen
 				return new BlockContext(Collections.EMPTY_LIST, ObjectArrays.concat(statement, callBlocks));
 			}
 			
-			public Statement enclosingLoop() {								
-				return enclosingLoop(null);			
-			}
-			
+				
 			/**
 			 * Finds the enclosing loop of this context that has a specific label name.
 			 * @param label The label of the enclosing loop, or null if the next enclosing loop regardless of the label should be found.
 			 * @return The enclosing loop of this context, or null if there is no loop.
 			 */
-			public Statement enclosingLoop(SimpleName label) {
+			public Statement enclosingContinueBlock(SimpleName label) {
 								
+				for (Object element : callBlocks) {
+					
+					Statement statement = (Statement) element;
+					
+					if (Statements.isLoop(statement) && label == null 
+						|| statement instanceof LabeledStatement 
+							&& Statements.isLoop(((LabeledStatement) statement).getBody()) 
+							&& Objects.equals(label.getIdentifier(), ((LabeledStatement) statement).getLabel().getIdentifier())) {
+						return statement;
+					}
+				}
+				
+				return null;				
+			}
+			
+			public Statement enclosingBreakBlock(SimpleName label) {
+				
 				for (Object element : callBlocks) {
 					
 					Statement statement = (Statement) element;
@@ -131,7 +149,6 @@ public class ControlFlowGraph extends AbstractBaseGraph<Statement, Edge<Statemen
 				}
 				
 				return null;
-				
 			}
 			
 			
@@ -144,7 +161,75 @@ public class ControlFlowGraph extends AbstractBaseGraph<Statement, Edge<Statemen
 		}
 		
 		public static void from(ControlFlowGraph graph, Statement statement) {
-			GraphBuildingUtils.from(graph, BlockContext.empty(), -1, statement);
+			GraphBuildingUtils.from(graph, BlockContext.empty(), statement);
+		}
+		
+		private static class FlowResult {
+			/**
+			 * Multimap from statement to all additional exits that should be added to the CFG node of that statement.
+			 */
+			private final Multimap<Statement, Statement> exits;
+			
+			
+			private FlowResult(Multimap<Statement, Statement> exits) {
+				this.exits = exits;
+			}
+			
+			private FlowResult() {
+				this(newMultimap());
+			}
+			
+			/**
+			 * Adds results of a child computation to the flow result.
+			 * 
+			 * @param currentStatement The statement where to put the exits.
+			 * @param additionalStatements Statements that should be put as exit.
+			 * @param childStatements The child statements which are removed from their results.
+			 * @param childResults The child results that are used for merging.
+			 * @param addChildExits True, if the exits of the children should be added to the new result.
+			 */
+			protected void addTo(Statement currentStatement, Statement[] additionalStatements, Statement[] childStatements, FlowResult[] childResults, boolean addChildExits) {
+				for (FlowResult childResult : childResults) {
+					exits.putAll(childResult.exits);
+				}				
+				
+				for (Statement statement : childStatements) {
+					if (addChildExits) 
+						exits.putAll(currentStatement, exits.get(statement));
+					exits.removeAll(statement);
+				}
+				
+				for (Statement statement : additionalStatements) {
+					exits.put(currentStatement, statement);
+				}
+			}
+			
+								
+			private static Multimap<Statement, Statement> newMultimap() {
+				return Multimaps.newSetMultimap(Maps.newHashMap(), () -> Sets.newHashSet());
+			}
+			
+			public static FlowResult create(Statement... statements) {
+				Multimap<Statement, Statement> exits = newMultimap();
+				for (Statement statement : statements) {
+					exits.put(statement, statement);
+				}
+				return new FlowResult(exits);
+			}
+			
+			
+			public static FlowResult concat(Statement currentStatement, Statement[] additionalStatements, Statement[] childStatements, FlowResult[] childResults, boolean addChildExits) {
+				
+				FlowResult result = new FlowResult();
+				result.addTo(currentStatement, additionalStatements, childStatements, childResults, addChildExits);				
+				
+				return result;
+			}
+			
+			@Override
+			public String toString() {
+				return "FlowResult(" + exits.toString() + ")";
+			}
 		}
 		
 		/**
@@ -164,401 +249,222 @@ public class ControlFlowGraph extends AbstractBaseGraph<Statement, Edge<Statemen
 		 * 
 		 * @return The last statement(s) that has been processed in a basic block.
 		 */
-		private static Statement[] from(ControlFlowGraph graph, BlockContext context, int currentIndex,
-				Statement currentStatement, Statement... previousStatements) {
+		private static FlowResult from(ControlFlowGraph graph, BlockContext context, Statement currentStatement) {
 
 			//Decide how to traverse further by looking at the current statement.
 			//There should be a case for each statement that changes the control flow.			
 			if (currentStatement instanceof Block) {
 				//If we look at a block, discard the block and only look at the statements in the block.
 				Block block = (Block) currentStatement;
-
-								//If there are statements in the block, move to the first statement of the block with 
-				//the previous statements of the block as previous statements of the first statement
-				if (block.statements().size() > 0) {					
-					BlockContext newContext = context.enterBlock(block);
-					return from(graph, newContext, 0, newContext.getStatementAt(0), previousStatements);
-				//If there are no statements in the block, completely ignore the block.
-				} else {
-					return previousStatements;
-				}
+				Collection<Statement> previousStatements = Collections.singleton(block);
+				
+				BlockContext newContext = context.enterBlock(block);
+				
+				FlowResult result = FlowResult.create(); 
+				
+				//Iterate through all statements in the block and establish links between them.
+				for (Object element : block.statements()) {
+					Statement statement = (Statement) element;
 					
+					addEdges(graph, previousStatements, statement);
+					
+					FlowResult statementResult = from(graph, newContext, statement);
+					//TODO: Is this correct?
+					result.addTo(statement, new Statement[0], new Statement[] {statement}, new FlowResult[] {statementResult}, true);				
+					
+					previousStatements = statementResult.exits.get(statement); 					
+				}
+				
+				result.exits.putAll(block, previousStatements);
+				
+				return result;
+				
 			} else if (currentStatement instanceof LabeledStatement) {
 				LabeledStatement labeledStatement = (LabeledStatement) currentStatement;
 				
-				//Add a vertex of the current statement to the graph.	
-				graph.addVertex(currentStatement);
-				addEdges(graph, currentStatement, previousStatements);
+				Statement bodyStatement = labeledStatement.getBody();
 				
-				Statement[] exits = from(graph, context.enterControlFlowStatement(currentStatement), -1, labeledStatement.getBody(), currentStatement);
-				
+				addEdge(graph, labeledStatement, bodyStatement);
+		
 				//Ignore the labeled statement for now
-				return moveToNextStatement(graph, context, currentIndex, exits);
+				return from(graph, context.enterControlFlowStatement(currentStatement), labeledStatement.getBody());
 				
 			} else if (currentStatement instanceof IfStatement) {
 				IfStatement ifStatement = (IfStatement) currentStatement;
-				
-				//Add a vertex of the current statement to the graph.	
-				graph.addVertex(ifStatement);
-				addEdges(graph, ifStatement, previousStatements);
-				
-				
+								
 				Statement thenStatement = ifStatement.getThenStatement();
 				Statement elseStatement = ifStatement.getElseStatement();
 
 				//Compute the exit entries for an if statement depending on whether there is an else branch
-				Statement[] exits;
-				if (elseStatement == null) {
+				if (elseStatement == null) {					
+					addEdge(graph, ifStatement, thenStatement);
+					
+					
+					FlowResult thenResult = from(graph, context.enterControlFlowStatement(ifStatement), thenStatement);
+					
+					FlowResult result = FlowResult.concat(
+							ifStatement, 
+							new Statement[] { ifStatement }, 
+							new Statement[] { thenStatement }, 
+							new FlowResult[] { thenResult },
+							true);
+					
 					//If there is no else branch, then either the if statement or the last statement of the then-branch
 					//can be used as previous statements
-					exits = ObjectArrays.concat(ifStatement,
-							from(graph, context.enterControlFlowStatement(ifStatement), -1, thenStatement, ifStatement));
-				} else {
+					return result;
+				} else {					
+					addEdge(graph, ifStatement, thenStatement);
+					addEdge(graph, ifStatement, elseStatement);
+					
+					FlowResult thenResult = from(graph, context.enterControlFlowStatement(ifStatement), thenStatement);
+					FlowResult elseResult = from(graph, context.enterControlFlowStatement(ifStatement), elseStatement);				
+					
+					
+					FlowResult result = FlowResult.concat(
+							ifStatement, 
+							new Statement[0], 
+							new Statement[] { thenStatement, elseStatement }, 
+							new FlowResult[] { thenResult, elseResult },
+							true);
+					
 					//If there is an else branch, then either the last statement of the then-branch
 					//or the last statement of the else-branch can be used as previous statements
-					exits = ObjectArrays.concat(from(graph, context.enterControlFlowStatement(ifStatement), -1, thenStatement, ifStatement),
-							from(graph, context.enterControlFlowStatement(ifStatement), -1, elseStatement, ifStatement), Statement.class);
-				}
-				
-				//Move to the next statement with the last statement of either branch.
-				return moveToNextStatement(graph, context, currentIndex, exits);
+					return result;
+				}		
 				
 			} else if (currentStatement instanceof WhileStatement) {
-				
-				//Add a vertex of the current statement to the graph.	
-				graph.addVertex(currentStatement);
-				addEdges(graph, currentStatement, previousStatements);
-				
 				WhileStatement whileStatement = (WhileStatement) currentStatement;
+				
 				Statement bodyStatement = whileStatement.getBody();
 				
+				addEdge(graph, whileStatement, bodyStatement);
+				
 				//Create edges inside while-block with while as previous edge
-				Statement[] whileExits = from(graph, context.enterControlFlowStatement(whileStatement), -1, bodyStatement, whileStatement);
+				FlowResult bodyResult = from(graph, context.enterControlFlowStatement(whileStatement), bodyStatement);
 				
 				//Add an edge from the end of the while block to the beginning of the while block
-				addEdges(graph, whileStatement, whileExits);
-							
+				addEdges(graph, bodyResult.exits.get(bodyStatement), whileStatement);
+						
+				FlowResult result = FlowResult.concat(
+						whileStatement,
+						new Statement[] { whileStatement },
+						new Statement[] { bodyStatement },
+						new FlowResult[] { bodyResult },
+						false
+						);
+				
 				//Move to the next statement in the main block
-				return moveToNextStatement(graph, context, currentIndex, currentStatement);				
+				return result;		
 			
 			} else if (currentStatement instanceof DoStatement) {
-				
-				//Add a vertex of the current statement to the graph.	
-				graph.addVertex(currentStatement);
-				
 				DoStatement doStatement = (DoStatement) currentStatement;
+				
 				Statement bodyStatement = doStatement.getBody();
 				
+							
 				//Create edges inside while-block with while as previous edge
-				Statement[] doExits = from(graph, context.enterControlFlowStatement(doStatement), -1, bodyStatement, ObjectArrays.concat(previousStatements, doStatement));
+				FlowResult bodyResult = from(graph, context.enterControlFlowStatement(doStatement), bodyStatement);
 				
+				
+				graph.addVertex(doStatement);
 				//Add an edge from the end of the while block to the beginning of the while block
-				addEdges(graph, doStatement, doExits);
+				for (Statement exit : bodyResult.exits.get(bodyStatement)) { //DO NOT USE ADDEDGES HERE, because we need an edge to the real do statement and not to
+												 //the body.
+					graph.addEdge(exit, doStatement);
+				}
 				
+				//Link to bodystatement has already been added in addEdge
+				//graph.addVertex(bodyStatement);
+				//addEdge(graph, doStatement, bodyStatement);	
+				addEdge(graph, doStatement, bodyStatement);
+								
 				//Move to the next statement in the main block
-				return moveToNextStatement(graph, context, currentIndex, currentStatement);
+				return FlowResult.concat(
+						doStatement,
+						new Statement[] { doStatement },
+						new Statement[] { bodyStatement },
+						new FlowResult[] { bodyResult },
+						false
+						);
 				
 			} else if (currentStatement instanceof ForStatement) {
-				
-				//Add a vertex of the current statement to the graph.	
-				graph.addVertex(currentStatement);
-				addEdges(graph, currentStatement, previousStatements);
-				
 				ForStatement forStatement = (ForStatement) currentStatement;
+				
 				Statement bodyStatement = forStatement.getBody();
 				
-				//Create edges inside for-block with while as previous edge
-				Statement[] forExits = from(graph, context.enterControlFlowStatement(forStatement), -1, bodyStatement, forStatement);
+				addEdge(graph, forStatement, bodyStatement);
 				
-				//Add an edge from the end of the for-block to the beginning of the for-block
-				addEdges(graph, forStatement, forExits);
-							
+				//Create edges inside while-block with while as previous edge
+				FlowResult bodyResult = from(graph, context.enterControlFlowStatement(forStatement), bodyStatement);
+				
+				//Add an edge from the end of the while block to the beginning of the while block
+				addEdges(graph, bodyResult.exits.get(bodyStatement), forStatement);
+										
 				//Move to the next statement in the main block
-				return moveToNextStatement(graph, context, currentIndex, currentStatement);				
+				return FlowResult.concat(
+						forStatement,
+						new Statement[] { forStatement },
+						new Statement[] { bodyStatement },
+						new FlowResult[] { bodyResult },
+						false
+						);					
 			
 			} else if (currentStatement instanceof ContinueStatement) {
 				ContinueStatement continueStatement = (ContinueStatement) currentStatement;
-				
-				//Add a vertex of the current statement to the graph.	
-				graph.addVertex(continueStatement);
-				addEdges(graph, continueStatement, previousStatements);
-								
-				Statement enclosingLoop = context.enclosingLoop(continueStatement.getLabel());
-				if (enclosingLoop != null) { //Enclosing loop should never be null as continue can only be used in loops.
-					addEdges(graph, enclosingLoop, continueStatement);	
+												
+				Statement enclosingLoop = context.enclosingContinueBlock(continueStatement.getLabel());
+				if (enclosingLoop != null) { //Enclosing loop should never be null if the program is correctly typed.
+					addEdge(graph, continueStatement, enclosingLoop);	
 				}
 				
 				//Stop traversion of the block.
-				return new Statement[] { };
+				return FlowResult.create();
 			} else if (currentStatement instanceof BreakStatement) {
-				//TODO: Check Break statements!!!
+				BreakStatement breakStatement = (BreakStatement) currentStatement;
 				
-				//Add a vertex of the current statement to the graph.	
-				graph.addVertex(currentStatement);
-				addEdges(graph, currentStatement, previousStatements);
+				FlowResult result = FlowResult.create();
+				
+				Statement enclosingBlock = context.enclosingBreakBlock(breakStatement.getLabel());
+				if (enclosingBlock != null) {
+					result.exits.put(enclosingBlock, breakStatement);
+				}
 				
 				//Stop traversion of the block.
-				return new Statement[] { currentStatement };
+				return result;
 			} else if (currentStatement instanceof ReturnStatement) {
-				
-				//Add a vertex of the current statement to the graph.	
-				graph.addVertex(currentStatement);
-				addEdges(graph, currentStatement, previousStatements);
-				
 				//Do not traverse further.
-				return new Statement[] { };
+				return FlowResult.create();
 			} else {
 				//If the statement does not affect the control flow, then just go to the next statement.
-				
-				//Add a vertex of the current statement to the graph.	
-				graph.addVertex(currentStatement);
-				addEdges(graph, currentStatement, previousStatements);
-								
-				return moveToNextStatement(graph, context, currentIndex, currentStatement);
+				return FlowResult.create(currentStatement);
 			}
 
 		}
 
-		private static Statement[] moveToNextStatement(ControlFlowGraph graph, BlockContext context, int currentIndex,
-				Statement... useAsPreviousStatements) {
+		private static Edge<Statement> addEdge(ControlFlowGraph graph, Statement sourceVertex, Statement targetVertex) {
 			
-			if (currentIndex < context.numberOfStatements() - 1) {
-				return from(graph, context, currentIndex + 1, context.getStatementAt(currentIndex + 1),
-						useAsPreviousStatements);
+			
+			if (targetVertex instanceof DoStatement) {
+				DoStatement doStatement = (DoStatement) targetVertex;
+				
+				graph.addVertex(sourceVertex);
+				graph.addVertex(doStatement.getBody());
+				
+				return graph.addEdge(sourceVertex, doStatement.getBody());
 			} else {
-				return useAsPreviousStatements;
-			}
-		}
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		private class ExitStatements {
-			private final Multimap<Statement, Statement> exits = HashMultimap.create();
-			
-			public ExitStatements() {
 				
-			}
-			
-			public Collection<Statement> get(Statement statement) {
-				return exits.get(statement);
-			}
-			
-		}
-		
-		
-		
-		
-		
-		private static ExitStatements from2(ControlFlowGraph graph, BlockContext context, Statement currentStatement) {
-
-			//Decide how to traverse further by looking at the current statement.
-			//There should be a case for each statement that changes the control flow.			
-			if (currentStatement instanceof Block) {
-				//If we look at a block, discard the block and only look at the statements in the block.
-				Block block = (Block) currentStatement;
+				graph.addVertex(sourceVertex);
+				graph.addVertex(targetVertex);
 				
-				Collection<Statement> previousStatements = Collections.singleton(block);
-				
-				Multimap<Statement, Statement> result = HashMultimap.create();
-				
-				for (Object element : block.statements()) {
-					Statement statement = (Statement) element;
-					
-					//Add a vertex of the current statement to the graph.	
-					graph.addVertex(statement);
-					addEdges(graph, statement, previousStatements);
-					
-					ExitStatements exits = from2(graph, context, statement);					
-					for (Statement exit : exits.get(block) ) {
-						result.
-					}
-					
-				}
-				
-								//If there are statements in the block, move to the first statement of the block with 
-				//the previous statements of the block as previous statements of the first statement
-				if (block.statements().size() > 0) {					
-					BlockContext newContext = context.enterBlock(block);
-					return from(graph, newContext, 0, newContext.getStatementAt(0), previousStatements);
-				//If there are no statements in the block, completely ignore the block.
-				} else {
-					return previousStatements;
-				}
-					
-//			} else if (currentStatement instanceof LabeledStatement) {
-//				LabeledStatement labeledStatement = (LabeledStatement) currentStatement;
-//				
-//				//Add a vertex of the current statement to the graph.	
-//				graph.addVertex(currentStatement);
-//				addEdges(graph, currentStatement, previousStatements);
-//				
-//				Statement[] exits = from(graph, context.enterControlFlowStatement(currentStatement), -1, labeledStatement.getBody(), currentStatement);
-//				
-//				//Ignore the labeled statement for now
-//				return moveToNextStatement(graph, context, currentIndex, exits);
-//				
-//			} else if (currentStatement instanceof IfStatement) {
-//				IfStatement ifStatement = (IfStatement) currentStatement;
-//				
-//				//Add a vertex of the current statement to the graph.	
-//				graph.addVertex(ifStatement);
-//				addEdges(graph, ifStatement, previousStatements);
-//				
-//				
-//				Statement thenStatement = ifStatement.getThenStatement();
-//				Statement elseStatement = ifStatement.getElseStatement();
-//
-//				//Compute the exit entries for an if statement depending on whether there is an else branch
-//				Statement[] exits;
-//				if (elseStatement == null) {
-//					//If there is no else branch, then either the if statement or the last statement of the then-branch
-//					//can be used as previous statements
-//					exits = ObjectArrays.concat(ifStatement,
-//							from(graph, context.enterControlFlowStatement(ifStatement), -1, thenStatement, ifStatement));
-//				} else {
-//					//If there is an else branch, then either the last statement of the then-branch
-//					//or the last statement of the else-branch can be used as previous statements
-//					exits = ObjectArrays.concat(from(graph, context.enterControlFlowStatement(ifStatement), -1, thenStatement, ifStatement),
-//							from(graph, context.enterControlFlowStatement(ifStatement), -1, elseStatement, ifStatement), Statement.class);
-//				}
-//				
-//				//Move to the next statement with the last statement of either branch.
-//				return moveToNextStatement(graph, context, currentIndex, exits);
-//				
-//			} else if (currentStatement instanceof WhileStatement) {
-//				
-//				//Add a vertex of the current statement to the graph.	
-//				graph.addVertex(currentStatement);
-//				addEdges(graph, currentStatement, previousStatements);
-//				
-//				WhileStatement whileStatement = (WhileStatement) currentStatement;
-//				Statement bodyStatement = whileStatement.getBody();
-//				
-//				//Create edges inside while-block with while as previous edge
-//				Statement[] whileExits = from(graph, context.enterControlFlowStatement(whileStatement), -1, bodyStatement, whileStatement);
-//				
-//				//Add an edge from the end of the while block to the beginning of the while block
-//				addEdges(graph, whileStatement, whileExits);
-//							
-//				//Move to the next statement in the main block
-//				return moveToNextStatement(graph, context, currentIndex, currentStatement);				
-//			
-//			} else if (currentStatement instanceof DoStatement) {
-//				
-//				//Add a vertex of the current statement to the graph.	
-//				graph.addVertex(currentStatement);
-//				
-//				DoStatement doStatement = (DoStatement) currentStatement;
-//				Statement bodyStatement = doStatement.getBody();
-//				
-//				//Create edges inside while-block with while as previous edge
-//				Statement[] doExits = from(graph, context.enterControlFlowStatement(doStatement), -1, bodyStatement, ObjectArrays.concat(previousStatements, doStatement));
-//				
-//				//Add an edge from the end of the while block to the beginning of the while block
-//				addEdges(graph, doStatement, doExits);
-//				
-//				//Move to the next statement in the main block
-//				return moveToNextStatement(graph, context, currentIndex, currentStatement);
-//				
-//			} else if (currentStatement instanceof ForStatement) {
-//				
-//				//Add a vertex of the current statement to the graph.	
-//				graph.addVertex(currentStatement);
-//				addEdges(graph, currentStatement, previousStatements);
-//				
-//				ForStatement forStatement = (ForStatement) currentStatement;
-//				Statement bodyStatement = forStatement.getBody();
-//				
-//				//Create edges inside for-block with while as previous edge
-//				Statement[] forExits = from(graph, context.enterControlFlowStatement(forStatement), -1, bodyStatement, forStatement);
-//				
-//				//Add an edge from the end of the for-block to the beginning of the for-block
-//				addEdges(graph, forStatement, forExits);
-//							
-//				//Move to the next statement in the main block
-//				return moveToNextStatement(graph, context, currentIndex, currentStatement);				
-//			
-//			} else if (currentStatement instanceof ContinueStatement) {
-//				ContinueStatement continueStatement = (ContinueStatement) currentStatement;
-//				
-//				//Add a vertex of the current statement to the graph.	
-//				graph.addVertex(continueStatement);
-//				addEdges(graph, continueStatement, previousStatements);
-//								
-//				Statement enclosingLoop = context.enclosingLoop(continueStatement.getLabel());
-//				if (enclosingLoop != null) { //Enclosing loop should never be null as continue can only be used in loops.
-//					addEdges(graph, enclosingLoop, continueStatement);	
-//				}
-//				
-//				//Stop traversion of the block.
-//				return new Statement[] { };
-//			} else if (currentStatement instanceof BreakStatement) {
-//				//TODO: Check Break statements!!!
-//				
-//				//Add a vertex of the current statement to the graph.	
-//				graph.addVertex(currentStatement);
-//				addEdges(graph, currentStatement, previousStatements);
-//				
-//				//Stop traversion of the block.
-//				return new Statement[] { currentStatement };
-//			} else if (currentStatement instanceof ReturnStatement) {
-//				
-//				//Add a vertex of the current statement to the graph.	
-//				graph.addVertex(currentStatement);
-//				addEdges(graph, currentStatement, previousStatements);
-//				
-//				//Do not traverse further.
-//				return new Statement[] { };
-			} else {
-				//If the statement does not affect the control flow, then just go to the next statement.
-				
-				
-				graph.addVertex(currentStatement);
-				addEdges(graph, currentStatement, previousStatements);
-								
-				return moveToNextStatement(graph, context, currentIndex, currentStatement);
-			}
-
-		}
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		private static void addEdges(ControlFlowGraph graph, Statement currentStatement, Statement... previousStatements) {
-			for (Statement previousStatement : previousStatements) {
-				//Add an edge previousStatement --> currentStatement
-				Edge<Statement> edge = graph.addEdge(previousStatement, currentStatement);
-				Log.info(ControlFlowGraph.class, "Add edge : " + edge);
+				return graph.addEdge(sourceVertex, targetVertex);
 			}			
 		}
+	
 		
-		private static void addEdges(ControlFlowGraph graph, Statement currentStatement, Iterable<Statement> previousStatements) {
+		private static void addEdges(ControlFlowGraph graph, Iterable<Statement> previousStatements, Statement currentStatement) {
 			for (Statement previousStatement : previousStatements) {
 				//Add an edge previousStatement --> currentStatement
-				Edge<Statement> edge = graph.addEdge(previousStatement, currentStatement);
-				Log.info(ControlFlowGraph.class, "Add edge : " + edge);
+				addEdge(graph, previousStatement, currentStatement);
 			}			
 		}
 		

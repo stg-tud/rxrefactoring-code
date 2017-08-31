@@ -90,13 +90,13 @@ public class StatementEdge extends SimpleEdge<Statement> {
 			
 			@Override
 			public boolean visit(Block node) {
-				result = "<block size=" + node.statements().size() + ">";
+				result = "<block id=" + node.getStartPosition() + ">";
 				return false;
 			}
 			
 			@Override
 			public boolean visit(BreakStatement node) {
-				result = "<break>";
+				result = "<break label=" + node.getLabel() + ">";
 				return false;
 			}
 			
