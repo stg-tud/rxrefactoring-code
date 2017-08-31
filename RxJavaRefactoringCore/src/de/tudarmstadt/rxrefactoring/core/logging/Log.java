@@ -1,5 +1,6 @@
 package de.tudarmstadt.rxrefactoring.core.logging;
 
+import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -41,13 +42,19 @@ public final class Log {
 	 *            logging text
 	 * 
 	 */
-	public static void info(PrintStream out, Class<?> cls, Object text) {
-		println(out, "INFO", convertClassName(cls), text == null ? "null" : text.toString());
+	private static void info(PrintStream out, Class<?> cls, Object text) {
+		String className = convertClassName(cls);
+		for (String splitted : Objects.toString(text).split("\n")) {
+			println(out, "INFO", className, splitted);
+		}
+		
 	}
 
 	public static void info(Class<?> cls, Object text) {
 		info(INFO, cls, text);
 	}
+	
+	
 
 	/**
 	 * Uses System.err.println(...) to log in the console and prints stack trace
@@ -59,8 +66,11 @@ public final class Log {
 	 * @param throwable
 	 *            exception
 	 */
-	public static void error(PrintStream out, Class<?> cls, Object text, Throwable throwable) {
-		println(out, "INFO", convertClassName(cls), text == null ? "null" : text.toString());
+	private static void error(PrintStream out, Class<?> cls, Object text, Throwable throwable) {
+		String className = convertClassName(cls);
+		for (String splitted : Objects.toString(text).split("\n")) {
+			println(out, "ERR", className, splitted);
+		}
 
 		if (Objects.nonNull(throwable)) {
 			throwable.printStackTrace(out);
@@ -85,15 +95,21 @@ public final class Log {
 		throwable.printStackTrace(INFO);
 		info(cls, "### FINISH ###");
 	}
-
+	
+	
 	private static String convertClassName(Class<?> cls) {
 		Objects.requireNonNull(cls, "Class can not be null.");
 		return cls.getSimpleName();
 	}
 
 	private static void println(PrintStream out, String tag, String cls, String text) {
-		out.println("[" + format.format(new Date()) + "][" + tag + "][" + cls + "]: " + text);
+		out.println(toConsoleLine(tag, cls, text));
 	}
+	
+	private static String toConsoleLine(String tag, String cls, String text) {
+		return "[" + format.format(new Date()) + "][" + tag + "][" + cls + "]: " + text;
+	}
+	
 
 	/**
 	 * Shows text in the console of the Eclipse instance that's running the plugin

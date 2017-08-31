@@ -22,9 +22,9 @@ public class CFGCollector implements IWorker<Void, Void> {
 		units.accept(collector);
 		
 		collector.declarations.forEach(m -> {
-			Log.info(CFGCollector.class, "Build CFG for " + m.getName());
+			Log.info(CFGCollector.class, "### Build CFG for " + m.getName() + " ###");
 			ControlFlowGraph cfg = ControlFlowGraph.from(m.getBody());
-			Log.info(CFGCollector.class, cfg.edgeSet());
+			Log.info(CFGCollector.class, cfg.listEdges());
 		});
 		
 		return null;
