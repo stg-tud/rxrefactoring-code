@@ -22,6 +22,8 @@ Bundle-ClassPath: libs/rxjava-1.2.2.jar,
  .
 Export-Package: de.tudarmstadt.rxrefactoring.core,
  de.tudarmstadt.rxrefactoring.core.analysis,
+ de.tudarmstadt.rxrefactoring.core.analysis.cfg,
+ de.tudarmstadt.rxrefactoring.core.analysis.example,
  de.tudarmstadt.rxrefactoring.core.codegen,
  de.tudarmstadt.rxrefactoring.core.handler,
  de.tudarmstadt.rxrefactoring.core.logging,

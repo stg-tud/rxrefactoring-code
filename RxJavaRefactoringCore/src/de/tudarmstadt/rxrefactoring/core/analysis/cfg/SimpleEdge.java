@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core.analysis;
+package de.tudarmstadt.rxrefactoring.core.analysis.cfg;
 
 public class SimpleEdge<V> implements Edge<V> {
 

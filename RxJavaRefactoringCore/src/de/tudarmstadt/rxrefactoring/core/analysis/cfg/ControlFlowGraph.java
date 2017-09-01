@@ -1,11 +1,11 @@
-package de.tudarmstadt.rxrefactoring.core.analysis;
+package de.tudarmstadt.rxrefactoring.core.analysis.cfg;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.BreakStatement;
@@ -17,21 +17,21 @@ import org.eclipse.jdt.core.dom.LabeledStatement;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.SwitchCase;
+import org.eclipse.jdt.core.dom.SwitchStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 import org.jgrapht.DirectedGraph;
-import org.jgrapht.alg.util.Pair;
 import org.jgrapht.graph.AbstractBaseGraph;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.ObjectArrays;
 import com.google.common.collect.Sets;
 
-import de.tudarmstadt.rxrefactoring.core.logging.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
 
+//TODO: Add Exceptions to the Control Flow Graph
 public class ControlFlowGraph extends AbstractBaseGraph<Statement, Edge<Statement>>
 		implements DirectedGraph<Statement, Edge<Statement>> {
 
@@ -65,6 +65,14 @@ public class ControlFlowGraph extends AbstractBaseGraph<Statement, Edge<Statemen
 	}
 
 
+	public Set<Statement> entryNodes() {
+		return vertexSet().stream().filter(stmt -> inDegreeOf(stmt) == 0).collect(Collectors.toSet());		
+	}
+	
+	public Set<Statement> exitNodes() {
+		return vertexSet().stream().filter(stmt -> outDegreeOf(stmt) == 0).collect(Collectors.toSet());		
+	}
+	
 	
 	
 	/**
@@ -76,48 +84,38 @@ public class ControlFlowGraph extends AbstractBaseGraph<Statement, Edge<Statemen
 	 */
 	private static class GraphBuildingUtils {
 		
-		private static class BlockContext {
+		/**
+		 * The context defines the nesting of classes.
+		 * 
+		 * @author mirko
+		 *
+		 */
+		private static class Context {
 			/**
 			 * The enclosing blocks in the current call context.
 			 */
 			private final Statement[] callBlocks;
 			
-			/**
-			 * The list of statements in the current block. Empty, if not currently in a block
-			 * or the block has no statements.
-			 */
-			private final List<?> statements;
 						
-			public BlockContext(List<?> statements, Statement... callBlocks) {
-				this.statements = statements;
+			public Context(Statement... callBlocks) {
 				this.callBlocks = callBlocks;
 			}
 			
-			public static BlockContext empty() {
-				return new BlockContext(Collections.EMPTY_LIST);
+			public static Context empty() {
+				return new Context();
 			}
 			
-			public Statement getStatementAt(int index) {
-				return (Statement) statements.get(index);
-			}
 			
-			public int numberOfStatements() {
-				return statements.size();
-			}
-			
-			public BlockContext enterBlock(Block block) {
-				return new BlockContext(block.statements(), ObjectArrays.concat(block, callBlocks));
-			}
-			
-			public BlockContext enterControlFlowStatement(Statement statement) {
-				return new BlockContext(Collections.EMPTY_LIST, ObjectArrays.concat(statement, callBlocks));
+			public Context enterStatement(Statement statement) {
+				return new Context(ObjectArrays.concat(statement, callBlocks));
 			}
 			
 				
 			/**
-			 * Finds the enclosing loop of this context that has a specific label name.
-			 * @param label The label of the enclosing loop, or null if the next enclosing loop regardless of the label should be found.
-			 * @return The enclosing loop of this context, or null if there is no loop.
+			 * Finds the enclosing statement that a continue statement refers to.
+			 * 
+			 * @param label The label of the continue statement, or null if there is no label.
+			 * @return The enclosing statement that is referred to by a continue in this context.
 			 */
 			public Statement enclosingContinueBlock(SimpleName label) {
 								
@@ -142,9 +140,20 @@ public class ControlFlowGraph extends AbstractBaseGraph<Statement, Edge<Statemen
 					
 					Statement statement = (Statement) element;
 					
-					if (Statements.isLoop(statement) && label == null 
-						|| statement instanceof LabeledStatement && Objects.equals(label.getIdentifier(), ((LabeledStatement) statement).getLabel().getIdentifier())) {
+					if (label == null && (Statements.isLoop(statement) || statement instanceof SwitchStatement) 
+						|| statement instanceof LabeledStatement && Objects.equals(label.getIdentifier(), ((LabeledStatement) statement).getLabel().getIdentifier())
+					) {
 						return statement;
+					}
+				}
+				
+				return null;
+			}
+			
+			public SwitchStatement enclosingSwitch() {
+				for (Object element : callBlocks) {					
+					if (element instanceof SwitchStatement) {
+						return (SwitchStatement) element;
 					}
 				}
 				
@@ -156,12 +165,12 @@ public class ControlFlowGraph extends AbstractBaseGraph<Statement, Edge<Statemen
 			
 			@Override
 			public String toString() {
-				return "{ call hierarchy=" + Arrays.toString(callBlocks) + ", current=" + statements + " }";
+				return "Context" + Arrays.toString(callBlocks);
 			}
 		}
 		
 		public static void from(ControlFlowGraph graph, Statement statement) {
-			GraphBuildingUtils.from(graph, BlockContext.empty(), statement);
+			GraphBuildingUtils.from(graph, Context.empty(), statement);
 		}
 		
 		private static class FlowResult {
@@ -249,7 +258,7 @@ public class ControlFlowGraph extends AbstractBaseGraph<Statement, Edge<Statemen
 		 * 
 		 * @return The last statement(s) that has been processed in a basic block.
 		 */
-		private static FlowResult from(ControlFlowGraph graph, BlockContext context, Statement currentStatement) {
+		private static FlowResult from(ControlFlowGraph graph, Context context, Statement currentStatement) {
 
 			//Decide how to traverse further by looking at the current statement.
 			//There should be a case for each statement that changes the control flow.			
@@ -258,7 +267,7 @@ public class ControlFlowGraph extends AbstractBaseGraph<Statement, Edge<Statemen
 				Block block = (Block) currentStatement;
 				Collection<Statement> previousStatements = Collections.singleton(block);
 				
-				BlockContext newContext = context.enterBlock(block);
+				Context newContext = context.enterStatement(block);
 				
 				FlowResult result = FlowResult.create(); 
 				
@@ -269,7 +278,6 @@ public class ControlFlowGraph extends AbstractBaseGraph<Statement, Edge<Statemen
 					addEdges(graph, previousStatements, statement);
 					
 					FlowResult statementResult = from(graph, newContext, statement);
-					//TODO: Is this correct?
 					result.addTo(statement, new Statement[0], new Statement[] {statement}, new FlowResult[] {statementResult}, true);				
 					
 					previousStatements = statementResult.exits.get(statement); 					
@@ -287,7 +295,7 @@ public class ControlFlowGraph extends AbstractBaseGraph<Statement, Edge<Statemen
 				addEdge(graph, labeledStatement, bodyStatement);
 		
 				//Ignore the labeled statement for now
-				return from(graph, context.enterControlFlowStatement(currentStatement), labeledStatement.getBody());
+				return from(graph, context.enterStatement(currentStatement), labeledStatement.getBody());
 				
 			} else if (currentStatement instanceof IfStatement) {
 				IfStatement ifStatement = (IfStatement) currentStatement;
@@ -300,7 +308,7 @@ public class ControlFlowGraph extends AbstractBaseGraph<Statement, Edge<Statemen
 					addEdge(graph, ifStatement, thenStatement);
 					
 					
-					FlowResult thenResult = from(graph, context.enterControlFlowStatement(ifStatement), thenStatement);
+					FlowResult thenResult = from(graph, context.enterStatement(ifStatement), thenStatement);
 					
 					FlowResult result = FlowResult.concat(
 							ifStatement, 
@@ -316,8 +324,8 @@ public class ControlFlowGraph extends AbstractBaseGraph<Statement, Edge<Statemen
 					addEdge(graph, ifStatement, thenStatement);
 					addEdge(graph, ifStatement, elseStatement);
 					
-					FlowResult thenResult = from(graph, context.enterControlFlowStatement(ifStatement), thenStatement);
-					FlowResult elseResult = from(graph, context.enterControlFlowStatement(ifStatement), elseStatement);				
+					FlowResult thenResult = from(graph, context.enterStatement(ifStatement), thenStatement);
+					FlowResult elseResult = from(graph, context.enterStatement(ifStatement), elseStatement);				
 					
 					
 					FlowResult result = FlowResult.concat(
@@ -332,6 +340,43 @@ public class ControlFlowGraph extends AbstractBaseGraph<Statement, Edge<Statemen
 					return result;
 				}		
 				
+			} else if (currentStatement instanceof SwitchStatement) {
+				//If we look at a block, discard the block and only look at the statements in the block.
+				SwitchStatement switchStatement = (SwitchStatement) currentStatement;
+				Collection<Statement> previousStatements = Collections.emptyList();
+				
+				Context newContext = context.enterStatement(switchStatement);
+				
+				FlowResult result = FlowResult.create(); 
+				
+				//Iterate through all statements in the block and establish links between them.
+				for (Object element : switchStatement.statements()) {
+					Statement statement = (Statement) element;
+					
+					addEdges(graph, previousStatements, statement);
+					
+					FlowResult statementResult = from(graph, newContext, statement);
+					//TODO: Is this correct?
+					result.addTo(statement, new Statement[0], new Statement[] {statement}, new FlowResult[] {statementResult}, true);				
+					
+					previousStatements = statementResult.exits.get(statement); 					
+				}
+				
+				result.exits.putAll(switchStatement, previousStatements);
+				
+				return result;
+			
+			} else if (currentStatement instanceof SwitchCase) {
+				SwitchCase switchCase = (SwitchCase) currentStatement;
+				
+				Statement enclosingSwitch = context.enclosingSwitch();
+				if (enclosingSwitch != null) { //Enclosing switch should never be null if the program is correctly typed.
+					addEdge(graph, enclosingSwitch, switchCase);	
+				}
+				
+				//Traverse further.
+				return FlowResult.create(switchCase);
+			
 			} else if (currentStatement instanceof WhileStatement) {
 				WhileStatement whileStatement = (WhileStatement) currentStatement;
 				
@@ -340,7 +385,7 @@ public class ControlFlowGraph extends AbstractBaseGraph<Statement, Edge<Statemen
 				addEdge(graph, whileStatement, bodyStatement);
 				
 				//Create edges inside while-block with while as previous edge
-				FlowResult bodyResult = from(graph, context.enterControlFlowStatement(whileStatement), bodyStatement);
+				FlowResult bodyResult = from(graph, context.enterStatement(whileStatement), bodyStatement);
 				
 				//Add an edge from the end of the while block to the beginning of the while block
 				addEdges(graph, bodyResult.exits.get(bodyStatement), whileStatement);
@@ -363,7 +408,7 @@ public class ControlFlowGraph extends AbstractBaseGraph<Statement, Edge<Statemen
 				
 							
 				//Create edges inside while-block with while as previous edge
-				FlowResult bodyResult = from(graph, context.enterControlFlowStatement(doStatement), bodyStatement);
+				FlowResult bodyResult = from(graph, context.enterStatement(doStatement), bodyStatement);
 				
 				
 				graph.addVertex(doStatement);
@@ -395,7 +440,7 @@ public class ControlFlowGraph extends AbstractBaseGraph<Statement, Edge<Statemen
 				addEdge(graph, forStatement, bodyStatement);
 				
 				//Create edges inside while-block with while as previous edge
-				FlowResult bodyResult = from(graph, context.enterControlFlowStatement(forStatement), bodyStatement);
+				FlowResult bodyResult = from(graph, context.enterStatement(forStatement), bodyStatement);
 				
 				//Add an edge from the end of the while block to the beginning of the while block
 				addEdges(graph, bodyResult.exits.get(bodyStatement), forStatement);

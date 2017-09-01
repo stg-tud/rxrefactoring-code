@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core.analysis;
+package de.tudarmstadt.rxrefactoring.core.analysis.cfg;
 
 public interface Edge<V> {
 	public V getHead();
