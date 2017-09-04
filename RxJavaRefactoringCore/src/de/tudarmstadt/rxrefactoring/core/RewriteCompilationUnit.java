@@ -44,8 +44,13 @@ import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.projection.ProjectionDocumentManager;
+import org.eclipse.ltk.core.refactoring.DocumentChange;
 import org.eclipse.text.edits.MalformedTreeException;
+import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
+import org.eclipse.text.edits.TextEditGroup;
+import org.eclipse.text.edits.TextEditVisitor;
 import org.eclipse.text.edits.UndoEdit;
 
 /**
@@ -331,29 +336,33 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	 * @return True, if the compilation unit did have changes.
 	 * 
 	 */
-	protected Optional<IDocument> getChangedDocument()
+	protected Optional<DocumentChange> getChangedDocument()
 			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
 
 				
 		// Only do something if there are changes to the compilation unit
-		if (hasChanges()) {
-			
+		if (hasChanges()) {		
+						
 //			// Initialize the document with the old source code
-			ICompilationUnit copy = getWorkingCopy(null);
-			this.getPath();
-			Document document = new Document(copy.getSource());				
+			
+			Document document = new Document(getSource());		
+			DocumentChange change = new DocumentChange(unit.getElementName(), document);
 				
+			MultiTextEdit root = new MultiTextEdit(); 
+			
 			// Apply changes to the classes AST if there are any
 			if (hasASTChanges()) {
 				TextEdit edit = writer().rewriteAST(document, null);
-				edit.apply(document);			
+				root.addChild(edit);
 			}
 
 			// Apply changes to the classes imports if there are any
 			if (hasImportChanges()) {
 				TextEdit edit = imports().rewriteImports(null); // We can add a progress monitor here.
-				edit.apply(document);
+				root.addChild(edit);
 			}		
+			
+			change.setEdit(root);
 			
 			//			// Save the changes to disk
 //			IBuffer buffer = unit.getBuffer();
@@ -362,7 +371,7 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 //			// if ( !RefactoringApp.isRunningForTests() )
 //			buffer.save(null, false);
 
-			return Optional.of(document);
+			return Optional.of(change);
 		}
 
 		return Optional.empty();

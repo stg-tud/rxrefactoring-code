@@ -121,8 +121,7 @@ public final class RefactorExecution implements Runnable {
 //				String description = extension.getDescription();
 //				Objects.requireNonNull(description, "The description of the refactoring may not be null.");
 							
-				CompositeChange changes = new CompositeChange("rxrefactor");
-
+				CompositeChange changes = new CompositeChange(extension.getName());
 				
 				// Reports that the refactoring is starting
 				summary.reportStarted();
