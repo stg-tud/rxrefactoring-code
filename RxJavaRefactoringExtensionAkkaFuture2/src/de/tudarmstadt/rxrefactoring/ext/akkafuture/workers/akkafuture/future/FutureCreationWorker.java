@@ -1,41 +1,27 @@
 package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.future;
 
-import java.util.List;
-import java.util.Set;
-import java.util.function.Consumer;
-
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.ReturnStatement;
-import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.Statement;
-import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
-import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
 
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.codegen.IdManager;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractAkkaWorker;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractFutureWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureCollectionAccessWrapper;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureCreationWrapper;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureTypeWrapper;
 
@@ -78,6 +64,7 @@ public class FutureCreationWorker extends AbstractAkkaWorker<AkkaFutureCollector
 			
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void refactorCreateInvocationWithoutAssignment(RewriteCompilationUnit unit, FutureCreationWrapper wrapper) {
 		
 		Expression expr = wrapper.getExpression();
@@ -236,6 +223,7 @@ public class FutureCreationWorker extends AbstractAkkaWorker<AkkaFutureCollector
 		summary.addCorrect("futureCreation");
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void refactorCreateInvocationWithAssignment(RewriteCompilationUnit unit, VariableDeclarationFragment variable, FutureCreationWrapper wrapper) {
 		
 		
@@ -387,6 +375,7 @@ public class FutureCreationWorker extends AbstractAkkaWorker<AkkaFutureCollector
 	}
 	
 	
+	@SuppressWarnings("unchecked")
 	protected Type newSubjectType(AST ast, Type typeArgument1, Type typeArgument2) {
 		ParameterizedType newType = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Subject")));
 		newType.typeArguments().add(typeArgument1);

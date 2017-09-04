@@ -3,11 +3,17 @@ package de.tudarmstadt.rxrefactoring.core;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.Document;
+import org.eclipse.jface.text.IDocument;
+import org.eclipse.ltk.core.refactoring.CompositeChange;
+import org.eclipse.ltk.core.refactoring.DocumentChange;
+import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.eclipse.text.edits.MalformedTreeException;
 
 import com.google.common.collect.Sets;
@@ -32,10 +38,15 @@ public final class ProjectUnits implements Set<RewriteCompilationUnit> {
 		this(Sets.newHashSet());
 	}
 
-	protected void applyChanges()
+	protected void addChangesTo(CompositeChange changes)
 			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
+		
+		
 		for (RewriteCompilationUnit unit : units) {
-			unit.applyChanges();
+			unit.getChangedDocument()
+			.ifPresent(doc -> {
+				changes.add(new DocumentChange("documentChange", doc));
+			});
 		}
 	}
 

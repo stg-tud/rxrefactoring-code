@@ -5,23 +5,22 @@ import java.util.EnumSet;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 
-import de.tudarmstadt.rxrefactoring.core.Refactoring;
+import de.tudarmstadt.rxrefactoring.core.RefactorExtension;
 import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree;
 import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree.WorkerNode;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.future.FutureCreationWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.future.AwaitWorker;
+import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.future.FutureCreationWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.future.ListTypeWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.future.MethodUsageWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.future.UnrefactorableReferencesWorker;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.future.VariableFragmentWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.future.VariableTypeToObservableWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.future.VariableTypeToSubjectWorker;
 
 /**
  * Future extension
  */
-public class AkkaFutureRefactoring implements Refactoring {
+public class AkkaFutureRefactoring implements RefactorExtension {
 	
 	private EnumSet<RefactoringOptions> options;
 
@@ -101,5 +100,11 @@ public class AkkaFutureRefactoring implements Refactoring {
 	@Override
 	public String getPlugInId() {
 		return "de.tudarmstadt.rxrefactoring.ext.akkafuture";
+	}
+
+
+	@Override
+	public String getName() {
+		return "scala.concurrent.Future to rx.Observable";
 	}
 }

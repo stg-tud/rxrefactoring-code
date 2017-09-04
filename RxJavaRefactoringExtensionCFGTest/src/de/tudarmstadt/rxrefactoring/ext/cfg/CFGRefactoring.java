@@ -1,13 +1,13 @@
 package de.tudarmstadt.rxrefactoring.ext.cfg;
 
-import de.tudarmstadt.rxrefactoring.core.Refactoring;
+import de.tudarmstadt.rxrefactoring.core.RefactorExtension;
 import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree;
 import de.tudarmstadt.rxrefactoring.ext.cfg.workers.CFGCollector;
 
 /**
  * Future extension
  */
-public class CFGRefactoring implements Refactoring {
+public class CFGRefactoring implements RefactorExtension {
 	
 	@Override
 	public String getDescription() {
@@ -23,5 +23,10 @@ public class CFGRefactoring implements Refactoring {
 	@Override
 	public String getPlugInId() {
 		return "de.tudarmstadt.rxrefactoring.ext.cfg";
+	}
+
+	@Override
+	public String getName() {
+		return "Create CFG";
 	}
 }

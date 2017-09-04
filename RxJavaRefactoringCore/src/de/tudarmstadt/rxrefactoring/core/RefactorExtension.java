@@ -13,8 +13,10 @@ import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree;
  * @author mirko
  *
  */
-public interface Refactoring {
+public interface RefactorExtension {
 
+	public String getName();
+	
 	/**
 	 * Provides a comprehensible description of the kind of refactoring that is done
 	 * by this environment.

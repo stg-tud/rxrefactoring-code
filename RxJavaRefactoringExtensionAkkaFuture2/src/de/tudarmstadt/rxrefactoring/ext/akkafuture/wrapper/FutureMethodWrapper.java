@@ -1,7 +1,6 @@
 package de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper;
 
 import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.MethodInvocation;
 
 /**
  * Interface for methods that take a future and produce another future, e.g., future.map(...), Futures.sequence(future, ...)

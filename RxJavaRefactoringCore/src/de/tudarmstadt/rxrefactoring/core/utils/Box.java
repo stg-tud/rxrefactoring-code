@@ -1,6 +1,5 @@
 package de.tudarmstadt.rxrefactoring.core.utils;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
 

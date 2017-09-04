@@ -1,11 +1,5 @@
 package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.eclipse.jdt.core.dom.ASTNode;
-
 import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.ProjectUnits;

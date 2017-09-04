@@ -1,6 +1,5 @@
 package de.tudarmstadt.rxrefactoring.core.logging;
 
-import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;

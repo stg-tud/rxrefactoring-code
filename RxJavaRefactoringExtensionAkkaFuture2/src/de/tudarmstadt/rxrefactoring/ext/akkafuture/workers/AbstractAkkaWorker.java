@@ -1,7 +1,5 @@
 package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 
 public abstract class AbstractAkkaWorker<CollectorType, RefactorType> extends AbstractGeneralWorker<CollectorType, RefactorType> {

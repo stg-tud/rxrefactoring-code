@@ -1,6 +1,5 @@
 package de.tudarmstadt.rxrefactoring.core.analysis.traversal;
 
-import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 

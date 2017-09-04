@@ -2,7 +2,12 @@ package de.tudarmstadt.rxrefactoring.core;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
+import org.eclipse.core.filebuffers.FileBuffers;
+import org.eclipse.core.filebuffers.ITextFileBuffer;
+import org.eclipse.core.filebuffers.ITextFileBufferManager;
+import org.eclipse.core.filebuffers.LocationKind;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -38,6 +43,7 @@ import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.UndoEdit;
@@ -175,7 +181,9 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 			ChildListPropertyDescriptor clpd = (ChildListPropertyDescriptor) descriptor;
 			ListRewrite l = writer().getListRewrite(parent, clpd);
 			
+			@SuppressWarnings("rawtypes")
 			List rewritten = l.getRewrittenList();
+			@SuppressWarnings("rawtypes")
 			List original = l.getOriginalList();
 			
 			for (int i = 0; i < original.size(); i++) {
@@ -323,37 +331,41 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	 * @return True, if the compilation unit did have changes.
 	 * 
 	 */
-	protected boolean applyChanges()
+	protected Optional<IDocument> getChangedDocument()
 			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
 
+				
 		// Only do something if there are changes to the compilation unit
 		if (hasChanges()) {
-			// Initialize the document with the old source code
-			Document document = new Document(getSource());
-
+			
+//			// Initialize the document with the old source code
+			ICompilationUnit copy = getWorkingCopy(null);
+			this.getPath();
+			Document document = new Document(copy.getSource());				
+				
 			// Apply changes to the classes AST if there are any
 			if (hasASTChanges()) {
-				TextEdit edit = writer().rewriteAST();
-				edit.apply(document);
+				TextEdit edit = writer().rewriteAST(document, null);
+				edit.apply(document);			
 			}
 
 			// Apply changes to the classes imports if there are any
 			if (hasImportChanges()) {
 				TextEdit edit = imports().rewriteImports(null); // We can add a progress monitor here.
 				edit.apply(document);
-			}
+			}		
+			
+			//			// Save the changes to disk
+//			IBuffer buffer = unit.getBuffer();
+//			buffer.setContents(document.get());
+//			// TODO: Fix this functionality if there is a test run.
+//			// if ( !RefactoringApp.isRunningForTests() )
+//			buffer.save(null, false);
 
-			// Save the changes to disk
-			IBuffer buffer = unit.getBuffer();
-			buffer.setContents(document.get());
-			// TODO: Fix this functionality if there is a test run.
-			// if ( !RefactoringApp.isRunningForTests() )
-			buffer.save(null, false);
-
-			return true;
+			return Optional.of(document);
 		}
 
-		return false;
+		return Optional.empty();
 	}
 
 	@Override

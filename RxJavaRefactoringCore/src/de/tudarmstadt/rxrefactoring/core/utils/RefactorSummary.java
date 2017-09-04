@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;

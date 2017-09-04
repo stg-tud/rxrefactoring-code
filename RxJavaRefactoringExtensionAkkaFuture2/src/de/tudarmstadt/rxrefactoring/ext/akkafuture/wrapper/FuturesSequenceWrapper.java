@@ -3,12 +3,10 @@ package de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper;
 import java.util.Objects;
 
 import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;

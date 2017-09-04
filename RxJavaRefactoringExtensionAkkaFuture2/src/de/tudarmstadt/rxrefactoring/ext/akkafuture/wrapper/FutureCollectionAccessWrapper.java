@@ -2,13 +2,9 @@ package de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper;
 
 import java.util.Objects;
 
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.IMethodBinding;
-import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
 
 public class FutureCollectionAccessWrapper implements FutureMethodWrapper {
