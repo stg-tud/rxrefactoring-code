@@ -4,10 +4,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.eclipse.core.filebuffers.FileBuffers;
-import org.eclipse.core.filebuffers.ITextFileBuffer;
-import org.eclipse.core.filebuffers.ITextFileBufferManager;
-import org.eclipse.core.filebuffers.LocationKind;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -16,10 +12,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.jdt.core.CompletionRequestor;
 import org.eclipse.jdt.core.IBuffer;
-import org.eclipse.jdt.core.IBufferFactory;
-import org.eclipse.jdt.core.ICodeCompletionRequestor;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.ICompletionRequestor;
 import org.eclipse.jdt.core.IImportContainer;
 import org.eclipse.jdt.core.IImportDeclaration;
 import org.eclipse.jdt.core.IJavaElement;
@@ -43,14 +36,10 @@ import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
-import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.projection.ProjectionDocumentManager;
 import org.eclipse.ltk.core.refactoring.DocumentChange;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
-import org.eclipse.text.edits.TextEditGroup;
-import org.eclipse.text.edits.TextEditVisitor;
 import org.eclipse.text.edits.UndoEdit;
 
 /**
@@ -59,7 +48,6 @@ import org.eclipse.text.edits.UndoEdit;
  * @author mirko
  *
  */
-@SuppressWarnings("deprecation")
 public final class RewriteCompilationUnit implements ICompilationUnit {
 
 	/**
@@ -260,7 +248,7 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	 * @see ASTRewrite#replace(ASTNode, ASTNode,
 	 *      org.eclipse.text.edits.TextEditGroup)
 	 */
-	public void replace(ASTNode node, ASTNode replacement) {
+	public synchronized void replace(ASTNode node, ASTNode replacement) {
 		writer().replace(node, replacement, null);
 	}
 
@@ -277,7 +265,7 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	 * 
 	 * @see ImportRewrite#addImport(String)
 	 */
-	public void addImport(String qualifiedTypeName) {
+	public synchronized void addImport(String qualifiedTypeName) {
 		imports().addImport(qualifiedTypeName);
 	}
 
@@ -293,7 +281,7 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	 * 
 	 * @see ImportRewrite#removeImport(String)
 	 */
-	public void removeImport(String qualifiedTypeName) {
+	public synchronized void removeImport(String qualifiedTypeName) {
 		imports().removeImport(qualifiedTypeName);
 	}
 
@@ -314,19 +302,19 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	 * 
 	 * @see ASTRewrite#getListRewrite(ASTNode, ChildListPropertyDescriptor)
 	 */
-	public ListRewrite getListRewrite(ASTNode node, ChildListPropertyDescriptor property) {
+	public synchronized ListRewrite getListRewrite(ASTNode node, ChildListPropertyDescriptor property) {
 		return writer().getListRewrite(node, property);
 	}
 
 	@SuppressWarnings("unchecked")
-	public <V extends ASTNode> V copyNode(V node) {
+	public synchronized <V extends ASTNode> V copyNode(V node) {
 		if (node.getParent() == null)
 			return node;
 		
 		return (V) writer().createCopyTarget(node);
 	}
 
-	public void remove(ASTNode node) {
+	public synchronized void remove(ASTNode node) {
 		writer().remove(node, null);
 	}
 
@@ -364,13 +352,6 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 			
 			change.setEdit(root);
 			
-			//			// Save the changes to disk
-//			IBuffer buffer = unit.getBuffer();
-//			buffer.setContents(document.get());
-//			// TODO: Fix this functionality if there is a test run.
-//			// if ( !RefactoringApp.isRunningForTests() )
-//			buffer.save(null, false);
-
 			return Optional.of(change);
 		}
 
@@ -568,13 +549,13 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 
 	@Override
 	@Deprecated
-	public void codeComplete(int offset, ICodeCompletionRequestor requestor) throws JavaModelException {
+	public void codeComplete(int offset, org.eclipse.jdt.core.ICodeCompletionRequestor requestor) throws JavaModelException {
 		unit.codeComplete(offset, requestor);
 	}
 
 	@Override
 	@Deprecated
-	public void codeComplete(int offset, ICompletionRequestor requestor) throws JavaModelException {
+	public void codeComplete(int offset, org.eclipse.jdt.core.ICompletionRequestor requestor) throws JavaModelException {
 		unit.codeComplete(offset, requestor);
 
 	}
@@ -594,7 +575,7 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 
 	@Override
 	@Deprecated
-	public void codeComplete(int offset, ICompletionRequestor requestor, WorkingCopyOwner owner)
+	public void codeComplete(int offset, org.eclipse.jdt.core.ICompletionRequestor requestor, WorkingCopyOwner owner)
 			throws JavaModelException {
 		unit.codeComplete(offset, requestor, owner);
 
@@ -638,7 +619,7 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 
 	@Override
 	@Deprecated
-	public IJavaElement findSharedWorkingCopy(IBufferFactory bufferFactory) {
+	public IJavaElement findSharedWorkingCopy(org.eclipse.jdt.core.IBufferFactory bufferFactory) {
 		return unit.findSharedWorkingCopy(bufferFactory);
 	}
 
@@ -656,7 +637,7 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 
 	@Override
 	@Deprecated
-	public IJavaElement getSharedWorkingCopy(IProgressMonitor monitor, IBufferFactory factory,
+	public IJavaElement getSharedWorkingCopy(IProgressMonitor monitor, org.eclipse.jdt.core.IBufferFactory factory,
 			IProblemRequestor problemRequestor) throws JavaModelException {
 		return unit.getSharedWorkingCopy(monitor, factory, problemRequestor);
 	}
@@ -669,7 +650,7 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 
 	@Override
 	@Deprecated
-	public IJavaElement getWorkingCopy(IProgressMonitor monitor, IBufferFactory factory,
+	public IJavaElement getWorkingCopy(IProgressMonitor monitor, org.eclipse.jdt.core.IBufferFactory factory,
 			IProblemRequestor problemRequestor) throws JavaModelException {
 		return unit.getWorkingCopy(monitor, factory, problemRequestor);
 	}

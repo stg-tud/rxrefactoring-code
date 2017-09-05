@@ -4,7 +4,7 @@
     <extension
             point="de.tudarmstadt.rxrefactoring.extensionpoint">
         <client
-                class="de.tudarmstadt.rxrefactoring.ext.akkafuture.AkkaFutureRefactoring">
+                class="de.tudarmstadt.rxrefactoring.ext.akkafuture.AkkaFutureRefactoringExtension">
         </client>
     </extension>
 

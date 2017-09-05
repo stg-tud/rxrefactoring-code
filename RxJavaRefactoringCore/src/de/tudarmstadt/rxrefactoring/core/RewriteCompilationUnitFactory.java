@@ -14,12 +14,12 @@ public class RewriteCompilationUnitFactory {
 
 	public RewriteCompilationUnit from(ICompilationUnit unit) {
 		initializeParser();
+		parser.setKind(ASTParser.K_COMPILATION_UNIT);
 		parser.setSource(unit);
 		return new RewriteCompilationUnit(unit, parser.createAST(null));
 	}
 
 	private void initializeParser() {
-		// parser.setKind(ASTParser.K_STATEMENTS);
 		parser.setResolveBindings(true);
 	}
 

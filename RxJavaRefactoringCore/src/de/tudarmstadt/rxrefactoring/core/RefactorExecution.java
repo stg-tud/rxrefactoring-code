@@ -116,7 +116,7 @@ public final class RefactorExecution implements Runnable {
 //				Shell shell = Display.getCurrent().getActiveShell();
 
 				// Gathers information about the refactoring and presents it to the user.
-				RefactorSummary summary = new RefactorSummary();
+				RefactorSummary summary = new RefactorSummary(extension.getName());
 				
 //				String description = extension.getDescription();
 //				Objects.requireNonNull(description, "The description of the refactoring may not be null.");
@@ -160,6 +160,8 @@ public final class RefactorExecution implements Runnable {
 							projectSummary.reportStatus(ProjectStatus.SKIPPED);
 							Log.info(getClass(), "Skipping project: " + project.getName());
 						}
+					} catch (InterruptedException e) {
+						throw new OperationCanceledException();
 					} catch (Exception e) {
 						projectSummary.reportStatus(ProjectStatus.ERROR);
 						Log.handleException(getClass(), "refactoring of " + project.getName() + " ###", e);
@@ -197,11 +199,8 @@ public final class RefactorExecution implements Runnable {
 			op.run(shell, "This is an dialog title!");
 		} catch (InterruptedException e) {
 			//operation was cancelled 
-		}
-		
-	}
-	
-	
+		}		
+	}	
 	
 
 	// TODO: What about exceptions?
@@ -334,14 +333,14 @@ public final class RefactorExecution implements Runnable {
 	}
 
 	private void doRefactorProject(ProjectUnits units, CompositeChange changes, ProjectSummary projectSummary)
-			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
+			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException, InterruptedException {
 
 		// Produce the worker tree
 		WorkerTree workerTree = new WorkerTree(units, projectSummary);
 		extension.addWorkersTo(workerTree);
 
 		// The workers add their changes to the bundled compilation units
-		workerTree.run();
+		workerTree.run(extension.createExecutorService());
 
 		// The changes of the compilation units are applied
 		Log.info(getClass(), "Write changes...");

@@ -7,11 +7,11 @@ import de.tudarmstadt.rxrefactoring.ext.cfg.workers.CFGCollector;
 /**
  * Future extension
  */
-public class CFGRefactoring implements RefactorExtension {
+public class CFGExtension implements RefactorExtension {
 	
 	@Override
 	public String getDescription() {
-		return "Generating CFG...";
+		return "Generates the control flow graphs for each method.";
 	}
 
 	@Override

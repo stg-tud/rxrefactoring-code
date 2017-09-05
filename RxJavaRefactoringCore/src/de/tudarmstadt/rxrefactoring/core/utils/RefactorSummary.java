@@ -18,13 +18,16 @@ import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
 public class RefactorSummary {
 
 	private final Set<ProjectSummary> projects;
+	private final String name;
+	
 
 	// fields for storing the start and end time of the refactoring
 	private long startTime;
 	private long finishTime;
 
-	public RefactorSummary() {
+	public RefactorSummary(String name) {
 		this.projects = Sets.newHashSet();
+		this.name = name;
 	}
 
 	public ProjectSummary reportProject(IProject project) {
@@ -77,15 +80,20 @@ public class RefactorSummary {
 	@Override
 	public String toString() {
 
-		String result = ">>> Summary" + "\n" + fromPadding(1) + "Duration: " + getDurationAsString() + "\n"
-				+ fromPadding(1) + "Number of projects: " + getProjectCountAsString();
+		String result = ">>> Summary: " + name;
 
 		for (ProjectSummary project : projects) {
-			result += "\n" + project.toString(1);
+			result += "\n" + "\n" + project.toString(1);
 		}
 
-		result += "\n" + fromPadding(1) + ">>> Workspace Total:" + WorkerSummary.mapToString(getTotal(), 2);
+		Map<String,CountEntry> total = getTotal();
+		if (!total.isEmpty()) {
+			result += "\n" + "\n" + fromPadding(1) + ">>> Workspace Total:" + WorkerSummary.mapToString(getTotal(), 2);
+		}
 
+		result += "\n" + "\n" + fromPadding(1) + "Duration: " + getDurationAsString() + "\n"
+		+ fromPadding(1) + "Number of projects: " + getProjectCountAsString();
+		
 		result += "\n" + "<<<";
 		return result;
 	}
@@ -149,15 +157,19 @@ public class RefactorSummary {
 		public String toString(int padding) {
 			String pad = fromPadding(padding);
 
-			String result = pad + ">>> Project: " + project.getName() + "\n" + fromPadding(padding + 1) + "Status: "
-					+ status;
+			String result = pad + ">>> Project[" + status +"]: " + project.getName();
 
 			for (WorkerSummary worker : workers) {
 				result += "\n" + worker.toString(padding + 1);
 			}
 
-			result += "\n" + fromPadding(padding + 1) + ">>> Project Total:"
-					+ WorkerSummary.mapToString(getTotal(), padding + 2);
+			
+			Map<String, CountEntry> total = getTotal();
+			if (!total.isEmpty()) {
+				result += "\n" + "\n" + fromPadding(padding + 1) + ">>> Project Total:"
+						+ WorkerSummary.mapToString(getTotal(), padding + 2);
+			}
+			
 
 			return result;
 		}
@@ -169,13 +181,13 @@ public class RefactorSummary {
 
 	public static class WorkerSummary {
 
-		private final IWorker<?, ?> worker;
+		private final String workerName;
 
 		private WorkerStatus status;
 		private final Map<String, CountEntry> entries;
 
 		WorkerSummary(IWorker<?, ?> worker) {
-			this.worker = worker;
+			this.workerName = worker == null ? "NO-WORKER" : worker.getName();
 
 			this.status = WorkerStatus.UNDEFINED;
 			this.entries = Maps.newHashMap();
@@ -205,7 +217,7 @@ public class RefactorSummary {
 			return entries.containsKey(key);
 		}
 
-		public void setStatus(WorkerStatus status) {
+		public synchronized void setStatus(WorkerStatus status) {
 			Objects.requireNonNull(status);
 			this.status = status;
 		}
@@ -231,8 +243,7 @@ public class RefactorSummary {
 		public String toString(int padding) {
 
 			String pad = fromPadding(padding);
-			String result = pad + ">>> Worker: " + worker.getName() + "\n" + fromPadding(padding + 1) + "Status: "
-					+ status;
+			String result = pad + ">>> Worker[" + status + "]: " + workerName;
 
 			result += mapToString(entries, padding + 1);
 

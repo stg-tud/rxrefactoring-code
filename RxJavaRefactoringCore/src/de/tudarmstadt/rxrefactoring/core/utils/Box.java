@@ -32,6 +32,11 @@ public class Box<T> implements Iterable<T> {
 	}
 	
 	@Override
+	public String toString() {
+		return "Box[" + value + "]";
+	}
+	
+	@Override
 	public Iterator<T> iterator() {
 		return new Iterator<T>() {
 

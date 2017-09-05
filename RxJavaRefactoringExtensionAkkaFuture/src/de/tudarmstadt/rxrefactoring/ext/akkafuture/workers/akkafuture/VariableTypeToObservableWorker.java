@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.future;
+package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ParameterizedType;

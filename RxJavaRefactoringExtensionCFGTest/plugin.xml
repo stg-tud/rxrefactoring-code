@@ -4,7 +4,7 @@
     <extension
             point="de.tudarmstadt.rxrefactoring.extensionpoint">
         <client
-                class="de.tudarmstadt.rxrefactoring.ext.cfg.CFGRefactoring">
+                class="de.tudarmstadt.rxrefactoring.ext.cfg.CFGExtension">
         </client>
     </extension>
 

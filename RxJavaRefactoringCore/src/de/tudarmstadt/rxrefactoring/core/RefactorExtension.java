@@ -31,7 +31,7 @@ public interface RefactorExtension {
 	 * a worker can depend on the result of another worker.
 	 * 
 	 * @param workerTree
-	 *            A worker tree where the workers should be added to.
+	 *            A non-null worker tree where the workers should be added to.
 	 */
 	public void addWorkersTo(WorkerTree workerTree);
 
@@ -65,8 +65,8 @@ public interface RefactorExtension {
 	}
 
 	/**
-	 * Defines a thread pool that is used for parallel computations such as parsing
-	 * the source files.
+	 * Defines a thread pool that is used for parallel computations, i.e. parsing
+	 * the source files and building the ASTs as well as executing the workers.
 	 * 
 	 * @return A non-null executor service.
 	 */

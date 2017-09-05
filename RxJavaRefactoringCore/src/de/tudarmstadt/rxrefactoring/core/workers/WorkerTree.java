@@ -3,8 +3,15 @@ package de.tudarmstadt.rxrefactoring.core.workers;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import de.tudarmstadt.rxrefactoring.core.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.logging.Log;
@@ -30,36 +37,56 @@ public class WorkerTree {
 		this.summary = summary;
 	}
 
+	/**
+	 * A node in the worker tree containing the worker.
+	 * 
+	 * @author mirko
+	 *
+	 * @param <Input> The input to the worker.
+ 	 * @param <Output> The output to the worker.
+	 */
 	public class WorkerNode<Input, Output> {
-		private final IWorker<Input, Output> worker;
+		private final String workerName;
 		private final WorkerNode<?, Input> parent;
-
+		
+		private IWorker<Input, Output> worker;
+		
+		
 		private boolean hasResult = false;
 		private Output result;
 
 		WorkerNode(IWorker<Input, Output> worker, WorkerNode<?, Input> parent) {
 			this.worker = worker;
 			this.parent = parent;
+			this.workerName = worker.getName();
 		}
 
+		public boolean hasResult() {
+			return hasResult;
+		}
+		
 		Output getResult() {
-			if (!hasResult)
+			if (!hasResult())
 				throw new IllegalStateException("You have to run this worker node before retrieving its result.");
+			
 			return result;
-		}
-
-		void run(WorkerSummary workerSummary) throws Exception {
-			if (!hasResult) {
-				Input in = parent == null ? null : parent.getResult();
-				// TODO: Pass the correct summary.
-				result = worker.refactor(units, in, workerSummary);
-				hasResult = true;
-			}
 		}
 
 		@Override
 		public String toString() {
-			return String.format("WorkerNode(worker = %s, parent = %s)", worker, parent);
+			return String.format("WorkerNode(worker = %s, parent = %s)", workerName, parent == null ? "null" : parent.workerName);
+		}
+
+		
+		public Output run(WorkerSummary workerSummary) throws Exception {
+			if (!hasResult()) {
+				Input in = parent == null ? null : parent.getResult();
+				result = worker.refactor(units, in, workerSummary);
+				hasResult = true;
+				//Dereference the worker to allow garbage collection 
+				worker = null;				
+			}
+			return result;
 		}
 	}
 
@@ -96,13 +123,18 @@ public class WorkerTree {
 		workers.add(node);
 		return node;
 	}
-
+	
+	public int size() {
+		return workers.size() + 1; //All workers plus the root worker
+	}
+	
 	/**
 	 * Executes the workers in this worker tree. <br>
 	 * <br>
 	 * This method should not be used by clients.
 	 */
-	public void run() {
+	@Deprecated
+	public void runOnSameThread() {
 
 		Deque<WorkerNode<?, ?>> stack = new LinkedList<>();
 		stack.add(root);
@@ -110,12 +142,11 @@ public class WorkerTree {
 		while (!stack.isEmpty()) {
 			WorkerNode<?, ?> current = stack.pop();
 
-			WorkerSummary workerSummary;
-			if (current == root) {
-				workerSummary = WorkerSummary.createNullSummary();
-			} else {
-				workerSummary = summary.reportWorker(current.worker);
-			}
+			WorkerSummary workerSummary = 
+					current == root ?
+							WorkerSummary.createNullSummary() :
+								summary.reportWorker(current.worker);	
+			
 
 			Log.info(getClass(), "Run worker: " + current.worker.getName());
 
@@ -134,6 +165,77 @@ public class WorkerTree {
 				Log.handleException(getClass(), "execution of " + current.worker.getName(), e);
 			}
 		}
+	}
+	
+	/**
+	 * Defines the environment in which a refactoring can be executed.
+	 * @author mirko
+	 *
+	 */
+	private class WorkerTreeExecution {
+		private final ListeningExecutorService executor;
+		private final CountDownLatch latch;
+		
+		public WorkerTreeExecution(ExecutorService executor) {
+			this.executor = MoreExecutors.listeningDecorator(executor);
+			latch = new CountDownLatch(size());
+		}
+		
+		/**
+		 * Starts the execution of a worker node and all its
+		 * child nodes (recursively).
+		 * 
+		 * @param workerNode The node to execute.
+		 * 
+		 * @param workerSummary The summary to use for this worker node.
+		 */
+		public void execute(final WorkerNode<?,?> workerNode, final WorkerSummary workerSummary) {	
+			Log.info(WorkerTree.class, "Start execution: " + workerNode);
+			Futures.addCallback(
+					executor.submit(() -> workerNode.run(workerSummary)), 
+					new FutureCallback<Object>() {
+						@Override
+						public void onFailure(Throwable arg0) {
+							workerSummary.setStatus(WorkerStatus.ERROR);
+							
+							Log.error(WorkerTree.class, "An error occured while executing worker: " + workerNode.workerName, arg0);							
+						}
+						@Override
+						public void onSuccess(Object arg0) {
+							workerSummary.setStatus(WorkerStatus.COMPLETED);
+							
+							for (WorkerNode<?, ?> node : workers) {
+								if (node.parent == workerNode)
+									execute(node, summary.reportWorker(node.worker));
+							}
+							
+							latch.countDown();
+							Log.info(WorkerTree.class, "Latch = " + latch.toString());
+						}
+					});
+		}
+		
+		/**
+		 * Wait until the execution of the worker node and all its
+		 * child nodes has been finished.
+		 * 
+		 * @throws InterruptedException if the execution is interrupted
+		 * externally.
+		 */
+		public void waitFinished() throws InterruptedException {			
+			latch.await();
+			executor.shutdown();
+			executor.awaitTermination(15, TimeUnit.DAYS);			
+		}
+			
+	}
+	
+	
+	public void run(ExecutorService executor) throws InterruptedException {				
+		WorkerTreeExecution execution = new WorkerTreeExecution(executor);
+		execution.execute(root, WorkerSummary.createNullSummary());		
+		execution.waitFinished();
+		
 	}
 
 }

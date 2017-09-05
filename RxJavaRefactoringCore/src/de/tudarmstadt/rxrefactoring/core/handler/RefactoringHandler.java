@@ -19,7 +19,7 @@ public abstract class RefactoringHandler extends AbstractHandler {
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 
-		RefactorExecution app = new RefactorExecution(new DefaultUI(), createRefactoring());
+		RefactorExecution app = new RefactorExecution(new DefaultUI(), createExtension());
 		app.run();
 
 		return null;
@@ -36,5 +36,5 @@ public abstract class RefactoringHandler extends AbstractHandler {
 	 * 
 	 * @return A non-null refactoring.
 	 */
-	public abstract RefactorExtension createRefactoring();
+	public abstract RefactorExtension createExtension();
 }

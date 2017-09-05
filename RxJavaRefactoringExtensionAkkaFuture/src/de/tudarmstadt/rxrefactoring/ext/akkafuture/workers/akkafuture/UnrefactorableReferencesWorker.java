@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.future;
+package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture;
 
 import java.util.List;
 import java.util.Set;
