@@ -7,7 +7,7 @@ import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
 public interface IWorker<Input, Output> {
 
 	default public String getName() {
-		return getClass().getName();
+		return getClass().getSimpleName();
 	}
 
 	/**

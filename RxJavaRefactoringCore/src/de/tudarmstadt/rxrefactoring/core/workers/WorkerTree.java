@@ -209,8 +209,8 @@ public class WorkerTree {
 									execute(node, summary.reportWorker(node.worker));
 							}
 							
-							latch.countDown();
-							Log.info(WorkerTree.class, "Latch = " + latch.toString());
+							latch.countDown();							
+							Log.info(WorkerTree.class, "Finished execution: " + workerNode + " (remaining: " + latch.getCount() + ")");
 						}
 					});
 		}

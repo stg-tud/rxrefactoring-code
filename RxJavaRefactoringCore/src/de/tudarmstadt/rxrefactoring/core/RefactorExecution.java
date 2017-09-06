@@ -135,48 +135,48 @@ public final class RefactorExecution implements Runnable {
 					try {
 						// Check whether the project is open and if it is a Java project
 						if (project.isOpen() && project.hasNature(JavaCore.NATURE_ID)) {
-							Log.info(getClass(), ">>> Refactor project: " + project.getName());
+							Log.info(RefactorExecution.class, ">>> Refactor project: " + project.getName());
 							// Reports the project as being refactored
 
 							IJavaProject javaProject = JavaCore.create(project);
 
 							// Adds the additional resource files to the project.
-							Log.info(getClass(), "Copy library resources...");
+							Log.info(RefactorExecution.class, "Copy library resources...");
 							addResourceFiles(project, javaProject);
 
 							// Finds all java files in the project and produces the according bundled unit.
-							Log.info(getClass(), "Parse compilation units...");
+							Log.info(RefactorExecution.class, "Parse compilation units...");
 							ProjectUnits units = parseCompilationUnits(javaProject);
 
 							// Performs the refactoring by applying the workers of the extension.
-							Log.info(getClass(), "Refactor units...");
+							Log.info(RefactorExecution.class, "Refactor units...");
 							doRefactorProject(units, changes, projectSummary);
 
 							// Reports a successful refactoring
 							projectSummary.reportStatus(ProjectStatus.COMPLETED);
-							Log.info(getClass(), "<<< Refactor project");
+							Log.info(RefactorExecution.class, "<<< Refactor project");
 
 						} else {
 							projectSummary.reportStatus(ProjectStatus.SKIPPED);
-							Log.info(getClass(), "Skipping project: " + project.getName());
+							Log.info(RefactorExecution.class, "Skipping project: " + project.getName());
 						}
 					} catch (InterruptedException e) {
 						throw new OperationCanceledException();
 					} catch (Exception e) {
 						projectSummary.reportStatus(ProjectStatus.ERROR);
-						Log.handleException(getClass(), "refactoring of " + project.getName() + " ###", e);
+						Log.handleException(RefactorExecution.class, "refactoring of " + project.getName() + " ###", e);
 					}
 
 					monitor.worked(1);
 				}
 
 				// Reports that the refactoring is finished.
-				Log.info(getClass(), "Finished.");
+				Log.info(RefactorExecution.class, "Finished.");
 				summary.reportFinished();
 				monitor.done();	
 					
 
-				Log.info(getClass(), "Print summary...\n" + summary.toString());	
+				Log.info(RefactorExecution.class, "Print summary...\n" + summary.toString());	
 				
 				return changes;				
 			}
@@ -199,9 +199,11 @@ public final class RefactorExecution implements Runnable {
 			op.run(shell, "This is an dialog title!");
 		} catch (InterruptedException e) {
 			//operation was cancelled 
+			Log.info(RefactorExecution.class, "Operation was cancelled.");
 		}		
-	}	
+	}
 	
+		
 
 	// TODO: What about exceptions?
 	private void addResourceFiles(IProject project, IJavaProject javaProject)
@@ -235,7 +237,7 @@ public final class RefactorExecution implements Runnable {
 
 		// Check if the destination does exist
 		if (!destDir.isDirectory() || !destDir.exists()) {
-			Log.info(getClass(),
+			Log.info(RefactorExecution.class,
 					"Destination directory has not been created. Do you have write access? Directory: " + destDir);
 			return;
 		}

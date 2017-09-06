@@ -43,8 +43,7 @@ public final class ProjectUnits implements Set<RewriteCompilationUnit> {
 		
 		
 		for (RewriteCompilationUnit unit : units) {
-			unit.getChangedDocument()
-			.ifPresent(doc -> {
+			unit.getChangedDocument().ifPresent(doc -> {
 				changes.add(doc);
 			});
 		}

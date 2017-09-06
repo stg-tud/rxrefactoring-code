@@ -5,7 +5,7 @@ import java.util.EnumSet;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 
-import de.tudarmstadt.rxrefactoring.core.Refactoring;
+import de.tudarmstadt.rxrefactoring.core.RefactorExtension;
 import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree;
 import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree.WorkerNode;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.FutureCollector;
@@ -13,7 +13,7 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.FutureCollector;
 /**
  * Future extension
  */
-public class JavaFutureRefactoring implements Refactoring {
+public class JavaFutureRefactoring implements RefactorExtension {
 	
 	private EnumSet<RefactoringOptions> options;
 
@@ -32,7 +32,10 @@ public class JavaFutureRefactoring implements Refactoring {
 		return new Path("./libs/");
 	}
 
-	
+	@Override
+	public String getName() {
+		return "Future and FutureTask to Observable";
+	}
 
 	@Override
 	public String getDescription() {
@@ -97,4 +100,7 @@ public class JavaFutureRefactoring implements Refactoring {
 	public String getPlugInId() {
 		return "de.tudarmstadt.rxrefactoring.ext.javafuture";
 	}
+
+
+	
 }

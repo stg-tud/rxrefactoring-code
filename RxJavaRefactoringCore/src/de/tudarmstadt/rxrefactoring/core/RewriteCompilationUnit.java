@@ -36,7 +36,9 @@ import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.ltk.core.refactoring.DocumentChange;
+import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
@@ -333,9 +335,10 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 						
 //			// Initialize the document with the old source code
 			
-			Document document = new Document(getSource());		
-			DocumentChange change = new DocumentChange(unit.getElementName(), document);
-				
+			Document document = new Document(getSource());					
+			DocumentChange change = new RewriteChange(unit.getElementName(), document);
+						
+			
 			MultiTextEdit root = new MultiTextEdit(); 
 			
 			// Apply changes to the classes AST if there are any
@@ -356,6 +359,35 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 		}
 
 		return Optional.empty();
+	}
+	
+	private class RewriteChange extends DocumentChange {
+
+		public RewriteChange(String name, IDocument document) {
+			super(name, document);			
+		}
+		
+		@Override
+		protected UndoEdit performEdits(final IDocument document) throws BadLocationException, MalformedTreeException {
+			//TODO: Why is the original function not working? The refactoring does not change the files.
+			
+			UndoEdit undo = super.performEdits(document);
+			//undo.apply(document, TextEdit.NONE);
+			
+			//TODO: Replace the following lines because undo functionality is not preserved...
+			//UndoEdit undo = this.getEdit().apply(document);			
+			
+			try {
+				IBuffer buffer = unit.getBuffer();			
+				buffer.setContents(document.get());			
+				buffer.save(null, false);			
+				return undo;
+			} catch (JavaModelException e) {
+				e.printStackTrace();
+				throw new BadLocationException();				
+			}
+		}
+		
 	}
 
 	@Override
