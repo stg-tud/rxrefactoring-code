@@ -40,8 +40,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.codegen.IdManager;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.IdManager;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureTypeWrapper;
 
 public class AkkaFutureASTUtils {

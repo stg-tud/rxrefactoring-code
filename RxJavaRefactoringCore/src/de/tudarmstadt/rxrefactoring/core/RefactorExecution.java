@@ -164,7 +164,7 @@ public final class RefactorExecution implements Runnable {
 						throw new OperationCanceledException();
 					} catch (Exception e) {
 						projectSummary.reportStatus(ProjectStatus.ERROR);
-						Log.handleException(RefactorExecution.class, "refactoring of " + project.getName() + " ###", e);
+						Log.error(RefactorExecution.class, "Error during refactoring of " +project.getName() , e);
 					}
 
 					monitor.worked(1);

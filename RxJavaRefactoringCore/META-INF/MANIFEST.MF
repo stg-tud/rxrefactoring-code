@@ -27,10 +27,11 @@ Export-Package: de.tudarmstadt.rxrefactoring.core,
  de.tudarmstadt.rxrefactoring.core.analysis.cfg,
  de.tudarmstadt.rxrefactoring.core.analysis.example,
  de.tudarmstadt.rxrefactoring.core.codegen,
+ de.tudarmstadt.rxrefactoring.core.codegen.util,
  de.tudarmstadt.rxrefactoring.core.handler,
  de.tudarmstadt.rxrefactoring.core.logging,
  de.tudarmstadt.rxrefactoring.core.utils,
  de.tudarmstadt.rxrefactoring.core.workers
 Import-Package: com.google.common.base,
- com.google.common.collect
-
+ com.google.common.collect,
+ org.eclipse.jdt.annotation

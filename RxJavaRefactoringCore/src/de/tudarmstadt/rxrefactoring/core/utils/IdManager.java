@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core.codegen;
+package de.tudarmstadt.rxrefactoring.core.utils;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

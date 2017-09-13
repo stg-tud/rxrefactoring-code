@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.eclipse.core.filebuffers.FileBuffers;
+import org.eclipse.core.filebuffers.ITextFileBuffer;
+import org.eclipse.core.filebuffers.ITextFileBufferManager;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -39,6 +42,7 @@ import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.ltk.core.refactoring.DocumentChange;
 import org.eclipse.ltk.core.refactoring.TextFileChange;
+import org.eclipse.ltk.internal.core.refactoring.Lock;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
@@ -336,8 +340,6 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 //			// Initialize the document with the old source code
 			
 			Document document = new Document(getSource());					
-			DocumentChange change = new RewriteChange(unit.getElementName(), document);
-						
 			
 			MultiTextEdit root = new MultiTextEdit(); 
 			
@@ -353,8 +355,8 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 				root.addChild(edit);
 			}		
 			
-			change.setEdit(root);
-			
+			DocumentChange change = new RewriteChange(unit.getElementName(), document);
+			change.setEdit(root);			
 			return Optional.of(change);
 		}
 
@@ -371,13 +373,57 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 		protected UndoEdit performEdits(final IDocument document) throws BadLocationException, MalformedTreeException {
 			//TODO: Why is the original function not working? The refactoring does not change the files.
 			
+			//Document has changed 
 			UndoEdit undo = super.performEdits(document);
-			//undo.apply(document, TextEdit.NONE);
 			
-			//TODO: Replace the following lines because undo functionality is not preserved...
-			//UndoEdit undo = this.getEdit().apply(document);			
+			
+//			ITextFileBufferManager fileBufferManager= FileBuffers.getTextFileBufferManager();
+//			
+//			ITextFileBuffer fileBuffer= fileBufferManager.getTextFileBuffer(document);
+//			if (fileBuffer == null || ! fileBuffer.isSynchronizationContextRequested()) {
+//				return super.performEdits(document);
+//			}
+//			
+//			/** The lock for waiting for computation in the UI thread to complete. */
+//			final Lock completionLock= new Lock();
+//			final UndoEdit[] result= new UndoEdit[1];
+//			final BadLocationException[] exception= new BadLocationException[1];
+//			Runnable runnable= new Runnable() {
+//				@Override
+//				public void run() {
+//					synchronized (completionLock) {
+//						try {
+//							result[0]= super.performEdits(document);
+//						} catch (BadLocationException e) {
+//							exception[0]= e;
+//						} finally {
+//							completionLock.fDone= true;
+//							completionLock.notifyAll();
+//						}
+//					}
+//				}
+//			};
+//			
+//			synchronized (completionLock) {
+//				fileBufferManager.execute(runnable);
+//				while (! completionLock.fDone) {
+//					try {
+//						completionLock.wait(500);
+//					} catch (InterruptedException x) {
+//					}
+//				}
+//			}
+//			
+//			if (exception[0] != null) {
+//				throw exception[0];
+//			}
+//			
+//			UndoEdit undo = result[0];
+							
+			//UndoEdit undo = this.getEdit().apply(document);
 			
 			try {
+				//TODO: Replace the following lines because undo functionality is not preserved...
 				IBuffer buffer = unit.getBuffer();			
 				buffer.setContents(document.get());			
 				buffer.save(null, false);			

@@ -308,30 +308,30 @@ public class RxSingleUnitWriter {
 		replaceNode(invocation, node);
 	}
 
-	public synchronized void replaceMethodInvocation(String caller, String method1, String method2,
-			MethodInvocation oldNode) {
-		AST ast = astRewriter.getAST();
-
-		MethodInvocation singleMethod = ast.newMethodInvocation();
-		singleMethod.setName(ast.newSimpleName(method2));
-		MethodInvocation toBlockingMethod = ast.newMethodInvocation();
-		toBlockingMethod.setName(ast.newSimpleName(method1));
-
-		Expression old = oldNode.getExpression();
-
-		if (old instanceof ArrayAccess) {
-			ArrayAccess clone = null;// (ArrayAccess)ASTUtil.clone(old);
-			clone.setArray(ast.newSimpleName(caller));
-
-			toBlockingMethod.setExpression(clone);
-		} else {
-			toBlockingMethod.setExpression(ast.newSimpleName(caller));
-		}
-
-		singleMethod.setExpression(toBlockingMethod);
-
-		replaceNode(singleMethod, oldNode);
-	}
+//	public synchronized void replaceMethodInvocation(String caller, String method1, String method2,
+//			MethodInvocation oldNode) {
+//		AST ast = astRewriter.getAST();
+//
+//		MethodInvocation singleMethod = ast.newMethodInvocation();
+//		singleMethod.setName(ast.newSimpleName(method2));
+//		MethodInvocation toBlockingMethod = ast.newMethodInvocation();
+//		toBlockingMethod.setName(ast.newSimpleName(method1));
+//
+//		Expression old = oldNode.getExpression();
+//
+//		if (old instanceof ArrayAccess) {
+//			ArrayAccess clone = null;// (ArrayAccess)ASTUtil.clone(old);
+//			clone.setArray(ast.newSimpleName(caller));
+//
+//			toBlockingMethod.setExpression(clone);
+//		} else {
+//			toBlockingMethod.setExpression(ast.newSimpleName(caller));
+//		}
+//
+//		singleMethod.setExpression(toBlockingMethod);
+//
+//		replaceNode(singleMethod, oldNode);
+//	}
 
 	/**
 	 * Used by {@link RxMultipleUnitsWriter}

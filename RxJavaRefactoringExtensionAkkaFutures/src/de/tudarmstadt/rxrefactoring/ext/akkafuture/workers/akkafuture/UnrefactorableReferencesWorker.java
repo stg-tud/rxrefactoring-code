@@ -22,8 +22,8 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.codegen.IdManager;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.IdManager;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractAkkaWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;

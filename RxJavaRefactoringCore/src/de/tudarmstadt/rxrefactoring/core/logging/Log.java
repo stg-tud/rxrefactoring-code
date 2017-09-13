@@ -88,7 +88,8 @@ public final class Log {
 	public static void errorInClient(Class<?> cls, Throwable throwable) {
 		error(PLUGIN_INFO, cls, "An error occured:", throwable);
 	}
-
+	
+	@Deprecated
 	public static void handleException(Class<?> cls, String when, Throwable throwable) {
 		info(cls, "### ERROR DURING " + when + " ###");
 		throwable.printStackTrace(INFO);
@@ -118,6 +119,7 @@ public final class Log {
 	 * @param text
 	 *            message text
 	 */
+	@Deprecated
 	public static void showInConsole(Object currentClass, Object text) {
 		MessageConsole myConsole = findConsole(CONSOLE_NAME);
 		MessageConsoleStream out = myConsole.newMessageStream();
