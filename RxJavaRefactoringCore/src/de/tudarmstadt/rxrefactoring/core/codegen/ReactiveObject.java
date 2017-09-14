@@ -31,19 +31,22 @@ public class ReactiveObject {
 	
 	
 	//lists for inputs and outputs
-	private final Map<Object, ReactiveInput> inputs;
+	private final @NonNull Map<Object, ReactiveInput> inputs;
 	
-	private final Map<Object, ReactiveOutput> outputs;
+	private final @NonNull Map<Object, ReactiveOutput> outputs;
 	
-	private final Map<Object, ReactiveComputation> computations;
+	private final @NonNull Map<Object, ReactiveComputation> computations;
 	
-	private NodeSupplier<SimpleName> className;
+	private final @NonNull NodeSupplier<SimpleName> className;
 	
 	
-	public ReactiveObject() {
+	@SuppressWarnings("null")
+	public ReactiveObject(@NonNull NodeSupplier<SimpleName> className) {
 		inputs = Maps.newHashMap();
 		outputs = Maps.newHashMap();
 		computations = Maps.newHashMap();
+		
+		this.className = className;
 	}
 	
 	public void addInput(@NonNull Object identifier, @NonNull ReactiveInput input) {
@@ -54,41 +57,39 @@ public class ReactiveObject {
 		computations.put(identifier, computation);
 	}
 	
-	public void setClassName(NodeSupplier<SimpleName> className) {
-		Objects.requireNonNull(className);
-		this.className = className;
+	public void addOutput(@NonNull Object identifier, @NonNull ReactiveOutput output) {
+		outputs.put(identifier, output);
 	}
 	
-	public SimpleName buildClassName(AST ast) {
-		Objects.requireNonNull(ast);
-		Objects.requireNonNull(className);
-		return className.apply(ast);
+		
+	public @NonNull NodeSupplier<SimpleName> supplyClassName() {		
+		return className;
 	}
 
 	
 	
-	private MethodDeclaration buildConstructorDeclaration(AST ast) {
-		
-		MethodDeclaration result = ast.newMethodDeclaration();
-		result.setConstructor(true);
-		result.setName(className.apply(ast));
-		result.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
-		
-		Block resultBody = ast.newBlock();
-		result.setBody(resultBody);
-		
-		for (ReactiveComputation internal : computations.values()) {
-			SimpleName internalName = internal.buildName(ast);			
-			resultBody.statements().add(buildSubscribeInvoke(ast, internalName));
-		}
-		
-		for (ReactiveOutput output : outputs.values()) {
-			SimpleName outputName = output.buildName(ast);
-			resultBody.statements().add(buildSubscribeInvoke(ast, outputName));
-		}
-		
-		
-		return result;
+	private @NonNull NodeSupplier<MethodDeclaration> supplyConstructorDeclaration() {
+		return ast -> {
+			MethodDeclaration result = ast.newMethodDeclaration();
+			result.setConstructor(true);
+			result.setName(className.apply(ast));
+			result.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
+			
+			Block resultBody = ast.newBlock();
+			result.setBody(resultBody);
+			
+			for (ReactiveComputation internal : computations.values()) {
+				SimpleName internalName = internal.buildName(ast);			
+				resultBody.statements().add(supplySubscribeInvoke(internalName).apply(ast));
+			}
+			
+			for (ReactiveOutput output : outputs.values()) {
+				SimpleName outputName = output.supplyName().apply(ast);
+				resultBody.statements().add(supplySubscribeInvoke(outputName).apply(ast));
+			}
+						
+			return result;
+		};
 	}
 
 	/**
@@ -96,33 +97,41 @@ public class ReactiveObject {
 	 * @param ast The AST used for building. 
 	 * @param internalName The name of the expression of the invocation.
 	 */
-	private ExpressionStatement buildSubscribeInvoke(AST ast, SimpleName internalName) {
-		MethodInvocation invokeSubscribe = ast.newMethodInvocation();
-		invokeSubscribe.setName(ast.newSimpleName("subscribe"));
-		invokeSubscribe.setExpression(internalName);
-		
-		return ast.newExpressionStatement(invokeSubscribe);
+	private @NonNull NodeSupplier<ExpressionStatement> supplySubscribeInvoke(final SimpleName internalName) {
+		return ast -> {
+			MethodInvocation invokeSubscribe = ast.newMethodInvocation();
+			invokeSubscribe.setName(ast.newSimpleName("subscribe"));
+			invokeSubscribe.setExpression(internalName);
+			
+			return ast.newExpressionStatement(invokeSubscribe);
+		};
 		
 	}
 	
-	public TypeDeclaration buildTypeDeclaration(AST ast) {
-		Objects.requireNonNull(ast);
-		
-		TypeDeclaration reactiveType = ast.newTypeDeclaration();
-		reactiveType.setName(buildClassName(ast));
-		
-		reactiveType.bodyDeclarations().add(buildConstructorDeclaration(ast));
-		
-		for (ReactiveInput input : inputs.values()) {
-			input.addToTypeDeclaration(ast, reactiveType);
-		}
-		
-		for (ReactiveComputation computation : computations.values()) {
-			reactiveType.bodyDeclarations().add(
-					computation.buildFieldDeclaration(ast));
-		}
-		
-		return reactiveType;
+	public @NonNull NodeSupplier<TypeDeclaration> supplyTypeDeclaration() {
+		return ast -> {
+			Objects.requireNonNull(ast);
+			
+			TypeDeclaration reactiveType = ast.newTypeDeclaration();
+			reactiveType.setName(supplyClassName().apply(ast));
+			
+			reactiveType.bodyDeclarations().add(supplyConstructorDeclaration().apply(ast));
+			
+			for (ReactiveInput input : inputs.values()) {
+				input.addToTypeDeclaration(ast, reactiveType);
+			}
+			
+			for (ReactiveComputation computation : computations.values()) {
+				reactiveType.bodyDeclarations().add(
+						computation.buildFieldDeclaration(ast));
+			}
+			
+			for (ReactiveOutput output : outputs.values()) {
+				output.addToTypeDeclaration(ast, reactiveType);
+			}
+			
+			return reactiveType;
+		};
 	}
 	
 }

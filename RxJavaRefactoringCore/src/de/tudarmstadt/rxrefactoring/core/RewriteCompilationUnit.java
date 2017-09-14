@@ -13,6 +13,8 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.CompletionRequestor;
 import org.eclipse.jdt.core.IBuffer;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -59,12 +61,12 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	/**
 	 * The underlying compilation unit.
 	 */
-	private final ICompilationUnit unit;
+	private final @NonNull ICompilationUnit unit;
 
 	/**
 	 * The root node of the AST of the compilation unit.
 	 */
-	private final ASTNode rootNode;
+	private final @NonNull ASTNode rootNode;
 
 	/**
 	 * The AST rewriter to be used for this compilation unit.
@@ -94,7 +96,7 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	 *             if any argument is null.
 	 * 
 	 */
-	protected RewriteCompilationUnit(ICompilationUnit unit, ASTNode rootNode) {
+	protected RewriteCompilationUnit(@NonNull ICompilationUnit unit, @NonNull ASTNode rootNode) {
 		Objects.requireNonNull(unit);
 		Objects.requireNonNull(rootNode);
 
@@ -110,10 +112,8 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	 * 
 	 * @see ASTNode#accept(ASTVisitor)
 	 */
-	public void accept(ASTVisitor visitor) {
-		rootNode.accept(visitor);
-		
-		
+	public void accept(@NonNull ASTVisitor visitor) {
+		rootNode.accept(visitor);		
 	}
 
 	/**
@@ -122,11 +122,11 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	 * 
 	 * @return The root node of this compilation units AST. Cannot be null.
 	 */
-	public ASTNode getRoot() {
+	public @NonNull ASTNode getRoot() {
 		return rootNode;
 	}
 
-	public AST getAST() {
+	public @NonNull AST getAST() {
 		if (ast == null) {
 			ast = getRoot().getAST();
 		}
@@ -134,7 +134,7 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 		return ast;
 	}
 
-	public ASTRewrite writer() {
+	public @NonNull ASTRewrite writer() {
 		if (writer == null) {
 			writer = ASTRewrite.create(getAST());
 		}
@@ -142,7 +142,7 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 		return writer;
 	}
 
-	ImportRewrite imports() {
+	public @NonNull ImportRewrite imports() {
 		if (imports == null) {
 			try {
 				imports = ImportRewrite.create(unit, true);

@@ -3,11 +3,9 @@ package de.tudarmstadt.rxrefactoring.core.codegen.util;
 import static de.tudarmstadt.rxrefactoring.core.codegen.NodeSupplier.parameterizedTypeFrom;
 import static de.tudarmstadt.rxrefactoring.core.codegen.NodeSupplier.simpleType;
 
-import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.eclipse.jdt.annotation.NonNull;
-import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
@@ -48,9 +46,9 @@ public class ConsumerBuilder {
 	 * @return An expression of type {@link Consumer}.
 	 */
 	@SuppressWarnings("unchecked")
-	public NodeSupplier<ClassInstanceCreation> supplyAnonymousClass() {
+	public @NonNull NodeSupplier<ClassInstanceCreation> supplyAnonymousClass() {
 		
-		return ast -> {					
+		return ast -> {
 			//Define the call method
 			MethodDeclaration acceptMethod = ast.newMethodDeclaration();
 			acceptMethod.setName(ast.newSimpleName("accept"));

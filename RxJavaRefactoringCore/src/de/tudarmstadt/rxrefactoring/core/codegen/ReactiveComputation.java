@@ -53,7 +53,7 @@ public class ReactiveComputation extends AbstractReactiveValue {
 	
 	public @NonNull FieldDeclaration buildFieldDeclaration(@NonNull AST ast) {
 		//initializer = name;
-		Expression initializer = input.buildInternalName(ast);
+		Expression initializer = input.supplyInternalName().apply(ast);
 		
 		//If there is a scheduler...
 		//initializer.observeOn(scheduler)
@@ -81,7 +81,7 @@ public class ReactiveComputation extends AbstractReactiveValue {
 		variable.setInitializer(initializer);
 		
 		FieldDeclaration internalField = ast.newFieldDeclaration(variable);
-		internalField.setType(buildFlowableType(ast));
+		internalField.setType(supplyFlowableType().apply(ast));
 		internalField.modifiers().add(ast.newModifier(ModifierKeyword.PRIVATE_KEYWORD));
 		internalField.modifiers().add(ast.newModifier(ModifierKeyword.FINAL_KEYWORD));
 		

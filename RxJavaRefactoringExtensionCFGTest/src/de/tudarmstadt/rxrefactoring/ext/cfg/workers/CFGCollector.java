@@ -19,6 +19,7 @@ import de.tudarmstadt.rxrefactoring.core.analysis.example.VariableNameAnalysis;
 import de.tudarmstadt.rxrefactoring.core.codegen.ReactiveComputation;
 import de.tudarmstadt.rxrefactoring.core.codegen.ReactiveInput;
 import de.tudarmstadt.rxrefactoring.core.codegen.ReactiveObject;
+import de.tudarmstadt.rxrefactoring.core.codegen.ReactiveOutput;
 import de.tudarmstadt.rxrefactoring.core.codegen.util.ConsumerBuilder;
 import de.tudarmstadt.rxrefactoring.core.codegen.util.SchedulerBuilder;
 import de.tudarmstadt.rxrefactoring.core.logging.Log;
@@ -50,14 +51,15 @@ public class CFGCollector implements IWorker<Void, Void> {
 		
 		
 		
-		ReactiveObject builder = new ReactiveObject();
-		builder.setClassName(simpleName("ReactiveTest"));
-		
-		ReactiveInput reactiveInput = new ReactiveInput(simpleType("Integer"), simpleName("input"));		
-		reactiveInput.setScheduler(SchedulerBuilder.schedulersComputation());
+		ReactiveObject builder = new ReactiveObject(simpleName("ReactiveTest"));
+				
+		ReactiveInput reactiveInput = new ReactiveInput(simpleType("Integer"), simpleName("input"), SchedulerBuilder.schedulersComputation(), null);	
 		builder.addInput("input", reactiveInput);
 		
-		ConsumerBuilder consumer = new ConsumerBuilder(
+		ReactiveOutput reactiveOutput = new ReactiveOutput(simpleType("String"), simpleName("output"), null, null);
+		builder.addOutput("output", reactiveOutput);
+		
+		final ConsumerBuilder consumer = new ConsumerBuilder(
 				reactiveInput.type, 
 				simpleName("x"), 
 				ast -> {
@@ -82,7 +84,7 @@ public class CFGCollector implements IWorker<Void, Void> {
 			unit.getRoot().accept(new ASTVisitor() {
 				public boolean visit(TypeDeclaration node) {
 					ListRewrite l = unit.getListRewrite(node, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
-					l.insertFirst(builder.buildTypeDeclaration(unit.getAST()), null);
+					l.insertFirst(builder.supplyTypeDeclaration().apply(unit.getAST()), null);
 					return false;
 				}
 			});

@@ -7,6 +7,7 @@ import org.eclipse.jdt.core.dom.Type;
 
 public interface ReactiveValue {
 
-	public @NonNull Type buildType(@NonNull AST ast);
-	public @NonNull SimpleName buildName(@NonNull AST ast);
+	public @NonNull NodeSupplier<? extends Type> supplyType();
+	
+	public @NonNull NodeSupplier<SimpleName> supplyName();
 }

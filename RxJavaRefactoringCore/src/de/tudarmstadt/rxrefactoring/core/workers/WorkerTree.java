@@ -198,7 +198,8 @@ public class WorkerTree {
 						public void onFailure(Throwable arg0) {
 							workerSummary.setStatus(WorkerStatus.ERROR);
 							
-							Log.error(WorkerTree.class, "An error occured while executing worker: " + workerNode.workerName, arg0);							
+							Log.error(WorkerTree.class, "An error occured while executing worker: " + workerNode.workerName, arg0);		
+							latch.countDown();		
 						}
 						@Override
 						public void onSuccess(Object arg0) {
@@ -209,8 +210,9 @@ public class WorkerTree {
 									execute(node, summary.reportWorker(node.worker));
 							}
 							
-							latch.countDown();							
+												
 							Log.info(WorkerTree.class, "Finished execution: " + workerNode + " (remaining: " + latch.getCount() + ")");
+							latch.countDown();		
 						}
 					});
 		}

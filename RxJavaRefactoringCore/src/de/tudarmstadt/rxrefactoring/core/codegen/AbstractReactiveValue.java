@@ -1,8 +1,5 @@
 package de.tudarmstadt.rxrefactoring.core.codegen;
 
-import java.util.Objects;
-import java.util.function.Function;
-
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ParameterizedType;
@@ -25,17 +22,17 @@ class AbstractReactiveValue implements ReactiveValue {
 	}
 
 	@Override
-	public @NonNull Type buildType(@NonNull AST ast) {
-		return type.apply(ast);
+	public @NonNull NodeSupplier<? extends Type> supplyType() {
+		return type;
 	}
 
 	@Override
-	public @NonNull SimpleName buildName(@NonNull AST ast) {
-		return name.apply(ast);
+	public @NonNull NodeSupplier<SimpleName> supplyName() {
+		return name;
 	}
 	
-	public @NonNull ParameterizedType buildFlowableType(@NonNull AST ast) {
-		return flowableType.apply(ast);
+	public @NonNull NodeSupplier<ParameterizedType> supplyFlowableType() {
+		return flowableType;
 	}
 	
 	
