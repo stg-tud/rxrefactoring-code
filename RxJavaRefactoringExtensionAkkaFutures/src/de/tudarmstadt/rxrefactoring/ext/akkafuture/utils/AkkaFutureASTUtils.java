@@ -40,8 +40,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
-import de.tudarmstadt.rxrefactoring.core.utils.IdManager;
+import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.legacy.IdManager;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureTypeWrapper;
 
 public class AkkaFutureASTUtils {
@@ -165,7 +167,7 @@ public class AkkaFutureASTUtils {
 					ITypeBinding thisBinding = node.resolveTypeBinding().getErasure();
 					
 					ThisExpression thisExpr = ast.newThisExpression();
-					thisExpr.setQualifier(ast.newName(ASTUtils.typeFromBinding(ast, thisBinding).toString()));
+					thisExpr.setQualifier(ast.newName(Types.typeFromBinding(ast, thisBinding).toString()));
 					
 					unit.replace(node, thisExpr);
 				}
@@ -363,7 +365,7 @@ public class AkkaFutureASTUtils {
 				if (FutureTypeWrapper.isAkkaFuture(varType)) {
 					varStatement.setType(FutureTypeWrapper.create(varType).toObservableType(ast));
 				} else {
-					varStatement.setType(ASTUtils.typeFromBinding(ast, varType));
+					varStatement.setType(Types.typeFromBinding(ast, varType));
 				}				
 				varStatement.modifiers().add(ast.newModifier(ModifierKeyword.FINAL_KEYWORD));
 				
@@ -380,7 +382,7 @@ public class AkkaFutureASTUtils {
 	}
 	
 	public static boolean isParameter(Expression expr) {
-		MethodDeclaration t = ASTUtils.findParent(expr, MethodDeclaration.class);
+		MethodDeclaration t = ASTNodes.findParent(expr, MethodDeclaration.class).get();
 		if (Objects.isNull(t)) {			
 			return false;
 		}
@@ -403,7 +405,7 @@ public class AkkaFutureASTUtils {
 	
 	
 	public static boolean isField(Expression expr) {
-		TypeDeclaration t = ASTUtils.findParent(expr, TypeDeclaration.class);
+		TypeDeclaration t = ASTNodes.findParent(expr, TypeDeclaration.class).get();
 		if (Objects.isNull(t)) {			
 			return false;
 		}
@@ -461,7 +463,7 @@ public class AkkaFutureASTUtils {
 			}
 
 			private void processFieldExpression(Expression expr) {
-				TypeDeclaration t = ASTUtils.findParent(expr, TypeDeclaration.class);
+				TypeDeclaration t = ASTNodes.findParent(expr, TypeDeclaration.class).get();
 				if (Objects.isNull(t)) {					
 					return;
 				}

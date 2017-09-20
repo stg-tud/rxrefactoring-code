@@ -7,7 +7,7 @@ import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.Type;
 
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 
 public class FutureTypeWrapper {
 	
@@ -34,13 +34,13 @@ public class FutureTypeWrapper {
 	}
 	
 	public Type createType(AST ast) {
-		return ASTUtils.typeFromBinding(ast, futureType);
+		return Types.typeFromBinding(ast, futureType);
 		
 	}
 	
 	public Type toObservableType(AST ast) {
 		ParameterizedType type = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Observable")));
-		type.typeArguments().add(ASTUtils.typeFromBinding(ast, getTypeParameter(ast)));
+		type.typeArguments().add(Types.typeFromBinding(ast, getTypeParameter(ast)));
 		
 		return type;
 	}

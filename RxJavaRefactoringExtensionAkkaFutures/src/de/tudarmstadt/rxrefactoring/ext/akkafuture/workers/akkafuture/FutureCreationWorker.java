@@ -17,8 +17,10 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
-import de.tudarmstadt.rxrefactoring.core.utils.IdManager;
+import de.tudarmstadt.rxrefactoring.core.legacy.IdManager;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.Statements;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractAkkaWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
@@ -72,7 +74,7 @@ public class FutureCreationWorker extends AbstractAkkaWorker<AkkaFutureCollector
 		AST ast = unit.getAST();	
 		
 		ITypeBinding binding = expr.resolveTypeBinding();
-		Type futureType = ASTUtils.typeFromBinding(ast, FutureTypeWrapper.create(binding).getTypeParameter(ast)); //ASTUtils.typeFromBinding(ast, binding.getTypeArguments()[0]);	
+		Type futureType = Types.typeFromBinding(ast, FutureTypeWrapper.create(binding).getTypeParameter(ast)); //ASTUtils.typeFromBinding(ast, binding.getTypeArguments()[0]);	
 		
 		Statement referenceStatement = wrapper.getReferenceStatement();
 				
@@ -112,7 +114,7 @@ public class FutureCreationWorker extends AbstractAkkaWorker<AkkaFutureCollector
 		VariableDeclarationExpression varExpr = ast.newVariableDeclarationExpression(varFragment);
 		varExpr.setType(newSubjectType(ast, (Type) ASTNode.copySubtree(ast, futureType), (Type) ASTNode.copySubtree(ast, futureType)));
 		
-		ASTUtils.addStatementBefore(unit, ast.newExpressionStatement(varExpr), referenceStatement);
+		Statements.addStatementBefore(unit, ast.newExpressionStatement(varExpr), referenceStatement);
 		
 		/*
 		 * Build
@@ -213,11 +215,11 @@ public class FutureCreationWorker extends AbstractAkkaWorker<AkkaFutureCollector
 //			//Replace variable reference with new variable name
 //			unit.replace(var, ast.newSimpleName(newVarName));			
 //		}
-		AkkaFutureASTUtils.transformVariablesInExpressionToFinal(unit, expr, stmt -> ASTUtils.addStatementBefore(unit, stmt, referenceStatement));
+		AkkaFutureASTUtils.transformVariablesInExpressionToFinal(unit, expr, stmt -> Statements.addStatementBefore(unit, stmt, referenceStatement));
 
 		
 		//Add Observable.fromCallable statement 
-		ASTUtils.addStatementBefore(unit, ast.newExpressionStatement(subscribe), referenceStatement);
+		Statements.addStatementBefore(unit, ast.newExpressionStatement(subscribe), referenceStatement);
 				
 		
 		summary.addCorrect("futureCreation");
@@ -244,13 +246,10 @@ public class FutureCreationWorker extends AbstractAkkaWorker<AkkaFutureCollector
 		 *	})
 		 *	.subscribeOn(Schedulers.io())
 		 *	.subscribe(f1);
-		 */	
+		 */			
+		Type type = Types.declaredTypeOf(variable);
 		
-		
-		
-		Type type = ASTUtils.typeOfVariableFragment(variable);
-		
-		Statement referenceStatement = ASTUtils.findParent(variable, Statement.class);
+		Statement referenceStatement = ASTNodes.findParent(variable, Statement.class).orElse(null);
 		
 		//The name of the left-hand-side variable
 		Type typeArgument = null;			
@@ -321,7 +320,7 @@ public class FutureCreationWorker extends AbstractAkkaWorker<AkkaFutureCollector
 		subscribe.arguments().add(unit.copyNode(variable.getName()));
 		
 		
-		ASTUtils.addStatementAfter(unit, ast.newExpressionStatement(subscribe), referenceStatement);
+		Statements.addStatementAfter(unit, ast.newExpressionStatement(subscribe), referenceStatement);
 		
 		
 		/*
@@ -369,7 +368,7 @@ public class FutureCreationWorker extends AbstractAkkaWorker<AkkaFutureCollector
 //			unit.replace(var, ast.newSimpleName(newVarName));			
 //		}
 		
-		AkkaFutureASTUtils.transformVariablesInExpressionToFinal(unit, expr, stmt -> ASTUtils.addStatementAfter(unit, stmt, referenceStatement));
+		AkkaFutureASTUtils.transformVariablesInExpressionToFinal(unit, expr, stmt -> Statements.addStatementAfter(unit, stmt, referenceStatement));
 		
 		summary.addCorrect("futureCreation");
 	}

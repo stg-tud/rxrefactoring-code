@@ -22,8 +22,11 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
-import de.tudarmstadt.rxrefactoring.core.utils.IdManager;
+import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.legacy.IdManager;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.Statements;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractAkkaWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
@@ -49,7 +52,7 @@ public class UnrefactorableReferencesWorker extends AbstractAkkaWorker<AkkaFutur
 		if (!FutureTypeWrapper.isAkkaFuture(typeBinding))
 			return;
 		
-		Supplier<Type> typeSupplier = () -> ASTUtils.typeFromBinding(ast, FutureTypeWrapper.create(typeBinding).getTypeParameter(ast));
+		Supplier<Type> typeSupplier = () -> Types.typeFromBinding(ast, FutureTypeWrapper.create(typeBinding).getTypeParameter(ast));
 		
 		/*
 		 * builds
@@ -111,11 +114,11 @@ public class UnrefactorableReferencesWorker extends AbstractAkkaWorker<AkkaFutur
 				if (FutureTypeWrapper.isAkkaFuture(varType)) {
 					varStatement.setType(FutureTypeWrapper.create(varType).toObservableType(ast));
 				} else {
-					varStatement.setType(ASTUtils.typeFromBinding(ast, varType));
+					varStatement.setType(Types.typeFromBinding(ast, varType));
 				}				
 				varStatement.modifiers().add(ast.newModifier(ModifierKeyword.FINAL_KEYWORD));
 				
-				ASTUtils.addStatementBefore(unit, varStatement, ASTUtils.findParent(expr, Statement.class));
+				Statements.addStatementBefore(unit, varStatement, ASTNodes.findParent(expr, Statement.class).get());
 				
 				alreadyDeclared.add(newVarName);
 			}

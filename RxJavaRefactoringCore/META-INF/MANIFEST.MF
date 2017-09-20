@@ -16,7 +16,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.jdt.ui;bundle-version="3.12.1",
  org.eclipse.ui.console;bundle-version="3.6.200",
  com.google.guava;bundle-version="21.0.0",
- org.eclipse.core.filebuffers;bundle-version="3.6.100"
+ org.eclipse.core.filebuffers;bundle-version="3.6.100",
+ org.eclipse.jdt.annotation
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ClassPath: libs/rxjava-1.2.2.jar,
  libs/commons-io-2.5.jar,
@@ -26,12 +27,9 @@ Export-Package: de.tudarmstadt.rxrefactoring.core,
  de.tudarmstadt.rxrefactoring.core.analysis,
  de.tudarmstadt.rxrefactoring.core.analysis.cfg,
  de.tudarmstadt.rxrefactoring.core.analysis.example,
- de.tudarmstadt.rxrefactoring.core.codegen,
- de.tudarmstadt.rxrefactoring.core.codegen.util,
- de.tudarmstadt.rxrefactoring.core.handler,
- de.tudarmstadt.rxrefactoring.core.logging,
- de.tudarmstadt.rxrefactoring.core.utils,
- de.tudarmstadt.rxrefactoring.core.workers
+ de.tudarmstadt.rxrefactoring.core.ir,
+ de.tudarmstadt.rxrefactoring.core.ir.util,
+ de.tudarmstadt.rxrefactoring.core.legacy,
+ de.tudarmstadt.rxrefactoring.core.utils
 Import-Package: com.google.common.base,
- com.google.common.collect,
- org.eclipse.jdt.annotation
+ com.google.common.collect

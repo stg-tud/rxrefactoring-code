@@ -5,9 +5,9 @@ import java.util.EnumSet;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 
+import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
+import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
 import de.tudarmstadt.rxrefactoring.core.RefactorExtension;
-import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree;
-import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree.WorkerNode;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.FutureCollector;
 
 /**
@@ -43,8 +43,8 @@ public class JavaFutureRefactoring implements RefactorExtension {
 	}
 
 	@Override
-	public void addWorkersTo(WorkerTree workerTree) {
-		WorkerNode<Void, FutureCollector> collector = workerTree.addWorker(new FutureCollector(options));
+	public void addWorkersTo(IWorkerTree workerTree) {
+		IWorkerRef<Void, FutureCollector> collector = workerTree.addWorker(new FutureCollector(options));
 		
 		if(options.contains(RefactoringOptions.FUTURE)) {
 			workerTree.addWorker(collector, new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.SimpleNameWorker());

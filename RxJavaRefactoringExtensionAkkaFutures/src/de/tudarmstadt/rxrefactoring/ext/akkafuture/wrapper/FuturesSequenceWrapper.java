@@ -10,7 +10,7 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
 
 /**
@@ -88,7 +88,7 @@ public class FuturesSequenceWrapper implements FutureMethodWrapper {
 		
 		FutureTypeWrapper ft = getFutureType();
 		
-		cast.setType(ASTUtils.typeFromBinding(ast, getFutureType().getTypeParameter(ast)));
+		cast.setType(Types.typeFromBinding(ast, getFutureType().getTypeParameter(ast)));
 		cast.setExpression(ast.newSimpleName("o"));
 		
 		LambdaExpression mapLambda = ast.newLambdaExpression();

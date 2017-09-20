@@ -6,7 +6,9 @@ import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Statement;
 
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+
 
 /**
  * Models how a future is created.
@@ -79,7 +81,7 @@ public class FutureCreationWrapper {
 	}
 	
 	public Statement getReferenceStatement() {
-		return ASTUtils.findParent(expression, Statement.class);
+		return ASTNodes.findParent(expression, Statement.class).get();
 	}
 	
 	public static boolean isFutureCreation(Expression expression) {

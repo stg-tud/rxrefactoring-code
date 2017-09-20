@@ -2,7 +2,7 @@ package de.tudarmstadt.rxrefactoring.core.ui;
 
 import org.eclipse.swt.widgets.Shell;
 
-import de.tudarmstadt.rxrefactoring.core.logging.Log;
+import de.tudarmstadt.rxrefactoring.core.Log;
 
 public class TestUI implements IUIIntegration {
 

@@ -25,7 +25,8 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.CollectionInfo;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.VisitorNodes;
 
@@ -95,7 +96,7 @@ public class FutureCollectionVisitor extends ASTVisitor implements VisitorNodes 
 	public boolean visit(FieldDeclaration node) {
 		ITypeBinding type = node.getType().resolveBinding();
 		
-		if (ASTUtils.isTypeOf(type, collectionBinaryNames)
+		if (collectionBinaryNames.stream().allMatch(s -> Types.hasSignature(type, s))
 				|| node.getType() instanceof ArrayType)
 		{
 			ITypeBinding binding = ASTUtils.getTypeArgumentBinding(

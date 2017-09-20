@@ -9,7 +9,8 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractAkkaWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
 
@@ -32,7 +33,7 @@ public class VariableTypeToSubjectWorker extends AbstractAkkaWorker<AkkaFutureCo
 	
 	@Override
 	protected void refactorNode(RewriteCompilationUnit unit, VariableDeclarationFragment variable) {
-		Type type = ASTUtils.typeOfVariableFragment(variable);
+		Type type = Types.declaredTypeOf(variable);
 		
 		AST ast = unit.getAST();	
 		

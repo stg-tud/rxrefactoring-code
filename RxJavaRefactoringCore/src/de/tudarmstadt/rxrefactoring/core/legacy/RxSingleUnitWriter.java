@@ -20,7 +20,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 
 /**
  * Description: This class is responsible for managing the changes in one
@@ -85,7 +85,7 @@ public class RxSingleUnitWriter {
 		if (elementInTargetStatement instanceof Statement) {
 			astRewriter.remove(elementInTargetStatement, null);
 		} else {
-			astRewriter.remove(ASTUtils.findParent(elementInTargetStatement, Statement.class), null);
+			astRewriter.remove(ASTNodes.findParent(elementInTargetStatement, Statement.class).get(), null);
 		}
 	}
 
@@ -158,7 +158,7 @@ public class RxSingleUnitWriter {
 	 *            reference node
 	 */
 	public synchronized void addMethodBefore(MethodDeclaration methodDeclaration, ASTNode referenceNode) {
-		MethodDeclaration referenceMethod = ASTUtils.findParent(referenceNode, MethodDeclaration.class);
+		MethodDeclaration referenceMethod = ASTNodes.findParent(referenceNode, MethodDeclaration.class).get();
 		ListRewrite classBlock = getClassBlock(referenceMethod);
 		classBlock.insertBefore(methodDeclaration, referenceMethod, null);
 	}
@@ -175,7 +175,7 @@ public class RxSingleUnitWriter {
 	 *            reference node
 	 */
 	public synchronized void addMethodAfter(MethodDeclaration methodDeclaration, ASTNode referenceNode) {
-		MethodDeclaration referenceMethod = ASTUtils.findParent(referenceNode, MethodDeclaration.class);
+		MethodDeclaration referenceMethod = ASTNodes.findParent(referenceNode, MethodDeclaration.class).get();
 		ListRewrite classBlock = getClassBlock(referenceMethod);
 		classBlock.insertAfter(methodDeclaration, referenceMethod, null);
 	}
@@ -199,7 +199,7 @@ public class RxSingleUnitWriter {
 			classBlock.insertAfter(typeDeclaration, referenceNode, null);
 			return;
 		}
-		MethodDeclaration referenceMethod = ASTUtils.findParent(referenceNode, MethodDeclaration.class);
+		MethodDeclaration referenceMethod = ASTNodes.findParent(referenceNode, MethodDeclaration.class).get();
 		if (referenceMethod == null) {
 			throw new IllegalArgumentException(this.getClass().getName() + ": referenceNode must be a "
 					+ "FieldDeclaration, a MethodDeclaration or a child of a MethodDeclaration");

@@ -1,5 +1,7 @@
 package de.tudarmstadt.rxrefactoring.ext.cfg.workers;
 
+import static de.tudarmstadt.rxrefactoring.core.ir.NodeSupplier.*;
+
 import java.util.Map;
 import java.util.Set;
 
@@ -11,22 +13,22 @@ import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import com.google.common.collect.Sets;
 
+import de.tudarmstadt.rxrefactoring.core.IWorker;
+import de.tudarmstadt.rxrefactoring.core.Log;
 import de.tudarmstadt.rxrefactoring.core.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 import de.tudarmstadt.rxrefactoring.core.analysis.DataFlowAnalysis;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.ControlFlowGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.example.VariableNameAnalysis;
-import de.tudarmstadt.rxrefactoring.core.codegen.ReactiveComputation;
-import de.tudarmstadt.rxrefactoring.core.codegen.ReactiveInput;
-import de.tudarmstadt.rxrefactoring.core.codegen.ReactiveObject;
-import de.tudarmstadt.rxrefactoring.core.codegen.ReactiveOutput;
-import de.tudarmstadt.rxrefactoring.core.codegen.util.ConsumerBuilder;
-import de.tudarmstadt.rxrefactoring.core.codegen.util.SchedulerBuilder;
-import de.tudarmstadt.rxrefactoring.core.logging.Log;
+import de.tudarmstadt.rxrefactoring.core.ir.ComplexReactiveInput;
+import de.tudarmstadt.rxrefactoring.core.ir.IReactiveInput;
+import de.tudarmstadt.rxrefactoring.core.ir.ReactiveComputation;
+import de.tudarmstadt.rxrefactoring.core.ir.ReactiveObject;
+import de.tudarmstadt.rxrefactoring.core.ir.ReactiveOutput;
+import de.tudarmstadt.rxrefactoring.core.ir.util.ConsumerBuilder;
+import de.tudarmstadt.rxrefactoring.core.ir.util.SchedulerBuilder;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
-import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
-
-import static de.tudarmstadt.rxrefactoring.core.codegen.NodeSupplier.*;
 
 
 public class CFGCollector implements IWorker<Void, Void> {
@@ -53,24 +55,24 @@ public class CFGCollector implements IWorker<Void, Void> {
 		
 		ReactiveObject builder = new ReactiveObject(simpleName("ReactiveTest"));
 				
-		ReactiveInput reactiveInput = new ReactiveInput(simpleType("Integer"), simpleName("input"), SchedulerBuilder.schedulersComputation(), null);	
+		IReactiveInput reactiveInput = new ComplexReactiveInput(simpleType("Integer"), simpleName("input"), SchedulerBuilder.schedulersComputation(), null);	
 		builder.addInput("input", reactiveInput);
 		
 		ReactiveOutput reactiveOutput = new ReactiveOutput(simpleType("String"), simpleName("output"), null, null);
 		builder.addOutput("output", reactiveOutput);
 		
 		final ConsumerBuilder consumer = new ConsumerBuilder(
-				reactiveInput.type, 
+				reactiveInput.supplyType(), 
 				simpleName("x"), 
-				ast -> {
-					Block block = ast.newBlock();
+				unit -> {
+					Block block = unit.getAST().newBlock();
 					return block;
 				});
 		
 		ReactiveComputation reactiveCompute = new ReactiveComputation(
 				reactiveInput, 
 				simpleName("internal"), 
-				consumer.supplyAnonymousClass(),
+				consumer.supplyClassInstanceCreation(),
 				SchedulerBuilder.schedulersComputation());
 		
 		builder.addComputation("internal", reactiveCompute);
@@ -84,7 +86,7 @@ public class CFGCollector implements IWorker<Void, Void> {
 			unit.getRoot().accept(new ASTVisitor() {
 				public boolean visit(TypeDeclaration node) {
 					ListRewrite l = unit.getListRewrite(node, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
-					l.insertFirst(builder.supplyTypeDeclaration().apply(unit.getAST()), null);
+//					l.insertFirst(builder.supplyTypeDeclaration().apply(unit), null);
 					return false;
 				}
 			});
@@ -94,7 +96,7 @@ public class CFGCollector implements IWorker<Void, Void> {
 	}
 	
 	
-	class MethodDeclarationCollector extends ASTVisitor {
+	class MethodDeclarationCollector extends UnitASTVisitor {
 		
 		final Set<MethodDeclaration> declarations = Sets.newHashSet();
 		

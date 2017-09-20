@@ -25,151 +25,151 @@ import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 
-import de.tudarmstadt.rxrefactoring.core.utils.Box;
 
 public interface StatementDataFlowStrategy<Result> extends DataFlowStrategy<Result> {
 
+	@SuppressWarnings("unchecked")
 	@Override
 	default public Result transform(Statement statement, Result input) {
 		
-		Box<Result> result = new Box<Result>();
+		final Object[] result = new Object[1];
 		
 		new ASTVisitor() {
 			@Override
 			public boolean visit(AssertStatement node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			@Override
 			public boolean visit(Block node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			@Override
 			public boolean visit(BreakStatement node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			@Override
 			public boolean visit(ConstructorInvocation node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			@Override
 			public boolean visit(ContinueStatement node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			@Override
 			public boolean visit(DoStatement node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			@Override
 			public boolean visit(EmptyStatement node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			@Override
 			public boolean visit(EnhancedForStatement node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			@Override
 			public boolean visit(ExpressionStatement node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			@Override
 			public boolean visit(ForStatement node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			@Override
 			public boolean visit(IfStatement node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			@Override
 			public boolean visit(LabeledStatement node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			@Override
 			public boolean visit(ReturnStatement node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			@Override
 			public boolean visit(SuperConstructorInvocation node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			@Override
 			public boolean visit(SwitchCase node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			@Override
 			public boolean visit(SwitchStatement node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			@Override
 			public boolean visit(SynchronizedStatement node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			
 			@Override
 			public boolean visit(ThrowStatement node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			@Override
 			public boolean visit(TryStatement node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			@Override
 			public boolean visit(TypeDeclarationStatement node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			@Override
 			public boolean visit(VariableDeclarationStatement node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}
 			
 			@Override
 			public boolean visit(WhileStatement node) {
-				result.set(transformStatement(node, input));
+				result[0] = transformStatement(node, input);
 				return false;
 			}			
 		}; 
 		
-		return result.get();
+		return (Result) result[0];
 	}
 	
 	Result transformStatement(AssertStatement statement, Result input);

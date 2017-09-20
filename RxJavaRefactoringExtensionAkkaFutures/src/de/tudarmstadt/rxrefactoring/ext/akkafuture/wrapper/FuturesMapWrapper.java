@@ -17,7 +17,7 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 
 /**
  * Wrapper for Futures.sequence(...) invocations
@@ -85,8 +85,8 @@ public class FuturesMapWrapper implements FutureMethodWrapper {
 		
 		AST ast = unit.getAST();
 		
-		Supplier<Type> fromType = () -> unit.copyNode(ASTUtils.typeFromBinding(ast, getFromType().getTypeParameter(ast)));
-		Supplier<Type> toType = () -> unit.copyNode(ASTUtils.typeFromBinding(ast, getToType().getTypeParameter(ast)));
+		Supplier<Type> fromType = () -> unit.copyNode(Types.typeFromBinding(ast, getFromType().getTypeParameter(ast)));
+		Supplier<Type> toType = () -> unit.copyNode(Types.typeFromBinding(ast, getToType().getTypeParameter(ast)));
 		
 		//Func1 Type
 		ParameterizedType func1Type = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Func1")));

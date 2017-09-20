@@ -4,9 +4,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.eclipse.core.filebuffers.FileBuffers;
-import org.eclipse.core.filebuffers.ITextFileBuffer;
-import org.eclipse.core.filebuffers.ITextFileBufferManager;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -43,12 +40,11 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.ltk.core.refactoring.DocumentChange;
-import org.eclipse.ltk.core.refactoring.TextFileChange;
-import org.eclipse.ltk.internal.core.refactoring.Lock;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.UndoEdit;
+
 
 /**
  * Bundles a compilation unit together with its AST and AST rewriter.
@@ -71,21 +67,22 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	/**
 	 * The AST rewriter to be used for this compilation unit.
 	 */
-	private ASTRewrite writer;
+	private @Nullable ASTRewrite writer;
 
 	/**
 	 * The import rewriter to be used for this compilation unit.
 	 */
-	private ImportRewrite imports;
+	private @Nullable ImportRewrite imports;
 
 	/**
 	 * The AST that has been used to create the AST of this unit.
 	 */
-	private AST ast;
+	private @Nullable AST ast;
 
 	/**
-	 * Bundles a compilation unit together with its root AST node. Use
-	 * {@link RewriteCompilationUnitFactory} to generate Bundled compilation units.
+	 * <p>Bundles a compilation unit together with its root AST node. Use
+	 * {@link RewriteCompilationUnitFactory} to generate Bundled compilation units.</p>
+	 * <p>This class should not be instantiated by clients.</p>
 	 * 
 	 * @param unit
 	 *            The compilation unit.
@@ -96,7 +93,7 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	 *             if any argument is null.
 	 * 
 	 */
-	protected RewriteCompilationUnit(@NonNull ICompilationUnit unit, @NonNull ASTNode rootNode) {
+	public RewriteCompilationUnit(@NonNull ICompilationUnit unit, @NonNull ASTNode rootNode) {
 		Objects.requireNonNull(unit);
 		Objects.requireNonNull(rootNode);
 
@@ -314,10 +311,15 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 
 	@SuppressWarnings("unchecked")
 	public synchronized <V extends ASTNode> V copyNode(V node) {
-		if (node.getParent() == null)
+		if (node == null || node.getParent() == null)
 			return node;
 		
 		return (V) writer().createCopyTarget(node);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public synchronized <V extends ASTNode> V cloneNode(V node) {
+		return (V) ASTNode.copySubtree(getAST(), node);
 	}
 
 	public synchronized void remove(ASTNode node) {

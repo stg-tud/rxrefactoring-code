@@ -38,7 +38,8 @@ public final class ProjectUnits implements Set<RewriteCompilationUnit> {
 		this(Sets.newHashSet());
 	}
 
-	protected void addChangesTo(CompositeChange changes)
+	
+	public void addChangesTo(CompositeChange changes)
 			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
 		
 		
@@ -49,8 +50,9 @@ public final class ProjectUnits implements Set<RewriteCompilationUnit> {
 		}
 	}
 
-	public void accept(ASTVisitor visitor) {
+	public void accept(UnitASTVisitor visitor) {
 		for (RewriteCompilationUnit unit : units) {
+			visitor.setUnit(unit);
 			unit.accept(visitor);
 		}
 	}

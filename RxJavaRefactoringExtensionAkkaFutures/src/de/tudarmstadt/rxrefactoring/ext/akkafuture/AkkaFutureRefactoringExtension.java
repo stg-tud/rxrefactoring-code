@@ -4,10 +4,12 @@ import java.util.EnumSet;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.annotation.NonNull;
 
+import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
+import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
 import de.tudarmstadt.rxrefactoring.core.RefactorExtension;
-import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree;
-import de.tudarmstadt.rxrefactoring.core.workers.WorkerTree.WorkerNode;
+
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.AwaitWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.FutureCreationWorker;
@@ -22,10 +24,10 @@ import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.VariableTy
  */
 public class AkkaFutureRefactoringExtension implements RefactorExtension {
 	
-	private EnumSet<RefactoringOptions> options;
+	
 
 	public AkkaFutureRefactoringExtension() {
-		options = EnumSet.of(RefactoringOptions.AKKA_FUTURE);
+		
 	}
 	
 
@@ -41,43 +43,38 @@ public class AkkaFutureRefactoringExtension implements RefactorExtension {
 	
 
 	@Override
-	public String getDescription() {
+	public @NonNull String getDescription() {
 		return "Refactor Future and FutureTask to Observables...";
 	}
 
 	@Override
-	public void addWorkersTo(WorkerTree workerTree) {
-		WorkerNode<Void, AkkaFutureCollector> futureCollectorRef = workerTree.addWorker(new AkkaFutureCollector());
-
+	public void addWorkersTo(@NonNull IWorkerTree workerTree) {
+		IWorkerRef<Void, AkkaFutureCollector> futureCollectorRef = workerTree.addWorker(new AkkaFutureCollector());		
+			
+		//Future workers
+		//workerTree.addWorker(futureCollectorRef, new VariableFragmentWorker());
 		
-		if(options.contains(RefactoringOptions.AKKA_FUTURE)) {
+		workerTree.addWorker(futureCollectorRef, new MethodUsageWorker());
+		workerTree.addWorker(futureCollectorRef, new UnrefactorableReferencesWorker());
+		workerTree.addWorker(futureCollectorRef, new VariableTypeToObservableWorker());
+		workerTree.addWorker(futureCollectorRef, new VariableTypeToSubjectWorker());
+		workerTree.addWorker(futureCollectorRef, new AwaitWorker());
+					
+		//Collection workers
+		workerTree.addWorker(futureCollectorRef, new ListTypeWorker());
+		workerTree.addWorker(futureCollectorRef, new FutureCreationWorker());
 			
-			//Future workers
-			//workerTree.addWorker(futureCollectorRef, new VariableFragmentWorker());
-			
-			workerTree.addWorker(futureCollectorRef, new MethodUsageWorker());
-			workerTree.addWorker(futureCollectorRef, new UnrefactorableReferencesWorker());
-			workerTree.addWorker(futureCollectorRef, new VariableTypeToObservableWorker());
-			workerTree.addWorker(futureCollectorRef, new VariableTypeToSubjectWorker());
-			workerTree.addWorker(futureCollectorRef, new AwaitWorker());
-						
-			//Collection workers
-			workerTree.addWorker(futureCollectorRef, new ListTypeWorker());
-			workerTree.addWorker(futureCollectorRef, new FutureCreationWorker());
-			
-		} else {
-			throw new IllegalStateException("No valid options: " + options);
-		}		
+	
 	}
 
 	@Override
-	public String getPlugInId() {
+	public @NonNull String getPlugInId() {
 		return "de.tudarmstadt.rxrefactoring.ext.akkafuture";
 	}
 
 
 	@Override
-	public String getName() {
+	public @NonNull String getName() {
 		return "scala.concurrent.Future to rx.Observable";
 	}
 }

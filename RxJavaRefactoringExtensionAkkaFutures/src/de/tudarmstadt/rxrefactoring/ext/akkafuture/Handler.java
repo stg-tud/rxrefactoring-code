@@ -1,7 +1,7 @@
 package de.tudarmstadt.rxrefactoring.ext.akkafuture;
 
 import de.tudarmstadt.rxrefactoring.core.RefactorExtension;
-import de.tudarmstadt.rxrefactoring.core.handler.RefactoringHandler;
+import de.tudarmstadt.rxrefactoring.core.RefactoringHandler;
 
 public class Handler extends RefactoringHandler {
 

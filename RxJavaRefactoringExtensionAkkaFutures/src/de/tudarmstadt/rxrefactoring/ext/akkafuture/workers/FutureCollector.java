@@ -22,10 +22,10 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
+import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
-import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.RefactoringOptions;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.domain.ClassInfos;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.visitors.FutureCollectionVisitor;

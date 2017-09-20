@@ -6,7 +6,8 @@ import java.util.List;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.SimpleName;
 
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
+
 
 
 /**
@@ -24,7 +25,7 @@ public class SimpleNameVisitor extends ASTVisitor {
 
 	@Override
 	public boolean visit(SimpleName node) {
-		if (ASTUtils.isTypeOf(node.resolveTypeBinding(), binaryName)) {
+		if (Types.hasSignature(node.resolveTypeBinding(), binaryName)) {
 			simpleNames.add(node);
 		}
 		

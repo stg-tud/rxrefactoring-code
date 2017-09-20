@@ -12,8 +12,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary.CountEntry;
-import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
 
 public class RefactorSummary {
 

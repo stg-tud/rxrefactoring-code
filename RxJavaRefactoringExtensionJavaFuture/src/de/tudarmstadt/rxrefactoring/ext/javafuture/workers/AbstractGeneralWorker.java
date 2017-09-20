@@ -5,10 +5,10 @@ import java.util.Map;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
+import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
-import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
 
 
 public abstract class AbstractGeneralWorker<NodeType extends ASTNode> implements IWorker<FutureCollector, Void> {

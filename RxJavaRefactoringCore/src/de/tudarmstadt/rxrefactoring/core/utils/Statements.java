@@ -1,6 +1,11 @@
 package de.tudarmstadt.rxrefactoring.core.utils;
 
+import java.util.Optional;
+import java.util.function.Function;
+
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.DoStatement;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.ForStatement;
@@ -8,6 +13,10 @@ import org.eclipse.jdt.core.dom.LabeledStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.WhileStatement;
+import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
+
+import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 
 public final class Statements {
 
@@ -50,6 +59,30 @@ public final class Statements {
 		}
 		
 		return null;
+	}
+	
+	
+	public static void addStatementBefore(@NonNull RewriteCompilationUnit unit, @NonNull Statement newStatement, @NonNull Statement referenceStatement) {				
+		Optional<Block> parentBlock = ASTNodes.findParent(referenceStatement, Block.class);
+		
+		if (!parentBlock.isPresent()) {
+			throw new IllegalArgumentException("referenceStatement not in a block");
+		}
+				
+		ListRewrite statementsBlock = unit.getListRewrite(parentBlock.get(), Block.STATEMENTS_PROPERTY);
+		statementsBlock.insertBefore(newStatement, referenceStatement, null);					
+	}
+	
+	
+	public static void addStatementAfter(@NonNull RewriteCompilationUnit unit, @NonNull Statement newStatement, @NonNull Statement referenceStatement) {		
+		Optional<Block> parentBlock = ASTNodes.findParent(referenceStatement, Block.class);
+		
+		if (!parentBlock.isPresent()) {
+			throw new IllegalArgumentException("referenceStatement not in a block");
+		}
+				
+		ListRewrite statementsBlock = unit.getListRewrite(parentBlock.get(), Block.STATEMENTS_PROPERTY);
+		statementsBlock.insertAfter(newStatement, referenceStatement, null);
 	}
 	
 	
