@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?eclipse version="3.4"?>
-<plugin>
-    <extension-point
-            id="de.tudarmstadt.rxrefactoring.extensionpoint"
-            name="RxJava Refactoring Tool Extension Point"
-            schema="schema/de.tudarmstadt.rxrefactoring.extensionpoint.exsd"/>
-</plugin>
