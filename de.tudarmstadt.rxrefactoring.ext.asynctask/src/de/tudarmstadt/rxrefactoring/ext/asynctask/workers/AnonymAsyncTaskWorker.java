@@ -2,6 +2,7 @@ package de.tudarmstadt.rxrefactoring.ext.asynctask.workers;
 
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
@@ -19,11 +20,12 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import com.google.common.collect.Multimap;
 
+import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
-import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.AnonymousClassBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.InnerClassBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.RefactorNames;
@@ -69,7 +71,10 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 					
 				
 				//Retrieves the statement that defines the AsyncTask.
-				Statement referenceStatement = ASTUtils.findParent(asyncTaskDeclaration, Statement.class);
+				Optional<Statement> referenceStatement = ASTNodes.findParent(asyncTaskDeclaration, Statement.class);
+				
+				if (!referenceStatement.isPresent())
+					throw new IllegalArgumentException("asyncTaskDeclaration is not a child of a Statement");
 							
 				//Gets the AST used for this compilation unit
 				AST ast = unit.getAST();
@@ -78,7 +83,7 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 				updateImports(asyncTask, unit);	
 				
 				//Replace the anonymous AsyncTask declaration with an observable
-				InnerClassBuilder builder = addObservable(asyncTask, unit, referenceStatement, asyncTaskDeclaration);
+				InnerClassBuilder builder = addObservable(asyncTask, unit, referenceStatement.get(), asyncTaskDeclaration);
 				
 				if (builder != null) {
 					updateUsageFor(asyncTask, collector.getRelevantUsages(), builder);
@@ -393,15 +398,15 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 	}
 
 	void createSubscriptionDeclaration(RewriteCompilationUnit unit, MethodInvocation methodInvoke) {
-		TypeDeclaration tyDec = ASTUtils.findParent(methodInvoke, TypeDeclaration.class);
-		AST astInvoke = tyDec.getAST();
+		Optional<TypeDeclaration> tyDec = ASTNodes.findParent(methodInvoke, TypeDeclaration.class);
+		AST astInvoke = tyDec.get().getAST();
 
 		VariableDeclarationFragment variable = astInvoke.newVariableDeclarationFragment();
 		variable.setName(astInvoke.newSimpleName(methodInvoke.getExpression().toString() + subscription));
 		FieldDeclaration subscription = astInvoke.newFieldDeclaration(variable);
 		subscription.setType(astInvoke.newSimpleType(astInvoke.newSimpleName("Subscription")));
 
-		unit.getListRewrite(tyDec, TypeDeclaration.BODY_DECLARATIONS_PROPERTY).insertFirst(subscription, null);;
+		unit.getListRewrite(tyDec.get(), TypeDeclaration.BODY_DECLARATIONS_PROPERTY).insertFirst(subscription, null);;
 		unit.addImport("rx.Subscription");
 	}
 
@@ -482,9 +487,9 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 			
 			
 			//Check whether there is an execute invoke.
-			MethodInvocation parentInvoke = ASTUtils.findParent(asyncTask.getDeclaration(), MethodInvocation.class);
-			if (parentInvoke != null && (parentInvoke.getName().toString().equals(EXECUTE)
-					|| parentInvoke.getName().toString().equals(EXECUTE_ON_EXECUTOR))) {
+			Optional<MethodInvocation> parentInvoke = ASTNodes.findParent(asyncTask.getDeclaration(), MethodInvocation.class);
+			if (parentInvoke.isPresent() && (parentInvoke.get().getName().toString().equals(EXECUTE)
+					|| parentInvoke.get().getName().toString().equals(EXECUTE_ON_EXECUTOR))) {
 				
 				MethodInvocation subscribeInvoke = ast.newMethodInvocation();
 				subscribeInvoke.setExpression(observable);
@@ -544,12 +549,12 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 //					.withMethods(asyncTask.getAdditionalMethodDeclarations());
 			
 			
-			MethodInvocation parentInvocation = ASTUtils.findParent(asyncTask.getDeclaration(), MethodInvocation.class);
+			Optional<MethodInvocation> parentInvocation = ASTNodes.findParent(asyncTask.getDeclaration(), MethodInvocation.class);
 			
-			if (parentInvocation != null) {
+			if (parentInvocation.isPresent()) {
 				//Check if execute method
-				if (parentInvocation.getName().toString().equals(EXECUTE) || parentInvocation.getName().toString().equals(EXECUTE_ON_EXECUTOR)) {
-					replaceExecute(unit, parentInvocation, builder, asyncTask.hasOnProgressUpdate());
+				if (parentInvocation.get().getName().toString().equals(EXECUTE) || parentInvocation.get().getName().toString().equals(EXECUTE_ON_EXECUTOR)) {
+					replaceExecute(unit, parentInvocation.get(), builder, asyncTask.hasOnProgressUpdate());
 				}
 			}
 			

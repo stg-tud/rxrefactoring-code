@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -29,7 +30,9 @@ import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
+import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.ClassDetails;
 
 /**
@@ -486,8 +489,8 @@ public class AsyncTaskWrapper {
 		return result;
 	}
 	
-	public BodyDeclaration getEnclosingDeclaration() {
-		return ASTUtils.findParent(declaration, BodyDeclaration.class);
+	public Optional<BodyDeclaration> getEnclosingDeclaration() {
+		return ASTNodes.findParent(declaration, BodyDeclaration.class);
 	}
 	
 	
@@ -504,7 +507,7 @@ public class AsyncTaskWrapper {
 	 */
 	public Set<ClassInstanceCreation> findClassInstanceCreationsIn(ProjectUnits units) {		
 		
-		class InstanceCreationVisitor extends ASTVisitor {
+		class InstanceCreationVisitor extends UnitASTVisitor {
 			
 			final Set<ClassInstanceCreation> classInstanceCreations = Sets.newHashSet();
 			final ITypeBinding asyncTaskBinding = resolveTypeBinding();			

@@ -21,12 +21,13 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
+import de.tudarmstadt.rxrefactoring.core.IWorker;
+import de.tudarmstadt.rxrefactoring.core.Log;
 import de.tudarmstadt.rxrefactoring.core.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.logging.Log;
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
-import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.ClassDetails;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
 

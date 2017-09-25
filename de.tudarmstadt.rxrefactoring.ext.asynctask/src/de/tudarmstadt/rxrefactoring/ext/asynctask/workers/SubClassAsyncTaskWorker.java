@@ -15,10 +15,10 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import com.google.common.collect.Multimap;
 
+import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
-import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.InnerClassBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.RefactorNames;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.SubscriberBuilder;

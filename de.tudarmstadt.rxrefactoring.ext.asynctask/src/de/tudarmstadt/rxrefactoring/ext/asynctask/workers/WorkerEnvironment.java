@@ -14,7 +14,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.SubscriberBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 
@@ -49,13 +49,13 @@ interface WorkerEnvironment {
 	}
 	
 	default void addStatementBefore(RewriteCompilationUnit unit, Statement newStatement, Statement referenceStatement) {		
-		Block parentBlock = ASTUtils.findParent(referenceStatement, Block.class);
+		Block parentBlock = ASTNodes.findParent(referenceStatement, Block.class).get();
 		ListRewrite statementsBlock = unit.getListRewrite(parentBlock, Block.STATEMENTS_PROPERTY);
 		statementsBlock.insertBefore(newStatement, referenceStatement, null);		
 	}
 	
 	default void addStatementAfter(RewriteCompilationUnit unit, Statement newStatement, Statement referenceStatement) {		
-		Block parentBlock = ASTUtils.findParent(referenceStatement, Block.class);
+		Block parentBlock = ASTNodes.findParent(referenceStatement, Block.class).get();
 		ListRewrite statementsBlock = unit.getListRewrite(parentBlock, Block.STATEMENTS_PROPERTY);
 		statementsBlock.insertAfter(newStatement, referenceStatement, null);		
 	}
@@ -73,7 +73,7 @@ interface WorkerEnvironment {
 	 *            reference node
 	 */
 	default public void addMethodBefore(RewriteCompilationUnit unit, MethodDeclaration methodDeclaration, ASTNode referenceNode) {
-		MethodDeclaration referenceMethod = ASTUtils.findParent(referenceNode, MethodDeclaration.class);
+		MethodDeclaration referenceMethod = ASTNodes.findParent(referenceNode, MethodDeclaration.class).get();
 		ListRewrite classBlock = getClassBlock(unit, referenceMethod);
 		classBlock.insertBefore(methodDeclaration, referenceMethod, null);
 	}
@@ -90,7 +90,7 @@ interface WorkerEnvironment {
 	 *            reference node
 	 */
 	default public void addMethodAfter(RewriteCompilationUnit unit, MethodDeclaration methodDeclaration, ASTNode referenceNode) {
-		MethodDeclaration referenceMethod = ASTUtils.findParent(referenceNode, MethodDeclaration.class);
+		MethodDeclaration referenceMethod = ASTNodes.findParent(referenceNode, MethodDeclaration.class).get();
 		ListRewrite classBlock = getClassBlock(unit, referenceMethod);
 		classBlock.insertAfter(methodDeclaration, referenceMethod, null);
 	}
@@ -127,7 +127,7 @@ interface WorkerEnvironment {
 			classBlock.insertAfter(typeDeclaration, referenceNode, null);
 			return;
 		}
-		MethodDeclaration referenceMethod = ASTUtils.findParent(referenceNode, MethodDeclaration.class);
+		MethodDeclaration referenceMethod = ASTNodes.findParent(referenceNode, MethodDeclaration.class).get();
 		if (referenceMethod == null) {
 			throw new IllegalArgumentException(this.getClass().getName() + ": referenceNode must be a "
 					+ "FieldDeclaration, a MethodDeclaration or a child of a MethodDeclaration");

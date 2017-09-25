@@ -2,6 +2,7 @@ package de.tudarmstadt.rxrefactoring.ext.asynctask.utils;
 
 import java.lang.reflect.Modifier;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.AST;
@@ -20,9 +21,11 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import com.google.common.collect.Sets;
 
+import de.tudarmstadt.rxrefactoring.core.Log;
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.logging.Log;
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+
 
 /**
  * Description: <br>
@@ -61,7 +64,7 @@ public class AsyncTaskASTUtils {
 	 */
 	public static boolean containsForbiddenMethod(ASTNode root) {
 
-		boolean result = ASTUtils.containsNode(root, (n) -> {
+		boolean result = ASTNodes.containsNode(root, (n) -> {
 			if (n instanceof MethodInvocation) {
 				MethodInvocation inv = (MethodInvocation) n;
 			
@@ -124,13 +127,13 @@ public class AsyncTaskASTUtils {
 			}
 
 			private void processFieldExpression(Expression expr) {
-				TypeDeclaration t = ASTUtils.findParent(expr, TypeDeclaration.class);
-				if (Objects.isNull(t)) {
+				Optional<TypeDeclaration> t = ASTNodes.findParent(expr, TypeDeclaration.class);
+				if (!t.isPresent()) {
 					Log.error(AsyncTaskASTUtils.class, "Could not find enclosing type declaration.");
 					return;
 				}
 
-				ITypeBinding binding = t.resolveBinding();
+				ITypeBinding binding = t.get().resolveBinding();
 				if (Objects.isNull(binding)) {
 					Log.error(AsyncTaskASTUtils.class, "Could not resolve type binding.");
 					return;

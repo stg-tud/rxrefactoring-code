@@ -1,7 +1,7 @@
 package de.tudarmstadt.rxrefactoring.ext.asynctask;
 
-import de.tudarmstadt.rxrefactoring.core.Refactoring;
-import de.tudarmstadt.rxrefactoring.core.handler.RefactoringHandler;
+import de.tudarmstadt.rxrefactoring.core.RefactorExtension;
+import de.tudarmstadt.rxrefactoring.core.RefactoringHandler;
 
 /**
  * Author: Template<br>
@@ -10,7 +10,7 @@ import de.tudarmstadt.rxrefactoring.core.handler.RefactoringHandler;
 public class Handler extends RefactoringHandler {
 
 	@Override
-	public Refactoring createRefactoring() {
+	public RefactorExtension createExtension() {
 		return new AsyncTaskRefactoring();
 	}
 	
