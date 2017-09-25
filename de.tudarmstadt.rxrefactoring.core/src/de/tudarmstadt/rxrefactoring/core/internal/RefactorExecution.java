@@ -23,6 +23,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
@@ -122,16 +123,20 @@ public final class RefactorExecution implements Runnable {
 
 				// Iterate over all projects
 				for (IProject project : projects) {
-
+										
+					
 					ProjectSummary projectSummary = summary.reportProject(project);
-
 					// Try to refactor the project
 					try {
+						Objects.requireNonNull(project);
+						
 						// Check whether the project is open and if it is a Java project
 						if (project.isOpen() && project.hasNature(JavaCore.NATURE_ID)) {
 							Log.info(RefactorExecution.class, ">>> Refactor project: " + project.getName());
 							// Reports the project as being refactored
 
+							@SuppressWarnings("null")
+							@NonNull
 							IJavaProject javaProject = JavaCore.create(project);
 
 							// Adds the additional resource files to the project.
@@ -276,11 +281,12 @@ public final class RefactorExecution implements Runnable {
 	}
 
 
-	private ProjectUnits parseCompilationUnits(IJavaProject javaProject) throws JavaModelException {
+	private @NonNull ProjectUnits parseCompilationUnits(@NonNull IJavaProject javaProject) throws JavaModelException {
 
 		IPackageFragmentRoot[] roots = javaProject.getAllPackageFragmentRoots();
 
-		Set<RewriteCompilationUnit> result = Sets.newConcurrentHashSet();
+		@SuppressWarnings("null")
+		@NonNull Set<RewriteCompilationUnit> result = Sets.newConcurrentHashSet();
 
 		// Initializes a new thread pool.
 		ExecutorService executor = extension.createExecutorService();
@@ -295,7 +301,9 @@ public final class RefactorExecution implements Runnable {
 					// Check whether the element found was a package fragment
 					if (javaElement.getElementType() == IJavaElement.PACKAGE_FRAGMENT) {
 						IPackageFragment packageFragment = (IPackageFragment) javaElement;
-						ICompilationUnit[] units = packageFragment.getCompilationUnits();
+						
+						@SuppressWarnings("null")
+						@NonNull ICompilationUnit[] units = packageFragment.getCompilationUnits();
 
 						if (units.length > 0) {
 							// Asynchronously parse units

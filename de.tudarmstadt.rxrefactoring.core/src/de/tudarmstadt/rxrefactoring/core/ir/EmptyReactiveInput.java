@@ -37,6 +37,7 @@ public class EmptyReactiveInput implements IReactiveInput {
 		return name;
 	}
 	
+	@SuppressWarnings("unchecked")
 	protected @NonNull NodeSupplier<FieldDeclaration> supplyExternalField() {
 		return unit -> {
 			AST ast = unit.getAST();
@@ -58,8 +59,9 @@ public class EmptyReactiveInput implements IReactiveInput {
 		};
 	} 
 	
+	@SuppressWarnings("unchecked")
 	@Override
-	public void addToTypeDeclaration(@NonNull RewriteCompilationUnit unit, @NonNull List bodyDeclarations) {	
+	public void addToTypeDeclaration(@NonNull RewriteCompilationUnit unit, @SuppressWarnings("rawtypes") @NonNull List bodyDeclarations) {	
 		bodyDeclarations.add(supplyExternalField().apply(unit));
 	}
 	
