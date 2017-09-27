@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
 
 /**

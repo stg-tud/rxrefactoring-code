@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core.internal;
+package de.tudarmstadt.rxrefactoring.core.internal.execution;
 
 import java.util.Deque;
 import java.util.LinkedList;
@@ -16,8 +16,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
-import de.tudarmstadt.rxrefactoring.core.Log;
-import de.tudarmstadt.rxrefactoring.core.ProjectUnits;
+import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.ProjectSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerStatus;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
@@ -213,13 +212,15 @@ public class WorkerTree implements IWorkerTree {
 						public void onSuccess(Object arg0) {
 							workerSummary.setStatus(WorkerStatus.COMPLETED);
 							
+							latch.countDown();				
+							Log.info(WorkerTree.class, "Finished execution: " + workerNode + " (remaining: " + latch.getCount() + ")");
+							
 							for (WorkerNode<?, ?> node : workers) {
 								if (node.parent == workerNode)
 									execute(node, summary.reportWorker(node.worker));
 							}
 							
-							latch.countDown();				
-							Log.info(WorkerTree.class, "Finished execution: " + workerNode + " (remaining: " + latch.getCount() + ")");
+							
 									
 						}
 					});

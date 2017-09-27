@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core.internal;
+package de.tudarmstadt.rxrefactoring.core.internal.execution;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,10 +46,8 @@ import org.osgi.framework.Bundle;
 
 import com.google.common.collect.Sets;
 
-import de.tudarmstadt.rxrefactoring.core.Log;
-import de.tudarmstadt.rxrefactoring.core.ProjectUnits;
-import de.tudarmstadt.rxrefactoring.core.RefactorExtension;
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
+import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.ProjectStatus;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.ProjectSummary;
@@ -66,10 +64,10 @@ public final class RefactorExecution implements Runnable {
 	 * Defines the environment that is used for the refactoring. Usually this is
 	 * given by the extension .
 	 */
-	private final RefactorExtension extension;
+	private final IRefactorExtension extension;
 
 	
-	public RefactorExecution(RefactorExtension env) {
+	public RefactorExecution(IRefactorExtension env) {
 		Objects.requireNonNull(env);
 		this.extension = env;
 	}
@@ -108,14 +106,10 @@ public final class RefactorExecution implements Runnable {
 				monitor.beginTask(extension.getDescription(), projects.length);
 				
 
-//				Shell shell = Display.getCurrent().getActiveShell();
-
 				// Gathers information about the refactoring and presents it to the user.
 				RefactorSummary summary = new RefactorSummary(extension.getName());
 				
-//				String description = extension.getDescription();
-//				Objects.requireNonNull(description, "The description of the refactoring may not be null.");
-							
+				//Tracks the changes that have been done by this refactoring
 				CompositeChange changes = new CompositeChange(extension.getName());
 				
 				// Reports that the refactoring is starting

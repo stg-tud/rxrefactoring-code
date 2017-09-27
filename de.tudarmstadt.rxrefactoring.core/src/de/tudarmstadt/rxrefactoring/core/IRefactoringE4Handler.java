@@ -1,11 +1,11 @@
 package de.tudarmstadt.rxrefactoring.core;
 
-import org.eclipse.core.commands.AbstractHandler;
-import org.eclipse.core.commands.ExecutionEvent;
-import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.swt.widgets.Shell;
 
-import de.tudarmstadt.rxrefactoring.core.internal.RefactorExecution;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.RefactorExecution;
+
 
 /**
  * Starts the refactoring when the button is clicked by invoking a
@@ -13,15 +13,12 @@ import de.tudarmstadt.rxrefactoring.core.internal.RefactorExecution;
  * 
  * @author Grebiel Jose Ifill Brito, Mirko Köhler
  */
-public abstract class RefactoringHandler extends AbstractHandler {
+public interface IRefactoringE4Handler {
 
-	@Override
-	public Object execute(ExecutionEvent event) throws ExecutionException {
-
+	@Execute
+	default public void execute(Shell shell) {
 		RefactorExecution app = new RefactorExecution(createExtension());
-		app.run();
-
-		return null;
+		app.run();	
 	}
 
 	/**
@@ -30,10 +27,10 @@ public abstract class RefactoringHandler extends AbstractHandler {
 	 * <br>
 	 * The same class will be used to refactor the whole workspace. However, there
 	 * will be a call to
-	 * {@link RefactorExtension#addWorkersTo(de.tudarmstadt.rxrefactoring.core.workers.WorkerTree)}
+	 * {@link IRefactorExtension#addWorkersTo(de.tudarmstadt.rxrefactoring.core.workers.WorkerTree)}
 	 * for each project in the workspace.
 	 * 
 	 * @return A non-null refactoring.
 	 */
-	public abstract @NonNull RefactorExtension createExtension();
+	public @NonNull IRefactorExtension createExtension();
 }

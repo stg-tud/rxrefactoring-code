@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core.ir;
+package de.tudarmstadt.rxrefactoring.core;
 
 import java.util.function.BiFunction;
 
@@ -10,7 +10,7 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.Type;
 
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
 
 @FunctionalInterface
 public interface NodeSupplier<NodeType extends ASTNode> {
@@ -18,10 +18,10 @@ public interface NodeSupplier<NodeType extends ASTNode> {
 	/**
 	 * Supplies a node for the given AST.
 	 */
-	@NonNull NodeType apply(@NonNull RewriteCompilationUnit unit);
+	@NonNull NodeType apply(@NonNull IRewriteCompilationUnit unit);
 	
 	@SuppressWarnings("null")
-	default <Y extends ASTNode> @NonNull NodeSupplier<Y> map(@NonNull BiFunction<RewriteCompilationUnit, NodeType, Y> f) {
+	default <Y extends ASTNode> de.tudarmstadt.rxrefactoring.core.NodeSupplier<Y> map(@NonNull BiFunction<IRewriteCompilationUnit, NodeType, Y> f) {
 		return ast -> f.apply(ast, apply(ast));
 	}
 	

@@ -18,6 +18,8 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import de.tudarmstadt.rxrefactoring.core.NodeSupplier;
+
 /*
  * A reactive object has the following information flow
  * 

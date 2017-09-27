@@ -1,7 +1,7 @@
 package de.tudarmstadt.rxrefactoring.core.ir.util;
 
-import static de.tudarmstadt.rxrefactoring.core.ir.NodeSupplier.parameterizedType;
-import static de.tudarmstadt.rxrefactoring.core.ir.NodeSupplier.simpleType;
+import static de.tudarmstadt.rxrefactoring.core.NodeSupplier.parameterizedType;
+import static de.tudarmstadt.rxrefactoring.core.NodeSupplier.simpleType;
 
 import java.util.function.Consumer;
 
@@ -13,7 +13,7 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
 
-import de.tudarmstadt.rxrefactoring.core.ir.NodeSupplier;
+import de.tudarmstadt.rxrefactoring.core.NodeSupplier;
 
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.SimpleName;

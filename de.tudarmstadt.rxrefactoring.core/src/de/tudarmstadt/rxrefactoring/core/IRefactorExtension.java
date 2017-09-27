@@ -13,7 +13,7 @@ import org.eclipse.jdt.annotation.Nullable;
  * @author mirko
  *
  */
-public interface RefactorExtension {
+public interface IRefactorExtension {
 
 	/**
 	 * Provides the name of the extension.
@@ -55,7 +55,7 @@ public interface RefactorExtension {
 	 * @return Path with all resource jars relative to the plugin root, or null if
 	 *         no jars should be included.
 	 */
-	public default @Nullable IPath getResourceDir() {
+	default public @Nullable IPath getResourceDir() {
 		return null;
 	}
 
@@ -65,7 +65,7 @@ public interface RefactorExtension {
 	 * @return Path where the jars should be included relative to the refactored
 	 *         project root, or null if no jars should be included.
 	 */
-	public default @Nullable IPath getDestinationDir() {
+	default public @Nullable IPath getDestinationDir() {
 		return null; // new Path("./libs");
 	}
 
@@ -76,7 +76,8 @@ public interface RefactorExtension {
 	 * @return A non-null executor service.
 	 */
 	@SuppressWarnings("null")
-	public default @NonNull ExecutorService createExecutorService() {
+	default public @NonNull ExecutorService createExecutorService() {
 		return Executors.newFixedThreadPool(4);
 	}
+	
 }

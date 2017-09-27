@@ -4,7 +4,7 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
-import de.tudarmstadt.rxrefactoring.core.ir.NodeSupplier;
+import de.tudarmstadt.rxrefactoring.core.NodeSupplier;
 
 public class SchedulerBuilder {
 

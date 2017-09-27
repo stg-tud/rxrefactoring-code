@@ -1,6 +1,5 @@
-package de.tudarmstadt.rxrefactoring.core;
+package de.tudarmstadt.rxrefactoring.core.internal.execution;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -30,12 +29,9 @@ import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.ChildListPropertyDescriptor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
-import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
@@ -45,7 +41,7 @@ import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.UndoEdit;
 
-import com.google.common.annotations.Beta;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 
 
 /**
@@ -54,7 +50,7 @@ import com.google.common.annotations.Beta;
  * @author mirko
  *
  */
-public final class RewriteCompilationUnit implements ICompilationUnit {
+public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 
 	/**
 	 * The underlying compilation unit.
@@ -103,28 +99,17 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 		this.rootNode = rootNode;
 	}
 
-	/**
-	 * Accepts a visitor for this compilation units AST.
-	 * 
-	 * @param visitor
-	 *            The visitor to use.
-	 * 
-	 * @see ASTNode#accept(ASTVisitor)
-	 */
+	@Override
 	public void accept(@NonNull ASTVisitor visitor) {
 		rootNode.accept(visitor);		
 	}
 
-	/**
-	 * The root node of this compilation units AST. Use {@link writer()} when you
-	 * want to make changes to the AST.
-	 * 
-	 * @return The root node of this compilation units AST. Cannot be null.
-	 */
+	@Override
 	public @NonNull ASTNode getRoot() {
 		return rootNode;
 	}
 
+	@Override
 	@SuppressWarnings("null")
 	public @NonNull AST getAST() {
 		if (ast == null) {
@@ -134,6 +119,7 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 		return ast;
 	}
 
+	@Override
 	@SuppressWarnings("null")
 	public @NonNull ASTRewrite writer() {
 		if (writer == null) {
@@ -142,7 +128,8 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 
 		return writer;
 	}
-
+	
+	@Override
 	@SuppressWarnings("null")
 	public @NonNull ImportRewrite imports() {
 		if (imports == null) {
@@ -158,69 +145,7 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 
 	
 	
-	/**
-	 * Returns the rewritten node of the given node. If the node
-	 * has not been rewritten, then it returns the original node.
-	 * If the node is located in a list, then the index of the node
-	 * has to be given as well.
-	 * 
-	 * @param node The node to check.
-	 * @param index The index of the enclosing list (if any).
-	 * @return The possible rewriting of the original node, or
-	 * the original node.
-	 */
-	@Beta
-	public ASTNode getRewrittenNode(ASTNode node) {		
-		Objects.requireNonNull(node, "node can not be null.");
-		
-		StructuralPropertyDescriptor descriptor = node.getLocationInParent();
-		ASTNode parent = node.getParent();
-		
-		if (parent == null || descriptor == null)
-			throw new IllegalStateException("parent or descriptor are null.");
-		
-		if (descriptor instanceof ChildListPropertyDescriptor) {
-			ChildListPropertyDescriptor clpd = (ChildListPropertyDescriptor) descriptor;
-			ListRewrite l = writer().getListRewrite(parent, clpd);
-			
-			@SuppressWarnings("rawtypes")
-			List rewritten = l.getRewrittenList();
-			@SuppressWarnings("rawtypes")
-			List original = l.getOriginalList();
-			
-			for (int i = 0; i < original.size(); i++) {
-				if (Objects.equals(original.get(i), node)) {
-					try {
-						return (ASTNode) rewritten.get(i);
-					} catch (IndexOutOfBoundsException e) {
-						return node;
-					}					
-				}
-			}
-			
-			return node;			
-		} else {
-			return (ASTNode) writer().get(node, descriptor);
-		}
-	}
 	
-	public ASTNode getRewrittenNode(ASTNode node, int index) {		
-		Objects.requireNonNull(node, "node can not be null.");
-		
-		StructuralPropertyDescriptor descriptor = node.getLocationInParent();
-		ASTNode parent = node.getParent();
-		
-		if (parent == null || descriptor == null)
-			throw new IllegalStateException("parent or descriptor are null.");
-		
-		if (descriptor instanceof ChildListPropertyDescriptor) {
-			ChildListPropertyDescriptor clpd = (ChildListPropertyDescriptor) descriptor;
-			ListRewrite l = writer().getListRewrite(parent, clpd);								
-			return (ASTNode) l.getRewrittenList().get(index);			
-		} else {
-			return (ASTNode) writer().get(node, descriptor);
-		}
-	}
 	
 	
 	/**
@@ -228,109 +153,21 @@ public final class RewriteCompilationUnit implements ICompilationUnit {
 	 * or imports.
 	 * 
 	 */
+	@Override
 	public boolean hasChanges() {
 		return hasImportChanges() || hasASTChanges();
 	}
 
+	@Override
 	public boolean hasImportChanges() {
 		return imports != null;
 	}
 
+	@Override
 	public boolean hasASTChanges() {
 		return writer != null;
 	}
 
-	/**
-	 * Replaces an AST node with another AST node. This replacement is not immediate
-	 * as it does not change the underlying AST graph. * <br>
-	 * <br>
-	 * This method does not change the AST until
-	 * {@link RewriteCompilationUnit#applyChanges(IProgressMonitor)} has been
-	 * called.
-	 * 
-	 * 
-	 * @param node
-	 *            The node that should be marked for replacement.
-	 * @param replacement
-	 *            The new node.
-	 * 
-	 * @see ASTRewrite#replace(ASTNode, ASTNode,
-	 *      org.eclipse.text.edits.TextEditGroup)
-	 */
-	public synchronized void replace(ASTNode node, ASTNode replacement) {
-		writer().replace(node, replacement, null);
-	}
-
-	/**
-	 * Adds an import to this compilation unit. No imports are added for types that
-	 * are already known. <br>
-	 * <br>
-	 * This method does not change the AST until
-	 * {@link RewriteCompilationUnit#applyChanges(IProgressMonitor)} has been
-	 * called.
-	 * 
-	 * @param qualifiedTypeName
-	 *            The qualified name of the type that should be imported.
-	 * 
-	 * @see ImportRewrite#addImport(String)
-	 */
-	public synchronized void addImport(String qualifiedTypeName) {
-		imports().addImport(qualifiedTypeName);
-	}
-
-	/**
-	 * Removes an import from this compilation unit. <br>
-	 * <br>
-	 * This method does not change the AST until
-	 * {@link RewriteCompilationUnit#applyChanges(IProgressMonitor)} has been
-	 * called.
-	 * 
-	 * @param qualifiedTypeName
-	 *            The qualified name of the type that should be removed.
-	 * 
-	 * @see ImportRewrite#removeImport(String)
-	 */
-	public synchronized void removeImport(String qualifiedTypeName) {
-		imports().removeImport(qualifiedTypeName);
-	}
-
-	/**
-	 * Creates and returns a new rewriter for describing modifications to the given
-	 * list property of the given node.
-	 *
-	 * @param node
-	 *            the node
-	 * @param property
-	 *            the node's property; the child list property
-	 * @return a new list rewriter object
-	 * 
-	 * @throws IllegalArgumentException
-	 *             if the node or property is null, or if the node is not part of
-	 *             this rewriter's AST, or if the property is not a node property,
-	 *             or if the described modification is invalid
-	 * 
-	 * @see ASTRewrite#getListRewrite(ASTNode, ChildListPropertyDescriptor)
-	 */
-	public synchronized ListRewrite getListRewrite(ASTNode node, ChildListPropertyDescriptor property) {
-		return writer().getListRewrite(node, property);
-	}
-
-	@SuppressWarnings("unchecked")
-	public synchronized <V extends ASTNode> V copyNode(V node) {
-		if (node == null || node.getParent() == null)
-			return node;
-		
-		return (V) writer().createCopyTarget(node);
-	}
-	
-	@SuppressWarnings("unchecked")
-	public synchronized <V extends ASTNode> V cloneNode(V node) {
-		return (V) ASTNode.copySubtree(getAST(), node);
-	}
-
-	public synchronized void remove(ASTNode node) {
-		writer().remove(node, null);
-	}
 
 	/**
 	 * Applies the changes marked in this compilation unit and writes them to disk.

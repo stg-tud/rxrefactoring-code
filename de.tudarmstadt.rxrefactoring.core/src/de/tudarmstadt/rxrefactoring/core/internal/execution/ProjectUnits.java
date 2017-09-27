@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core;
+package de.tudarmstadt.rxrefactoring.core.internal.execution;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -13,13 +13,17 @@ import org.eclipse.text.edits.MalformedTreeException;
 
 import com.google.common.collect.Sets;
 
+import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
+
 /**
- * A set of {@link RewriteCompilationUnit} enhanced with utility methods.
+ * A set of {@link IRewriteCompilationUnit} enhanced with utility methods.
  * 
  * @author mirko
  *
  */
-public final class ProjectUnits implements Set<RewriteCompilationUnit> {
+public class ProjectUnits implements IProjectUnits<RewriteCompilationUnit> {
 
 	private final @NonNull Set<RewriteCompilationUnit> units;
 
@@ -35,19 +39,19 @@ public final class ProjectUnits implements Set<RewriteCompilationUnit> {
 	}
 
 	
-	public void addChangesTo(CompositeChange changes)
-			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
+	protected void addChangesTo(CompositeChange changes)
+			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {		
 		
-		
-		for (RewriteCompilationUnit unit : units) {
-			unit.getChangedDocument().ifPresent(doc -> {
-				changes.add(doc);
-			});
+		for (RewriteCompilationUnit unit : units) {			
+				unit.getChangedDocument().ifPresent(doc -> {
+					changes.add(doc);
+				});			
+			
 		}
 	}
 
 	public void accept(@NonNull UnitASTVisitor visitor) {
-		for (RewriteCompilationUnit unit : units) {
+		for (IRewriteCompilationUnit unit : units) {
 			Objects.requireNonNull(unit, "an element of ProjectUnits was null");			
 			visitor.setUnit(unit);
 			unit.accept(visitor);

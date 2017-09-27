@@ -6,7 +6,7 @@ import org.eclipse.jdt.annotation.NonNull;
 
 import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
-import de.tudarmstadt.rxrefactoring.core.RefactorExtension;
+import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.AwaitWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.FutureCreationWorker;
@@ -19,7 +19,7 @@ import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.VariableTy
 /**
  * Future extension
  */
-public class AkkaFutureRefactoringExtension implements RefactorExtension {
+public class AkkaFutureRefactoringExtension implements IRefactorExtension {
 	
 	
 

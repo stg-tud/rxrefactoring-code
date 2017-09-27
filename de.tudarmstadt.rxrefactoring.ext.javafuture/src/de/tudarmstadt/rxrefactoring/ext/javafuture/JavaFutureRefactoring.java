@@ -7,13 +7,13 @@ import org.eclipse.core.runtime.Path;
 
 import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
-import de.tudarmstadt.rxrefactoring.core.RefactorExtension;
+import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.FutureCollector;
 
 /**
  * Future extension
  */
-public class JavaFutureRefactoring implements RefactorExtension {
+public class JavaFutureRefactoring implements IRefactorExtension {
 	
 	private EnumSet<RefactoringOptions> options;
 

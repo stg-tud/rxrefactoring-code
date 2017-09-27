@@ -10,11 +10,13 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
+
+import de.tudarmstadt.rxrefactoring.core.NodeSupplier;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 
 public class ReactiveOutput implements IReactiveOutput {
 

@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core;
+package de.tudarmstadt.rxrefactoring.core.utils;
 
 import java.io.PrintStream;
 import java.text.DateFormat;

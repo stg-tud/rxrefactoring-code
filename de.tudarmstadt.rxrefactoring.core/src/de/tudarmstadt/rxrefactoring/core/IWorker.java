@@ -1,5 +1,7 @@
 package de.tudarmstadt.rxrefactoring.core;
 
+import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
 
 public interface IWorker<Input, Output> {
