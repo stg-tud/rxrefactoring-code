@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureTaskWorker;
 
 public class MethodInvocationWorker extends AbstractFutureTaskWorker<MethodInvocation> {
@@ -15,7 +15,7 @@ public class MethodInvocationWorker extends AbstractFutureTaskWorker<MethodInvoc
 	}
 
 	@Override
-	protected Map<RewriteCompilationUnit, List<MethodInvocation>> getNodesMap() {
+	protected Map<IRewriteCompilationUnit, List<MethodInvocation>> getNodesMap() {
 		return collector.getMethodInvocationsMap("futuretask");
 	}
 
@@ -25,7 +25,7 @@ public class MethodInvocationWorker extends AbstractFutureTaskWorker<MethodInvoc
 	 * @param methodInvocation
 	 */
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, MethodInvocation methodInvocation) {
+	protected void refactorNode(IRewriteCompilationUnit unit, MethodInvocation methodInvocation) {
 		String methodName = methodInvocation.getName().getIdentifier();
 
 		/*

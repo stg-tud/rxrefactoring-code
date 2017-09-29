@@ -22,10 +22,10 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
+import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
-import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
+import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.RefactoringOptions;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfos;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureCollectionVisitor;
@@ -42,8 +42,8 @@ public class FutureCollector implements IWorker<Void, FutureCollector> {
 	
 	private final Map<String, CollectorGroup> groups;
 	
-	private final Map<RewriteCompilationUnit, Map<ASTNode, MethodDeclaration>> parentMethod;
-	private final Map<RewriteCompilationUnit, Map<MethodDeclaration, Boolean>> isMethodPure;
+	private final Map<IRewriteCompilationUnit, Map<ASTNode, MethodDeclaration>> parentMethod;
+	private final Map<IRewriteCompilationUnit, Map<MethodDeclaration, Boolean>> isMethodPure;
 
 	private final EnumSet<RefactoringOptions> options;
 	
@@ -57,9 +57,9 @@ public class FutureCollector implements IWorker<Void, FutureCollector> {
 	}
 	
 	@Override
-	public FutureCollector refactor(ProjectUnits units, Void input, WorkerSummary summary) throws Exception {
+	public FutureCollector refactor(IProjectUnits units, Void input, WorkerSummary summary) throws Exception {
 		
-		for (RewriteCompilationUnit unit : units) {
+		for (IRewriteCompilationUnit unit : units) {
 			// Collect the data		
 			if(options.contains(RefactoringOptions.FUTURE)) {
 				FutureVisitor2 discoveringVisitor = new FutureVisitor2(ClassInfos.Future);
@@ -93,7 +93,7 @@ public class FutureCollector implements IWorker<Void, FutureCollector> {
 		return this;
 	}
 
-	public void add(String group, RewriteCompilationUnit cu, VisitorNodes subclasses) {
+	public void add(String group, IRewriteCompilationUnit cu, VisitorNodes subclasses) {
 		
 		// Create group if it doesn't exist yet
 		if(!groups.containsKey(group))
@@ -106,13 +106,13 @@ public class FutureCollector implements IWorker<Void, FutureCollector> {
 		addPureInformation(cu, subclasses.getParentMethods(), subclasses.getIsMethodPures());
 	}
 	
-	private void addPureInformation(RewriteCompilationUnit cu, Map<ASTNode, MethodDeclaration> parentMethods, Map<MethodDeclaration, Boolean> isMethodPures) {
+	private void addPureInformation(IRewriteCompilationUnit cu, Map<ASTNode, MethodDeclaration> parentMethods, Map<MethodDeclaration, Boolean> isMethodPures) {
 		
 		addParentMethods(cu, parentMethods);
 		addIsPureInfo(cu, isMethodPures);
 	}
 	
-	private void addParentMethods(RewriteCompilationUnit cu, Map<ASTNode, MethodDeclaration> parentMethods) {
+	private void addParentMethods(IRewriteCompilationUnit cu, Map<ASTNode, MethodDeclaration> parentMethods) {
 		if (parentMethods == null || parentMethods.isEmpty()) {
 			return;
 		}
@@ -125,7 +125,7 @@ public class FutureCollector implements IWorker<Void, FutureCollector> {
 		}
 	}
 	
-	private void addIsPureInfo(RewriteCompilationUnit cu, Map<MethodDeclaration, Boolean> isMethodPures) {
+	private void addIsPureInfo(IRewriteCompilationUnit cu, Map<MethodDeclaration, Boolean> isMethodPures) {
 		if (isMethodPures == null || isMethodPures.isEmpty()) {
 			return;
 		}
@@ -150,12 +150,12 @@ public class FutureCollector implements IWorker<Void, FutureCollector> {
 	}
 	
 	
-	public boolean isPure(RewriteCompilationUnit cu, ASTNode node) {
+	public boolean isPure(IRewriteCompilationUnit cu, ASTNode node) {
 		return isMethodPure.get(cu).getOrDefault(getParentMethod(cu, node), false);
 	}
 	
 	
-	public MethodDeclaration getParentMethod(RewriteCompilationUnit cu, ASTNode node) {
+	public MethodDeclaration getParentMethod(IRewriteCompilationUnit cu, ASTNode node) {
 		return parentMethod.get(cu).getOrDefault(node, null);
 	}
 
@@ -164,7 +164,7 @@ public class FutureCollector implements IWorker<Void, FutureCollector> {
 		if(methodBinding == null)
 			return false;
 		
-		for (Map.Entry<RewriteCompilationUnit, List<MethodDeclaration>> methodDeclEntry : getMethodDeclarationsMap(group).entrySet())
+		for (Map.Entry<IRewriteCompilationUnit, List<MethodDeclaration>> methodDeclEntry : getMethodDeclarationsMap(group).entrySet())
 		{
 			for (MethodDeclaration methodDeclaration : methodDeclEntry.getValue())
 			{
@@ -176,61 +176,61 @@ public class FutureCollector implements IWorker<Void, FutureCollector> {
 		return false;
 	}
 	
-	public Map<RewriteCompilationUnit, List<TypeDeclaration>> getTypeDeclMap(String group1, String group2)
+	public Map<IRewriteCompilationUnit, List<TypeDeclaration>> getTypeDeclMap(String group1, String group2)
 	{	
 		return merge(groups.get(group1).getTypeDeclMap(), groups.get(group2).getTypeDeclMap());
 	}
 
-	public Map<RewriteCompilationUnit, List<TypeDeclaration>> getTypeDeclMap(String group)
+	public Map<IRewriteCompilationUnit, List<TypeDeclaration>> getTypeDeclMap(String group)
 	{
 		return groups.get(group).getTypeDeclMap();
 	}
 
-	public Map<RewriteCompilationUnit, List<FieldDeclaration>> getFieldDeclMap(String group)
+	public Map<IRewriteCompilationUnit, List<FieldDeclaration>> getFieldDeclMap(String group)
 	{
 		return groups.get(group).getFieldDeclMap();
 	}
 
-	public Map<RewriteCompilationUnit, List<Assignment>> getAssigmentsMap(String group)
+	public Map<IRewriteCompilationUnit, List<Assignment>> getAssigmentsMap(String group)
 	{
 		return groups.get(group).getAssigmentsMap();
 	}
 
-	public Map<RewriteCompilationUnit, List<VariableDeclarationStatement>> getVarDeclMap(String group)
+	public Map<IRewriteCompilationUnit, List<VariableDeclarationStatement>> getVarDeclMap(String group)
 	{
 		return groups.get(group).getVarDeclMap();
 	}
 
-	public Map<RewriteCompilationUnit, List<SimpleName>> getSimpleNamesMap(String group)
+	public Map<IRewriteCompilationUnit, List<SimpleName>> getSimpleNamesMap(String group)
 	{
 		return groups.get(group).getSimpleNamesMap();
 	}
 
-	public Map<RewriteCompilationUnit, List<ClassInstanceCreation>> getClassInstanceMap(String group)
+	public Map<IRewriteCompilationUnit, List<ClassInstanceCreation>> getClassInstanceMap(String group)
 	{
 		return groups.get(group).getClassInstanceMap();
 	}
 
-	public Map<RewriteCompilationUnit, List<SingleVariableDeclaration>> getSingleVarDeclMap(String group)
+	public Map<IRewriteCompilationUnit, List<SingleVariableDeclaration>> getSingleVarDeclMap(String group)
 	{
 		return groups.get(group).getSingleVarDeclMap();
 	}
 
-	public Map<RewriteCompilationUnit, List<MethodInvocation>> getMethodInvocationsMap(String group)
+	public Map<IRewriteCompilationUnit, List<MethodInvocation>> getMethodInvocationsMap(String group)
 	{
 		return groups.get(group).getMethodInvocationsMap();
 	}
 
-	public Map<RewriteCompilationUnit, List<MethodDeclaration>> getMethodDeclarationsMap(String group)
+	public Map<IRewriteCompilationUnit, List<MethodDeclaration>> getMethodDeclarationsMap(String group)
 	{
 		return groups.get(group).getMethodDeclarationsMap();
 	}
 	
-	public Map<RewriteCompilationUnit, List<ArrayCreation>> getArrayCreationsMap(String group) {
+	public Map<IRewriteCompilationUnit, List<ArrayCreation>> getArrayCreationsMap(String group) {
 		return groups.get(group).getArrayCreationsMap();
 	}
 	
-	public Map<RewriteCompilationUnit, List<ReturnStatement>> getReturnStatementsMap(String group) {
+	public Map<IRewriteCompilationUnit, List<ReturnStatement>> getReturnStatementsMap(String group) {
 		return groups.get(group).getReturnStatementsMap();
 	}
 		
@@ -243,16 +243,16 @@ public class FutureCollector implements IWorker<Void, FutureCollector> {
 	 * @return
 	 */
 	@SafeVarargs
-	public final <T> Map<RewriteCompilationUnit, List<T>> merge(Map<RewriteCompilationUnit, List<T>>... maps) {
+	public final <T> Map<IRewriteCompilationUnit, List<T>> merge(Map<IRewriteCompilationUnit, List<T>>... maps) {
 		if(maps.length == 0)
 			return null;
 		if(maps.length == 1)
 			return maps[0];
 
-		Map<RewriteCompilationUnit, List<T>> result = new HashMap<>(maps[0]);
+		Map<IRewriteCompilationUnit, List<T>> result = new HashMap<>(maps[0]);
 
 		for(int i = 1; i < maps.length; i++) {
-			for(Map.Entry<RewriteCompilationUnit, List<T>> entry : maps[i].entrySet()) {
+			for(Map.Entry<IRewriteCompilationUnit, List<T>> entry : maps[i].entrySet()) {
 				result.merge(entry.getKey(), entry.getValue(), (a, b) -> {
 					List<T> combined = new ArrayList<T>(a);
 					combined.addAll(b);
@@ -266,7 +266,7 @@ public class FutureCollector implements IWorker<Void, FutureCollector> {
 
 	public int getNumberOfCompilationUnits() {
 		
-		Set<RewriteCompilationUnit> allCompilationUnits = new HashSet<>();
+		Set<IRewriteCompilationUnit> allCompilationUnits = new HashSet<>();
 		
 		for(CollectorGroup group : groups.values()) {
 			allCompilationUnits.addAll(group.getCompilationUnits());

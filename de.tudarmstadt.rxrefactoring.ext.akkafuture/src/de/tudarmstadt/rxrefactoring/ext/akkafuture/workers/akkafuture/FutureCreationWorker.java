@@ -16,7 +16,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import com.google.common.collect.Multimap;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.legacy.IdManager;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
@@ -33,12 +33,12 @@ public class FutureCreationWorker extends AbstractAkkaFutureWorker<AkkaFutureCol
 	}
 
 	@Override
-	protected Multimap<RewriteCompilationUnit, FutureCreationWrapper> getNodesMap() {
+	protected Multimap<IRewriteCompilationUnit, FutureCreationWrapper> getNodesMap() {
 		return collector.futureCreations;
 	}
 
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, FutureCreationWrapper wrapper) {		
+	protected void refactorNode(IRewriteCompilationUnit unit, FutureCreationWrapper wrapper) {		
 		
 		Expression expr = wrapper.getExpression();
 		ASTNode parent = expr.getParent();
@@ -67,7 +67,7 @@ public class FutureCreationWorker extends AbstractAkkaFutureWorker<AkkaFutureCol
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void refactorCreateInvocationWithoutAssignment(RewriteCompilationUnit unit, FutureCreationWrapper wrapper) {
+	private void refactorCreateInvocationWithoutAssignment(IRewriteCompilationUnit unit, FutureCreationWrapper wrapper) {
 		
 		Expression expr = wrapper.getExpression();
 						
@@ -226,7 +226,7 @@ public class FutureCreationWorker extends AbstractAkkaFutureWorker<AkkaFutureCol
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void refactorCreateInvocationWithAssignment(RewriteCompilationUnit unit, VariableDeclarationFragment variable, FutureCreationWrapper wrapper) {
+	private void refactorCreateInvocationWithAssignment(IRewriteCompilationUnit unit, VariableDeclarationFragment variable, FutureCreationWrapper wrapper) {
 		
 		
 		AST ast = unit.getAST();	

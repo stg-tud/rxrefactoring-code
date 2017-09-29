@@ -7,7 +7,7 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfos;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.helper.SimpleNameVisitor;
@@ -20,12 +20,12 @@ public class VariableDeclStatementWorker extends AbstractFutureWorker<VariableDe
 	}
 
 	@Override
-	protected Map<RewriteCompilationUnit, List<VariableDeclarationStatement>> getNodesMap() {
+	protected Map<IRewriteCompilationUnit, List<VariableDeclarationStatement>> getNodesMap() {
 		return collector.getVarDeclMap("collection");
 	}
 
 	@Override
-	protected void endRefactorNode(RewriteCompilationUnit unit) {
+	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
 		addFutureObservableImport(unit);
 		
@@ -33,7 +33,7 @@ public class VariableDeclStatementWorker extends AbstractFutureWorker<VariableDe
 	}
 	
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, VariableDeclarationStatement varDeclStatement) {
+	protected void refactorNode(IRewriteCompilationUnit unit, VariableDeclarationStatement varDeclStatement) {
 		Type type = varDeclStatement.getType();
 		
 		SimpleNameVisitor v = new SimpleNameVisitor(ClassInfos.Future.getBinaryName());

@@ -8,7 +8,7 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
@@ -21,12 +21,12 @@ public class ReturnStatementWorker extends AbstractFutureWorker<ReturnStatement>
 	}
 
 	@Override
-	protected Map<RewriteCompilationUnit, List<ReturnStatement>> getNodesMap() {
+	protected Map<IRewriteCompilationUnit, List<ReturnStatement>> getNodesMap() {
 		return collector.getReturnStatementsMap("collection");
 	}
 	
 	@Override
-	protected void endRefactorNode(RewriteCompilationUnit unit) {
+	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
 		addFutureObservableImport(unit);
 		
@@ -34,7 +34,7 @@ public class ReturnStatementWorker extends AbstractFutureWorker<ReturnStatement>
 	}
 	
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, ReturnStatement returnStatement) {
+	protected void refactorNode(IRewriteCompilationUnit unit, ReturnStatement returnStatement) {
 		IMethodBinding methodBinding = collector.getParentMethod(unit, returnStatement).resolveBinding();
 		
 		// We have to return Futures if the method overrides a method outside the project.

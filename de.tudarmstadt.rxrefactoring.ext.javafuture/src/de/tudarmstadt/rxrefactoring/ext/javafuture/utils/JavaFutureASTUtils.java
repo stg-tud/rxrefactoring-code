@@ -9,7 +9,8 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+
 
 
 public class JavaFutureASTUtils {
@@ -22,7 +23,7 @@ public class JavaFutureASTUtils {
 	 * @param node
 	 */
 	@SuppressWarnings("unchecked")
-	public static void moveInsideMethodInvocation(RewriteCompilationUnit unit, String className, String methodName, ASTNode node) {
+	public static void moveInsideMethodInvocation(IRewriteCompilationUnit unit, String className, String methodName, ASTNode node) {
 		AST ast = unit.getAST();
 		
 
@@ -35,7 +36,7 @@ public class JavaFutureASTUtils {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static void moveInsideMethodInvocation(RewriteCompilationUnit unit, String className, String methodName, SimpleName node, String append) {
+	public static void moveInsideMethodInvocation(IRewriteCompilationUnit unit, String className, String methodName, SimpleName node, String append) {
 		AST ast = unit.getAST();
 		
 		Expression initializerClone = ast.newSimpleName(node.getIdentifier() + append);
@@ -47,14 +48,14 @@ public class JavaFutureASTUtils {
 		unit.replace(node, invocation);
 	}
 	
-	public static void replaceType(RewriteCompilationUnit unit, Type type, String replacementTypeName) {
+	public static void replaceType(IRewriteCompilationUnit unit, Type type, String replacementTypeName) {
 		AST ast = unit.getAST();
 		unit.replace(type, ast.newSimpleType(ast.newSimpleName(replacementTypeName)));
 	}
 	
 	
 	
-	public static void replaceMethodInvocation(RewriteCompilationUnit unit, String caller, String method1, String method2, MethodInvocation oldNode) {
+	public static void replaceMethodInvocation(IRewriteCompilationUnit unit, String caller, String method1, String method2, MethodInvocation oldNode) {
 		AST ast = unit.getAST();
 		
 		MethodInvocation singleMethod = ast.newMethodInvocation();
@@ -81,12 +82,12 @@ public class JavaFutureASTUtils {
 	}
 	
 	
-	public static void replaceSimpleName(RewriteCompilationUnit unit, SimpleName name, String replacement) {
+	public static void replaceSimpleName(IRewriteCompilationUnit unit, SimpleName name, String replacement) {
 		AST ast = unit.getAST();
 		unit.replace(name, ast.newSimpleName(replacement));
 	}
 	
-	public static void appendSimpleName(RewriteCompilationUnit unit, SimpleName name, String append) {
+	public static void appendSimpleName(IRewriteCompilationUnit unit, SimpleName name, String append) {
 		AST ast = unit.getAST();
 		unit.replace(name, ast.newSimpleName(name.getIdentifier() + append));
 	}

@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
 
 /**
@@ -19,19 +19,19 @@ public class SingleVariableDeclWorker extends AbstractFutureWorker<SingleVariabl
 	}
 	
 	@Override
-	protected Map<RewriteCompilationUnit, List<SingleVariableDeclaration>> getNodesMap() {
+	protected Map<IRewriteCompilationUnit, List<SingleVariableDeclaration>> getNodesMap() {
 		return collector.getSingleVarDeclMap("collection");
 	}
 	
 	@Override
-	protected void endRefactorNode(RewriteCompilationUnit unit) {
+	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addFutureObservableImport(unit);
 		
 		super.endRefactorNode(unit);
 	}
 
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, SingleVariableDeclaration singleVarDecl) {
+	protected void refactorNode(IRewriteCompilationUnit unit, SingleVariableDeclaration singleVarDecl) {
 		
 
 	}

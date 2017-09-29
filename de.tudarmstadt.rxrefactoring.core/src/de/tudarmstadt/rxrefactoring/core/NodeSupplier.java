@@ -12,6 +12,14 @@ import org.eclipse.jdt.core.dom.Type;
 
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
 
+/**
+ * A node supplier is a factory for {@link ASTNode}. It creates nodes
+ * for a specified {@link RewriteCompilationUnit}.
+ * 
+ * @author mirko
+ *
+ * @param <NodeType> The type of node that is created by this supplier.
+ */
 @FunctionalInterface
 public interface NodeSupplier<NodeType extends ASTNode> {
 	

@@ -8,7 +8,7 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
@@ -21,7 +21,7 @@ public class MethodInvocationWorker extends AbstractFutureWorker<MethodInvocatio
 	}
 
 	@Override
-	protected Map<RewriteCompilationUnit, List<MethodInvocation>> getNodesMap() {
+	protected Map<IRewriteCompilationUnit, List<MethodInvocation>> getNodesMap() {
 		return collector.getMethodInvocationsMap("future");
 	}
 
@@ -31,7 +31,7 @@ public class MethodInvocationWorker extends AbstractFutureWorker<MethodInvocatio
 	 * @param methodInvocation
 	 */
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, MethodInvocation methodInvocation) {
+	protected void refactorNode(IRewriteCompilationUnit unit, MethodInvocation methodInvocation) {
 		String methodName = methodInvocation.getName().getIdentifier();
 		
 		// Only convert if it's not in a try/catch block

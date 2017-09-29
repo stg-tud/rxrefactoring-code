@@ -11,7 +11,7 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.PrimitiveType;
@@ -52,7 +52,7 @@ public class FutureOnFailureWrapper implements FutureMethodWrapper {
 	}
 	
 	
-	public MethodInvocation createOnErrorExpression(RewriteCompilationUnit unit) {
+	public MethodInvocation createOnErrorExpression(IRewriteCompilationUnit unit) {
 		/*
 		 * Builds:		
 		 * future.doOnError(new Action1<Throwable>() {

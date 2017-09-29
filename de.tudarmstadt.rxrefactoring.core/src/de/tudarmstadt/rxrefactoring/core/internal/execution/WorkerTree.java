@@ -7,6 +7,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
+
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -16,10 +19,10 @@ import com.google.common.util.concurrent.MoreExecutors;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
+import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
+import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerStatus;
+import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.ProjectSummary;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerStatus;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
 
 /**
  * This class defines hierarchies of workers that may rely on the results of
@@ -34,7 +37,7 @@ public class WorkerTree implements IWorkerTree {
 
 	private final ProjectSummary summary;
 
-	WorkerTree(ProjectUnits units, ProjectSummary summary) {
+	WorkerTree(@NonNull ProjectUnits units, @NonNull ProjectSummary summary) {
 		this.units = units;
 		this.summary = summary;
 	}
@@ -55,7 +58,7 @@ public class WorkerTree implements IWorkerTree {
 		
 		
 		private boolean hasResult = false;
-		private Output result;
+		private @Nullable Output result;
 
 		WorkerNode(IWorker<Input, Output> worker, WorkerNode<?, Input> parent) {
 			this.worker = worker;
@@ -92,9 +95,10 @@ public class WorkerTree implements IWorkerTree {
 		}
 	}
 
-	private final WorkerNode<Void, Void> root = new WorkerNode<>(new NullWorker(), null);
+	private final @NonNull WorkerNode<Void, Void> root = new WorkerNode<>(new NullWorker(), null);
 
-	private final List<WorkerNode<?, ?>> workers = Lists.newLinkedList();
+	@SuppressWarnings("null")
+	private final @NonNull List<WorkerNode<?, ?>> workers = Lists.newLinkedList();
 
 	/**
 	 * Adds a new top level worker. It gets null as input.
@@ -105,7 +109,7 @@ public class WorkerTree implements IWorkerTree {
 	 * @return A reference to the location of the worker in the worker tree. This
 	 *         can be used to define workers that use the results of this worker.
 	 */
-	public <Y> WorkerNode<Void, Y> addWorker(IWorker<Void, Y> worker) {
+	public <Y> @NonNull WorkerNode<Void, Y> addWorker(@NonNull IWorker<Void, Y> worker) {
 		return addWorker(root, worker);
 	}
 
@@ -120,7 +124,7 @@ public class WorkerTree implements IWorkerTree {
 	 * @return A reference to the location of the worker in the worker tree. This
 	 *         can be used to define workers that use the results of this worker.
 	 */
-	public <X, Y> WorkerNode<X, Y> addWorker(IWorkerRef<?, X> parent, IWorker<X, Y> worker) {
+	public <X, Y> @NonNull WorkerNode<X, Y> addWorker(@NonNull IWorkerRef<?, X> parent, @NonNull IWorker<X, Y> worker) {
 		if (!(parent instanceof WorkerNode)) {
 			throw new IllegalArgumentException("worker references in this tree have to be of type WorkerNode");
 		}

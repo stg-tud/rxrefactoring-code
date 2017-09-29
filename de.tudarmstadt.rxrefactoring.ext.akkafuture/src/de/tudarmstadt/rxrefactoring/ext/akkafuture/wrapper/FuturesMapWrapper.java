@@ -16,7 +16,7 @@ import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 
 /**
@@ -62,7 +62,7 @@ public class FuturesMapWrapper implements FutureMethodWrapper {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public MethodInvocation createMapExpression(RewriteCompilationUnit unit) {
+	public MethodInvocation createMapExpression(IRewriteCompilationUnit unit) {
 		/*
 		 * Builds:		
 		 * future.map(new Func1<T0, T>() {

@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureTaskWorker;
 
 public class ClassInstanceCreationWorker extends AbstractFutureTaskWorker<ClassInstanceCreation> {
@@ -14,12 +14,12 @@ public class ClassInstanceCreationWorker extends AbstractFutureTaskWorker<ClassI
 	}
 
 	@Override
-	protected Map<RewriteCompilationUnit, List<ClassInstanceCreation>> getNodesMap() {
+	protected Map<IRewriteCompilationUnit, List<ClassInstanceCreation>> getNodesMap() {
 		return collector.getClassInstanceMap("futuretask");
 	}
 
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, ClassInstanceCreation classInstanceCreation) {
+	protected void refactorNode(IRewriteCompilationUnit unit, ClassInstanceCreation classInstanceCreation) {
 		/* unit.replaceType(
 				classInstanceCreation.getType(), 
 				"Observable");

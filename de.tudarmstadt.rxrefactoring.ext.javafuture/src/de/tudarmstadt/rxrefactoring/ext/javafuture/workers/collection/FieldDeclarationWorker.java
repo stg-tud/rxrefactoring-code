@@ -7,7 +7,7 @@ import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.Type;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.CollectionInfo;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
@@ -21,12 +21,12 @@ public class FieldDeclarationWorker extends AbstractFutureWorker<FieldDeclaratio
 	}
 
 	@Override
-	protected Map<RewriteCompilationUnit, List<FieldDeclaration>> getNodesMap() {
+	protected Map<IRewriteCompilationUnit, List<FieldDeclaration>> getNodesMap() {
 		return collector.getFieldDeclMap("collection");
 	}
 	
 	@Override
-	protected void endRefactorNode(RewriteCompilationUnit unit) {
+	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
 		addFutureObservableImport(unit);
 		
@@ -34,7 +34,7 @@ public class FieldDeclarationWorker extends AbstractFutureWorker<FieldDeclaratio
 	}
 
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, FieldDeclaration fieldDeclaration) {
+	protected void refactorNode(IRewriteCompilationUnit unit, FieldDeclaration fieldDeclaration) {
 		Type fieldType = fieldDeclaration.getType();
 		
 		if(ASTUtils.isTypeOf(fieldType, CollectionInfo.getBinaryNames())) {

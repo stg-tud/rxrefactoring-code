@@ -11,6 +11,7 @@ import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
 
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.NodeSupplier;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
 
@@ -155,7 +156,7 @@ public class ReactiveOutput implements IReactiveOutput {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public void addToTypeDeclaration(@NonNull RewriteCompilationUnit unit, @NonNull List bodyDeclarations) {
+	public void addToTypeDeclaration(@NonNull IRewriteCompilationUnit unit, @NonNull List bodyDeclarations) {
 		bodyDeclarations.add(supplyInternalField().apply(unit));
 		bodyDeclarations.add(supplyExternalField().apply(unit));		
 	}

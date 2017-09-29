@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core.utils;
+package de.tudarmstadt.rxrefactoring.core;
 
 import java.util.Locale;
 import java.util.Map;
@@ -12,8 +12,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import de.tudarmstadt.rxrefactoring.core.IWorker;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary.CountEntry;
+import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary.CountEntry;
 
 public class RefactorSummary {
 

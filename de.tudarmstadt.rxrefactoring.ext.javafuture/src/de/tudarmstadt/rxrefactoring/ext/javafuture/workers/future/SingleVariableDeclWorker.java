@@ -6,7 +6,7 @@ import java.util.Map;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfos;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.helper.SimpleNameVisitor;
@@ -19,19 +19,19 @@ public class SingleVariableDeclWorker extends AbstractFutureWorker<SingleVariabl
 	}
 	
 	@Override
-	protected Map<RewriteCompilationUnit, List<SingleVariableDeclaration>> getNodesMap() {
+	protected Map<IRewriteCompilationUnit, List<SingleVariableDeclaration>> getNodesMap() {
 		return collector.getSingleVarDeclMap("future");
 	}
 	
 	@Override
-	protected void endRefactorNode(RewriteCompilationUnit unit) {
+	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
 		
 		super.endRefactorNode(unit);
 	}
 
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, SingleVariableDeclaration singleVarDecl) {
+	protected void refactorNode(IRewriteCompilationUnit unit, SingleVariableDeclaration singleVarDecl) {
 		SimpleNameVisitor visitor = new SimpleNameVisitor(ClassInfos.Future.getBinaryName());
 		singleVarDecl.accept(visitor);
 

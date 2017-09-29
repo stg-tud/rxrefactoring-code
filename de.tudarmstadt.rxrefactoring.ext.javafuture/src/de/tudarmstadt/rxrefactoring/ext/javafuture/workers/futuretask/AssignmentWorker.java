@@ -6,7 +6,7 @@ import java.util.Map;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Expression;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.helper.MethodInvocationVisitor;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureTaskWorker;
@@ -17,12 +17,12 @@ public class AssignmentWorker extends AbstractFutureTaskWorker<Assignment> {
 	}
 
 	@Override
-	protected Map<RewriteCompilationUnit, List<Assignment>> getNodesMap() {
+	protected Map<IRewriteCompilationUnit, List<Assignment>> getNodesMap() {
 		return collector.getAssigmentsMap("futuretask");
 	}
 
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, Assignment assignment) {
+	protected void refactorNode(IRewriteCompilationUnit unit, Assignment assignment) {
 		Expression rightHand = assignment.getRightHandSide();
 		
 		refactorRightHand(unit, rightHand);
@@ -35,7 +35,7 @@ public class AssignmentWorker extends AbstractFutureTaskWorker<Assignment> {
 	 * @param unit
 	 * @param fragment
 	 */
-	private void refactorRightHand(RewriteCompilationUnit unit, Expression rightHand) {
+	private void refactorRightHand(IRewriteCompilationUnit unit, Expression rightHand) {
 		
 		// look for a methodinvocation here
 		MethodInvocationVisitor visitor = new MethodInvocationVisitor(collector, "future");

@@ -14,7 +14,7 @@ import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.Type;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
@@ -27,18 +27,18 @@ public class MethodDeclarationWorker extends AbstractFutureWorker<MethodDeclarat
 	}
 	
 	@Override
-	protected Map<RewriteCompilationUnit, List<MethodDeclaration>> getNodesMap() {
+	protected Map<IRewriteCompilationUnit, List<MethodDeclaration>> getNodesMap() {
 		return collector.getMethodDeclarationsMap("future");
 	}
 
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, MethodDeclaration methodDeclaration) {
+	protected void refactorNode(IRewriteCompilationUnit unit, MethodDeclaration methodDeclaration) {
 		replaceReturnType(unit, methodDeclaration);
 		
 		replaceReturnStatements(unit, methodDeclaration);
 	}
 
-	private void replaceReturnType(RewriteCompilationUnit unit, MethodDeclaration methodDeclaration) {
+	private void replaceReturnType(IRewriteCompilationUnit unit, MethodDeclaration methodDeclaration) {
 		Type returnType =  methodDeclaration.getReturnType2();
 		
 		// Check for super methods
@@ -57,7 +57,7 @@ public class MethodDeclarationWorker extends AbstractFutureWorker<MethodDeclarat
 		}
 	}
 	
-	private void replaceReturnStatements(RewriteCompilationUnit unit, MethodDeclaration methodDeclaration) {
+	private void replaceReturnStatements(IRewriteCompilationUnit unit, MethodDeclaration methodDeclaration) {
 		
 		// Replace return statements
 		ASTVisitor visitor = new ASTVisitor() {

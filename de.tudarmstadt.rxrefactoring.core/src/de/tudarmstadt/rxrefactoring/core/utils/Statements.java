@@ -14,7 +14,8 @@ import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+
 
 public final class Statements {
 
@@ -60,7 +61,7 @@ public final class Statements {
 	}
 	
 	
-	public static void addStatementBefore(@NonNull RewriteCompilationUnit unit, @NonNull Statement newStatement, @NonNull Statement referenceStatement) {				
+	public static void addStatementBefore(@NonNull IRewriteCompilationUnit unit, @NonNull Statement newStatement, @NonNull Statement referenceStatement) {				
 		Optional<Block> parentBlock = ASTNodes.findParent(referenceStatement, Block.class);
 		
 		if (!parentBlock.isPresent()) {
@@ -72,7 +73,7 @@ public final class Statements {
 	}
 	
 	
-	public static void addStatementAfter(@NonNull RewriteCompilationUnit unit, @NonNull Statement newStatement, @NonNull Statement referenceStatement) {		
+	public static void addStatementAfter(@NonNull IRewriteCompilationUnit unit, @NonNull Statement newStatement, @NonNull Statement referenceStatement) {		
 		Optional<Block> parentBlock = ASTNodes.findParent(referenceStatement, Block.class);
 		
 		if (!parentBlock.isPresent()) {

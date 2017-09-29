@@ -2,11 +2,10 @@ package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers;
 
 import com.google.common.collect.Multimap;
 
+import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
-import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
-import de.tudarmstadt.rxrefactoring.core.internal.execution.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
+import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 
 
 public abstract class AbstractAkkaFutureWorker<CollectorType, RefactorType> implements IWorker<CollectorType, Void> {

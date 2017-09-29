@@ -6,7 +6,7 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 
 import com.google.common.collect.Multimap;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractAkkaFutureWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.AwaitBinding;
@@ -17,12 +17,12 @@ public class AwaitWorker extends AbstractAkkaFutureWorker<AkkaFutureCollector, A
 	}
 
 	@Override
-	protected Multimap<RewriteCompilationUnit, AwaitBinding> getNodesMap() {
+	protected Multimap<IRewriteCompilationUnit, AwaitBinding> getNodesMap() {
 		return collector.awaits;
 	}
 
 	@Override
-	protected void endRefactorNode(RewriteCompilationUnit unit) {
+	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
 		addSubjectImport(unit);
 		addCallableImport(unit);
@@ -33,7 +33,7 @@ public class AwaitWorker extends AbstractAkkaFutureWorker<AkkaFutureCollector, A
 	
 	@SuppressWarnings("unused")
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, AwaitBinding await) {
+	protected void refactorNode(IRewriteCompilationUnit unit, AwaitBinding await) {
 		
 		AST ast = unit.getAST();
 		

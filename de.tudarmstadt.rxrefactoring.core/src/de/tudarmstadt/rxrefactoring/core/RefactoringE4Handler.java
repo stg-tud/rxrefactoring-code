@@ -13,10 +13,13 @@ import de.tudarmstadt.rxrefactoring.core.internal.execution.RefactorExecution;
  * 
  * @author Grebiel Jose Ifill Brito, Mirko Köhler
  */
-public interface IRefactoringE4Handler {
+public abstract class RefactoringE4Handler {
 
+	/*
+	 * Callback for the handler.
+	 */
 	@Execute
-	default public void execute(Shell shell) {
+	public final void execute(Shell shell) {
 		RefactorExecution app = new RefactorExecution(createExtension());
 		app.run();	
 	}
@@ -32,5 +35,5 @@ public interface IRefactoringE4Handler {
 	 * 
 	 * @return A non-null refactoring.
 	 */
-	public @NonNull IRefactorExtension createExtension();
+	public abstract @NonNull IRefactorExtension createExtension();
 }

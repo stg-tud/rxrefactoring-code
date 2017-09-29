@@ -40,7 +40,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.legacy.IdManager;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
@@ -71,7 +71,7 @@ public class AkkaFutureASTUtils {
 	 * block has to be a "fresh" node (without parent, e.g., a copied node).
 	 * returnType is copied by the method.
 	 */	
-	public static MethodInvocation buildFromCallable(RewriteCompilationUnit unit, Supplier<Type> returnType, Supplier<Block> block) {
+	public static MethodInvocation buildFromCallable(IRewriteCompilationUnit unit, Supplier<Type> returnType, Supplier<Block> block) {
 		
 		AST ast = unit.getAST();
 		
@@ -123,7 +123,7 @@ public class AkkaFutureASTUtils {
 	 * }
 	 */
 	@SuppressWarnings("unchecked")
-	public static ClassInstanceCreation buildCallableFromBlock(RewriteCompilationUnit unit, Supplier<Type> type, Supplier<Block> block) {
+	public static ClassInstanceCreation buildCallableFromBlock(IRewriteCompilationUnit unit, Supplier<Type> type, Supplier<Block> block) {
 		
 		AST ast = unit.getAST();
 		
@@ -155,7 +155,7 @@ public class AkkaFutureASTUtils {
 		return initCallable;
 	}
 	
-	public static void replaceThisWithFullyQualifiedThisIn(ASTNode root, RewriteCompilationUnit unit) {
+	public static void replaceThisWithFullyQualifiedThisIn(ASTNode root, IRewriteCompilationUnit unit) {
 		
 		final AST ast = unit.getAST();
 		
@@ -191,7 +191,7 @@ public class AkkaFutureASTUtils {
 	 * }
 	 */
 	@SuppressWarnings("unchecked")
-	public static ClassInstanceCreation buildCallableFromExpr(RewriteCompilationUnit unit, Supplier<Type> type, Supplier<Expression> expr) {
+	public static ClassInstanceCreation buildCallableFromExpr(IRewriteCompilationUnit unit, Supplier<Type> type, Supplier<Expression> expr) {
 		
 		AST ast = unit.getAST();
 		
@@ -213,7 +213,7 @@ public class AkkaFutureASTUtils {
 	 * expr has to be a "fresh" node (without parent, e.g., a copied node).
 	 */	
 	@SuppressWarnings("unchecked")
-	public static MethodInvocation buildFromCallable(RewriteCompilationUnit unit, Expression expr) {
+	public static MethodInvocation buildFromCallable(IRewriteCompilationUnit unit, Expression expr) {
 		
 		AST ast = unit.getAST();
 						
@@ -322,7 +322,7 @@ public class AkkaFutureASTUtils {
 	 * @param variableDeclarationStatement
 	 */
 	@SuppressWarnings("unchecked")
-	public static void transformVariablesInExpressionToFinal(RewriteCompilationUnit unit, Expression expr, Consumer<Statement> variableDeclarationStatement) {
+	public static void transformVariablesInExpressionToFinal(IRewriteCompilationUnit unit, Expression expr, Consumer<Statement> variableDeclarationStatement) {
 		
 		AST ast = unit.getAST();
 		
@@ -446,7 +446,7 @@ public class AkkaFutureASTUtils {
 	 * @param root
 	 * @param unit
 	 */
-	public static void replaceFieldsWithFullyQualifiedNameIn(ASTNode root, RewriteCompilationUnit unit) {
+	public static void replaceFieldsWithFullyQualifiedNameIn(ASTNode root, IRewriteCompilationUnit unit) {
 
 		class FieldsVisitor extends ASTVisitor {
 			@Override

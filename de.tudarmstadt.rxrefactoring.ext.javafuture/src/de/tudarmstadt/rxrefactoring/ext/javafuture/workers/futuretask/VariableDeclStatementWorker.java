@@ -9,7 +9,7 @@ import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureTaskWorker;
 
@@ -20,12 +20,12 @@ public class VariableDeclStatementWorker extends AbstractFutureTaskWorker<Variab
 	}
 
 	@Override
-	protected Map<RewriteCompilationUnit, List<VariableDeclarationStatement>> getNodesMap() {
+	protected Map<IRewriteCompilationUnit, List<VariableDeclarationStatement>> getNodesMap() {
 		return collector.getVarDeclMap("futuretask");
 	}
 
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, VariableDeclarationStatement varDeclStatement) {
+	protected void refactorNode(IRewriteCompilationUnit unit, VariableDeclarationStatement varDeclStatement) {
 		VariableDeclarationFragment fragment = (VariableDeclarationFragment)varDeclStatement.fragments().get(0);
 
 		// Replace type Future with Observable
@@ -41,7 +41,7 @@ public class VariableDeclStatementWorker extends AbstractFutureTaskWorker<Variab
 	 * @param fragment
 	 * @param type
 	 */
-	private void replaceType(RewriteCompilationUnit unit, VariableDeclarationFragment fragment, Type type) {
+	private void replaceType(IRewriteCompilationUnit unit, VariableDeclarationFragment fragment, Type type) {
 
 		if (type instanceof ParameterizedType) {
 			type = ((ParameterizedType) type).getType();
@@ -55,7 +55,7 @@ public class VariableDeclStatementWorker extends AbstractFutureTaskWorker<Variab
 	 * @param unit
 	 * @param fragment
 	 */
-	private void replaceMethodInvocation(RewriteCompilationUnit unit, VariableDeclarationFragment fragment) {
+	private void replaceMethodInvocation(IRewriteCompilationUnit unit, VariableDeclarationFragment fragment) {
 		// Replace the method invocation only if we didn't refactor the method yet.
 		Expression initializer = fragment.getInitializer();
 		

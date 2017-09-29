@@ -18,35 +18,39 @@ import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 
 /**
- * A set of {@link IRewriteCompilationUnit} enhanced with utility methods.
+ * A set of {@link RewriteCompilationUnit} enhanced with utility methods.
  * 
  * @author mirko
  *
  */
-public class ProjectUnits implements IProjectUnits<RewriteCompilationUnit> {
+public class ProjectUnits implements IProjectUnits {
 
 	private final @NonNull Set<RewriteCompilationUnit> units;
 
-	public ProjectUnits(@NonNull Set<RewriteCompilationUnit> units) {
+	protected ProjectUnits(@NonNull Set<RewriteCompilationUnit> units) {
 		Objects.requireNonNull(units, "The initial units can not be null");
 
 		this.units = units;
 	}
 
 	@SuppressWarnings("null")
-	public ProjectUnits() {
+	protected ProjectUnits() {
 		this(Sets.newHashSet());
 	}
 
-	
-	protected void addChangesTo(CompositeChange changes)
+	/**
+	 * Adds the changes that are stored in this sets compilation units
+	 * to a {@link CompositeChange} object.
+	 * 
+	 * @param changes the object that should be modified
+	 */
+	protected void addChangesTo(@NonNull CompositeChange changes)
 			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {		
 		
-		for (RewriteCompilationUnit unit : units) {			
+		for (RewriteCompilationUnit unit : units) {				
 				unit.getChangedDocument().ifPresent(doc -> {
 					changes.add(doc);
-				});			
-			
+				});				
 		}
 	}
 
@@ -75,10 +79,29 @@ public class ProjectUnits implements IProjectUnits<RewriteCompilationUnit> {
 	public boolean contains(Object o) {
 		return units.contains(o);
 	}
+	
+	@Override
+	public boolean containsAll(Collection<?> c) {
+		return units.containsAll(c);
+	}
 
 	@Override
-	public Iterator<RewriteCompilationUnit> iterator() {
-		return units.iterator();
+	public Iterator<IRewriteCompilationUnit> iterator() {
+		//Wrap Iterator<IRewriteCompilationUnit> around Iterator<RewriteCompilationUnit>
+		return new Iterator<IRewriteCompilationUnit>() {
+
+			private final Iterator<RewriteCompilationUnit> it = units.iterator();
+			
+			@Override
+			public boolean hasNext() {				
+				return it.hasNext();
+			}
+
+			@Override
+			public IRewriteCompilationUnit next() {				
+				return it.next();
+			}			
+		};
 	}
 
 	@Override
@@ -91,39 +114,6 @@ public class ProjectUnits implements IProjectUnits<RewriteCompilationUnit> {
 		return units.toArray(a);
 	}
 
-	@Override
-	public boolean add(RewriteCompilationUnit e) {
-		throw new UnsupportedOperationException("This class is not mutable.");
-	}
-
-	@Override
-	public boolean remove(Object o) {
-		throw new UnsupportedOperationException("This class is not mutable.");
-	}
-
-	@Override
-	public boolean containsAll(Collection<?> c) {
-		return units.containsAll(c);
-	}
-
-	@Override
-	public boolean addAll(Collection<? extends RewriteCompilationUnit> c) {
-		return units.addAll(c);
-	}
-
-	@Override
-	public boolean retainAll(Collection<?> c) {
-		return units.retainAll(c);
-	}
-
-	@Override
-	public boolean removeAll(Collection<?> c) {
-		return units.removeAll(c);
-	}
-
-	@Override
-	public void clear() {
-		throw new UnsupportedOperationException("This class is not mutable.");
-	}
+	
 
 }

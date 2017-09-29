@@ -1,12 +1,18 @@
 package de.tudarmstadt.rxrefactoring.core;
 
+import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNull;
 
-
-public interface IProjectUnits<T extends IRewriteCompilationUnit> extends Set<T>  {
+/**
+ * An immutable set of compilation units.
+ * 
+ * @author mirko
+ *
+ */
+public interface IProjectUnits extends Set<IRewriteCompilationUnit>  {
 	
 	/**
 	 * Accepts a visitor for each compilation unit in this
@@ -20,7 +26,37 @@ public interface IProjectUnits<T extends IRewriteCompilationUnit> extends Set<T>
 			Objects.requireNonNull(unit, "an element of ProjectUnits was null");				
 			visitor.setUnit(unit);
 			unit.accept(visitor);
-		}
-		
+		}		
+	}
+	
+	
+	@Override
+	default public boolean add(IRewriteCompilationUnit e) {
+		throw new UnsupportedOperationException("this set is not mutable");
+	}
+
+	@Override
+	default public boolean remove(Object o) {
+		throw new UnsupportedOperationException("this set is not mutable");
+	}
+	
+	@Override
+	default public boolean addAll(Collection<? extends IRewriteCompilationUnit> c) {
+		throw new UnsupportedOperationException("this set is not mutable");
+	}
+
+	@Override
+	default public boolean retainAll(Collection<?> c) {
+		throw new UnsupportedOperationException("this set is not mutable");
+	}
+
+	@Override
+	default public boolean removeAll(Collection<?> c) {
+		throw new UnsupportedOperationException("this set is not mutable");
+	}
+
+	@Override
+	default public void clear() {
+		throw new UnsupportedOperationException("this set is not mutable");
 	}
 }

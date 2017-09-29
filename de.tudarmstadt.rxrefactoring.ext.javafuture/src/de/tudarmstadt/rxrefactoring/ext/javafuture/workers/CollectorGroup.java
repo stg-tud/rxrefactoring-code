@@ -18,20 +18,21 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+
 
 public class CollectorGroup {
-	private final Map<RewriteCompilationUnit, List<TypeDeclaration>> typeDeclMap;
-	private final Map<RewriteCompilationUnit, List<FieldDeclaration>> fieldDeclMap;
-	private final Map<RewriteCompilationUnit, List<Assignment>> assigmentsMap;
-	private final Map<RewriteCompilationUnit, List<VariableDeclarationStatement>> varDeclMap;
-	private final Map<RewriteCompilationUnit, List<SimpleName>> simpleNamesMap;
-	private final Map<RewriteCompilationUnit, List<ClassInstanceCreation>> classInstanceMap;
-	private final Map<RewriteCompilationUnit, List<SingleVariableDeclaration>> singleVarDeclMap;
-	private final Map<RewriteCompilationUnit, List<MethodInvocation>> methodInvocationsMap;
-	private final Map<RewriteCompilationUnit, List<MethodDeclaration>> methodDeclarationsMap;
-	private final Map<RewriteCompilationUnit, List<ArrayCreation>> arrayCreationsMap;
-	private final Map<RewriteCompilationUnit, List<ReturnStatement>> returnStatementsMap; 
+	private final Map<IRewriteCompilationUnit, List<TypeDeclaration>> typeDeclMap;
+	private final Map<IRewriteCompilationUnit, List<FieldDeclaration>> fieldDeclMap;
+	private final Map<IRewriteCompilationUnit, List<Assignment>> assigmentsMap;
+	private final Map<IRewriteCompilationUnit, List<VariableDeclarationStatement>> varDeclMap;
+	private final Map<IRewriteCompilationUnit, List<SimpleName>> simpleNamesMap;
+	private final Map<IRewriteCompilationUnit, List<ClassInstanceCreation>> classInstanceMap;
+	private final Map<IRewriteCompilationUnit, List<SingleVariableDeclaration>> singleVarDeclMap;
+	private final Map<IRewriteCompilationUnit, List<MethodInvocation>> methodInvocationsMap;
+	private final Map<IRewriteCompilationUnit, List<MethodDeclaration>> methodDeclarationsMap;
+	private final Map<IRewriteCompilationUnit, List<ArrayCreation>> arrayCreationsMap;
+	private final Map<IRewriteCompilationUnit, List<ReturnStatement>> returnStatementsMap; 
 	
 	public CollectorGroup() {
 
@@ -48,7 +49,7 @@ public class CollectorGroup {
 		returnStatementsMap = new HashMap<>();
 	}
 	
-	public void add(RewriteCompilationUnit cu, VisitorNodes subclasses) {
+	public void add(IRewriteCompilationUnit cu, VisitorNodes subclasses) {
 		addToMap(cu, subclasses.getTypeDeclarations(), typeDeclMap);
 		addToMap(cu, subclasses.getFieldDeclarations(), fieldDeclMap);
 		addToMap(cu, subclasses.getAssignments(), assigmentsMap);
@@ -62,7 +63,7 @@ public class CollectorGroup {
 		addToMap(cu, subclasses.getReturnStatements(), returnStatementsMap);
 	}
 	
-	private <T> void addToMap(RewriteCompilationUnit cu, List<T> newList, Map<RewriteCompilationUnit, List<T>> map) {
+	private <T> void addToMap(IRewriteCompilationUnit cu, List<T> newList, Map<IRewriteCompilationUnit, List<T>> map) {
 		if (newList.isEmpty() || map == null) {
 			return;
 		}
@@ -75,52 +76,52 @@ public class CollectorGroup {
 		}
 	}
 	
-	public Map<RewriteCompilationUnit, List<TypeDeclaration>> getTypeDeclMap() {
+	public Map<IRewriteCompilationUnit, List<TypeDeclaration>> getTypeDeclMap() {
 		return typeDeclMap;
 	}
 
-	public Map<RewriteCompilationUnit, List<FieldDeclaration>> getFieldDeclMap() {
+	public Map<IRewriteCompilationUnit, List<FieldDeclaration>> getFieldDeclMap() {
 		return fieldDeclMap;
 	}
 
-	public Map<RewriteCompilationUnit, List<Assignment>> getAssigmentsMap() {
+	public Map<IRewriteCompilationUnit, List<Assignment>> getAssigmentsMap() {
 		return assigmentsMap;
 	}
 
-	public Map<RewriteCompilationUnit, List<VariableDeclarationStatement>> getVarDeclMap() {
+	public Map<IRewriteCompilationUnit, List<VariableDeclarationStatement>> getVarDeclMap() {
 		return varDeclMap;
 	}
 
-	public Map<RewriteCompilationUnit, List<SimpleName>> getSimpleNamesMap() {
+	public Map<IRewriteCompilationUnit, List<SimpleName>> getSimpleNamesMap() {
 		return simpleNamesMap;
 	}
 
-	public Map<RewriteCompilationUnit, List<ClassInstanceCreation>> getClassInstanceMap() {
+	public Map<IRewriteCompilationUnit, List<ClassInstanceCreation>> getClassInstanceMap() {
 		return classInstanceMap;
 	}
 
-	public Map<RewriteCompilationUnit, List<SingleVariableDeclaration>> getSingleVarDeclMap() {
+	public Map<IRewriteCompilationUnit, List<SingleVariableDeclaration>> getSingleVarDeclMap() {
 		return singleVarDeclMap;
 	}
 
-	public Map<RewriteCompilationUnit, List<MethodInvocation>> getMethodInvocationsMap() {
+	public Map<IRewriteCompilationUnit, List<MethodInvocation>> getMethodInvocationsMap() {
 		return methodInvocationsMap;
 	}
 
-	public Map<RewriteCompilationUnit, List<MethodDeclaration>> getMethodDeclarationsMap() {
+	public Map<IRewriteCompilationUnit, List<MethodDeclaration>> getMethodDeclarationsMap() {
 		return methodDeclarationsMap;
 	}
 	
-	public Map<RewriteCompilationUnit, List<ArrayCreation>> getArrayCreationsMap() {
+	public Map<IRewriteCompilationUnit, List<ArrayCreation>> getArrayCreationsMap() {
 		return arrayCreationsMap;
 	}
 	
-	public Map<RewriteCompilationUnit, List<ReturnStatement>> getReturnStatementsMap() {
+	public Map<IRewriteCompilationUnit, List<ReturnStatement>> getReturnStatementsMap() {
 		return returnStatementsMap;
 	}
 	
-	public Set<RewriteCompilationUnit> getCompilationUnits() {
-		Set<RewriteCompilationUnit> allCompilationUnits = new HashSet<>();
+	public Set<IRewriteCompilationUnit> getCompilationUnits() {
+		Set<IRewriteCompilationUnit> allCompilationUnits = new HashSet<>();
 
 		allCompilationUnits.addAll(typeDeclMap.keySet());
 		allCompilationUnits.addAll(fieldDeclMap.keySet());

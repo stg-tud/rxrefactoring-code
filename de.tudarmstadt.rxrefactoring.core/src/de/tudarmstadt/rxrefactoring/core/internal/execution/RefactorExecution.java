@@ -47,10 +47,10 @@ import org.osgi.framework.Bundle;
 import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
+import de.tudarmstadt.rxrefactoring.core.RefactorSummary;
+import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectStatus;
+import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.ProjectStatus;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.ProjectSummary;
 
 /**
  * This class is used to run the refactoring on all workspace projects.
@@ -330,7 +330,7 @@ public final class RefactorExecution implements Runnable {
 
 	}
 
-	private void doRefactorProject(ProjectUnits units, CompositeChange changes, ProjectSummary projectSummary)
+	private void doRefactorProject(@NonNull ProjectUnits units, @NonNull CompositeChange changes, @NonNull ProjectSummary projectSummary)
 			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException, InterruptedException {
 
 		// Produce the worker tree
