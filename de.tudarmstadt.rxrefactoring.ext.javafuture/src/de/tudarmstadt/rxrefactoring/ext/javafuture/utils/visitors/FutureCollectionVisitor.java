@@ -97,7 +97,7 @@ public class FutureCollectionVisitor extends ASTVisitor implements VisitorNodes 
 	public boolean visit(FieldDeclaration node) {
 		ITypeBinding type = node.getType().resolveBinding();
 		
-		if (Arrays.stream(collectionBinaryNames).allMatch(s -> Types.hasSignature(type, s))
+		if (Arrays.stream(collectionBinaryNames).allMatch(s -> Types.isExactTypeOf(type, s))
 				|| node.getType() instanceof ArrayType)
 		{
 			ITypeBinding binding = ASTUtils.getTypeArgumentBinding(
@@ -119,7 +119,7 @@ public class FutureCollectionVisitor extends ASTVisitor implements VisitorNodes 
 		if(leftHandSide.getNodeType() == Expression.ARRAY_ACCESS) {
 			ITypeBinding type = leftHandSide.resolveTypeBinding();
 			
-			if(Types.hasSignature(type, classBinaryName)) {
+			if(Types.isExactTypeOf(type, classBinaryName)) {
 				addParent(node);
 				assignments.add(node);
 			}
@@ -136,8 +136,8 @@ public class FutureCollectionVisitor extends ASTVisitor implements VisitorNodes 
 			return true;
 		
 		// Check for collections
-		if(Types.hasParent(type, collectionBinaryNames)
-				|| Types.hasParent(type, "java.util.Iterator")) {
+		if(Types.isTypeOf(type, collectionBinaryNames)
+				|| Types.isTypeOf(type, "java.util.Iterator")) {
 			
 			if(ASTUtils.getTypeArgumentBinding(type, classBinaryName) != null) {
 				varDeclStatements.add(node);
@@ -145,7 +145,7 @@ public class FutureCollectionVisitor extends ASTVisitor implements VisitorNodes 
 			}
 		} else if(type != null && type.isArray()) {
 			//Array
-			if(Types.hasSignature(type.getElementType(), classBinaryName)) {
+			if(Types.isExactTypeOf(type.getElementType(), classBinaryName)) {
 				varDeclStatements.add(node);
 				addParent(node);
 			}
@@ -157,7 +157,7 @@ public class FutureCollectionVisitor extends ASTVisitor implements VisitorNodes 
 	@Override
 	public boolean visit(ClassInstanceCreation node) {
 		ITypeBinding type = node.getType().resolveBinding();
-		if (Types.hasParent(type, collectionBinaryNames)) {
+		if (Types.isTypeOf(type, collectionBinaryNames)) {
 			if(ASTUtils.getTypeArgumentBinding(type, classBinaryName) != null) {
 				classInstanceCreations.add(node);
 				addParent(node);
@@ -173,11 +173,11 @@ public class FutureCollectionVisitor extends ASTVisitor implements VisitorNodes 
 			ITypeBinding typeBinding = simpleName.resolveTypeBinding();
 
 			// collection
-			if (Types.hasParent(typeBinding, collectionBinaryNames)
+			if (Types.isTypeOf(typeBinding, collectionBinaryNames)
 					&& ASTUtils.getTypeArgumentBinding(typeBinding, classBinaryName) != null) {
 				addSimpleName(simpleName);
 			} else if(typeBinding != null && typeBinding.isArray()
-					&& Types.hasSignature(typeBinding.getElementType(), classBinaryName)) {
+					&& Types.isExactTypeOf(typeBinding.getElementType(), classBinaryName)) {
 				addSimpleName(simpleName);
 			}
 		}
@@ -210,7 +210,7 @@ public class FutureCollectionVisitor extends ASTVisitor implements VisitorNodes 
 		if (binding != null) {
 			ITypeBinding returnType = binding.getReturnType();
 
-			if (Types.hasParent(returnType, collectionBinaryNames)
+			if (Types.isTypeOf(returnType, collectionBinaryNames)
 					&& ASTUtils.getTypeArgumentBinding(returnType, classBinaryName) != null) {
 				methodDeclarations.add(node);
 				
@@ -226,7 +226,7 @@ public class FutureCollectionVisitor extends ASTVisitor implements VisitorNodes 
 				SingleVariableDeclaration singleVarDecl = (SingleVariableDeclaration)parameter;
 				
 				ITypeBinding type = singleVarDecl.getType().resolveBinding();
-				if (Types.hasSignature(type, classBinaryName)) {
+				if (Types.isExactTypeOf(type, classBinaryName)) {
 					methodRelevant = true;
 					setPurity(false);
 					break;
@@ -254,7 +254,7 @@ public class FutureCollectionVisitor extends ASTVisitor implements VisitorNodes 
 		IMethodBinding binding = node.resolveMethodBinding();
 		if (binding != null) {
 			ITypeBinding type = binding.getDeclaringClass();
-			if (Types.hasParent(type, collectionBinaryNames)
+			if (Types.isTypeOf(type, collectionBinaryNames)
 					&& ASTUtils.getTypeArgumentBinding(type, classBinaryName) != null) {
 				methodInvocations.add(node);
 				addParent(node);
@@ -265,7 +265,7 @@ public class FutureCollectionVisitor extends ASTVisitor implements VisitorNodes 
 			if (arg instanceof SimpleName) {
 				SimpleName simpleName = (SimpleName) arg;
 				ITypeBinding argType = simpleName.resolveTypeBinding();
-				if (Types.hasParent(argType, collectionBinaryNames)
+				if (Types.isTypeOf(argType, collectionBinaryNames)
 						&& ASTUtils.getTypeArgumentBinding(argType, classBinaryName) != null) {
 					
 					setPurity(false);
@@ -284,7 +284,7 @@ public class FutureCollectionVisitor extends ASTVisitor implements VisitorNodes 
 		
 		ITypeBinding type = node.getType().getElementType().resolveBinding();
 		
-		if(Types.hasSignature(type, classBinaryName)) {
+		if(Types.isExactTypeOf(type, classBinaryName)) {
 			addParent(node);
 			arrayCreations.add(node);
 		}

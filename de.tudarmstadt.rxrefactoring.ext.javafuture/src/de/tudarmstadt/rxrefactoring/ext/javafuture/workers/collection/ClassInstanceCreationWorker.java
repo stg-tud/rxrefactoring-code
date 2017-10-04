@@ -37,7 +37,7 @@ public class ClassInstanceCreationWorker extends AbstractFutureWorker<ClassInsta
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, ClassInstanceCreation classInstanceCreation) {
 		Type type = classInstanceCreation.getType();
-		if (Types.hasParent(type.resolveBinding(), CollectionInfo.getBinaryNames())) {
+		if (Types.isTypeOf(type.resolveBinding(), CollectionInfo.getBinaryNames())) {
 			if(type instanceof ParameterizedType) {
 				ParameterizedType pType = (ParameterizedType)type;
 

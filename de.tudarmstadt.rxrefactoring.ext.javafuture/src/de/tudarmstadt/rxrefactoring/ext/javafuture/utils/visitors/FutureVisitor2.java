@@ -60,7 +60,7 @@ public class FutureVisitor2 extends ASTVisitor implements VisitorNodes {
 
 	@Override
 	public boolean visit(FieldDeclaration node) {
-		if (Types.hasSignature(node.getType().resolveBinding(), classBinaryName)) {
+		if (Types.isExactTypeOf(node.getType().resolveBinding(), classBinaryName)) {
 			fieldDeclarations.add(node);
 		}
 		
@@ -70,7 +70,7 @@ public class FutureVisitor2 extends ASTVisitor implements VisitorNodes {
 	@Override
 	public boolean visit(VariableDeclarationStatement node) {
 		ITypeBinding type = node.getType().resolveBinding();
-		if (Types.hasSignature(type, classBinaryName)) {
+		if (Types.isExactTypeOf(type, classBinaryName)) {
 			varDeclStatements.add(node);
 		}
 		

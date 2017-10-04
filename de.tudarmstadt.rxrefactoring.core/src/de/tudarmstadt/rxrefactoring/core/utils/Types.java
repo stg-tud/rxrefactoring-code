@@ -21,16 +21,16 @@ public final class Types {
 	private Types() { }
 	
 	/**
-	 * Checks whether the given type binding adheres to the given
-	 * binary name, e.g., {@code java.lang.String}.
+	 * Checks whether the given type binding adheres to any of the given
+	 * binary names, e.g., {@code java.lang.String}.
 	 * 
 	 * @param type the type to check.
 	 * @param typeBinaryNames the binary names to check against.
 	 * 
 	 * @return false, if the type does not adhere to any of the given binary names
-	 * or if any input is {@code null}.
+	 * or if any argument is {@code null}.
 	 */
-	public static boolean hasSignature(ITypeBinding type, String... typeBinaryNames) {
+	public static boolean isExactTypeOf(ITypeBinding type, String... typeBinaryNames) {
 		if (type == null || typeBinaryNames == null) {
 			return false;
 		}
@@ -45,16 +45,18 @@ public final class Types {
 	 * given type name.
 	 *  
 	 * @param type the type to check.
-	 * @param parentTypeBinaryName the name to compare the type against.
+	 * @param parentTypeBinaryNames the names to compare the type against.
 	 * 
-	 * @return false, if the given type does not adhere to the type name or
-	 * if any of the inputs is {@code null}.
+	 * @return false, if the given type does not adhere to any of the type names or
+	 * if any argument is {@code null}.
+	 * 
+	 * @see Types#isExactTypeOf(ITypeBinding, String...)
 	 */
-	public static boolean hasParent(ITypeBinding type, String... parentTypeBinaryNames) {
+	public static boolean isTypeOf(ITypeBinding type, String... parentTypeBinaryNames) {
 				
 		ITypeBinding superType = type;		
 		while (superType != null) {
-			if (hasSignature(superType, parentTypeBinaryNames)) {
+			if (isExactTypeOf(superType, parentTypeBinaryNames)) {
 				return true;
 			}
 			
@@ -120,6 +122,12 @@ public final class Types {
 	}
 	
 	
+	/**
+	 * Returns the declared type of a {@link VariableDeclarationFragment}.
+	 * 
+	 * @param variable the fragment to be checked
+	 * @return the type of the fragment. This node is already present in the same AST as the fragment.
+	 */
 	@SuppressWarnings("null")
 	public static @NonNull Type declaredTypeOf(@NonNull VariableDeclarationFragment variable) {
 		

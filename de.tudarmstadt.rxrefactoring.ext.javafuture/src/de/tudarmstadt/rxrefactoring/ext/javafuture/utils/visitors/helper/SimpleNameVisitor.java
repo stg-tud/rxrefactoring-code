@@ -25,7 +25,7 @@ public class SimpleNameVisitor extends ASTVisitor {
 
 	@Override
 	public boolean visit(SimpleName node) {
-		if (Types.hasSignature(node.resolveTypeBinding(), binaryName)) {
+		if (Types.isExactTypeOf(node.resolveTypeBinding(), binaryName)) {
 			simpleNames.add(node);
 		}
 		

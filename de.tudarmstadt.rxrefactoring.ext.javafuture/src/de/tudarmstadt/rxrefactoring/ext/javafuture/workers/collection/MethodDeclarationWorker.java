@@ -51,7 +51,7 @@ public class MethodDeclarationWorker extends AbstractFutureWorker<MethodDeclarat
 			return;
 		}
 		
-		if(Types.hasParent(returnType.resolveBinding(), CollectionInfo.getBinaryNames())) {
+		if(Types.isTypeOf(returnType.resolveBinding(), CollectionInfo.getBinaryNames())) {
 			if(returnType instanceof ParameterizedType) {
 
 				ParameterizedType pType = (ParameterizedType)returnType;

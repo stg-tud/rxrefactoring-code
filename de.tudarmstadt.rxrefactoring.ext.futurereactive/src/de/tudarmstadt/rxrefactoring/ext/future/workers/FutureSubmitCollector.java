@@ -40,7 +40,7 @@ public class FutureSubmitCollector implements IWorker<Void, Multimap<IRewriteCom
 			ITypeBinding expressionType = node.getExpression().resolveTypeBinding();	
 			IMethodBinding methodBinding = node.resolveMethodBinding();
 			
-			if (Types.hasSignature(expressionType, "java.util.concurrent.ExecutorService") 
+			if (Types.isExactTypeOf(expressionType, "java.util.concurrent.ExecutorService") 
 					&& Methods.hasSignature(methodBinding, null, "submit", "java.util.concurrent.Callable")) {
 				submitInvocations.put(getUnit(), node);
 				return true;

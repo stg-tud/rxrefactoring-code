@@ -38,7 +38,7 @@ public class FieldDeclarationWorker extends AbstractFutureWorker<FieldDeclaratio
 	protected void refactorNode(IRewriteCompilationUnit unit, FieldDeclaration fieldDeclaration) {
 		Type fieldType = fieldDeclaration.getType();
 		
-		if(Types.hasParent(fieldType.resolveBinding(), CollectionInfo.getBinaryNames())) {
+		if(Types.isTypeOf(fieldType.resolveBinding(), CollectionInfo.getBinaryNames())) {
 			if(fieldType instanceof ParameterizedType) {
 
 				ParameterizedType pType = (ParameterizedType)fieldType;

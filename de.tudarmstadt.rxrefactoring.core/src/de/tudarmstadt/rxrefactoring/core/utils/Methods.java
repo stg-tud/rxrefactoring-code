@@ -29,7 +29,7 @@ public final class Methods {
 			
 		ITypeBinding[] mbParameters = mb.getParameterTypes();
 		boolean result = 
-				(className == null || Types.hasSignature(mb.getDeclaringClass(), className))
+				(className == null || Types.isExactTypeOf(mb.getDeclaringClass(), className))
 				&& Objects.equals(mb.getName(), methodName)
 				&& parameterTypeNames.length == mbParameters.length;
 
@@ -38,7 +38,7 @@ public final class Methods {
 		}
 		
 		for (int i = 0; i < parameterTypeNames.length; i++) {
-			if (!Types.hasSignature(mbParameters[i], parameterTypeNames[i])) {
+			if (!Types.isExactTypeOf(mbParameters[i], parameterTypeNames[i])) {
 				return false;
 			}
 		}
