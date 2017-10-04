@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ASCII"?>
+<fragment:ModelFragments xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:commands="http://www.eclipse.org/ui/2010/UIModel/application/commands" xmlns:fragment="http://www.eclipse.org/ui/2010/UIModel/fragment" xmlns:menu="http://www.eclipse.org/ui/2010/UIModel/application/ui/menu" xmi:id="_Lk5Q4KjeEees9rbR_E5rBg">
+  <imports xsi:type="menu:Menu" xmi:id="_OPZ54KjfEees9rbR_E5rBg" elementId="de.tudarmstadt.rxrefactoring.core.menu"/>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_WdnG4KjeEees9rbR_E5rBg" featurename="menuContributions" parentElementId="org.eclipse.e4.legacy.ide.application">
+    <elements xsi:type="menu:MenuContribution" xmi:id="_GrnYUKjfEees9rbR_E5rBg" elementId="de.tudarmstadt.rxrefactoring.ext.futurereactive.menucontribution.execute" positionInParent="before=de.tudarmstadt.rxrefactoring.core.menuseparator.0" parentId="de.tudarmstadt.rxrefactoring.core.menu">
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_SvvRgKjfEees9rbR_E5rBg" elementId="de.tudarmstadt.rxrefactoring.ext.futurereactive.handledmenuitem.execute" label="Test Intermediate representation" command="_gIMgYKjfEees9rbR_E5rBg"/>
+    </elements>
+  </fragments>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_b-I6wKjfEees9rbR_E5rBg" featurename="commands" parentElementId="org.eclipse.e4.legacy.ide.application">
+    <elements xsi:type="commands:Command" xmi:id="_gIMgYKjfEees9rbR_E5rBg" elementId="de.tudarmstadt.rxrefactoring.ext.futurereactive.command.execute" commandName="Execute"/>
+  </fragments>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_i7KXQKjfEees9rbR_E5rBg" featurename="handlers" parentElementId="org.eclipse.e4.legacy.ide.application">
+    <elements xsi:type="commands:Handler" xmi:id="_j-QL8KjfEees9rbR_E5rBg" elementId="de.tudarmstadt.rxrefactoring.ext.futurereactive.handler.0" contributionURI="bundleclass://de.tudarmstadt.rxrefactoring.ext.future/de.tudarmstadt.rxrefactoring.ext.future.Handler" command="_gIMgYKjfEees9rbR_E5rBg"/>
+  </fragments>
+</fragment:ModelFragments>

@@ -53,7 +53,7 @@ public class UnrefactorableReferencesWorker extends AbstractAkkaFutureWorker<Akk
 		if (!FutureTypeWrapper.isAkkaFuture(typeBinding))
 			return;
 		
-		Supplier<Type> typeSupplier = () -> Types.typeFromBinding(ast, FutureTypeWrapper.create(typeBinding).getTypeParameter(ast));
+		Supplier<Type> typeSupplier = () -> Types.fromBinding(ast, FutureTypeWrapper.create(typeBinding).getTypeParameter(ast));
 		
 		/*
 		 * builds
@@ -115,7 +115,7 @@ public class UnrefactorableReferencesWorker extends AbstractAkkaFutureWorker<Akk
 				if (FutureTypeWrapper.isAkkaFuture(varType)) {
 					varStatement.setType(FutureTypeWrapper.create(varType).toObservableType(ast));
 				} else {
-					varStatement.setType(Types.typeFromBinding(ast, varType));
+					varStatement.setType(Types.fromBinding(ast, varType));
 				}				
 				varStatement.modifiers().add(ast.newModifier(ModifierKeyword.FINAL_KEYWORD));
 				

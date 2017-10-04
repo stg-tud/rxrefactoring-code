@@ -1,5 +1,6 @@
 package de.tudarmstadt.rxrefactoring.core.utils;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -19,14 +20,49 @@ public final class Types {
 	// There can be no instance of TypeUtils.
 	private Types() { }
 	
-	public static boolean hasSignature(ITypeBinding type, String typeBinaryName) {
-		if (type == null || typeBinaryName == null) {
+	/**
+	 * Checks whether the given type binding adheres to the given
+	 * binary name, e.g., {@code java.lang.String}.
+	 * 
+	 * @param type the type to check.
+	 * @param typeBinaryNames the binary names to check against.
+	 * 
+	 * @return false, if the type does not adhere to any of the given binary names
+	 * or if any input is {@code null}.
+	 */
+	public static boolean hasSignature(ITypeBinding type, String... typeBinaryNames) {
+		if (type == null || typeBinaryNames == null) {
 			return false;
 		}
 				
 		String binaryName = type.getBinaryName();
 		
-		return Objects.equals(binaryName, typeBinaryName);		
+		return Arrays.stream(typeBinaryNames).anyMatch(s -> Objects.equals(binaryName, s));		
+	}
+	
+	/**
+	 * Checks whether a given type or any of its super-types adhere to the
+	 * given type name.
+	 *  
+	 * @param type the type to check.
+	 * @param parentTypeBinaryName the name to compare the type against.
+	 * 
+	 * @return false, if the given type does not adhere to the type name or
+	 * if any of the inputs is {@code null}.
+	 */
+	public static boolean hasParent(ITypeBinding type, String... parentTypeBinaryNames) {
+				
+		ITypeBinding superType = type;		
+		while (superType != null) {
+			if (hasSignature(superType, parentTypeBinaryNames)) {
+				return true;
+			}
+			
+			superType = superType.getSuperclass();
+		}
+		
+		return false;		
+		
 	}
 	
 	/**
@@ -40,7 +76,7 @@ public final class Types {
 	 * @return The type from the type binding.
 	 */
 	@SuppressWarnings("null")
-	public static @NonNull Type typeFromBinding(@NonNull AST ast, @NonNull ITypeBinding typeBinding) {
+	public static @NonNull Type fromBinding(@NonNull AST ast, @NonNull ITypeBinding typeBinding) {
 		Objects.requireNonNull(ast);
 		Objects.requireNonNull(typeBinding);
 
@@ -53,23 +89,23 @@ public final class Types {
 			org.eclipse.jdt.core.dom.WildcardType capType = ast.newWildcardType();
 			ITypeBinding bound = wildCard.getBound();
 			if (bound != null) {
-				capType.setBound(typeFromBinding(ast, bound), wildCard.isUpperbound());
+				capType.setBound(fromBinding(ast, bound), wildCard.isUpperbound());
 			}
 			return capType;
 		}
 
 		if (typeBinding.isArray()) {
-			Type elType = typeFromBinding(ast, typeBinding.getElementType());
+			Type elType = fromBinding(ast, typeBinding.getElementType());
 			return ast.newArrayType(elType, typeBinding.getDimensions());
 		}
 
 		if (typeBinding.isParameterizedType()) {
-			ParameterizedType type = ast.newParameterizedType(typeFromBinding(ast, typeBinding.getErasure()));
+			ParameterizedType type = ast.newParameterizedType(fromBinding(ast, typeBinding.getErasure()));
 
 			@SuppressWarnings("unchecked")
 			List<Type> newTypeArgs = type.typeArguments();
 			for (ITypeBinding typeArg : typeBinding.getTypeArguments()) {
-				newTypeArgs.add(typeFromBinding(ast, typeArg));
+				newTypeArgs.add(fromBinding(ast, typeArg));
 			}
 
 			return type;

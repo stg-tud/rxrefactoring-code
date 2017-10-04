@@ -5,9 +5,7 @@ import java.util.List;
 
 public class CollectionInfo {
 
-	private static final List<String> collectionBinaryNames = Arrays.asList(
-			"java.util.Collection"
-			);
+	private static final String[] collectionBinaryNames = new String[] { "java.util.Collection" };
 
 	public static final List<String> publicMethodsMap = Arrays.asList(
 
@@ -17,7 +15,7 @@ public class CollectionInfo {
 	 *
 	 * @return full name of the class. i.e: android.os.AsyncTask
 	 */
-	public static List<String> getBinaryNames()
+	public static String[] getBinaryNames()
 	{
 		return collectionBinaryNames;
 	}

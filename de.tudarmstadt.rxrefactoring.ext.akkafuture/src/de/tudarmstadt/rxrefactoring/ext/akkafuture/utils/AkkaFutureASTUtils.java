@@ -169,7 +169,7 @@ public class AkkaFutureASTUtils {
 					ITypeBinding thisBinding = node.resolveTypeBinding().getErasure();
 					
 					ThisExpression thisExpr = ast.newThisExpression();
-					thisExpr.setQualifier(ast.newName(Types.typeFromBinding(ast, thisBinding).toString()));
+					thisExpr.setQualifier(ast.newName(Types.fromBinding(ast, thisBinding).toString()));
 					
 					unit.replace(node, thisExpr);
 				}
@@ -370,7 +370,7 @@ public class AkkaFutureASTUtils {
 				if (FutureTypeWrapper.isAkkaFuture(varType)) {
 					varStatement.setType(FutureTypeWrapper.create(varType).toObservableType(ast));
 				} else {
-					varStatement.setType(Types.typeFromBinding(ast, varType));
+					varStatement.setType(Types.fromBinding(ast, varType));
 				}				
 				varStatement.modifiers().add(ast.newModifier(ModifierKeyword.FINAL_KEYWORD));
 				

@@ -3,6 +3,8 @@ package de.tudarmstadt.rxrefactoring.ext.javafuture.workers;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
@@ -39,7 +41,7 @@ public abstract class AbstractGeneralWorker<NodeType extends ASTNode> implements
 	}
 	
 	@Override
-	public Void refactor(IProjectUnits units, FutureCollector collector, WorkerSummary summary) throws Exception {
+	public Void refactor(@NonNull IProjectUnits units, @Nullable FutureCollector collector, @NonNull WorkerSummary summary) throws Exception {
 		this.collector = collector;
 		this.summary = summary;
 		

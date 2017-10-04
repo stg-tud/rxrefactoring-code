@@ -88,7 +88,7 @@ public class FuturesSequenceWrapper implements FutureMethodWrapper {
 		
 		FutureTypeWrapper ft = getFutureType();
 		
-		cast.setType(Types.typeFromBinding(ast, getFutureType().getTypeParameter(ast)));
+		cast.setType(Types.fromBinding(ast, getFutureType().getTypeParameter(ast)));
 		cast.setExpression(ast.newSimpleName("o"));
 		
 		LambdaExpression mapLambda = ast.newLambdaExpression();

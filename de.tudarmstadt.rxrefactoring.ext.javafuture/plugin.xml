@@ -4,7 +4,7 @@
          id="de.tudarmstadt.rxrefactoring.ext.javafuture.fragment"
          point="org.eclipse.e4.workbench.model">
       <fragment
-            uri="extension.e4xmi">
+            uri="ext.javafuture.e4xmi">
       </fragment>
    </extension>
 

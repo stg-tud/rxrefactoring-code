@@ -86,8 +86,8 @@ public class FuturesMapWrapper implements FutureMethodWrapper {
 		
 		AST ast = unit.getAST();
 		
-		Supplier<Type> fromType = () -> unit.copyNode(Types.typeFromBinding(ast, getFromType().getTypeParameter(ast)));
-		Supplier<Type> toType = () -> unit.copyNode(Types.typeFromBinding(ast, getToType().getTypeParameter(ast)));
+		Supplier<Type> fromType = () -> unit.copyNode(Types.fromBinding(ast, getFromType().getTypeParameter(ast)));
+		Supplier<Type> toType = () -> unit.copyNode(Types.fromBinding(ast, getToType().getTypeParameter(ast)));
 		
 		//Func1 Type
 		ParameterizedType func1Type = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Func1")));

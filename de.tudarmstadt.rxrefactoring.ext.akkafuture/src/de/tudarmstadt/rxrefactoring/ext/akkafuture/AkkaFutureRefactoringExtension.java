@@ -21,12 +21,7 @@ import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture.VariableTy
  */
 public class AkkaFutureRefactoringExtension implements IRefactorExtension {
 	
-	
-
-	public AkkaFutureRefactoringExtension() {
 		
-	}
-	
 
 	@Override
 	public @NonNull String getDescription() {

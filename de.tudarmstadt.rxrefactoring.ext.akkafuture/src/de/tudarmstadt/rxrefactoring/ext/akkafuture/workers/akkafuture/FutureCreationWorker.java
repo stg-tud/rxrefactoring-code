@@ -74,7 +74,7 @@ public class FutureCreationWorker extends AbstractAkkaFutureWorker<AkkaFutureCol
 		AST ast = unit.getAST();	
 		
 		ITypeBinding binding = expr.resolveTypeBinding();
-		Type futureType = Types.typeFromBinding(ast, FutureTypeWrapper.create(binding).getTypeParameter(ast)); //ASTUtils.typeFromBinding(ast, binding.getTypeArguments()[0]);	
+		Type futureType = Types.fromBinding(ast, FutureTypeWrapper.create(binding).getTypeParameter(ast)); //ASTUtils.typeFromBinding(ast, binding.getTypeArguments()[0]);	
 		
 		Statement referenceStatement = wrapper.getReferenceStatement();
 				

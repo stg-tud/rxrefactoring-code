@@ -24,6 +24,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfo;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.VisitorNodes;
 
@@ -59,7 +60,7 @@ public class FutureVisitor2 extends ASTVisitor implements VisitorNodes {
 
 	@Override
 	public boolean visit(FieldDeclaration node) {
-		if (ASTUtils.isClassOf(node, classBinaryName)) {
+		if (Types.hasSignature(node.getType().resolveBinding(), classBinaryName)) {
 			fieldDeclarations.add(node);
 		}
 		
@@ -69,7 +70,7 @@ public class FutureVisitor2 extends ASTVisitor implements VisitorNodes {
 	@Override
 	public boolean visit(VariableDeclarationStatement node) {
 		ITypeBinding type = node.getType().resolveBinding();
-		if (ASTUtils.isClassOf(type, classBinaryName)) {
+		if (Types.hasSignature(type, classBinaryName)) {
 			varDeclStatements.add(node);
 		}
 		

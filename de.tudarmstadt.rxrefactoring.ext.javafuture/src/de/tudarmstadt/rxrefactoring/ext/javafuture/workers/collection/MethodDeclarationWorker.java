@@ -10,6 +10,7 @@ import org.eclipse.jdt.core.dom.Type;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.CollectionInfo;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
@@ -50,7 +51,7 @@ public class MethodDeclarationWorker extends AbstractFutureWorker<MethodDeclarat
 			return;
 		}
 		
-		if(ASTUtils.isTypeOf(returnType, CollectionInfo.getBinaryNames())) {
+		if(Types.hasParent(returnType.resolveBinding(), CollectionInfo.getBinaryNames())) {
 			if(returnType instanceof ParameterizedType) {
 
 				ParameterizedType pType = (ParameterizedType)returnType;

@@ -34,13 +34,13 @@ public class FutureTypeWrapper {
 	}
 	
 	public Type createType(AST ast) {
-		return Types.typeFromBinding(ast, futureType);
+		return Types.fromBinding(ast, futureType);
 		
 	}
 	
 	public Type toObservableType(AST ast) {
 		ParameterizedType type = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Observable")));
-		type.typeArguments().add(Types.typeFromBinding(ast, getTypeParameter(ast)));
+		type.typeArguments().add(Types.fromBinding(ast, getTypeParameter(ast)));
 		
 		return type;
 	}
