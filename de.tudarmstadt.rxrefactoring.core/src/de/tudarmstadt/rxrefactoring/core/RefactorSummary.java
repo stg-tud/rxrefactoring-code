@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.jdt.annotation.NonNull;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
@@ -29,7 +30,7 @@ public class RefactorSummary {
 		this.name = name;
 	}
 
-	public ProjectSummary reportProject(IProject project) {
+	public @NonNull ProjectSummary reportProject(IProject project) {
 		ProjectSummary result = new ProjectSummary(project);
 		projects.add(result);
 		return result;

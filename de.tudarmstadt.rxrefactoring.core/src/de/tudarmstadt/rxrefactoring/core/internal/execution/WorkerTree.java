@@ -187,7 +187,13 @@ public class WorkerTree implements IWorkerTree {
 		private final CountDownLatch latch;
 		
 		public WorkerTreeExecution(ExecutorService executor) {
-			this.executor = MoreExecutors.listeningDecorator(executor);
+			
+			if (executor instanceof ListeningExecutorService) {
+				this.executor = (ListeningExecutorService) executor;
+			} else {
+				this.executor = MoreExecutors.listeningDecorator(executor);
+			}			
+			
 			latch = new CountDownLatch(size());
 		}
 		

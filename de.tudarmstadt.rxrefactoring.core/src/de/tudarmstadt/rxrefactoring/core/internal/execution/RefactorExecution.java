@@ -326,7 +326,7 @@ public final class RefactorExecution implements Runnable {
 			throw new IllegalStateException(e);
 		}
 
-		return new ProjectUnits(result);
+		return new ProjectUnits(javaProject, result);
 
 	}
 

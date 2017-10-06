@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.core.search.IJavaSearchScope;
 
 /**
  * An immutable set of compilation units.
@@ -13,6 +14,9 @@ import org.eclipse.jdt.annotation.NonNull;
  *
  */
 public interface IProjectUnits extends Set<IRewriteCompilationUnit>  {
+	
+	
+	public @NonNull IJavaSearchScope getSearchScope();
 	
 	/**
 	 * Accepts a visitor for each compilation unit in this

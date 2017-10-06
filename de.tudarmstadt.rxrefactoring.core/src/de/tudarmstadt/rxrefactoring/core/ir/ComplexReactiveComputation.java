@@ -19,7 +19,7 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-public class ReactiveComputation implements IReactiveComputation {
+public class ComplexReactiveComputation implements IReactiveComputation {
 	
 	private final @NonNull NodeSupplier<SimpleName> internalName;
 	
@@ -42,7 +42,7 @@ public class ReactiveComputation implements IReactiveComputation {
 	
 		
 	
-	public ReactiveComputation(
+	public ComplexReactiveComputation(
 			@NonNull IReactiveInput input, 
 			@NonNull NodeSupplier<SimpleName> internalName, 
 			@NonNull NodeSupplier<? extends Expression> doWithInput,

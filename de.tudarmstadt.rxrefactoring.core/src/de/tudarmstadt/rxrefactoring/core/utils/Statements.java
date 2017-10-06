@@ -3,6 +3,7 @@ package de.tudarmstadt.rxrefactoring.core.utils;
 import java.util.Optional;
 
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.DoStatement;
@@ -21,6 +22,10 @@ public final class Statements {
 
 	
 	private Statements() {}
+	
+	public static @Nullable Statement enclosingStatement(@NonNull ASTNode node) {
+		return ASTNodes.findParent(node, Statement.class).orElse(null);
+	}
 	
 	/**
 	 * Checks whether the given statement is a loop statement.

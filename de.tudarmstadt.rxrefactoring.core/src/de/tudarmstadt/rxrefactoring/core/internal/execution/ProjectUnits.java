@@ -7,6 +7,10 @@ import java.util.Set;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.search.IJavaSearchScope;
+import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.eclipse.text.edits.MalformedTreeException;
@@ -25,18 +29,21 @@ import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
  */
 public class ProjectUnits implements IProjectUnits {
 
+	private final @NonNull IJavaProject project;
+	
 	private final @NonNull Set<RewriteCompilationUnit> units;
 
-	protected ProjectUnits(@NonNull Set<RewriteCompilationUnit> units) {
+	protected ProjectUnits(@NonNull IJavaProject project, @NonNull Set<RewriteCompilationUnit> units) {
 		Objects.requireNonNull(units, "The initial units can not be null");
 
+		this.project = project;
 		this.units = units;
 	}
 
-	@SuppressWarnings("null")
-	protected ProjectUnits() {
-		this(Sets.newHashSet());
-	}
+//	@SuppressWarnings("null")
+//	protected ProjectUnits() {
+//		this(Sets.newHashSet());
+//	}
 
 	/**
 	 * Adds the changes that are stored in this sets compilation units
@@ -60,6 +67,12 @@ public class ProjectUnits implements IProjectUnits {
 			visitor.setUnit(unit);
 			unit.accept(visitor);
 		}
+	}
+	
+	@SuppressWarnings("null")
+	@Override
+	public @NonNull IJavaSearchScope getSearchScope() {
+		return SearchEngine.createJavaSearchScope(new IJavaElement[] { project }, IJavaSearchScope.SOURCES);
 	}
 
 	/*
@@ -113,6 +126,8 @@ public class ProjectUnits implements IProjectUnits {
 	public <T> T[] toArray(T[] a) {
 		return units.toArray(a);
 	}
+
+
 
 	
 
