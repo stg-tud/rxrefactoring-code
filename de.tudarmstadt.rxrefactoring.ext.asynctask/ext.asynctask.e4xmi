@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ASCII"?>
+<fragment:ModelFragments xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:commands="http://www.eclipse.org/ui/2010/UIModel/application/commands" xmlns:fragment="http://www.eclipse.org/ui/2010/UIModel/fragment" xmlns:menu="http://www.eclipse.org/ui/2010/UIModel/application/ui/menu" xmi:id="_0m-7sK5kEeeKnLonPf-BIA">
+  <imports xsi:type="menu:Menu" xmi:id="_JCNCsK5lEeeKnLonPf-BIA" elementId="de.tudarmstadt.rxrefactoring.core.menu"/>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_NZ3mgK5lEeeKnLonPf-BIA" featurename="commands" parentElementId="org.eclipse.e4.legacy.ide.application">
+    <elements xsi:type="commands:Command" xmi:id="_NZ3mga5lEeeKnLonPf-BIA" elementId="de.tudarmstadt.rxrefactoring.ext.asynctask.command.execute" commandName="Execute"/>
+  </fragments>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_TUqJ8K5lEeeKnLonPf-BIA" featurename="handlers" parentElementId="org.eclipse.e4.legacy.ide.application">
+    <elements xsi:type="commands:Handler" xmi:id="_TUqJ8a5lEeeKnLonPf-BIA" elementId="de.tudarmstadt.rxrefactoring.ext.asynctask.handler.0" contributionURI="bundleclass://de.tudarmstadt.rxrefactoring.ext.asynctask/de.tudarmstadt.rxrefactoring.ext.asynctask.Handler" command="_NZ3mga5lEeeKnLonPf-BIA"/>
+  </fragments>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_Yzi0gK5lEeeKnLonPf-BIA" featurename="menuContributions" parentElementId="org.eclipse.e4.legacy.ide.application">
+    <elements xsi:type="menu:MenuContribution" xmi:id="_Yzi0ga5lEeeKnLonPf-BIA" elementId="de.tudarmstadt.rxrefactoring.ext.asynctask.menucontribution.execute" positionInParent="before=de.tudarmstadt.rxrefactoring.core.menuseparator.0" parentId="de.tudarmstadt.rxrefactoring.core.menu">
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_Yzi0gq5lEeeKnLonPf-BIA" elementId="de.tudarmstadt.rxrefactoring.ext.asynctask.handledmenuitem.execute" label="Refactor android.os.AsyncTask to io.reactivex.Flowable" command="_NZ3mga5lEeeKnLonPf-BIA"/>
+    </elements>
+  </fragments>
+</fragment:ModelFragments>

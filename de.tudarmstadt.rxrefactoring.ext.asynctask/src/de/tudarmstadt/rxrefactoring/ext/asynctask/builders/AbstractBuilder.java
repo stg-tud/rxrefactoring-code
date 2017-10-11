@@ -13,7 +13,7 @@ import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 
 import com.google.common.collect.Lists;
 
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Methods;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
@@ -23,7 +23,7 @@ abstract class AbstractBuilder {
 
 	
 	final AsyncTaskWrapper asyncTask;
-	final RewriteCompilationUnit unit;
+	final IRewriteCompilationUnit unit;
 	
 	final AST ast;
 	

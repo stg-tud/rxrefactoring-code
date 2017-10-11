@@ -13,7 +13,7 @@ import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.SubscriberBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
@@ -48,13 +48,13 @@ interface WorkerEnvironment {
 		
 	}
 	
-	default void addStatementBefore(RewriteCompilationUnit unit, Statement newStatement, Statement referenceStatement) {		
+	default void addStatementBefore(IRewriteCompilationUnit unit, Statement newStatement, Statement referenceStatement) {		
 		Block parentBlock = ASTNodes.findParent(referenceStatement, Block.class).get();
 		ListRewrite statementsBlock = unit.getListRewrite(parentBlock, Block.STATEMENTS_PROPERTY);
 		statementsBlock.insertBefore(newStatement, referenceStatement, null);		
 	}
 	
-	default void addStatementAfter(RewriteCompilationUnit unit, Statement newStatement, Statement referenceStatement) {		
+	default void addStatementAfter(IRewriteCompilationUnit unit, Statement newStatement, Statement referenceStatement) {		
 		Block parentBlock = ASTNodes.findParent(referenceStatement, Block.class).get();
 		ListRewrite statementsBlock = unit.getListRewrite(parentBlock, Block.STATEMENTS_PROPERTY);
 		statementsBlock.insertAfter(newStatement, referenceStatement, null);		
@@ -72,7 +72,7 @@ interface WorkerEnvironment {
 	 * @param referenceNode
 	 *            reference node
 	 */
-	default public void addMethodBefore(RewriteCompilationUnit unit, MethodDeclaration methodDeclaration, ASTNode referenceNode) {
+	default public void addMethodBefore(IRewriteCompilationUnit unit, MethodDeclaration methodDeclaration, ASTNode referenceNode) {
 		MethodDeclaration referenceMethod = ASTNodes.findParent(referenceNode, MethodDeclaration.class).get();
 		ListRewrite classBlock = getClassBlock(unit, referenceMethod);
 		classBlock.insertBefore(methodDeclaration, referenceMethod, null);
@@ -89,13 +89,13 @@ interface WorkerEnvironment {
 	 * @param referenceNode
 	 *            reference node
 	 */
-	default public void addMethodAfter(RewriteCompilationUnit unit, MethodDeclaration methodDeclaration, ASTNode referenceNode) {
+	default public void addMethodAfter(IRewriteCompilationUnit unit, MethodDeclaration methodDeclaration, ASTNode referenceNode) {
 		MethodDeclaration referenceMethod = ASTNodes.findParent(referenceNode, MethodDeclaration.class).get();
 		ListRewrite classBlock = getClassBlock(unit, referenceMethod);
 		classBlock.insertAfter(methodDeclaration, referenceMethod, null);
 	}
 	
-	default ListRewrite getClassBlock(RewriteCompilationUnit unit, ASTNode referenceNode) {
+	default ListRewrite getClassBlock(IRewriteCompilationUnit unit, ASTNode referenceNode) {
 		ASTNode currentClass = referenceNode.getParent();
 		
 		
@@ -121,7 +121,7 @@ interface WorkerEnvironment {
 	 * @param referenceNode
 	 *            reference node
 	 */
-	default void addInnerClassAfter(RewriteCompilationUnit unit, TypeDeclaration typeDeclaration, ASTNode referenceNode) {
+	default void addInnerClassAfter(IRewriteCompilationUnit unit, TypeDeclaration typeDeclaration, ASTNode referenceNode) {
 		if (referenceNode instanceof FieldDeclaration) {
 			ListRewrite classBlock = getClassBlock(unit, referenceNode);
 			classBlock.insertAfter(typeDeclaration, referenceNode, null);
@@ -136,12 +136,12 @@ interface WorkerEnvironment {
 		classBlock.insertAfter(typeDeclaration, referenceMethod, null);
 	}
 	
-	default void addStatementToClass(RewriteCompilationUnit unit, ASTNode newStatement, TypeDeclaration type) {
+	default void addStatementToClass(IRewriteCompilationUnit unit, ASTNode newStatement, TypeDeclaration type) {
 		ListRewrite statementsBlock = unit.getListRewrite(type, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
 		statementsBlock.insertFirst(newStatement, null);
 	}
 	
-	default void removeSuperClass(RewriteCompilationUnit unit, TypeDeclaration classRef) {
+	default void removeSuperClass(IRewriteCompilationUnit unit, TypeDeclaration classRef) {
 		unit.remove(classRef.getSuperclassType());
 	}
 }

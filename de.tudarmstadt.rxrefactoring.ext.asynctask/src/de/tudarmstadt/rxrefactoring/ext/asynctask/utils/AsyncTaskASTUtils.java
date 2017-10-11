@@ -21,10 +21,10 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import com.google.common.collect.Sets;
 
-import de.tudarmstadt.rxrefactoring.core.Log;
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 
 /**
@@ -79,7 +79,7 @@ public class AsyncTaskASTUtils {
 		return result;
 	}
 	
-	public static void replaceThisWithFullyQualifiedThisIn(ASTNode root, RewriteCompilationUnit unit, String thisClassName) {
+	public static void replaceThisWithFullyQualifiedThisIn(ASTNode root, IRewriteCompilationUnit unit, String thisClassName) {
 		
 		final AST ast = unit.getAST();
 		
@@ -105,7 +105,7 @@ public class AsyncTaskASTUtils {
 	 * @param root
 	 * @param unit
 	 */
-	public static void replaceFieldsWithFullyQualifiedNameIn(ASTNode root, RewriteCompilationUnit unit) {
+	public static void replaceFieldsWithFullyQualifiedNameIn(ASTNode root, IRewriteCompilationUnit unit) {
 
 		class FieldsVisitor extends ASTVisitor {
 			@Override

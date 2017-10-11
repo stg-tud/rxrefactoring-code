@@ -28,8 +28,8 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import de.tudarmstadt.rxrefactoring.core.ProjectUnits;
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
@@ -73,7 +73,7 @@ public class AsyncTaskWrapper {
 	/**
 	 * The compilation unit that contains the declaration. 
 	 */
-	private final RewriteCompilationUnit unit;
+	private final IRewriteCompilationUnit unit;
 
 	/**
 	 * Creates a new wrapper given the class declaration of a class that is an
@@ -84,7 +84,7 @@ public class AsyncTaskWrapper {
 	 *            
 	 * @throws NullPointerException if either argument is null.
 	 */
-	public AsyncTaskWrapper(ASTNode declaration, RewriteCompilationUnit unit) {
+	public AsyncTaskWrapper(ASTNode declaration, IRewriteCompilationUnit unit) {
 		Objects.requireNonNull(declaration);
 		Objects.requireNonNull(unit);
 		
@@ -212,7 +212,7 @@ public class AsyncTaskWrapper {
 		return declaration instanceof TypeDeclaration && declaration.getParent() instanceof TypeDeclaration;
 	}
 	
-	public RewriteCompilationUnit getUnit() {
+	public IRewriteCompilationUnit getUnit() {
 		return unit;
 	}
 	
@@ -505,7 +505,7 @@ public class AsyncTaskWrapper {
 	 * @return A set of all class instance creation expressions that create
 	 * this AsyncTask. The set is empty if there are no such expressions. 
 	 */
-	public Set<ClassInstanceCreation> findClassInstanceCreationsIn(ProjectUnits units) {		
+	public Set<ClassInstanceCreation> findClassInstanceCreationsIn(IProjectUnits units) {		
 		
 		class InstanceCreationVisitor extends UnitASTVisitor {
 			
@@ -540,7 +540,7 @@ public class AsyncTaskWrapper {
 	}
 	
 	
-	public Set<MethodInvocation> findUsagesIn(ProjectUnits units) {
+	public Set<MethodInvocation> findUsagesIn(IProjectUnits units) {
 		return null;
 	}
 

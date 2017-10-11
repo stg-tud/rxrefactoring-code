@@ -125,7 +125,7 @@ public class InnerClassBuilder extends AbstractBuilder {
 			
 			//Add field declaration
 			FieldDeclaration field = ast.newFieldDeclaration(newVariableDeclarationFragmentFrom(variable));
-			field.setType(Types.typeFromBinding(ast, variable.getType()));
+			field.setType(Types.fromBinding(ast, variable.getType()));
 			observableType.bodyDeclarations().add(field);
 			
 			
@@ -176,7 +176,7 @@ public class InnerClassBuilder extends AbstractBuilder {
 	private SingleVariableDeclaration newSingleVariableDeclarationFrom(IVariableBinding binding) {
 		SingleVariableDeclaration var = ast.newSingleVariableDeclaration();
 		var.setName(ast.newSimpleName(binding.getName()));	
-		var.setType(Types.typeFromBinding(ast, binding.getType()));
+		var.setType(Types.fromBinding(ast, binding.getType()));
 		
 		return var;
 	}

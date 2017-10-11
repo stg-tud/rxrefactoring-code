@@ -4,9 +4,9 @@ package de.tudarmstadt.rxrefactoring.ext.asynctask;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 
+import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
-import de.tudarmstadt.rxrefactoring.core.RefactorExtension;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.workers.AnonymAsyncTaskWorker;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.workers.AsyncTaskCollector;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.workers.SubClassAsyncTaskWorker;
@@ -15,7 +15,7 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.workers.SubClassAsyncTaskWorke
  * Author: Template<br>
  * Created: 01/18/2017
  */
-public class AsyncTaskRefactoring implements RefactorExtension {
+public class AsyncTaskRefactoring implements IRefactorExtension {
 
 	@Override
 	public String getPlugInId() {		
