@@ -56,10 +56,16 @@ public class SingleVariableDeclWorker extends AbstractRefactorWorker<RxCollector
 					if ( "SwingWorker".equals( simpleName.toString() ) )
 					{
 						singleUnitWriter.replaceSimpleName( simpleName, "SWSubscriber" );
+						/*
+						 *  Scenario : 46--ggasoftware--indigo : variables present as an argument of some method, after renaming import should be added.
+						 *  E.g. ProgressStatusDialog.java(See executeSwingWorker method argument variable)
+						 */
+						singleUnitWriter.addImport( "de.tudarmstadt.stg.rx.swingworker.SWSubscriber" );
 					}
 					else
 					{
-						singleUnitWriter.replaceSimpleName( simpleName, RefactoringUtils.cleanSwingWorkerName( simpleName.getIdentifier() ) );
+						if(!(simpleName.getParent() instanceof QualifiedName))
+							singleUnitWriter.replaceSimpleName( simpleName, RefactoringUtils.cleanSwingWorkerName( simpleName.getIdentifier() ) );
 					}
 				}
 

@@ -5,13 +5,13 @@ import java.util.stream.Collectors;
 
 import org.eclipse.jdt.core.dom.Statement;
 
-import de.tudarmstadt.rxrefactoring.core.analysis.cfg.ControlFlowGraph;
+import de.tudarmstadt.rxrefactoring.core.analysis.cfg.StatementGraph;
 
 public class ForwardTraversal implements DataFlowTraversal<Statement> {
 
-	private final ControlFlowGraph cfg;
+	private final StatementGraph cfg;
 	
-	public ForwardTraversal(ControlFlowGraph cfg) {
+	public ForwardTraversal(StatementGraph cfg) {
 		this.cfg = cfg;
 	}
 	

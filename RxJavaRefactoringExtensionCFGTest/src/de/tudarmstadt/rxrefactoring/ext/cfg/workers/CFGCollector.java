@@ -19,7 +19,7 @@ import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 import de.tudarmstadt.rxrefactoring.core.analysis.DataFlowAnalysis;
-import de.tudarmstadt.rxrefactoring.core.analysis.cfg.ControlFlowGraph;
+import de.tudarmstadt.rxrefactoring.core.analysis.cfg.StatementGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.example.VariableNameAnalysis;
 import de.tudarmstadt.rxrefactoring.core.ir.ComplexReactiveInput;
 import de.tudarmstadt.rxrefactoring.core.ir.IReactiveInput;
@@ -41,7 +41,7 @@ public class CFGCollector implements IWorker<Void, Void> {
 		
 		collector.declarations.forEach(m -> {
 			Log.info(CFGCollector.class, "### Build CFG for " + m.getName() + " ###");
-			ControlFlowGraph cfg = ControlFlowGraph.from(m.getBody());
+			StatementGraph cfg = StatementGraph.from(m.getBody());
 			Log.info(CFGCollector.class, cfg.listEdges());
 			
 			Log.info(CFGCollector.class, "### Start Analysis for " + m.getName() + " ###");

@@ -5,7 +5,19 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.TryStatement;
+import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 import domain.RxObservableModel;
 import domain.RxObserverModel;
@@ -166,7 +178,12 @@ public class VariableDeclStatementWorker extends GeneralWorker
 	{
 		String icuName = icu.getElementName();
 		RxObservableModel observableDto = createObservableDto( icuName, refactoringVisitor );
-
+		/*
+		 * Sometimes doInbackground Block needs to be refactored futher for handling java.util.concurrent.ExecutorService.submit() method calls 
+		 * executor.submit(singleRun) --> singleRun.executeObservable()
+		 * Scenario: CrysHomModeling-master : MainMenu.java
+		 */
+		observableDto.setDoInBackgroundBlock(refactorDoInBgBlock(refactoringVisitor.getDoInBackgroundBlock()));
 		Map<String, Object> observableData = new HashMap<>();
 		observableData.put( "model", observableDto );
 		String observableTemplate = "observable.ftl";
@@ -192,5 +209,22 @@ public class VariableDeclStatementWorker extends GeneralWorker
 		singleUnitWriter.addBefore( observerStatement, varDeclStatement );
 
 		singleUnitWriter.removeStatement( varDeclStatement );
+	}
+	
+	private String refactorDoInBgBlock(Block doInBgBlock) {
+		String doInBgBlockString = "";
+		List<Statement> list = doInBgBlock.statements();
+		StringBuilder sb = new StringBuilder();
+		sb.append("{ " + System.lineSeparator());
+		for(int i=0;i<list.size();i++) {
+				Statement stmnt = list.get(i);
+				if(stmnt instanceof TryStatement && stmnt.toString().contains("executorSC.submit(singleRun)")) {
+					stmnt = ASTNodeFactory.createSingleStatementFromText(doInBgBlock.getAST(), stmnt.toString().replace("executorSC.submit(singleRun)", "singleRun.executeObservable()"));
+				}
+				sb.append(stmnt.toString() + System.lineSeparator());
+		}
+		sb.append("}");
+		doInBgBlockString = RefactoringUtils.cleanSwingWorkerName(sb.toString());
+		return doInBgBlockString;
 	}
 }

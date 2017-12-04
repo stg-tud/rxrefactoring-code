@@ -14,18 +14,18 @@ import org.eclipse.jdt.core.dom.Statement;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import de.tudarmstadt.rxrefactoring.core.analysis.cfg.ControlFlowGraph;
+import de.tudarmstadt.rxrefactoring.core.analysis.cfg.StatementGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.strategy.DataFlowStrategy;
 import de.tudarmstadt.rxrefactoring.core.analysis.traversal.DataFlowTraversal;
 
-public abstract class DataFlowAnalysis<Result> implements Function<ControlFlowGraph, Map<Statement, Result>> {
+public abstract class DataFlowAnalysis<Result> implements Function<StatementGraph, Map<Statement, Result>> {
 	
 	public abstract DataFlowStrategy<Result> newDataFlowStrategy();
 	
-	public abstract DataFlowTraversal<Statement> newDataFlowTraversal(ControlFlowGraph cfg);
+	public abstract DataFlowTraversal<Statement> newDataFlowTraversal(StatementGraph cfg);
 	
 	@Override
-	public Map<Statement, Result> apply(ControlFlowGraph cfg) {
+	public Map<Statement, Result> apply(StatementGraph cfg) {
 		return new AnalysisExecution(cfg).call();
 	}
 	
@@ -42,7 +42,7 @@ public abstract class DataFlowAnalysis<Result> implements Function<ControlFlowGr
 		
 		private final Map<Statement, Result> outgoingResults = Maps.newHashMap();
 		
-		public AnalysisExecution(ControlFlowGraph cfg) {
+		public AnalysisExecution(StatementGraph cfg) {
 			Objects.requireNonNull(cfg);			
 			this.traversal = newDataFlowTraversal(cfg);
 			this.strategy = newDataFlowStrategy();

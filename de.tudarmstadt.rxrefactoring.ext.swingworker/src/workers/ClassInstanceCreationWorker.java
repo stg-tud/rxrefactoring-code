@@ -5,7 +5,16 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 import domain.RxObservableModel;
 import domain.RxObserverModel;
@@ -96,6 +105,21 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 		{
 			if ( ASTUtil.isSubclassOf( classInstanceCreation, SwingWorkerInfo.getBinaryName(), false ) )
 			{
+				/*
+				 *  Abstract class : For anonymous swingworker classes, we need to replace doInBackground method name with getRxObservable
+				 *  Scenario: 37--KolakCC--lol-jclient : ProfileController.java StoreController.java
+				 */
+				if(classInstanceCreation.getAnonymousClassDeclaration() != null) {
+					List childlist = classInstanceCreation.getAnonymousClassDeclaration().bodyDeclarations();
+					for(int k=0;k<childlist.size();k++) {
+						if(childlist.get(k) instanceof MethodDeclaration) {
+							MethodDeclaration mdInner = (MethodDeclaration)childlist.get(k);
+							if(mdInner.getName() != null && mdInner.getName().getIdentifier().equals("doInBackground")) {
+								singleUnitWriter.replaceSimpleName(mdInner.getName(), "getRxObservable");	
+							}
+						}
+					}
+				}
 				// Refactor only the method name
 				SimpleName methodInvocationName = methodInvocation.getName();
 				String newMethodName = RefactoringUtils.getNewMethodName( methodInvocationName.getIdentifier() );

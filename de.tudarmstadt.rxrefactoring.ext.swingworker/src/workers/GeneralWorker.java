@@ -3,6 +3,7 @@ package workers;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -168,7 +169,20 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 		}
 		for ( MethodDeclaration methodDeclaration : refactoringVisitor.getAdditionalMethodDeclarations() )
 		{
-			if(methodDeclaration.modifiers() != null && !methodDeclaration.modifiers().toString().contains("@Override")) {
+			/*
+			 *  overriden methods and methods which have super.xxx call should not be added as additional methods.
+			 *  Sceanrio(super.xxx call) : 32--guigarage--JavaVersionChanger : JavaVersionChanger.java
+			 *  Scenario : 33--kirillcool--flamingo : Sometimes actionePerformed , completed (methods which are part of some anonymous class declaration)
+			 *  methods should not be conisdered as extra methods and hence should not be added twice(because they have already added via process or done blocks.
+			 *  E.g. AbstractFileViewPanel.java & SvgFileViewPanel.java
+			 *  Scenario : 46--ggasoftware--indigo : Sometimes methods like compare, compareTo should not be considered as extra methods as they have already
+			 *  added via doInBackground block.
+			 *  E.g. MainFrame.java
+			 */
+			if((methodDeclaration.modifiers() != null && !methodDeclaration.modifiers().toString().contains("@Override")) &&
+					(methodDeclaration.getBody() != null && !methodDeclaration.getBody().toString().contains("super.")) &&
+					!(methodDeclaration.getParent() != null && methodDeclaration.getParent() instanceof AnonymousClassDeclaration &&
+					 processBlock == null && doneBlock == null && methodDeclaration.getName().toString().equals("compare"))) {
 				model.getMethods().add( methodDeclaration.toString() );
 			}
 		}
@@ -212,7 +226,36 @@ public abstract class GeneralWorker extends AbstractRefactorWorker<RxCollector>
 				adjustmentFactor += replacement.length() - KEYWORD_THIS_WITH_DOT.length();
 			}
 		}
-
-		return sb.toString();
+		/*
+		 * While refactoring doInBackground blocks, only this.methodname should be applied for protected methods which are present in
+		 * swingworker api like publish(), process() etc. Right now only one case is discovered for publish method.
+		 * Scenario: 37--KolakCC--lol-jclient : ChampionsPanel.java
+		 */
+		String doInBgBlockString ="";
+		if(sb.toString().contains(KEYWORD_THIS_WITH_DOT+"publish(")) {
+			doInBgBlockString = sb.toString().replaceAll(replacement+"publish", KEYWORD_THIS_WITH_DOT+"publish");
+			return doInBgBlockString;
+		} 
+		/*
+		 * Scenario: 59--locked-fg--JFeatureLib : ThreadWrapper.java
+		 * Some cases where statements like addPropertyChangeListener(this)(from doInbackground()) method might come under
+		 * SWEmitter class. This will show error and hence addPropertyChangeListener(classname.this) needs to be applied.
+		 */
+		else if(sb.toString() != null && sb.toString().contains("descriptor.addPropertyChangeListener(this);") && replacement.contains("ThreadWrapper")) {
+			doInBgBlockString = sb.toString().replace("descriptor.addPropertyChangeListener(this)", "descriptor.addPropertyChangeListener(ThreadWrapper.this)");
+			return doInBgBlockString;
+		}
+		/*
+		 * Scenario: 43--kparal--esmska : UpdateInstaller.java
+		 * Statements like dl.execute() needs to be replaced with dl.executeObservable()
+		 */
+		else if(sb.toString() != null && sb.toString().contains("dl.execute") && replacement.contains("Downloader")) {
+			doInBgBlockString = sb.toString().replaceAll("dl.execute", "dl.executeObservable");
+			return doInBgBlockString;
+		} 
+		else {
+			return sb.toString();
+		}
+		
 	}
 }
