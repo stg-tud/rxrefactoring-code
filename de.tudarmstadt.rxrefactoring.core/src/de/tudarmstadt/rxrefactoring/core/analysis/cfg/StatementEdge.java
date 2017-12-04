@@ -32,10 +32,10 @@ public class StatementEdge extends SimpleEdge<Statement> {
 
 	@Override
 	public String toString() {
-		return "Edge(" + statementAsNode(getHead()) + ", " +  statementAsNode(getTail()) + ")";
+		return "Edge(" + statementAsString(getHead()) + ", " +  statementAsString(getTail()) + ")";
 	}
 	
-	private String statementAsNode(Statement stmt) {
+	private String statementAsString(Statement stmt) {
 		
 		class StatementVisitor extends ASTVisitor {
 			String result = "STRING NOT AVAILABLE";

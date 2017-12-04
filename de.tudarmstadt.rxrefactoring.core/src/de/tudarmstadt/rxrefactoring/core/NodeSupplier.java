@@ -6,6 +6,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.Type;
@@ -36,6 +37,14 @@ public interface NodeSupplier<NodeType extends ASTNode> {
 	@SuppressWarnings("null")
 	static @NonNull NodeSupplier<Type> OBJECT_TYPE =
 			unit -> unit.getAST().newSimpleType(unit.getAST().newSimpleName("Object"));
+			
+	@SuppressWarnings("null")
+	static @NonNull NodeSupplier<Type> VOID_TYPE =
+			unit -> unit.getAST().newSimpleType(unit.getAST().newSimpleName("Void"));
+						
+	@SuppressWarnings("null")
+	static @NonNull NodeSupplier<Type> PRIMITIVE_VOID_TYPE =
+			unit -> unit.getAST().newPrimitiveType(PrimitiveType.VOID);
 			
 	/**
 	 * Creates a supplier that generates types {@code name<supplier>}.

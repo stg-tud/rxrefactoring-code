@@ -4,6 +4,7 @@ import java.util.EnumSet;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.annotation.NonNull;
 
 import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
@@ -33,17 +34,17 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 	}
 
 	@Override
-	public String getName() {
+	public @NonNull String getName() {
 		return "Future and FutureTask to Observable";
 	}
 
 	@Override
-	public String getDescription() {
+	public @NonNull String getDescription() {
 		return "Refactor Future and FutureTask to Observables...";
 	}
 
 	@Override
-	public void addWorkersTo(IWorkerTree workerTree) {
+	public void addWorkersTo(@NonNull IWorkerTree workerTree) {
 		IWorkerRef<Void, FutureCollector> collector = workerTree.addWorker(new FutureCollector(options));
 		
 		if(options.contains(RefactoringOptions.FUTURE)) {
@@ -97,7 +98,7 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 	}
 
 	@Override
-	public String getPlugInId() {
+	public @NonNull String getPlugInId() {
 		return "de.tudarmstadt.rxrefactoring.ext.javafuture";
 	}
 

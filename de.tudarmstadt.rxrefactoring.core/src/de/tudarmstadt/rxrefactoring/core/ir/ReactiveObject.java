@@ -23,6 +23,7 @@ import com.google.common.collect.Maps;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.NodeSupplier;
+import de.tudarmstadt.rxrefactoring.core.ir.util.CallableBuilder;
 
 /*
  * A reactive object has the following information flow
@@ -183,6 +184,9 @@ public class ReactiveObject implements IReactiveObject {
 			throw new IllegalStateException("method creation cannot be supplied");
 		}
 		
+		final IReactiveOutput output = outputs.values().iterator().next();
+		final IReactiveComputation computation = computations.values().iterator().next();
+		
 		return unit -> {
 			AST ast = unit.getAST();
 			
@@ -190,10 +194,11 @@ public class ReactiveObject implements IReactiveObject {
 			fromCallable.setName(ast.newSimpleName("fromCallable"));
 			fromCallable.setExpression(ast.newSimpleName("Flowable"));
 			
+			//TODO: get body of computation
+			CallableBuilder builder = new CallableBuilder(output.supplyType(), null);
 			
 			
-			
-			return null;
+			return builder.supplyClassInstanceCreation().apply(unit);
 		};
 	}
 	

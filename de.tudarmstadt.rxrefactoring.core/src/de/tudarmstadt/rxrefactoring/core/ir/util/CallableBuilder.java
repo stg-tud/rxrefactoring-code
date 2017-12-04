@@ -16,32 +16,25 @@ import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
 import de.tudarmstadt.rxrefactoring.core.NodeSupplier;
 
 import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 
-public class FunctionBuilder {
+public class CallableBuilder {
 	
-	private final @NonNull NodeSupplier<? extends Type> inputType;
-	
-	private final @NonNull NodeSupplier<? extends Type> outputType;
-	
-	private final @NonNull NodeSupplier<SimpleName> variableName;
+	private final @NonNull NodeSupplier<? extends Type> type;
 	
 	private final @NonNull NodeSupplier<Block> body;
 
 	
-	public FunctionBuilder(
-			@NonNull NodeSupplier<? extends Type> inputType, 
-			@NonNull NodeSupplier<? extends Type> outputType,
-			@NonNull NodeSupplier<SimpleName> variableName,
+	public CallableBuilder(
+			@NonNull NodeSupplier<? extends Type> type, 
 			@NonNull NodeSupplier<Block> body) {
-		this.inputType = inputType;
-		this.outputType = outputType;
-		this.variableName = variableName;
+		this.type = type;
 		this.body = body;
 	}
-	
+
 	/**
 	 * Builds an expression of type {@link Consumer}. The expression
 	 * creates a new anonymous class consumer with the specified
@@ -51,37 +44,32 @@ public class FunctionBuilder {
 	 * @return An expression of type {@link Consumer}.
 	 */
 	@SuppressWarnings("unchecked")
-	public NodeSupplier<ClassInstanceCreation> supplyAnonymousClass() {
+	public @NonNull NodeSupplier<ClassInstanceCreation> supplyClassInstanceCreation() {
+		
 		return unit -> {
 			AST ast = unit.getAST();
 			
 			//Define the call method
-			MethodDeclaration applyMethod = ast.newMethodDeclaration();
-			applyMethod.setName(ast.newSimpleName("apply"));
-			applyMethod.setReturnType2(outputType.apply(unit));
-			applyMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
+			MethodDeclaration callMethod = ast.newMethodDeclaration();
+			callMethod.setName(ast.newSimpleName("call"));
+			callMethod.setReturnType2(type.apply(unit));
+			callMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
 					
-			SingleVariableDeclaration callParameter = ast.newSingleVariableDeclaration();
-			callParameter.setName(variableName.apply(unit));
-			callParameter.setType(inputType.apply(unit));
-			
-			applyMethod.parameters().add(callParameter);
-			
-			applyMethod.setBody(body.apply(unit));
+							
+			callMethod.setBody(body.apply(unit));
 					
 			//Action1 class declaration
 			AnonymousClassDeclaration anonClass = ast.newAnonymousClassDeclaration();
-			anonClass.bodyDeclarations().add(applyMethod);	
+			anonClass.bodyDeclarations().add(callMethod);	
 			
-			ParameterizedType consumerType = parameterizedType(simpleType("Function"), inputType, outputType).apply(unit);
+			ParameterizedType callableType = parameterizedType(simpleType("Callable"), type).apply(unit);
 					
-			ClassInstanceCreation newConsumer = ast.newClassInstanceCreation();
-			newConsumer.setType(consumerType);
-			newConsumer.setAnonymousClassDeclaration(anonClass);
+			ClassInstanceCreation newCallable = ast.newClassInstanceCreation();
+			newCallable.setType(callableType);
+			newCallable.setAnonymousClassDeclaration(anonClass);
 			
-			return newConsumer;
+			return newCallable;
 		};
-		
 	}
 	
 }
