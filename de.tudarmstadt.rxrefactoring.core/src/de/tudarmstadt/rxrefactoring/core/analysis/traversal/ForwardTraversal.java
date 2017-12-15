@@ -3,31 +3,29 @@ package de.tudarmstadt.rxrefactoring.core.analysis.traversal;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.eclipse.jdt.core.dom.Statement;
+import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IControlFlowGraph;
 
-import de.tudarmstadt.rxrefactoring.core.analysis.cfg.StatementGraph;
+public class ForwardTraversal<V> implements DataFlowTraversal<V> {
 
-public class ForwardTraversal implements DataFlowTraversal<Statement> {
-
-	private final StatementGraph cfg;
+	private final IControlFlowGraph<V> cfg;
 	
-	public ForwardTraversal(StatementGraph cfg) {
+	public ForwardTraversal(IControlFlowGraph<V> cfg) {
 		this.cfg = cfg;
 	}
 	
 	
 	@Override
-	public Set<Statement> entryNodes() {		
+	public Set<V> entryNodes() {		
 		return cfg.entryNodes();
 	}
 
 	@Override
-	public Set<Statement> successorsOf(Statement vertex) {
+	public Set<V> successorsOf(V vertex) {
 		return cfg.outgoingEdgesOf(vertex).stream().map(edge -> edge.getTail()).collect(Collectors.toSet());
 	}
 
 	@Override
-	public Set<Statement> predecessorsOf(Statement vertex) {
+	public Set<V> predecessorsOf(V vertex) {
 		return cfg.incomingEdgesOf(vertex).stream().map(edge -> edge.getHead()).collect(Collectors.toSet());
 	}
 

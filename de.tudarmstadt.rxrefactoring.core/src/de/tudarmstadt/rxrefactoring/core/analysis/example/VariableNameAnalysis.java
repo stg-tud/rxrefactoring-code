@@ -9,17 +9,18 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.analysis.DataFlowAnalysis;
+import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IControlFlowGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.StatementGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.strategy.DataFlowStrategy;
 import de.tudarmstadt.rxrefactoring.core.analysis.strategy.SetDataFlowStrategy;
 import de.tudarmstadt.rxrefactoring.core.analysis.traversal.DataFlowTraversal;
 import de.tudarmstadt.rxrefactoring.core.analysis.traversal.ForwardTraversal;
 
-public class VariableNameAnalysis extends DataFlowAnalysis<Set<String>> {
+public class VariableNameAnalysis extends DataFlowAnalysis<Statement, Set<String>> {
 
 	@Override
-	public DataFlowStrategy<Set<String>> newDataFlowStrategy() {		
-		return new SetDataFlowStrategy<String>() {
+	public DataFlowStrategy<Statement, Set<String>> newDataFlowStrategy() {		
+		return new SetDataFlowStrategy<Statement, String>() {
 
 			private Set<String> findVariableNamesIn(Statement statement) {
 				
@@ -49,7 +50,7 @@ public class VariableNameAnalysis extends DataFlowAnalysis<Set<String>> {
 	}
 
 	@Override
-	public DataFlowTraversal<Statement> newDataFlowTraversal(StatementGraph cfg) {		
+	public DataFlowTraversal<Statement> newDataFlowTraversal(IControlFlowGraph<Statement> cfg) {		
 		return new ForwardTraversal(cfg);
 	}
 

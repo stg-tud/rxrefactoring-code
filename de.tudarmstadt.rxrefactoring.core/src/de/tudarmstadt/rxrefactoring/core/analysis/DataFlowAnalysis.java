@@ -9,23 +9,21 @@ import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.eclipse.jdt.core.dom.Statement;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import de.tudarmstadt.rxrefactoring.core.analysis.cfg.StatementGraph;
+import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IControlFlowGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.strategy.DataFlowStrategy;
 import de.tudarmstadt.rxrefactoring.core.analysis.traversal.DataFlowTraversal;
 
-public abstract class DataFlowAnalysis<Result> implements Function<StatementGraph, Map<Statement, Result>> {
+public abstract class DataFlowAnalysis<Vertex, Result> implements Function<IControlFlowGraph<Vertex>, Map<Vertex, Result>> {
 	
-	public abstract DataFlowStrategy<Result> newDataFlowStrategy();
+	public abstract DataFlowStrategy<Vertex, Result> newDataFlowStrategy();
 	
-	public abstract DataFlowTraversal<Statement> newDataFlowTraversal(StatementGraph cfg);
+	public abstract DataFlowTraversal<Vertex> newDataFlowTraversal(IControlFlowGraph<Vertex> cfg);
 	
 	@Override
-	public Map<Statement, Result> apply(StatementGraph cfg) {
+	public Map<Vertex, Result> apply(IControlFlowGraph<Vertex> cfg) {
 		return new AnalysisExecution(cfg).call();
 	}
 	
@@ -35,21 +33,21 @@ public abstract class DataFlowAnalysis<Result> implements Function<StatementGrap
 	 * @author mirko
 	 *
 	 */
-	private class AnalysisExecution implements Runnable, Callable<Map<Statement, Result>> {
+	private class AnalysisExecution implements Runnable, Callable<Map<Vertex, Result>> {
 		
-		private final DataFlowStrategy<Result> strategy;
-		private final DataFlowTraversal<Statement> traversal;
+		private final DataFlowStrategy<Vertex, Result> strategy;
+		private final DataFlowTraversal<Vertex> traversal;
 		
-		private final Map<Statement, Result> outgoingResults = Maps.newHashMap();
+		private final Map<Vertex, Result> outgoingResults = Maps.newHashMap();
 		
-		public AnalysisExecution(StatementGraph cfg) {
+		public AnalysisExecution(IControlFlowGraph<Vertex> cfg) {
 			Objects.requireNonNull(cfg);			
 			this.traversal = newDataFlowTraversal(cfg);
 			this.strategy = newDataFlowStrategy();
 		}
 				
 		@Override
-		public Map<Statement, Result> call() {
+		public Map<Vertex, Result> call() {
 			run();		
 			return outgoingResults;
 		}
@@ -57,13 +55,13 @@ public abstract class DataFlowAnalysis<Result> implements Function<StatementGrap
 		@Override
 		public void run() {
 			//Queue of nodes that have to be processed
-			Queue<Statement> queue = Lists.newLinkedList();
+			Queue<Vertex> queue = Lists.newLinkedList();
 			//Add the entry nodes to the queue.
 			queue.addAll(traversal.entryNodes());
 			
 			while (!queue.isEmpty()) {
-				Statement currentStatement = queue.poll();				
-				Collection<Statement> predecessors = traversal.predecessorsOf(currentStatement);
+				Vertex currentVertex = queue.poll();				
+				Collection<Vertex> predecessors = traversal.predecessorsOf(currentVertex);
 				
 				//Compute the incoming result as merge of all outgoing results from
 				//predecessors.
@@ -82,23 +80,23 @@ public abstract class DataFlowAnalysis<Result> implements Function<StatementGrap
 				}
 						
 				//Compute the outgoing result by applying the transformation of the node.
-				Result outgoingResult = strategy.transform(currentStatement, incomingResult);
+				Result outgoingResult = strategy.transform(currentVertex, incomingResult);
 				
 				//If the result has changed, then add all successors to the queue.
-				Result previousResult = outgoingResults.put(currentStatement, outgoingResult);
+				Result previousResult = outgoingResults.put(currentVertex, outgoingResult);
 				if (!Objects.equals(previousResult, outgoingResult)) {
-					queue.addAll(traversal.successorsOf(currentStatement));
+					queue.addAll(traversal.successorsOf(currentVertex));
 				}				
 			}		
 		}
 				
 		
-		private Result getResultOf(Statement statement) {
-			if (outgoingResults.containsKey(statement)) {
-				return outgoingResults.get(statement);
+		private Result getResultOf(Vertex vertex) {
+			if (outgoingResults.containsKey(vertex)) {
+				return outgoingResults.get(vertex);
 			} else {
 				Result r = strategy.initResult();
-				outgoingResults.put(statement, r);
+				outgoingResults.put(vertex, r);
 				return r;
 			}
 		}

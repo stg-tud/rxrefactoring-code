@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.eclipse.jdt.core.dom.Statement;
 
-public interface DataFlowStrategy<Result> {
+public interface DataFlowStrategy<Vertex, Result> {
 	
 	/**
 	 * The analysis result for the entry nodes of the CFG.
@@ -33,5 +33,5 @@ public interface DataFlowStrategy<Result> {
 	 * @param input The input result.
 	 * @return A new non-null result.
 	 */
-	Result transform(Statement statement, Result input);
+	Result transform(Vertex vertex, Result input);
 }

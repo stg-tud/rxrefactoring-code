@@ -26,7 +26,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 
 
-public interface StatementDataFlowStrategy<Result> extends DataFlowStrategy<Result> {
+public interface StatementDataFlowStrategy<Statement, Result> extends DataFlowStrategy<Statement, Result> {
 
 	@SuppressWarnings("unchecked")
 	@Override

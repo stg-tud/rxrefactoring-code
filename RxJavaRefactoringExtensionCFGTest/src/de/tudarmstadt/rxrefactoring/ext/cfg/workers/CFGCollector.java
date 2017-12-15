@@ -45,7 +45,7 @@ public class CFGCollector implements IWorker<Void, Void> {
 			Log.info(CFGCollector.class, cfg.listEdges());
 			
 			Log.info(CFGCollector.class, "### Start Analysis for " + m.getName() + " ###");
-			DataFlowAnalysis<?> analysis = new VariableNameAnalysis();
+			DataFlowAnalysis<?, ?> analysis = new VariableNameAnalysis();
 			Map<?, ?> result = analysis.apply(cfg);	
 			Log.info(CFGCollector.class, result);
 		});

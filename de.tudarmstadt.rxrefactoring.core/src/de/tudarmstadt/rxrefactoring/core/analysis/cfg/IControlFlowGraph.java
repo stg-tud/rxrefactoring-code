@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import org.eclipse.jdt.core.dom.Statement;
 import org.jgrapht.DirectedGraph;
 
-public interface ControlFlowGraph<Vertex> extends DirectedGraph<Vertex, Edge<Vertex>> {
+public interface IControlFlowGraph<Vertex> extends DirectedGraph<Vertex, IEdge<Vertex>> {
 
 	default Set<Vertex> entryNodes() {
 		return vertexSet().stream().filter(stmt -> inDegreeOf(stmt) == 0).collect(Collectors.toSet());		

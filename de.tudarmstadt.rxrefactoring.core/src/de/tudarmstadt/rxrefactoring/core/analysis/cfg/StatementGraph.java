@@ -34,8 +34,8 @@ import com.google.common.collect.Sets;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
 
 //TODO: Add Exceptions to the Control Flow Graph
-public class StatementGraph extends AbstractBaseGraph<Statement, Edge<Statement>>
-		implements ControlFlowGraph<Statement> {
+public class StatementGraph extends AbstractBaseGraph<Statement, IEdge<Statement>>
+		implements IControlFlowGraph<Statement> {
 
 	/**
 	 * Serial ID
@@ -481,7 +481,7 @@ public class StatementGraph extends AbstractBaseGraph<Statement, Edge<Statement>
 			}
 		}
 
-		private static Edge<Statement> addEdge(StatementGraph graph, Statement sourceVertex, Statement targetVertex) {
+		private static IEdge<Statement> addEdge(StatementGraph graph, Statement sourceVertex, Statement targetVertex) {
 			
 			
 			if (targetVertex instanceof DoStatement) {
@@ -515,7 +515,7 @@ public class StatementGraph extends AbstractBaseGraph<Statement, Edge<Statement>
 	
 	public String listEdges() {
 		String result = "";
-		for (Edge<Statement> edge : edgeSet()) {
+		for (IEdge<Statement> edge : edgeSet()) {
 			result += edge.toString() + ";\n";
 		}
 		return result;
