@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IControlFlowGraph;
 
-public class ForwardTraversal<V> implements DataFlowTraversal<V> {
+public class ForwardTraversal<V> implements IDataFlowTraversal<V> {
 
 	private final IControlFlowGraph<V> cfg;
 	

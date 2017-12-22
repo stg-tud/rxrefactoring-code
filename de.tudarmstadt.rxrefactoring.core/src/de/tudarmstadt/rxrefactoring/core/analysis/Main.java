@@ -12,15 +12,17 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.ExpressionGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.ExpressionGraphUtils;
+import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IControlFlowGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IEdge;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.StatementExpressionGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.StatementGraph;
-import de.tudarmstadt.rxrefactoring.core.analysis.example.UseDefAnalysis;
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.analysis.flow.DataFlowAnalysis;
 
 public final class Main {
 
-	static void statementExample() {
+
+	
+	static IControlFlowGraph<? extends ASTNode> statementExample() {
 		String program =
 				"{"
 				+ "G g = new G();"
@@ -32,6 +34,8 @@ public final class Main {
 				+ "int r = t(g.h(x), y);"
 				+ "return r;"
 				+ "}";
+		
+		
 				
 		final ASTParser parser = ASTParser.newParser(AST.JLS9);
 		
@@ -42,10 +46,14 @@ public final class Main {
 		
 		StatementGraph g = StatementGraph.from((Statement) node);
 		
-		System.out.println(g);
+		//Apply an analysis		
+				DataFlowAnalysis analysis = Analyses.VARIABLE_NAME_ANALYSIS;
+				Object result = analysis.apply(g, analysis.mapExecutor());
+		
+		return g;
 	}
 	
-	static void expressionExample() {
+	static IControlFlowGraph<?> expressionExample() {
 		String program =
 				"a = b == 1 ? f(g.h(x), y) : z";
 				
@@ -57,13 +65,11 @@ public final class Main {
 		ASTNode node = parser.createAST(null);
 		
 		ExpressionGraph g = ExpressionGraphUtils.from((Expression) node);
-		
-		
-		System.out.println("Entry=" + g.entryNodes() + ", Exit=" + g.exitNodes());
-		System.out.println(g);
+				
+		return g;
 	}
 	
-	static void futureExample() {
+	static IControlFlowGraph<? extends ASTNode> statementExpressionExample() {
 		String program =
 				"{"
 				+ "Future<Integer> f1 = ask(\"Hello\");"
@@ -74,11 +80,37 @@ public final class Main {
 				+ "}"
 				+ "f2.cancel();"
 				+ "}";
+		
+		String program2 =
+				"{"
+				+ "int n = 0;"
+				+ "for(int a; b < c; d++)"
+				+ "n = n + i;"
+				+ "System.out.println(n);"
+				+ "}";
+		
+		String program3 =				
+				"int[][] a = new int[][] {{1, 2}, {3, 4}};"
+				+ "int[] b = new int[1];"
+				+ "b[0] = a[1][0];";
+		
+		String program4 =
+				"switch (a) {"
+				+ "case 0: return 0;"
+				+ "case 1: "
+				+ "b = a;"
+				+ "a++;"
+				+ "case 2:"
+				+ "c = a;"
+				+ "break;"
+				+ "default: return a;"
+				+ "}"
+				+ "return b;";
 				
 		final ASTParser parser = ASTParser.newParser(AST.JLS9);
 		
 		parser.setKind(ASTParser.K_STATEMENTS);
-		parser.setSource(program.toCharArray());
+		parser.setSource(program4.toCharArray());
 		parser.setBindingsRecovery(true);
 		parser.setStatementsRecovery(true);
 		
@@ -86,20 +118,34 @@ public final class Main {
 		
 		StatementExpressionGraph g = StatementExpressionGraph.from((Statement) node);
 		
-		for(IEdge<ASTNode> e : g.edgeSet()) {
-			System.out.println(e.getHead() + "\n-->\n" + e.getTail() + "\n#####");
-		}
 		
 		//Apply an analysis		
-		Map<ASTNode, Multimap<Expression, ASTNode>> result = new UseDefAnalysis().apply(g);
+		DataFlowAnalysis analysis = Analyses.VARIABLE_NAME_ANALYSIS;
+		Object result = analysis.apply(g, analysis.mapExecutor());
 		
 		System.out.println(g);
+		System.out.println(result);
+		
+		return g;
+		
+
 	}
 	
+
 	
 	public static void main(String[] args) {
 		
-		futureExample();
+//		CallHierarchy callHierarchy = CallHierarchy.getDefault();
+//	    IMember[] members = { method };
+//	    MethodWrapper[] callers = callHierarchy.getCallerRoots(members);
+		
+		IControlFlowGraph<? extends ASTNode> graph = statementExample();
+
+		for(IEdge<? extends ASTNode> e : graph.edgeSet()) {
+			System.out.println(e.getHead() + "\n-->\n" + e.getTail() + "\n#####");
+		}
+		
+		System.out.println("Entry=" + graph.entryNodes() + ", Exit=" + graph.exitNodes());
 		
 		
 		

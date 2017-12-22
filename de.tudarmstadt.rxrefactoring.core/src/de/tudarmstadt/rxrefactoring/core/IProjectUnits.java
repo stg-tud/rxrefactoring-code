@@ -13,27 +13,25 @@ import org.eclipse.jdt.core.search.IJavaSearchScope;
  * @author mirko
  *
  */
-public interface IProjectUnits extends Set<IRewriteCompilationUnit>  {
-	
-	
+public interface IProjectUnits extends Set<IRewriteCompilationUnit> {
+
 	public @NonNull IJavaSearchScope getSearchScope();
-	
+
 	/**
-	 * Accepts a visitor for each compilation unit in this
-	 * set.
+	 * Accepts a visitor for each compilation unit in this set.
 	 * 
-	 * @param visitor the non-null visitor to accept.
+	 * @param visitor
+	 *            the non-null visitor to accept.
 	 */
 	default public void accept(@NonNull UnitASTVisitor visitor) {
 		for (IRewriteCompilationUnit unit : this) {
-			
-			Objects.requireNonNull(unit, "an element of ProjectUnits was null");				
+
+			Objects.requireNonNull(unit, "an element of ProjectUnits was null");
 			visitor.setUnit(unit);
 			unit.accept(visitor);
-		}		
+		}
 	}
-	
-	
+
 	@Override
 	default public boolean add(IRewriteCompilationUnit e) {
 		throw new UnsupportedOperationException("this set is not mutable");
@@ -43,7 +41,7 @@ public interface IProjectUnits extends Set<IRewriteCompilationUnit>  {
 	default public boolean remove(Object o) {
 		throw new UnsupportedOperationException("this set is not mutable");
 	}
-	
+
 	@Override
 	default public boolean addAll(Collection<? extends IRewriteCompilationUnit> c) {
 		throw new UnsupportedOperationException("this set is not mutable");

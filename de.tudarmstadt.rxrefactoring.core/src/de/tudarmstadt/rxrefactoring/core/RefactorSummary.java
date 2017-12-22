@@ -19,7 +19,6 @@ public class RefactorSummary {
 
 	private final Set<ProjectSummary> projects;
 	private final String name;
-	
 
 	// fields for storing the start and end time of the refactoring
 	private long startTime;
@@ -86,14 +85,14 @@ public class RefactorSummary {
 			result += "\n" + "\n" + project.toString(1);
 		}
 
-		Map<String,CountEntry> total = getTotal();
+		Map<String, CountEntry> total = getTotal();
 		if (!total.isEmpty()) {
 			result += "\n" + "\n" + fromPadding(1) + ">>> Workspace Total:" + WorkerSummary.mapToString(getTotal(), 2);
 		}
 
-		result += "\n" + "\n" + fromPadding(1) + "Duration: " + getDurationAsString() + "\n"
-		+ fromPadding(1) + "Number of projects: " + getProjectCountAsString();
-		
+		result += "\n" + "\n" + fromPadding(1) + "Duration: " + getDurationAsString() + "\n" + fromPadding(1)
+				+ "Number of projects: " + getProjectCountAsString();
+
 		result += "\n" + "<<<";
 		return result;
 	}
@@ -157,19 +156,17 @@ public class RefactorSummary {
 		public String toString(int padding) {
 			String pad = fromPadding(padding);
 
-			String result = pad + ">>> Project[" + status +"]: " + project.getName();
+			String result = pad + ">>> Project[" + status + "]: " + project.getName();
 
 			for (WorkerSummary worker : workers) {
 				result += "\n" + worker.toString(padding + 1);
 			}
 
-			
 			Map<String, CountEntry> total = getTotal();
 			if (!total.isEmpty()) {
 				result += "\n" + "\n" + fromPadding(padding + 1) + ">>> Project Total:"
 						+ WorkerSummary.mapToString(getTotal(), padding + 2);
 			}
-			
 
 			return result;
 		}

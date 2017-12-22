@@ -3,7 +3,6 @@ package de.tudarmstadt.rxrefactoring.core.analysis.cfg;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.eclipse.jdt.core.dom.Statement;
 import org.jgrapht.DirectedGraph;
 
 public interface IControlFlowGraph<Vertex> extends DirectedGraph<Vertex, IEdge<Vertex>> {
@@ -15,4 +14,14 @@ public interface IControlFlowGraph<Vertex> extends DirectedGraph<Vertex, IEdge<V
 	default Set<Vertex> exitNodes() {
 		return vertexSet().stream().filter(stmt -> outDegreeOf(stmt) == 0).collect(Collectors.toSet());		
 	}
+	
+	
+	default String listEdges() {
+		String result = "";
+		for (IEdge<Vertex> edge : edgeSet()) {
+			result += edge.toString() + ";\n";
+		}
+		return result;
+	}
+	
 }

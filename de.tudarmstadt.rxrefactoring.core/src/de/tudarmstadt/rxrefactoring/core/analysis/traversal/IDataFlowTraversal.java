@@ -2,7 +2,7 @@ package de.tudarmstadt.rxrefactoring.core.analysis.traversal;
 
 import java.util.Set;
 
-public interface DataFlowTraversal<Vertex> {
+public interface IDataFlowTraversal<Vertex> {
 
 	public Set<Vertex> entryNodes();
 	

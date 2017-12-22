@@ -1,13 +1,9 @@
 package de.tudarmstadt.rxrefactoring.core.analysis.cfg;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.BreakStatement;
@@ -26,10 +22,8 @@ import org.eclipse.jdt.core.dom.SwitchStatement;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
-import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.AbstractBaseGraph;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -231,7 +225,7 @@ public class StatementExpressionGraph extends AbstractBaseGraph<ASTNode, IEdge<A
 			 * @return A non-null flow result that contains the specifed
 			 * statements as exit statements.
 			 */
-			public static Exits create() {	
+			public static Exits create() {		
 				return new Exits(newMultimap());
 			}
 			
@@ -260,7 +254,7 @@ public class StatementExpressionGraph extends AbstractBaseGraph<ASTNode, IEdge<A
 		 * @return The last statement(s) that has been processed in a basic block.
 		 */
 		private Exits process(Statement currentStatement, Context context) {
-			
+						
 			//Decide how to traverse further by looking at the current statement.
 			//There should be a case for each statement that changes the control flow.			
 			if (currentStatement instanceof Block) {				
@@ -326,44 +320,49 @@ public class StatementExpressionGraph extends AbstractBaseGraph<ASTNode, IEdge<A
 				
 				}		
 				
-//			} else if (currentStatement instanceof SwitchStatement) {
-//				//If we look at a block, discard the block and only look at the statements in the block.
-//				SwitchStatement switchStatement = (SwitchStatement) currentStatement;
-//				
-//				Collection<ASTNode> previousNodes = Collections.emptyList();
-//				
-//				Context newContext = context.enterStatement(switchStatement);
-//				
-//				ExitFlows result = ExitFlows.create(); 
-//				
-//				//Iterate through all statements in the block and establish links between them.
-//				for (Object element : switchStatement.statements()) {
-//					Statement statement = (Statement) element;
-//					
-//					addEdges(graph, previousNodes, statement);
-//					
-//					ExitFlows statementResult = from(statement, newContext);
-//					//TODO: Is this correct?
-//					result.addTo(statement, new Statement[0], new Statement[] {statement}, new ExitFlows[] {statementResult}, true);				
-//					
-//					previousNodes = statementResult.exits.get(statement); 					
-//				}
-//				
-//				result.exits.putAll(switchStatement, previousNodes);
-//				
-//				return result;
-//			
-//			} else if (currentStatement instanceof SwitchCase) {
-//				SwitchCase switchCase = (SwitchCase) currentStatement;
-//				
-//				Statement enclosingSwitch = context.enclosingSwitch();
-//				if (enclosingSwitch != null) { //Enclosing switch should never be null if the program is correctly typed.
-//					addEdge(graph, enclosingSwitch, switchCase);	
-//				}
-//				
-//				//Traverse further.
-//				return ExitFlows.create(switchCase);
-//			
+			} else if (currentStatement instanceof SwitchStatement) {
+				SwitchStatement switchStatement = (SwitchStatement) currentStatement;
+				Result expressionResult = builder.from(switchStatement.getExpression());
+				addEdge(switchStatement, expressionResult.entry);				
+				
+				Iterable<ASTNode> previousNodes = Collections.singleton(expressionResult.exit);
+				
+				Context newContext = context.enterStatement(switchStatement);
+				
+				Exits result = Exits.create(); 
+				
+				for (Object element : switchStatement.statements()) {
+					Statement statement = (Statement) element;		
+					addEdges(previousNodes, statement);
+					
+					if (statement instanceof SwitchCase) {
+						addEdge(expressionResult.exit, statement);
+					}
+					
+					Exits statementResult = process(statement, newContext);
+					previousNodes = statementResult.get(statement);					
+					
+					//TODO: Add breaks?
+					result.copyFrom(statementResult).remove(statement);					 					
+				}
+				
+				return result.add(switchStatement, previousNodes);
+			
+			} else if (currentStatement instanceof SwitchCase) {
+				SwitchCase switchCase = (SwitchCase) currentStatement;
+				
+				Expression expression = switchCase.getExpression();
+				
+				if (expression == null) {
+					return Exits.create().add(currentStatement, currentStatement);
+				}
+				
+				Result expressionResult = builder.from(expression);
+				addEdge(switchCase, expressionResult.entry);				
+				
+				//Traverse further.
+				return Exits.create().add(switchCase, expressionResult.exit);
+			
 			} else if (currentStatement instanceof WhileStatement) {
 				WhileStatement whileStatement = (WhileStatement) currentStatement;
 				
@@ -541,14 +540,7 @@ public class StatementExpressionGraph extends AbstractBaseGraph<ASTNode, IEdge<A
 				//Add an edge previousStatement --> currentStatement
 				addEdge(previousNode, currentNode);
 			}			
-		}
-		
-		private void addEdges(ASTNode[] previousNodes, ASTNode currentNode) {
-			for (ASTNode previousNode : previousNodes) {
-				//Add an edge previousStatement --> currentStatement
-				addEdge(previousNode, currentNode);
-			}			
-		}
+		}			
 	}
 	
 

@@ -6,7 +6,6 @@ import org.eclipse.swt.widgets.Shell;
 
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RefactorExecution;
 
-
 /**
  * Starts the refactoring when the button is clicked by invoking a
  * {@link RefactorExecution}.
@@ -21,7 +20,7 @@ public abstract class RefactoringE4Handler {
 	@Execute
 	public final void execute(Shell shell) {
 		RefactorExecution app = new RefactorExecution(createExtension());
-		app.run();	
+		app.run();
 	}
 
 	/**

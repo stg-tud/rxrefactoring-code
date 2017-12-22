@@ -4,7 +4,6 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
-import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
 
 public interface IWorker<Input, Output> {
@@ -31,6 +30,7 @@ public interface IWorker<Input, Output> {
 	 * @throws Exception
 	 *             if there is a problem with the refactoring.
 	 */
-	public @Nullable Output refactor(@NonNull IProjectUnits units, @Nullable Input input, @NonNull WorkerSummary summary) throws Exception;
+	public @Nullable Output refactor(@NonNull IProjectUnits units, @Nullable Input input,
+			@NonNull WorkerSummary summary) throws Exception;
 
 }

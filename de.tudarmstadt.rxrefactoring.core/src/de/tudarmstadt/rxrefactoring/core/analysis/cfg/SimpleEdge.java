@@ -24,5 +24,7 @@ public class SimpleEdge<V> implements IEdge<V> {
 	public String toString() {
 		return "Edge"; //(" + head + ", " + tail + ")";
 	}
+	
+	
 
 }

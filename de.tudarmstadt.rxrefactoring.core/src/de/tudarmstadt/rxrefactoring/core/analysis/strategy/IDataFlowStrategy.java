@@ -2,9 +2,7 @@ package de.tudarmstadt.rxrefactoring.core.analysis.strategy;
 
 import java.util.List;
 
-import org.eclipse.jdt.core.dom.Statement;
-
-public interface DataFlowStrategy<Vertex, Result> {
+public interface IDataFlowStrategy<Vertex, Result> {
 	
 	/**
 	 * The analysis result for the entry nodes of the CFG.

@@ -3,21 +3,29 @@ package de.tudarmstadt.rxrefactoring.core.analysis.cfg;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import org.eclipse.jdt.core.dom.ArrayAccess;
+import org.eclipse.jdt.core.dom.ArrayCreation;
+import org.eclipse.jdt.core.dom.ArrayInitializer;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.CastExpression;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.ConditionalExpression;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.InfixExpression;
+import org.eclipse.jdt.core.dom.InstanceofExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.ParenthesizedExpression;
+import org.eclipse.jdt.core.dom.PostfixExpression;
+import org.eclipse.jdt.core.dom.PrefixExpression;
+import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 
 
 
 public class ExpressionGraphUtils {
 	public static ExpressionGraph from(Expression expr) {
 		ExpressionGraph graph = new ExpressionGraph();		
-		Result result = new ExpressionGraphBuilder(graph).from(expr);
-
+		new ExpressionGraphBuilder(graph).from(expr);
 		return graph;
 	}
 	
@@ -55,6 +63,9 @@ public class ExpressionGraphUtils {
 			this.graph = graph;
 		}		
 						
+		/*
+		 * Result contains the first and last (sub-)expression of an expression evaluation.
+		 */
 		public Result from(Expression currentExpression) {
 			if (currentExpression instanceof MethodInvocation) {				
 				MethodInvocation e = (MethodInvocation) currentExpression;
@@ -68,11 +79,68 @@ public class ExpressionGraphUtils {
 				for(Object o : e.arguments()) {
 					Expression e0 = (Expression) o;
 					expressionQueue.add(from(e0));
+				}				
+								
+				Result first = expressionQueue.peek();				
+				Result previousExpression = null;
+				while (!expressionQueue.isEmpty()) {
+					Result e0 =  expressionQueue.poll();
+					
+					if (previousExpression != null) {
+						addEdge(previousExpression.exit, e0.entry);
+					}					
+					previousExpression = e0;					
+				}				
+				
+				if (previousExpression != null) {
+					addEdge(previousExpression.exit, e);
 				}
 				
-								
-				Result first = expressionQueue.peek();
+				return new Result(first.entry, e);				
 				
+			} else if (currentExpression instanceof SuperMethodInvocation) {				
+				SuperMethodInvocation e = (SuperMethodInvocation) currentExpression;
+				Queue<Result> expressionQueue = new LinkedList<>();
+								
+				for(Object o : e.arguments()) {
+					Expression e0 = (Expression) o;
+					expressionQueue.add(from(e0));
+				}				
+								
+				Result first = expressionQueue.peek();				
+				Result previousExpression = null;
+				while (!expressionQueue.isEmpty()) {
+					Result e0 =  expressionQueue.poll();
+					
+					if (previousExpression != null) {
+						addEdge(previousExpression.exit, e0.entry);
+					}					
+					previousExpression = e0;					
+				}				
+				
+				if (previousExpression != null) {
+					addEdge(previousExpression.exit, e);
+				}
+				
+				return new Result(first.entry, e);				
+				
+			} else if (currentExpression instanceof ClassInstanceCreation) {				
+				ClassInstanceCreation e = (ClassInstanceCreation) currentExpression;
+			
+				
+				Queue<Result> expressionQueue = new LinkedList<>();
+				
+				Expression expression = e.getExpression();				
+				if (expression != null) {
+					expressionQueue.add(from(expression));
+				}				
+				
+				for(Object o : e.arguments()) {
+					Expression e0 = (Expression) o;
+					expressionQueue.add(from(e0));
+				}				
+								
+				Result first = expressionQueue.peek();				
 				Result previousExpression = null;
 				while (!expressionQueue.isEmpty()) {
 					Result e0 =  expressionQueue.poll();
@@ -84,11 +152,13 @@ public class ExpressionGraphUtils {
 					previousExpression = e0;					
 				}
 				
+				
+				
 				if (previousExpression != null) {
 					addEdge(previousExpression.exit, e);
 				}
 				
-				return new Result(first.entry, e);
+				return new Result(first.entry, e);	
 				
 			} else if (currentExpression instanceof Assignment) {				
 				Assignment e = (Assignment) currentExpression;
@@ -123,16 +193,34 @@ public class ExpressionGraphUtils {
 				
 				return new Result(cond.entry, e);				
 			} else if (currentExpression instanceof InfixExpression) {
-				//TODO: Add shortcut semantics e.g. for &&				
 				InfixExpression e = (InfixExpression) currentExpression;
-					
+									
 				Result lhs = from(e.getLeftOperand());
 				Result rhs = from(e.getRightOperand());
-				
+												
 				addEdge(lhs.exit, rhs.entry);
-				addEdge(rhs.exit, e);			
+				addEdge(rhs.exit, e);	
 				
-				return new Result(lhs.entry, e);				
+				if (e.getOperator().equals(InfixExpression.Operator.CONDITIONAL_AND) || e.getOperator().equals(InfixExpression.Operator.CONDITIONAL_OR)) {
+					addEdge(lhs.exit, e);
+				}
+				
+				return new Result(lhs.entry, e);	
+				
+			} else if (currentExpression instanceof PostfixExpression) {
+				PostfixExpression e = (PostfixExpression) currentExpression;
+					
+				Result operand = from(e.getOperand());								
+				addEdge(operand.exit, e);								
+				return new Result(operand.entry, e);	
+				
+			} else if (currentExpression instanceof PrefixExpression) {
+				PrefixExpression e = (PrefixExpression) currentExpression;
+					
+				Result operand = from(e.getOperand());								
+				addEdge(operand.exit, e);								
+				return new Result(operand.entry, e);	
+				
 			} else if (currentExpression instanceof FieldAccess) {
 				FieldAccess e = (FieldAccess) currentExpression;
 				
@@ -141,30 +229,100 @@ public class ExpressionGraphUtils {
 				addEdge(res.exit, e);
 				
 				return new Result(res.entry, e);	
+			} else if (currentExpression instanceof InstanceofExpression) {
+				InstanceofExpression e = (InstanceofExpression) currentExpression;
+								
+				Result res = from(e.getLeftOperand());				
+				addEdge(res.exit, e);
+				
+				return new Result(res.entry, e);	
+			} else if (currentExpression instanceof ArrayAccess) {
+				ArrayAccess e = (ArrayAccess) currentExpression;
+				
+				Result arrayRes = from(e.getArray());
+				Result indexRes = from(e.getIndex());
+		
+				
+				addEdge(arrayRes.exit, indexRes.entry);
+				addEdge(indexRes.exit, e);
+				
+				return new Result(arrayRes.entry, e);
+				
+			} else if (currentExpression instanceof ArrayCreation) {
+				ArrayCreation e = (ArrayCreation) currentExpression;
+				
+				ArrayInitializer initializer = e.getInitializer();				
+				
+				if (initializer == null) {
+					Expression firstNode = null;
+					Expression previousNode = null; 
+					for (Object o : e.dimensions()) {
+						Expression initExpr = (Expression) o;						
+						
+						Result exprResult = from(initExpr);
+						if (previousNode != null) {
+							addEdge(previousNode, exprResult.entry);							
+						} else {
+							firstNode = exprResult.entry;
+						}						
+						previousNode = exprResult.exit;					
+					}
+					
+					if (previousNode != null) //Should not happen under normal conditions, because either dimensions or an initializer have to be provided.
+						addEdge(previousNode, e);
+					
+					return new Result(firstNode, e);
+				} else {					
+					Result initializerResult = from(e.getInitializer());
+					
+					addEdge(initializerResult.exit, e);
+					return new Result(initializerResult.entry, e);					
+				}				
+			} else if (currentExpression instanceof ArrayInitializer) {
+				ArrayInitializer e = (ArrayInitializer) currentExpression;
+				
+				Expression firstNode = e;
+				Expression previousNode = null; 
+				
+				for (Object o : e.expressions()) {
+					Expression expr = (Expression) o;						
+					
+					Result exprResult = from(expr);
+					if (previousNode != null) {
+						addEdge(previousNode, exprResult.entry);							
+					} else {
+						firstNode = exprResult.entry;
+					}						
+					previousNode = exprResult.exit;					
+				}
+				
+				if (previousNode != null)
+					addEdge(previousNode, e);
+				
+				return new Result(firstNode, e);
+				
+			} else if (currentExpression instanceof ParenthesizedExpression) {
+				ParenthesizedExpression e = (ParenthesizedExpression) currentExpression;
+									
+					Result res = from(e.getExpression());				
+					addEdge(res.exit, e);
+					
+					return new Result(res.entry, e);	
 			} else { // If there is no control flow inside the expression
 				/* 
 				 * BooleanLiteral, CharacterLiteral, Name, ThisExpression, TypeLiteral, NullLiteral, NumberLiteral, CreationReference, VariableDeclarationExpression, 
-				 * LambdaExpression, SuperFieldAccess
+				 * LambdaExpression, SuperFieldAccess, StringLiteral, Annotation
 				 */
 				return new Result(currentExpression, currentExpression);
+				
+				
+				
 			}	
 			
 			/*
 			 * Expression:
-				 *    {@link Annotation},
-				 *    {@link ArrayAccess},
-				 *    {@link ArrayCreation},
-				 *    {@link ArrayInitializer},
-				 *    {@link ClassInstanceCreation},
 				 *    {@link ExpressionMethodReference},
-				 *    {@link FieldAccess},
-				 *    {@link InstanceofExpression},
 				 *    {@link MethodReference},
-				 *    {@link ParenthesizedExpression},
-				 *    {@link PostfixExpression},
-				 *    {@link PrefixExpression},
-				 *    {@link StringLiteral},
-				 *    {@link SuperMethodInvocation},
 				 *    {@link SuperMethodReference},
 				 *    {@link TypeMethodReference},
 				 */    

@@ -21,7 +21,7 @@ public interface IRefactorExtension {
 	 * @return A non-null name.
 	 */
 	public @NonNull String getName();
-	
+
 	/**
 	 * Provides a comprehensible description of the kind of refactoring that is done
 	 * by this environment.
@@ -79,5 +79,5 @@ public interface IRefactorExtension {
 	default public @NonNull ExecutorService createExecutorService() {
 		return Executors.newFixedThreadPool(4);
 	}
-	
+
 }

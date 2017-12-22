@@ -3,6 +3,7 @@ package de.tudarmstadt.rxrefactoring.core;
 import java.util.List;
 import java.util.Objects;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -19,7 +20,6 @@ import com.google.common.annotations.Beta;
 
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
 
-
 /**
  * A compilation unit that can be directly rewritten.
  * 
@@ -29,7 +29,7 @@ import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUn
  * @see ASTRewrite
  *
  */
-public interface IRewriteCompilationUnit extends ICompilationUnit {	
+public interface IRewriteCompilationUnit extends ICompilationUnit {
 	/**
 	 * Accepts a visitor for this compilation units AST.
 	 * 
@@ -39,7 +39,7 @@ public interface IRewriteCompilationUnit extends ICompilationUnit {
 	 * @see ASTNode#accept(ASTVisitor)
 	 */
 	public void accept(@NonNull ASTVisitor visitor);
-	
+
 	/**
 	 * The root node of this compilation units AST. Use {@link writer()} when you
 	 * want to make changes to the AST.
@@ -47,37 +47,34 @@ public interface IRewriteCompilationUnit extends ICompilationUnit {
 	 * @return The root node of this compilation units AST. Cannot be null.
 	 */
 	public @NonNull ASTNode getRoot();
-	
+
 	/**
 	 * Retrieves the {@link AST} used for this compilation unit.
 	 * 
 	 * @return The non-null {@link AST}.
 	 */
 	public @NonNull AST getAST();
-	
+
 	/**
 	 * Retrieves the {@link ASTRewrite} used for this compilation unit.
 	 * 
 	 * @return The non-null {@link ASTRewrite}.
 	 */
 	public @NonNull ASTRewrite writer();
-	
+
 	/**
 	 * Retrieves the {@link ImportRewrite} used for this compilation unit.
 	 * 
 	 * @return The non-null {@link ImportRewrite}.
 	 */
 	public @NonNull ImportRewrite imports();
-	
-	
+
 	public boolean hasChanges();
 
 	public boolean hasImportChanges();
 
 	public boolean hasASTChanges();
-	
-	
-	
+
 	/**
 	 * Replaces an AST node with another AST node. This replacement is not immediate
 	 * as it does not change the underlying AST graph. * <br>
@@ -99,14 +96,15 @@ public interface IRewriteCompilationUnit extends ICompilationUnit {
 		ASTRewrite writer = writer();
 		synchronized (writer) {
 			writer.replace(node, replacement, null);
-		}		
+		}
 	}
-	
+
 	/**
 	 * Creates a placeholder node for a true copy of the given node. This method is
 	 * thread-safe.
 	 * 
-	 * @param node The node to create a copy placeholder for.
+	 * @param node
+	 *            The node to create a copy placeholder for.
 	 * @return the new placeholder node
 	 * 
 	 * @see ASTRewrite#createCopyTarget(ASTNode)
@@ -115,40 +113,41 @@ public interface IRewriteCompilationUnit extends ICompilationUnit {
 	default public @NonNull <V extends ASTNode> V copyNode(@NonNull V node) {
 		if (node == null || node.getParent() == null)
 			return node;
-		
-		ASTRewrite writer = writer();		
+
+		ASTRewrite writer = writer();
 		synchronized (writer) {
 			return (V) writer.createCopyTarget(node);
-		}		
+		}
 	}
-	
+
 	/**
-	 * Returns a deep copy of the subtree of AST nodes rooted at the given node. This method is
-	 * thread-safe.
+	 * Returns a deep copy of the subtree of AST nodes rooted at the given node.
+	 * This method is thread-safe.
 	 * 
-	 * @param node the node to copy
+	 * @param node
+	 *            the node to copy
 	 * @return the copied node
 	 * 
 	 * @see ASTNode#copySubtree(AST, ASTNode)
 	 */
 	@SuppressWarnings({ "unchecked", "null" })
 	default public @NonNull <V extends ASTNode> V cloneNode(@NonNull V node) {
-		ASTRewrite writer = writer();		
+		ASTRewrite writer = writer();
 		synchronized (writer) {
 			return (V) ASTNode.copySubtree(getAST(), node);
 		}
 	}
 
 	/**
-	 * Marks the given node for removal. 
-	 * This method is thread-safe.
+	 * Marks the given node for removal. This method is thread-safe.
 	 * 
-	 * @param node the node being removed. 
+	 * @param node
+	 *            the node being removed.
 	 * 
 	 * @see ASTRewrite#remove(ASTNode, org.eclipse.text.edits.TextEditGroup)
 	 */
 	default public void remove(@NonNull ASTNode node) {
-		ASTRewrite writer = writer();		
+		ASTRewrite writer = writer();
 		synchronized (writer) {
 			writer.remove(node, null);
 		}
@@ -190,7 +189,7 @@ public interface IRewriteCompilationUnit extends ICompilationUnit {
 		ImportRewrite imports = imports();
 		synchronized (imports) {
 			imports.removeImport(qualifiedTypeName);
-		}		
+		}
 	}
 
 	/**
@@ -213,68 +212,67 @@ public interface IRewriteCompilationUnit extends ICompilationUnit {
 	default public ListRewrite getListRewrite(ASTNode node, ChildListPropertyDescriptor property) {
 		return writer().getListRewrite(node, property);
 	}
-	
-	
+
 	/**
-	 * Returns the rewritten node of the given node. If the node
-	 * has not been rewritten, then it returns the original node.
-	 * If the node is located in a list, then the index of the node
-	 * has to be given as well.
+	 * Returns the rewritten node of the given node. If the node has not been
+	 * rewritten, then it returns the original node. If the node is located in a
+	 * list, then the index of the node has to be given as well.
 	 * 
-	 * @param node The node to check.
-	 * @param index The index of the enclosing list (if any).
-	 * @return The possible rewriting of the original node, or
-	 * the original node.
+	 * @param node
+	 *            The node to check.
+	 * @param index
+	 *            The index of the enclosing list (if any).
+	 * @return The possible rewriting of the original node, or the original node.
 	 */
 	@Beta
-	default public ASTNode getRewrittenNode(ASTNode node) {		
+	default public ASTNode getRewrittenNode(ASTNode node) {
 		Objects.requireNonNull(node, "node can not be null.");
-		
+
 		StructuralPropertyDescriptor descriptor = node.getLocationInParent();
 		ASTNode parent = node.getParent();
-		
+
 		if (parent == null || descriptor == null)
 			throw new IllegalStateException("parent or descriptor are null.");
-		
+
 		if (descriptor instanceof ChildListPropertyDescriptor) {
 			ChildListPropertyDescriptor clpd = (ChildListPropertyDescriptor) descriptor;
 			ListRewrite l = writer().getListRewrite(parent, clpd);
-			
+
 			@SuppressWarnings("rawtypes")
 			List rewritten = l.getRewrittenList();
 			@SuppressWarnings("rawtypes")
 			List original = l.getOriginalList();
-			
+
 			for (int i = 0; i < original.size(); i++) {
 				if (Objects.equals(original.get(i), node)) {
 					try {
 						return (ASTNode) rewritten.get(i);
 					} catch (IndexOutOfBoundsException e) {
 						return node;
-					}					
+					}
 				}
 			}
-			
-			return node;			
+
+			return node;
 		} else {
 			return (ASTNode) writer().get(node, descriptor);
 		}
 	}
-	
+
 	@Beta
-	default public ASTNode getRewrittenNode(ASTNode node, int index) {		
+	default public ASTNode getRewrittenNode(ASTNode node, int index) {
 		Objects.requireNonNull(node, "node can not be null.");
-		
+
 		StructuralPropertyDescriptor descriptor = node.getLocationInParent();
 		ASTNode parent = node.getParent();
-		
+
 		if (parent == null || descriptor == null)
 			throw new IllegalStateException("parent or descriptor are null.");
-		
+
 		if (descriptor instanceof ChildListPropertyDescriptor) {
 			ChildListPropertyDescriptor clpd = (ChildListPropertyDescriptor) descriptor;
-			ListRewrite l = writer().getListRewrite(parent, clpd);								
-			return (ASTNode) l.getRewrittenList().get(index);			
+			ListRewrite l = writer().getListRewrite(parent, clpd);
+			return (ASTNode) l.getRewrittenList().get(index);
 		} else {
 			return (ASTNode) writer().get(node, descriptor);
 		}

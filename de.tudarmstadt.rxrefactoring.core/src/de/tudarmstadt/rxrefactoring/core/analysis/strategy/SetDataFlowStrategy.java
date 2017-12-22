@@ -6,7 +6,7 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 
-public interface SetDataFlowStrategy<V, T> extends DataFlowStrategy<V, Set<T>> {
+public interface SetDataFlowStrategy<V, T> extends IDataFlowStrategy<V, Set<T>> {
 	
 	@Override
 	default Set<T> entryResult() {

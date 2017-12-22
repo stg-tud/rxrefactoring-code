@@ -19,7 +19,7 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 	private EnumSet<RefactoringOptions> options;
 
 	public JavaFutureRefactoring() {
-		options = EnumSet.of(RefactoringOptions.FUTURE_WRAPPER);
+		options = EnumSet.of(RefactoringOptions.FUTURE);
 	}
 	
 
