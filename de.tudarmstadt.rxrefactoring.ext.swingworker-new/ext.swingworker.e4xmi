@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ASCII"?>
+<fragment:ModelFragments xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:commands="http://www.eclipse.org/ui/2010/UIModel/application/commands" xmlns:fragment="http://www.eclipse.org/ui/2010/UIModel/fragment" xmlns:menu="http://www.eclipse.org/ui/2010/UIModel/application/ui/menu" xmi:id="_zMoPINj5EeeCzMBBaSfrkA">
+  <imports xsi:type="menu:Menu" xmi:id="_85_FQNj5EeeCzMBBaSfrkA" elementId="de.tudarmstadt.rxrefactoring.core.menu"/>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_AkNUQNj6EeeCzMBBaSfrkA" featurename="menuContributions" parentElementId="org.eclipse.e4.legacy.ide.application">
+    <elements xsi:type="menu:MenuContribution" xmi:id="_HPHGANj6EeeCzMBBaSfrkA" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.execute" positionInParent="before=de.tudarmstadt.rxrefactoring.core.menuseparator.0" parentId="de.tudarmstadt.rxrefactoring.core.menu">
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_rsoiAPIfEeejffxlKU2sGA" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.execute" label="SwingWorker" command="_Xc144Nj6EeeCzMBBaSfrkA"/>
+    </elements>
+  </fragments>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_TLMdgNj6EeeCzMBBaSfrkA" featurename="commands" parentElementId="org.eclipse.e4.legacy.ide.application">
+    <elements xsi:type="commands:Command" xmi:id="_Xc144Nj6EeeCzMBBaSfrkA" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.command.execute" commandName="Execute"/>
+  </fragments>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_fWWy0Nj6EeeCzMBBaSfrkA" featurename="handlers" parentElementId="org.eclipse.e4.legacy.ide.application">
+    <elements xsi:type="commands:Handler" xmi:id="_hG6KcNj6EeeCzMBBaSfrkA" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.handler.execute" contributionURI="bundleclass://de.tudarmstadt.rxrefactoring.ext.swingworker-new/de.tudarmstadt.rxrefactoring.ext.swingworker.SwingWorkerHandler" command="_Xc144Nj6EeeCzMBBaSfrkA"/>
+  </fragments>
+</fragment:ModelFragments>
