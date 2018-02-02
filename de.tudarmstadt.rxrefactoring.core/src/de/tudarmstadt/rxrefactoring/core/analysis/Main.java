@@ -1,6 +1,7 @@
 package de.tudarmstadt.rxrefactoring.core.analysis;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -48,7 +49,7 @@ public final class Main {
 		
 		//Apply an analysis		
 				DataFlowAnalysis analysis = Analyses.VARIABLE_NAME_ANALYSIS;
-				Object result = analysis.apply(g, analysis.mapExecutor());
+				Object result = analysis.apply(g, analysis.astExecutor());
 		
 		return g;
 	}
@@ -110,7 +111,7 @@ public final class Main {
 		final ASTParser parser = ASTParser.newParser(AST.JLS9);
 		
 		parser.setKind(ASTParser.K_STATEMENTS);
-		parser.setSource(program4.toCharArray());
+		parser.setSource(program.toCharArray());
 		parser.setBindingsRecovery(true);
 		parser.setStatementsRecovery(true);
 		
@@ -120,8 +121,8 @@ public final class Main {
 		
 		
 		//Apply an analysis		
-		DataFlowAnalysis analysis = Analyses.VARIABLE_NAME_ANALYSIS;
-		Object result = analysis.apply(g, analysis.mapExecutor());
+		DataFlowAnalysis<ASTNode, Set<String>> analysis = Analyses.VARIABLE_NAME_ANALYSIS;
+		Void result = analysis.apply(g, analysis.astExecutor());
 		
 		System.out.println(g);
 		System.out.println(result);
@@ -139,7 +140,7 @@ public final class Main {
 //	    IMember[] members = { method };
 //	    MethodWrapper[] callers = callHierarchy.getCallerRoots(members);
 		
-		IControlFlowGraph<? extends ASTNode> graph = statementExample();
+		IControlFlowGraph<? extends ASTNode> graph = statementExpressionExample();
 
 		for(IEdge<? extends ASTNode> e : graph.edgeSet()) {
 			System.out.println(e.getHead() + "\n-->\n" + e.getTail() + "\n#####");

@@ -11,6 +11,7 @@ import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.ConditionalExpression;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.ExpressionMethodReference;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.InstanceofExpression;
@@ -304,28 +305,27 @@ public class ExpressionGraphUtils {
 			} else if (currentExpression instanceof ParenthesizedExpression) {
 				ParenthesizedExpression e = (ParenthesizedExpression) currentExpression;
 									
-					Result res = from(e.getExpression());				
-					addEdge(res.exit, e);
+				Result res = from(e.getExpression());				
+				addEdge(res.exit, e);
 					
-					return new Result(res.entry, e);	
+				return new Result(res.entry, e);	
+			} else if (currentExpression instanceof ExpressionMethodReference) {
+				ExpressionMethodReference e = (ExpressionMethodReference) currentExpression;
+				
+				Result res = from(e.getExpression());
+				
+				return new Result(res.entry, e);			
+				
 			} else { // If there is no control flow inside the expression
 				/* 
 				 * BooleanLiteral, CharacterLiteral, Name, ThisExpression, TypeLiteral, NullLiteral, NumberLiteral, CreationReference, VariableDeclarationExpression, 
-				 * LambdaExpression, SuperFieldAccess, StringLiteral, Annotation
+				 * LambdaExpression, SuperFieldAccess, StringLiteral, Annotation, CreationReference, SuperMethodReference, TypeMethodReference
 				 */
 				return new Result(currentExpression, currentExpression);
 				
 				
 				
-			}	
-			
-			/*
-			 * Expression:
-				 *    {@link ExpressionMethodReference},
-				 *    {@link MethodReference},
-				 *    {@link SuperMethodReference},
-				 *    {@link TypeMethodReference},
-				 */    
+			}		  
 		}
 		
 		private IEdge<? super Expression> addEdge(Expression sourceVertex, Expression targetVertex) {

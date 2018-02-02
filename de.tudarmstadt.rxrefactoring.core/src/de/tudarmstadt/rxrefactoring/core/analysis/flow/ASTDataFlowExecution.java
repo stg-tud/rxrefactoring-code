@@ -19,7 +19,13 @@ public class ASTDataFlowExecution<Vertex extends ASTNode, Result> extends Abstra
 			@Override
 			protected
 			Result getResultOf(Vertex vertex) {
-				return (Result) vertex.getProperty(PROPERTY_NAME);
+				Result res = (Result) vertex.getProperty(PROPERTY_NAME);
+				
+				if (res == null) {
+					return strategy.initResult();
+				}
+				
+				return res;
 			}
 
 			@Override

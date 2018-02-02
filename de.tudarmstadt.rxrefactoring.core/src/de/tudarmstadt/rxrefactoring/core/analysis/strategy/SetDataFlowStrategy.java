@@ -6,6 +6,8 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 
+import de.tudarmstadt.rxrefactoring.core.utils.Log;
+
 public interface SetDataFlowStrategy<V, T> extends IDataFlowStrategy<V, Set<T>> {
 	
 	@Override
@@ -20,6 +22,9 @@ public interface SetDataFlowStrategy<V, T> extends IDataFlowStrategy<V, Set<T>> 
 		
 	@Override
 	default Set<T> mergeAll(List<Set<T>> results) {
+		
+		Log.info(getClass(), "mergeAll" + results);
+		
 		Set<T> result = Sets.newHashSet();
 		for (Set<T> set : results) {
 			result.addAll(set);

@@ -70,15 +70,6 @@ public class FutureCollector implements IWorker<Void, FutureCollector> {
 				
 				add("future", unit, discoveringVisitor);
 				//collector.add("collection", unit, collectionDiscoveringVisitor);			
-			} else if(options.contains(RefactoringOptions.FUTURE_WRAPPER)) {
-				FutureVisitor discoveringVisitor = new FutureVisitor(ClassInfos.Future);
-				FutureCollectionVisitor collectionDiscoveringVisitor = new FutureCollectionVisitor(ClassInfos.Future.getBinaryName());
-				
-				unit.accept(discoveringVisitor);
-				unit.accept(collectionDiscoveringVisitor);
-				
-				add("future", unit, discoveringVisitor);
-				add("collection", unit, collectionDiscoveringVisitor);					
 			}
 			
 			if(options.contains(RefactoringOptions.FUTURETASK)) {

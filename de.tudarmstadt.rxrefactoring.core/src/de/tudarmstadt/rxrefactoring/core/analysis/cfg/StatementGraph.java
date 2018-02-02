@@ -30,6 +30,12 @@ import com.google.common.collect.Sets;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
 
 //TODO: Add Exceptions to the Control Flow Graph
+/**
+ * @deprecated Use {@link StatementExpressionGraph} instead.
+ * @author mirko
+ *
+ */
+@Deprecated
 public class StatementGraph extends AbstractBaseGraph<Statement, IEdge<Statement>>
 		implements IControlFlowGraph<Statement> {
 
