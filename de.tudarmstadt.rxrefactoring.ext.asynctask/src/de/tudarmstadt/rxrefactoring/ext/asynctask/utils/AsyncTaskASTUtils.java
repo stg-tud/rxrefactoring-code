@@ -1,14 +1,26 @@
 package de.tudarmstadt.rxrefactoring.ext.asynctask.utils;
 
+import com.google.common.collect.Sets;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IControlFlowGraph;
+import de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement.ProgramGraph;
+import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.UseDefAnalysis;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.UseDefAnalysis.UseDefResult;
+import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import java.lang.reflect.Modifier;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.ITypeBinding;
@@ -18,13 +30,8 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.ThisExpression;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-
-import com.google.common.collect.Sets;
-
-import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
-import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
-import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
+import org.eclipse.recommenders.rcp.utils.ASTNodeUtils;
 
 
 /**
@@ -33,7 +40,8 @@ import de.tudarmstadt.rxrefactoring.core.utils.Log;
  * Created: 01/18/2017
  */
 public class AsyncTaskASTUtils {
-	public static <T> ASTNode findOuterParent(ASTNode node, Class<?> target) {
+
+	public static <T> T findOuterParent(ASTNode node, Class<T> target) {
 		ASTNode parent = node.getParent();
 		ASTNode outerParent = node.getParent();
 		while (parent != null) {
@@ -42,8 +50,9 @@ public class AsyncTaskASTUtils {
 			}
 			parent = parent.getParent();
 		}
-		if (target.isInstance(outerParent))
-			return outerParent;
+		if (target.isInstance(outerParent)) {
+			return target.cast(outerParent);
+		}
 		return null;
 	}
 
@@ -57,9 +66,8 @@ public class AsyncTaskASTUtils {
 	 * Checks whether an AST contains an invocation to a method that is not allowed
 	 * for refactoring. Those methods are AsyncTask.isCancelled() and
 	 * AsyncTask.getStatus().
-	 * 
-	 * @param root
-	 *            The root of the AST to check.
+	 *
+	 * @param root The root of the AST to check.
 	 * @return True, if a forbidden method has been found.
 	 */
 	public static boolean containsForbiddenMethod(ASTNode root) {
@@ -67,10 +75,10 @@ public class AsyncTaskASTUtils {
 		boolean result = ASTNodes.containsNode(root, (n) -> {
 			if (n instanceof MethodInvocation) {
 				MethodInvocation inv = (MethodInvocation) n;
-			
+
 				return ASTUtils.matchSignature(inv, "^android\\.os\\.AsyncTask(<.*>)?$", "isCancelled", "^boolean$")
 						|| ASTUtils.matchSignature(inv, "^android\\.os\\.AsyncTask(<.*>)?$", "getStatus",
-								"^android.os.AsyncTask.Status$");
+						"^android.os.AsyncTask.Status$");
 			}
 
 			return false;
@@ -78,36 +86,37 @@ public class AsyncTaskASTUtils {
 
 		return result;
 	}
-	
-	public static void replaceThisWithFullyQualifiedThisIn(ASTNode root, IRewriteCompilationUnit unit, String thisClassName) {
-		
+
+	public static void replaceThisWithFullyQualifiedThisIn(ASTNode root, IRewriteCompilationUnit unit,
+			String thisClassName) {
+
 		final AST ast = unit.getAST();
-		
+
 		class ThisVisitor extends ASTVisitor {
+
 			public boolean visit(ThisExpression node) {
 				if (node.getQualifier() == null) {
 					ThisExpression thisExpr = ast.newThisExpression();
 					thisExpr.setQualifier(ast.newSimpleName(thisClassName));
-					
+
 					unit.replace(node, thisExpr);
 				}
-				
+
 				return true;
 			}
 		}
-		
+
 		root.accept(new ThisVisitor());
 	}
 
 	/**
 	 * Replaces all field retrieves with the fully qualified name
 	 * for the field, e.g. f = ... --> MyClass.this.f = ...
-	 * @param root
-	 * @param unit
 	 */
 	public static void replaceFieldsWithFullyQualifiedNameIn(ASTNode root, IRewriteCompilationUnit unit) {
 
 		class FieldsVisitor extends ASTVisitor {
+
 			@Override
 			public boolean visit(Assignment node) {
 
@@ -120,8 +129,10 @@ public class AsyncTaskASTUtils {
 			@Override
 			public boolean visit(MethodInvocation node) {
 				Expression expr = node.getExpression();
-				
-				if (expr != null) processFieldExpression(expr);
+
+				if (expr != null) {
+					processFieldExpression(expr);
+				}
 
 				return true;
 			}
@@ -144,39 +155,37 @@ public class AsyncTaskASTUtils {
 				if (expr instanceof SimpleName) {
 					SimpleName variableName = (SimpleName) expr;
 
-					
 					for (IVariableBinding variable : binding.getDeclaredFields()) {
-						
-						if (variable != null 
-								//Name is the same as the expression name								
-								&& variable.getName().equals(variableName.getIdentifier()) 
+
+						if (variable != null
+								//Name is the same as the expression name
+								&& variable.getName().equals(variableName.getIdentifier())
 								//The field is not static
 								&& ((variable.getModifiers() & Modifier.STATIC) == 0)) {
 							//variableName.setIdentifier(variable.getDeclaringClass().getQualifiedName() + ".this." + variableName);
-							
+
 							ThisExpression thisExp = unit.getAST().newThisExpression();
 							thisExp.setQualifier(unit.getAST().newName(variable.getDeclaringClass().getName()));
-							
+
 							FieldAccess fa = unit.getAST().newFieldAccess();
 							fa.setName(unit.getAST().newSimpleName(variableName.getIdentifier()));
-							fa.setExpression(thisExp);						
-							
-							
+							fa.setExpression(thisExp);
+
 							unit.replace(variableName, fa);
-							
-							
+
+
 						}
-					}				
-				}				
-				
+					}
+				}
+
 			}
 		}
 
 		FieldsVisitor v = new FieldsVisitor();
 		root.accept(v);
 	}
-	
-	
+
+
 	public static Set<SimpleName> getVariableNames(Expression expr) {
 		class ExpressionVisitor extends ASTVisitor {
 
@@ -197,26 +206,40 @@ public class AsyncTaskASTUtils {
 		expr.accept(v);
 		return v.names;
 	}
-	
+
 	public static boolean canBeRefactored(AsyncTaskWrapper asyncTask) {
-				
-		//The AsyncTask needs to have a doInBackground method. 
+
+		//The AsyncTask needs to have a doInBackground method.
 		if (asyncTask.getDoInBackground() == null) {
 			return false;
 		}
-		
+
 		//Checks whether the implementation directly extends AsyncTask
 		//TODO: Activate this working code if we want to improve refactor detection.
 //		ITypeBinding superClass = asyncTask.getSuperClass();
 //		if (superClass == null || !Objects.equals(superClass.getErasure().getQualifiedName(), "android.os.AsyncTask")) {
 //			return false;
 //		}
-		
-				
-		
+
+		ASTNode declarationNode = asyncTask.getDeclaration();
+		if (declarationNode instanceof AnonymousClassDeclaration) {
+			Assignment assignment = ASTNodeUtils.getClosestParent(declarationNode, Assignment.class).orNull();
+			VariableDeclarationStatement parentStatement = ASTNodeUtils
+					.getClosestParent(declarationNode, VariableDeclarationStatement.class).orNull();
+			Block parentBlock = ASTNodeUtils.getClosestParent(declarationNode, Block.class).orNull();
+			if (assignment != null && parentStatement != null && parentBlock != null) {
+				IControlFlowGraph<ASTNode> cfg = ProgramGraph.createFrom(parentBlock);
+				DataFlowAnalysis<ASTNode, UseDefResult> analysis = UseDefAnalysis.create(UseDefAnalysis.IS_ASYNC_TASK);
+				Map<ASTNode, UseDefResult> useDef = analysis.apply(cfg, analysis.mapExecutor());
+
+				for (SimpleName name : useDef.get(parentStatement).uses.get(assignment.getLeftHandSide().toString())) {
+					if (name.getIdentifier().equals("cancel")) {
+						return false;
+					}
+				}
+			}
+		}
+
 		return true;
 	}
-	
-	
-
 }
