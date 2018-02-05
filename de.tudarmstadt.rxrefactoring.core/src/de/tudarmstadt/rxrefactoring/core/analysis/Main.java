@@ -11,48 +11,17 @@ import org.eclipse.jdt.core.dom.Statement;
 
 import com.google.common.collect.Multimap;
 
-import de.tudarmstadt.rxrefactoring.core.analysis.cfg.ExpressionGraph;
-import de.tudarmstadt.rxrefactoring.core.analysis.cfg.ExpressionGraphUtils;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IControlFlowGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IEdge;
-import de.tudarmstadt.rxrefactoring.core.analysis.cfg.StatementExpressionGraph;
-import de.tudarmstadt.rxrefactoring.core.analysis.cfg.StatementGraph;
-import de.tudarmstadt.rxrefactoring.core.analysis.flow.DataFlowAnalysis;
+import de.tudarmstadt.rxrefactoring.core.analysis.cfg.expression.ExpressionGraph;
+import de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement.ProgramGraph;
+import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
 
 public final class Main {
 
 
 	
-	static IControlFlowGraph<? extends ASTNode> statementExample() {
-		String program =
-				"{"
-				+ "G g = new G();"
-				+ "int a = 2;"
-				+ "int b = g.f(2, a);"
-				+ "if (x(a, b)) {"
-				+ "return a;"
-				+ "}"
-				+ "int r = t(g.h(x), y);"
-				+ "return r;"
-				+ "}";
-		
-		
-				
-		final ASTParser parser = ASTParser.newParser(AST.JLS9);
-		
-		parser.setKind(ASTParser.K_STATEMENTS);
-		parser.setSource(program.toCharArray());
-		
-		ASTNode node = parser.createAST(null);
-		
-		StatementGraph g = StatementGraph.from((Statement) node);
-		
-		//Apply an analysis		
-				DataFlowAnalysis analysis = Analyses.VARIABLE_NAME_ANALYSIS;
-				Object result = analysis.apply(g, analysis.astExecutor());
-		
-		return g;
-	}
+	
 	
 	static IControlFlowGraph<?> expressionExample() {
 		String program =
@@ -65,12 +34,12 @@ public final class Main {
 		
 		ASTNode node = parser.createAST(null);
 		
-		ExpressionGraph g = ExpressionGraphUtils.from((Expression) node);
+		ExpressionGraph g = ExpressionGraph.createFrom((Expression) node);
 				
 		return g;
 	}
 	
-	static IControlFlowGraph<? extends ASTNode> statementExpressionExample() {
+	static IControlFlowGraph<? extends ASTNode> programExample() {
 		String program =
 				"{"
 				+ "Future<Integer> f1 = ask(\"Hello\");"
@@ -107,21 +76,41 @@ public final class Main {
 				+ "default: return a;"
 				+ "}"
 				+ "return b;";
+		
+		
+		String program5 =
+				"{"
+				+ "G g = new G();"
+				+ "int a = 2;"
+				+ "int b = g.f(2, a);"
+				+ "if (x(a, b)) {"
+				+ "return a;"
+				+ "}"
+				+ "int r = t(g.h(x), y);"
+				+ "return r;"
+				+ "}";
+		
+		String program6 = 
+				"int[] l1 = new int[] {2};"
+				+ "for(int i : l)"
+				+ "println(i);"
+				+ "return 0;";
+		
 				
 		final ASTParser parser = ASTParser.newParser(AST.JLS9);
 		
 		parser.setKind(ASTParser.K_STATEMENTS);
-		parser.setSource(program.toCharArray());
+		parser.setSource(program6.toCharArray());
 		parser.setBindingsRecovery(true);
 		parser.setStatementsRecovery(true);
 		
 		ASTNode node = parser.createAST(null);
 		
-		StatementExpressionGraph g = StatementExpressionGraph.from((Statement) node);
+		ProgramGraph g = ProgramGraph.createFrom((Statement) node);
 		
 		
 		//Apply an analysis		
-		DataFlowAnalysis<ASTNode, Set<String>> analysis = Analyses.VARIABLE_NAME_ANALYSIS;
+		DataFlowAnalysis<ASTNode, Set<String>> analysis = Analyses.VariableNameAnalysis.create();
 		Void result = analysis.apply(g, analysis.astExecutor());
 		
 		System.out.println(g);
@@ -140,7 +129,7 @@ public final class Main {
 //	    IMember[] members = { method };
 //	    MethodWrapper[] callers = callHierarchy.getCallerRoots(members);
 		
-		IControlFlowGraph<? extends ASTNode> graph = statementExpressionExample();
+		IControlFlowGraph<? extends ASTNode> graph = programExample();
 
 		for(IEdge<? extends ASTNode> e : graph.edgeSet()) {
 			System.out.println(e.getHead() + "\n-->\n" + e.getTail() + "\n#####");

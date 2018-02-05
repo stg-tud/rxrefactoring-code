@@ -9,6 +9,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.AnalysisWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.FutureCollector;
 
 /**
@@ -45,7 +46,8 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 
 	@Override
 	public void addWorkersTo(@NonNull IWorkerTree workerTree) {
-		IWorkerRef<Void, FutureCollector> collector = workerTree.addWorker(new FutureCollector(options));
+		IWorkerRef<Void, Void> analysisExecutor = workerTree.addWorker(new AnalysisWorker());
+		IWorkerRef<Void, FutureCollector> collector = workerTree.addWorker(analysisExecutor, new FutureCollector(options));
 		
 		if(options.contains(RefactoringOptions.FUTURE)) {
 			workerTree.addWorker(collector, new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.SimpleNameWorker());

@@ -19,4 +19,5 @@ Require-Bundle: de.tudarmstadt.rxrefactoring.core,
   org.eclipse.e4.ui.model.workbench;bundle-version="2.0.0.v20170228-1842"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Import-Package: de.tudarmstadt.rxrefactoring.core,
-  de.tudarmstadt.rxrefactoring.core.utils
+  de.tudarmstadt.rxrefactoring.core.utils,
+  org.jgrapht.graph

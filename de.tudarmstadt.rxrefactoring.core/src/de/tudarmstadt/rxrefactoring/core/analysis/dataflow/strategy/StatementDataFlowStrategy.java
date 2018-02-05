@@ -1,4 +1,6 @@
-package de.tudarmstadt.rxrefactoring.core.analysis.strategy;
+package de.tudarmstadt.rxrefactoring.core.analysis.dataflow.strategy;
+
+import java.util.Arrays;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AssertStatement;
@@ -25,16 +27,21 @@ import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 
-
-public interface StatementDataFlowStrategy<Statement, Result> extends IDataFlowStrategy<Statement, Result> {
+/**
+ * This interface provides an easy implementation for dataflow strategies for
+ * statement AST nodes.
+ * @author mirko
+ *
+ * @param <Result> The result of the analysis.
+ */
+public interface StatementDataFlowStrategy<Result> extends IDataFlowStrategy<Statement, Result> {
 
 	@SuppressWarnings("unchecked")
 	@Override
 	default public Result transform(Statement statement, Result input) {
 		
 		final Object[] result = new Object[1];
-		
-		new ASTVisitor() {
+		statement.accept(new ASTVisitor() {
 			@Override
 			public boolean visit(AssertStatement node) {
 				result[0] = transformStatement(node, input);
@@ -44,7 +51,7 @@ public interface StatementDataFlowStrategy<Statement, Result> extends IDataFlowS
 			@Override
 			public boolean visit(Block node) {
 				result[0] = transformStatement(node, input);
-				return false;
+				return true;
 			}
 			
 			@Override
@@ -68,7 +75,7 @@ public interface StatementDataFlowStrategy<Statement, Result> extends IDataFlowS
 			@Override
 			public boolean visit(DoStatement node) {
 				result[0] = transformStatement(node, input);
-				return false;
+				return true;
 			}
 			
 			@Override
@@ -80,7 +87,7 @@ public interface StatementDataFlowStrategy<Statement, Result> extends IDataFlowS
 			@Override
 			public boolean visit(EnhancedForStatement node) {
 				result[0] = transformStatement(node, input);
-				return false;
+				return true;
 			}
 			
 			@Override
@@ -92,19 +99,19 @@ public interface StatementDataFlowStrategy<Statement, Result> extends IDataFlowS
 			@Override
 			public boolean visit(ForStatement node) {
 				result[0] = transformStatement(node, input);
-				return false;
+				return true;
 			}
 			
 			@Override
 			public boolean visit(IfStatement node) {
 				result[0] = transformStatement(node, input);
-				return false;
+				return true;
 			}
 			
 			@Override
 			public boolean visit(LabeledStatement node) {
 				result[0] = transformStatement(node, input);
-				return false;
+				return true;
 			}
 			
 			@Override
@@ -128,13 +135,13 @@ public interface StatementDataFlowStrategy<Statement, Result> extends IDataFlowS
 			@Override
 			public boolean visit(SwitchStatement node) {
 				result[0] = transformStatement(node, input);
-				return false;
+				return true;
 			}
 			
 			@Override
 			public boolean visit(SynchronizedStatement node) {
 				result[0] = transformStatement(node, input);
-				return false;
+				return true;
 			}
 			
 			
@@ -147,7 +154,7 @@ public interface StatementDataFlowStrategy<Statement, Result> extends IDataFlowS
 			@Override
 			public boolean visit(TryStatement node) {
 				result[0] = transformStatement(node, input);
-				return false;
+				return true;
 			}
 			
 			@Override
@@ -165,9 +172,9 @@ public interface StatementDataFlowStrategy<Statement, Result> extends IDataFlowS
 			@Override
 			public boolean visit(WhileStatement node) {
 				result[0] = transformStatement(node, input);
-				return false;
+				return true;
 			}			
-		}; 
+		}); 
 		
 		return (Result) result[0];
 	}
