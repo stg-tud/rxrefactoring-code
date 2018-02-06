@@ -1,16 +1,11 @@
 package de.tudarmstadt.rxrefactoring.ext.cfg.workers;
 
 
-import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import com.google.common.collect.Sets;
 
@@ -18,15 +13,9 @@ import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
-import de.tudarmstadt.rxrefactoring.core.analysis.DataFlowAnalysis;
-import de.tudarmstadt.rxrefactoring.core.analysis.cfg.StatementGraph;
-import de.tudarmstadt.rxrefactoring.core.analysis.example.VariableNameAnalysis;
-import de.tudarmstadt.rxrefactoring.core.ir.ComplexReactiveInput;
-import de.tudarmstadt.rxrefactoring.core.ir.IReactiveInput;
-import de.tudarmstadt.rxrefactoring.core.ir.ReactiveObject;
-import de.tudarmstadt.rxrefactoring.core.ir.ReactiveOutput;
-import de.tudarmstadt.rxrefactoring.core.ir.util.ConsumerBuilder;
-import de.tudarmstadt.rxrefactoring.core.ir.util.SchedulerBuilder;
+import de.tudarmstadt.rxrefactoring.core.analysis.Analyses;
+import de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement.ProgramGraph;
+import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 
@@ -41,12 +30,12 @@ public class CFGCollector implements IWorker<Void, Void> {
 		
 		collector.declarations.forEach(m -> {
 			Log.info(CFGCollector.class, "### Build CFG for " + m.getName() + " ###");
-			StatementGraph cfg = StatementGraph.from(m.getBody());
+			ProgramGraph cfg = ProgramGraph.createFrom(m.getBody());
 			Log.info(CFGCollector.class, cfg.listEdges());
 			
 			Log.info(CFGCollector.class, "### Start Analysis for " + m.getName() + " ###");
-			DataFlowAnalysis<?, ?> analysis = new VariableNameAnalysis();
-			Map<?, ?> result = analysis.apply(cfg);	
+			DataFlowAnalysis analysis = Analyses.VariableNameAnalysis.create();
+			Object result = analysis.apply(cfg, analysis.mapExecutor());	
 			Log.info(CFGCollector.class, result);
 		});
 		

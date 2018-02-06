@@ -20,7 +20,7 @@ public class Analyses {
 			DataFlowAnalysis.create(null, null);
 	
 	
-	static class VariableNameAnalysis extends DataFlowAnalysis<ASTNode, Set<String>> {
+	public static class VariableNameAnalysis extends DataFlowAnalysis<ASTNode, Set<String>> {
 
 		public static VariableNameAnalysis create() {
 			return new VariableNameAnalysis();
