@@ -18,6 +18,7 @@ import de.tudarmstadt.rxrefactoring.core.analysis.cfg.exception.ExceptionIdentif
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.expression.ExpressionGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement.ProgramGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.VariableNameAnalysis;
 
 public final class Main {
 
@@ -114,7 +115,7 @@ public final class Main {
 		
 		
 		//Apply an analysis		
-		DataFlowAnalysis<ASTNode, Set<String>> analysis = Analyses.VariableNameAnalysis.create();
+		DataFlowAnalysis<ASTNode, Set<String>> analysis = VariableNameAnalysis.create();
 		Void result = analysis.apply(g, analysis.astExecutor());
 		
 		System.out.println(g);

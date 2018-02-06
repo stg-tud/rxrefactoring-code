@@ -11,9 +11,9 @@ import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
-import de.tudarmstadt.rxrefactoring.core.analysis.Analyses;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement.ProgramGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.VariableNameAnalysis;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 /**
@@ -26,7 +26,7 @@ public class AnalysisWorker implements IWorker<Void, Void> {
 
 	
 	private static DataFlowAnalysis<ASTNode, Set<String>> analysis = 
-			Analyses.VariableNameAnalysis.create();
+			VariableNameAnalysis.create();
 			//DataFlowAnalysis.create(null, null);
 		
 	@Override

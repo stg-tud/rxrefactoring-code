@@ -13,9 +13,9 @@ import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
-import de.tudarmstadt.rxrefactoring.core.analysis.Analyses;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement.ProgramGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.VariableNameAnalysis;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 
@@ -34,7 +34,7 @@ public class CFGCollector implements IWorker<Void, Void> {
 			Log.info(CFGCollector.class, cfg.listEdges());
 			
 			Log.info(CFGCollector.class, "### Start Analysis for " + m.getName() + " ###");
-			DataFlowAnalysis analysis = Analyses.VariableNameAnalysis.create();
+			DataFlowAnalysis analysis = VariableNameAnalysis.create();
 			Object result = analysis.apply(cfg, analysis.mapExecutor());	
 			Log.info(CFGCollector.class, result);
 		});
