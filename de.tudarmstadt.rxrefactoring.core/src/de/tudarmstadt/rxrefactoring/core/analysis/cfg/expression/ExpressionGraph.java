@@ -1,5 +1,7 @@
 package de.tudarmstadt.rxrefactoring.core.analysis.cfg.expression;
 
+import java.util.Objects;
+
 import org.eclipse.jdt.core.dom.Expression;
 import org.jgrapht.graph.AbstractBaseGraph;
 
@@ -39,6 +41,9 @@ implements IControlFlowGraph<Expression> {
 		return builder.from(expr);		
 	}
 	
+	
+	
+	
 	/**
 	 * Defines the entry and exit (sub-)expressions of an expression. <br>
 	 * Example:
@@ -52,17 +57,25 @@ implements IControlFlowGraph<Expression> {
 	public static class ExprAccess {
 		public final Expression entry;
 		public final Expression exit;
-					
+		
 		ExprAccess(Expression entry, Expression exit) {
 			super();
-			this.entry = entry;
-			this.exit = exit;
+			this.entry = Objects.requireNonNull(entry);
+			this.exit = Objects.requireNonNull(exit);
+		}		
+		
+		public static ExprAccess create(Expression entry, Expression exit) {
+			return new ExprAccess(entry, exit);
+		}
+						
+		public ExprAccess withExit(Expression exit) {
+			return new ExprAccess(entry, exit);
 		}		
 		
 		@Override
 		public String toString() {
 			return "ExprAccess(entry=" + entry + ", exit=" + exit + ")";
-		}
+		}		
 	}
 
 	

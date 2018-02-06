@@ -13,6 +13,8 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IControlFlowGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IEdge;
+import de.tudarmstadt.rxrefactoring.core.analysis.cfg.exception.ExceptionExits;
+import de.tudarmstadt.rxrefactoring.core.analysis.cfg.exception.ExceptionIdentifier;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.expression.ExpressionGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement.ProgramGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
@@ -23,7 +25,7 @@ public final class Main {
 	
 	
 	
-	static IControlFlowGraph<?> expressionExample() {
+	static IControlFlowGraph<Expression> expressionExample() {
 		String program =
 				"a = b == 1 ? f(g.h(x), y) : z";
 				
@@ -35,6 +37,8 @@ public final class Main {
 		ASTNode node = parser.createAST(null);
 		
 		ExpressionGraph g = ExpressionGraph.createFrom((Expression) node);
+		
+		System.out.println(ExceptionExits.createFrom((Expression) node));
 				
 		return g;
 	}
@@ -129,7 +133,7 @@ public final class Main {
 //	    IMember[] members = { method };
 //	    MethodWrapper[] callers = callHierarchy.getCallerRoots(members);
 		
-		IControlFlowGraph<? extends ASTNode> graph = programExample();
+		IControlFlowGraph<? extends ASTNode> graph = expressionExample();
 
 		for(IEdge<? extends ASTNode> e : graph.edgeSet()) {
 			System.out.println(e.getHead() + "\n-->\n" + e.getTail() + "\n#####");

@@ -64,7 +64,7 @@ class ProgramGraphBuilder {
 	}
 	
 	/**
-	 * The context defines the nesting of classes.
+	 * The context defines the nesting of statements.
 	 * 
 	 * @author mirko
 	 *
@@ -146,18 +146,25 @@ class ProgramGraphBuilder {
 	}
 			
 	
-	private static class Exits {
+	/**
+	 * Describes the exit nodes for a statement and possibly other statements
+	 * affected by this statement. 
+	 * 
+	 * @author mirko
+	 *
+	 */
+	private static class StatementExits {
 		/**
 		 * Multimap from statement to all exits that should be added to the CFG node of that statement.
 		 */
 		private final Multimap<Statement, ASTNode> exitMap;
 		
 		
-		private Exits(Multimap<Statement, ASTNode> exits) {
+		private StatementExits(Multimap<Statement, ASTNode> exits) {
 			this.exitMap = exits;
 		}
 		
-		private Exits() {
+		private StatementExits() {
 			this(newMultimap());
 		}
 		
@@ -165,27 +172,27 @@ class ProgramGraphBuilder {
 			return exitMap.get(node);
 		}
 		
-		public Exits add(Statement node, ASTNode... exits) {
+		public StatementExits add(Statement node, ASTNode... exits) {
 			exitMap.putAll(node, Arrays.asList(exits));
 			return this;
 		}
 		
-		public Exits add(Statement node, Iterable<ASTNode> exits) {
+		public StatementExits add(Statement node, Iterable<ASTNode> exits) {
 			exitMap.putAll(node, exits);
 			return this;
 		}
 		
-		public Exits move(ASTNode from, Statement to) {
+		public StatementExits move(ASTNode from, Statement to) {
 			exitMap.putAll(to, exitMap.removeAll(from));
 			return this;
 		}
 		
-		public Exits copyFrom(Exits exits) {
+		public StatementExits copyFrom(StatementExits exits) {
 			exitMap.putAll(exits.exitMap);
 			return this;
 		}
 		
-		public Exits remove(ASTNode node) {
+		public StatementExits remove(ASTNode node) {
 			exitMap.removeAll(node);
 			return this;
 		}
@@ -205,8 +212,8 @@ class ProgramGraphBuilder {
 		 * @return A non-null flow result that contains the specifed
 		 * statements as exit statements.
 		 */
-		public static Exits create() {		
-			return new Exits(newMultimap());
+		public static StatementExits create() {		
+			return new StatementExits(newMultimap());
 		}
 		
 					
@@ -233,7 +240,7 @@ class ProgramGraphBuilder {
 	 * 
 	 * @return The last statement(s) that has been processed in a basic block.
 	 */
-	private Exits process(Statement currentStatement, Context context) {
+	private StatementExits process(Statement currentStatement, Context context) {
 					
 		//Decide how to traverse further by looking at the current statement.
 		//There should be a case for each statement that changes the control flow.			
@@ -244,14 +251,14 @@ class ProgramGraphBuilder {
 			
 			Context newContext = context.enterStatement(block);
 			
-			Exits result = Exits.create(); 
+			StatementExits result = StatementExits.create(); 
 			
 			//Iterate through all statements in the block and establish links between them.
 			for (Object element : block.statements()) {
 				Statement statement = (Statement) element;					
 				addEdges(previousNodes, statement);
 				
-				Exits statementResult = process(statement, newContext);
+				StatementExits statementResult = process(statement, newContext);
 				previousNodes = statementResult.get(statement);
 				
 				result.copyFrom(statementResult).remove(statement);					 					
@@ -265,10 +272,10 @@ class ProgramGraphBuilder {
 			Statement bodyStatement = labeledStatement.getBody();				
 			addEdge(labeledStatement, bodyStatement);
 	
-			Exits bodyExits = process(labeledStatement.getBody(), context.enterStatement(currentStatement));
+			StatementExits bodyExits = process(labeledStatement.getBody(), context.enterStatement(currentStatement));
 			
 			//Ignore the labeled statement for now
-			return Exits.create().copyFrom(bodyExits).move(bodyStatement, labeledStatement);
+			return StatementExits.create().copyFrom(bodyExits).move(bodyStatement, labeledStatement);
 			
 		} else if (currentStatement instanceof IfStatement) {
 			IfStatement ifStatement = (IfStatement) currentStatement;
@@ -280,25 +287,24 @@ class ProgramGraphBuilder {
 			addEdge(ifStatement, conditionResult.entry);
 			addEdge(conditionResult.exit, thenStatement);
 			
-			Exits thenResult = process(thenStatement, context.enterStatement(ifStatement));
+			StatementExits thenResult = process(thenStatement, context.enterStatement(ifStatement));
 
 			//Compute the exit entries for an if statement depending on whether there is an else branch
 			if (elseStatement == null) {
 				//If there is no else branch, then either the if statement or the last statement of the then-branch
 				//can be used as previous statements
-				return Exits.create().copyFrom(thenResult).move(thenStatement, ifStatement).add(ifStatement, conditionResult.exit);
+				return StatementExits.create().copyFrom(thenResult).move(thenStatement, ifStatement).add(ifStatement, conditionResult.exit);
 			} else {
 				
 				addEdge(conditionResult.exit, elseStatement);					
-				Exits elseResult = process(elseStatement, context.enterStatement(ifStatement));						
+				StatementExits elseResult = process(elseStatement, context.enterStatement(ifStatement));						
 	
 				//If there is an else branch, then either the last statement of the then-branch
 				//or the last statement of the else-branch can be used as previous statements
-				return Exits.create()
+				return StatementExits.create()
 						.copyFrom(thenResult).copyFrom(elseResult)
 						.move(thenStatement, ifStatement)
-						.move(elseStatement, ifStatement);					
-			
+						.move(elseStatement, ifStatement);				
 			}		
 			
 		} else if (currentStatement instanceof SwitchStatement) {
@@ -310,7 +316,7 @@ class ProgramGraphBuilder {
 			
 			Context newContext = context.enterStatement(switchStatement);
 			
-			Exits result = Exits.create(); 
+			StatementExits result = StatementExits.create(); 
 			
 			for (Object element : switchStatement.statements()) {
 				Statement statement = (Statement) element;		
@@ -320,7 +326,7 @@ class ProgramGraphBuilder {
 					addEdge(expressionResult.exit, statement);
 				}
 				
-				Exits statementResult = process(statement, newContext);
+				StatementExits statementResult = process(statement, newContext);
 				previousNodes = statementResult.get(statement);					
 				
 				//TODO: Add breaks?
@@ -335,14 +341,14 @@ class ProgramGraphBuilder {
 			Expression expression = switchCase.getExpression();
 			
 			if (expression == null) {
-				return Exits.create().add(currentStatement, currentStatement);
+				return StatementExits.create().add(currentStatement, currentStatement);
 			}
 			
 			ExprAccess expressionResult = addExpr(expression);
 			addEdge(switchCase, expressionResult.entry);				
 			
 			//Traverse further.
-			return Exits.create().add(switchCase, expressionResult.exit);
+			return StatementExits.create().add(switchCase, expressionResult.exit);
 		
 		} else if (currentStatement instanceof WhileStatement) {
 			WhileStatement whileStatement = (WhileStatement) currentStatement;
@@ -354,14 +360,14 @@ class ProgramGraphBuilder {
 			addEdge(conditionResult.exit, bodyStatement);
 						
 			//Create edges inside while-block with while as previous edge
-			Exits bodyResult = process(bodyStatement, context.enterStatement(whileStatement));
+			StatementExits bodyResult = process(bodyStatement, context.enterStatement(whileStatement));
 			
 			//Add an edge from the end of the while block to the beginning of the while block
 			addEdges(bodyResult.get(bodyStatement), conditionResult.entry);
 					
 					
 			//Move to the next statement in the main block
-			return Exits.create().copyFrom(bodyResult).remove(bodyStatement).add(whileStatement, conditionResult.exit);		
+			return StatementExits.create().copyFrom(bodyResult).remove(bodyStatement).add(whileStatement, conditionResult.exit);		
 		
 		} else if (currentStatement instanceof DoStatement) {
 			DoStatement doStatement = (DoStatement) currentStatement;
@@ -371,7 +377,7 @@ class ProgramGraphBuilder {
 			addEdge(doStatement, bodyStatement);
 			
 			//Create edges inside while-block with while as previous edge
-			Exits bodyResult = process(bodyStatement, context.enterStatement(doStatement));
+			StatementExits bodyResult = process(bodyStatement, context.enterStatement(doStatement));
 			
 			ExprAccess conditionResult = addExpr(doStatement.getExpression());
 			addEdges(bodyResult.get(bodyStatement), conditionResult.entry);
@@ -381,7 +387,7 @@ class ProgramGraphBuilder {
 			//Add an edge from the end of the while block to the beginning of the while block
 			addEdges(bodyResult.get(bodyStatement), conditionResult.entry);
 					
-			return Exits.create().copyFrom(bodyResult).remove(bodyStatement).add(doStatement, conditionResult.exit);	
+			return StatementExits.create().copyFrom(bodyResult).remove(bodyStatement).add(doStatement, conditionResult.exit);	
 		
 		} else if (currentStatement instanceof ForStatement) {
 			ForStatement forStatement = (ForStatement) currentStatement;
@@ -404,7 +410,7 @@ class ProgramGraphBuilder {
 				previousNode = conditionResult.exit;
 			}
 			
-			Exits bodyExits = process(bodyStatement, context.enterStatement(forStatement));
+			StatementExits bodyExits = process(bodyStatement, context.enterStatement(forStatement));
 			addEdge(previousNode, bodyStatement);
 			
 			previousNode = null;
@@ -430,9 +436,9 @@ class ProgramGraphBuilder {
 			
 			
 			if (conditionResult == null) {
-				return Exits.create().copyFrom(bodyExits).remove(bodyStatement);
+				return StatementExits.create().copyFrom(bodyExits).remove(bodyStatement);
 			} else {
-				return Exits.create().copyFrom(bodyExits).remove(bodyStatement).add(forStatement, conditionResult.exit);
+				return StatementExits.create().copyFrom(bodyExits).remove(bodyStatement).add(forStatement, conditionResult.exit);
 			}
 		} else if (currentStatement instanceof EnhancedForStatement) {
 			EnhancedForStatement enhancedForStatement = (EnhancedForStatement) currentStatement;
@@ -444,14 +450,14 @@ class ProgramGraphBuilder {
 			addEdge(exprResult.exit, bodyStatement);
 						
 			//Create edges inside while-block with while as previous edge
-			Exits bodyResult = process(bodyStatement, context.enterStatement(enhancedForStatement));
+			StatementExits bodyResult = process(bodyStatement, context.enterStatement(enhancedForStatement));
 			
 			//Add an edge from the end of the while block to the beginning of the while block
 			addEdges(bodyResult.get(bodyStatement), bodyStatement);
 					
 					
 			//Move to the next statement in the main block
-			return Exits.create().copyFrom(bodyResult)
+			return StatementExits.create().copyFrom(bodyResult)
 					.add(enhancedForStatement, exprResult.exit)
 					.move(bodyStatement, enhancedForStatement);		
 			
@@ -459,12 +465,12 @@ class ProgramGraphBuilder {
 			//TODO: implement this
 			TryStatement tryStatement = (TryStatement) currentStatement;
 			Log.info(getClass(), "try statement is unsupported by CFG");
-			return process(tryStatement.getBody(), context);				
+			return process(tryStatement.getBody(), context.enterStatement(tryStatement));				
 		} else if (currentStatement instanceof ThrowStatement) {
 			//TODO: implement this
 			ThrowStatement throwStatement = (ThrowStatement) currentStatement;
 			Log.info(getClass(), "throw statement is unsupported by CFG");
-			return Exits.create().add(throwStatement, throwStatement);
+			return StatementExits.create().add(throwStatement, throwStatement);
 		} else if (currentStatement instanceof ContinueStatement) {
 			ContinueStatement continueStatement = (ContinueStatement) currentStatement;
 											
@@ -474,11 +480,11 @@ class ProgramGraphBuilder {
 			}
 			
 			//Stop traversion of the block.
-			return Exits.create();
+			return StatementExits.create();
 		} else if (currentStatement instanceof BreakStatement) {
 			BreakStatement breakStatement = (BreakStatement) currentStatement;
 			
-			Exits result = Exits.create();
+			StatementExits result = StatementExits.create();
 			
 			Statement enclosingBlock = context.enclosingBreakBlock(breakStatement.getLabel());
 			if (enclosingBlock != null) {
@@ -497,7 +503,7 @@ class ProgramGraphBuilder {
 			}
 			
 			//Do not traverse further.
-			return Exits.create();
+			return StatementExits.create();
 		} else if (currentStatement instanceof ExpressionStatement) {				
 			ExpressionStatement expressionStatement = (ExpressionStatement) currentStatement;
 			Expression expression = expressionStatement.getExpression();
@@ -506,7 +512,7 @@ class ProgramGraphBuilder {
 			addEdge(expressionStatement, expressionResult.entry);				
 			
 			//Do not traverse further.
-			return Exits.create().add(expressionStatement, expressionResult.exit);
+			return StatementExits.create().add(expressionStatement, expressionResult.exit);
 		} else if (currentStatement instanceof VariableDeclarationStatement) {					
 			VariableDeclarationStatement varStatement = (VariableDeclarationStatement) currentStatement;
 			
@@ -530,10 +536,10 @@ class ProgramGraphBuilder {
 			}
 							
 			//Do not traverse further.
-			return Exits.create().add(varStatement, previousNode);
+			return StatementExits.create().add(varStatement, previousNode);
 		} else {
 			//If the statement does not affect the control flow, then just go to the next statement.
-			return Exits.create().add(currentStatement, currentStatement);
+			return StatementExits.create().add(currentStatement, currentStatement);
 		}
 	}
 
