@@ -1,11 +1,15 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.analysis;
 
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+
+import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
@@ -13,6 +17,8 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement.ProgramGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.ReachingDefinitionAnalysis;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.UseDefAnalysisUpdated;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.VariableNameAnalysis;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
@@ -25,8 +31,8 @@ import de.tudarmstadt.rxrefactoring.core.utils.Log;
 public class AnalysisWorker implements IWorker<Void, Void> {
 
 	
-	private static DataFlowAnalysis<ASTNode, Set<String>> analysis = 
-			VariableNameAnalysis.create();
+	private static DataFlowAnalysis<ASTNode, Multimap<String, Expression>> analysis = 
+			ReachingDefinitionAnalysis.create();
 			//DataFlowAnalysis.create(null, null);
 		
 	@Override
