@@ -67,7 +67,10 @@ class ExpressionGraphBuilder {
 				addEdge(previousExpression.exit, e);
 			}
 			
-			return new ExprAccess(first.entry, e);				
+			if (first == null)
+				return new ExprAccess(e, e);
+			else
+				return new ExprAccess(first.entry, e);				
 			
 		} else if (currentExpression instanceof SuperMethodInvocation) {				
 			SuperMethodInvocation e = (SuperMethodInvocation) currentExpression;
@@ -93,7 +96,10 @@ class ExpressionGraphBuilder {
 				addEdge(previousExpression.exit, e);
 			}
 			
-			return new ExprAccess(first.entry, e);				
+			if (first == null)
+				return new ExprAccess(e, e);
+			else
+				return new ExprAccess(first.entry, e);				
 			
 		} else if (currentExpression instanceof ClassInstanceCreation) {				
 			ClassInstanceCreation e = (ClassInstanceCreation) currentExpression;
@@ -129,7 +135,10 @@ class ExpressionGraphBuilder {
 				addEdge(previousExpression.exit, e);
 			}
 			
-			return new ExprAccess(first.entry, e);	
+			if (first == null)
+				return new ExprAccess(e, e);
+			else
+				return new ExprAccess(first.entry, e);
 			
 		} else if (currentExpression instanceof Assignment) {				
 			Assignment e = (Assignment) currentExpression;

@@ -28,7 +28,6 @@ import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.RefactoringOptions;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfos;
-import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureCollectionVisitor;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureVisitor;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureVisitor2;
 
@@ -69,7 +68,7 @@ public class FutureCollector implements IWorker<Void, FutureCollector> {
 				//cu.accept(collectionDiscoveringVisitor);
 				
 				add("future", unit, discoveringVisitor);
-				//collector.add("collection", unit, collectionDiscoveringVisitor);			
+				//add("collection", unit, collectionDiscoveringVisitor);			
 			}
 			
 			if(options.contains(RefactoringOptions.FUTURETASK)) {

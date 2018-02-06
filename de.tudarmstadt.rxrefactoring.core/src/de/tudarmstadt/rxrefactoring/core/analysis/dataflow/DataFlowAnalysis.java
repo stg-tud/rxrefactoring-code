@@ -176,14 +176,12 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 			protected abstract Output getOutput();
 			
 			
-			public AnalysisExecution(IControlFlowGraph<Vertex> cfg, IDataFlowStrategy<Vertex, Result> strategy, IDataFlowTraversal<Vertex> traversal) {
-				Objects.requireNonNull(cfg);
-				Objects.requireNonNull(strategy);
-				Objects.requireNonNull(traversal);
+			public AnalysisExecution(IControlFlowGraph<Vertex> cfg, IDataFlowStrategy<Vertex, Result> strategy, IDataFlowTraversal<Vertex> traversal) {			
 				
-				this.cfg = cfg;
-				this.traversal = traversal;
-				this.strategy = strategy;
+				this.cfg = Objects.requireNonNull(cfg);
+				this.traversal = Objects.requireNonNull(traversal);
+				this.strategy =  Objects.requireNonNull(strategy);
+;
 			}
 			
 			@Override
@@ -213,11 +211,11 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 						incomingResult = strategy.entryResult();
 						break;
 					case 1 :
-						incomingResult = getResultOf(predecessors.iterator().next());
+						incomingResult = getResultOfSafe(predecessors.iterator().next());
 						break;
 					default :
 						List<Result> incomingResults =
-							predecessors.stream().map(stmt -> getResultOf(stmt)).collect(Collectors.toList());				
+							predecessors.stream().map(node -> getResultOfSafe(node)).collect(Collectors.toList());				
 						incomingResult = strategy.mergeAll(incomingResults);
 					}
 					System.out.println("\tincoming " + incomingResult);	
@@ -233,28 +231,36 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 						queue.addAll(traversal.successorsOf(cfg, currentVertex));
 					}				
 				}
-			}		
+			}
+			
+			private Result getResultOfSafe(Vertex node) {
+				Result res = getResultOf(node);
+				if (res == null)
+					return strategy.initResult();
+				else
+					return res;
+			}
 			
 		};
 	}
 	
 	
-	static class ASTDataFlowExecution<Vertex extends ASTNode, Result> extends AbstractDataFlowExecution<Vertex, Result, Void>{
+	public static class ASTDataFlowExecution<Vertex extends ASTNode, Result> extends AbstractDataFlowExecution<Vertex, Result, Void>{
 
 		public final static String DEFAULT_PROPERTY = "dataflow-result";
 		
 		private final String propertyName;
 		
-		public ASTDataFlowExecution(String propertyName) {
+		ASTDataFlowExecution(String propertyName) {
 			this.propertyName = propertyName;
 		}
 		
-		public ASTDataFlowExecution() {
+		ASTDataFlowExecution() {
 			this(DEFAULT_PROPERTY);
 		}
 		
 		
-		public String getPropertyName() {
+		String getPropertyName() {
 			return propertyName;
 		}
 		
@@ -266,20 +272,15 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 
 				@Override
 				protected
-				Result getResultOf(Vertex vertex) {
-					Result res = (Result) vertex.getProperty(propertyName);
-					
-					if (res == null) {
-						return strategy.initResult();
-					}
-					
-					return res;
+				Result getResultOf(Vertex vertex) {									
+					return (Result) vertex.getProperty(propertyName);
 				}
 
 				@Override
 				protected
 				boolean resultHasChanged(Vertex vertex, Result newResult) {
-					return !Objects.equals(getResultOf(vertex), newResult);
+					Result res = getResultOf(vertex); 
+					return !Objects.equals(res, newResult);
 				}
 
 				@Override
