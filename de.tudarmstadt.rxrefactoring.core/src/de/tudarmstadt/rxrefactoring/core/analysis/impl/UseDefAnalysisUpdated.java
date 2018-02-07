@@ -77,7 +77,7 @@ public class UseDefAnalysisUpdated extends DataFlowAnalysis<ASTNode, Map<String,
 			}
 
 			@Override
-			public Map<String, Multimap<String, ASTNode>> mergeAll(Collection<Map<String, Multimap<String, ASTNode>>> results) {
+			public Map<String, Multimap<String, ASTNode>> mergeAll(Iterable<Map<String, Multimap<String, ASTNode>>> results) {
 				
 				Map<String, Multimap<String, ASTNode>> result = new HashMap();
 				result.put(DEFS, Multimaps.newSetMultimap(Maps.newLinkedHashMap(), () -> Sets.newLinkedHashSet()));

@@ -1,15 +1,21 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture;
 
 import java.util.EnumSet;
+import java.util.Map;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Expression;
+
+import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.ReachingDefinition;
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
-import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.AnalysisWorker;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.ReachingDefinitionsWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.PreconditionWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.FutureCollector;
 
@@ -47,8 +53,8 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 
 	@Override
 	public void addWorkersTo(@NonNull IWorkerTree workerTree) {
-		IWorkerRef<Void, Void> analysisRef = workerTree.addWorker(new AnalysisWorker());
-		IWorkerRef<Void, Void> precondRef = workerTree.addWorker(analysisRef, new PreconditionWorker());
+		IWorkerRef<Void, Map<ASTNode, ReachingDefinition>> analysisRef = workerTree.addWorker(new ReachingDefinitionsWorker());
+		IWorkerRef<Map<ASTNode, ReachingDefinition>, Void> precondRef = workerTree.addWorker(analysisRef, new PreconditionWorker());
 		IWorkerRef<Void, FutureCollector> collector = workerTree.addWorker(precondRef, new FutureCollector(options));
 		
 		if(options.contains(RefactoringOptions.FUTURE)) {

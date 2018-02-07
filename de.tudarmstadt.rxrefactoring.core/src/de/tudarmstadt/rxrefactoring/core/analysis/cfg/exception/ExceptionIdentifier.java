@@ -13,7 +13,7 @@ public class ExceptionIdentifier {
 	}
 	
 	public static ExceptionIdentifier createFrom(ITypeBinding exceptionType) {
-		return new ExceptionIdentifier(exceptionType.getQualifiedName());
+		return new ExceptionIdentifier(exceptionType.getErasure().getQualifiedName());
 	}
 	
 	@Override

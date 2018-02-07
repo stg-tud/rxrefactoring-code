@@ -1,5 +1,6 @@
 package de.tudarmstadt.rxrefactoring.core.utils;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -17,7 +18,7 @@ public final class Methods {
 	 * @param mb The binding of the method to check.
 	 * @param className The declaring class of the method, e.g., {@code java.lang.String}, or {@code null} if the class should not be checked.
 	 * @param methodName The name of the method, e.g., {@code equals}.
-	 * @param parameterTypeNames The names of the parameter types, e.g., {@code java.lang.Object}.
+	 * @param parameterTypeNames The names of the parameter types as qualified name, e.g., {@code java.lang.Object} or {@code boolean}.
 	 * 
 	 * @return False, if method does not match the description or method is {@code null}.
 	 */
@@ -33,6 +34,8 @@ public final class Methods {
 				&& Objects.equals(mb.getName(), methodName)
 				&& parameterTypeNames.length == mbParameters.length;
 
+		Arrays.stream(mbParameters).forEach(par -> Log.info(Methods.class, "bin name: " + par.getQualifiedName()));
+		
 		if (!result) {
 			return false;
 		}

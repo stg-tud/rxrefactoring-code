@@ -35,7 +35,7 @@ public final class Types {
 			return false;
 		}
 				
-		String binaryName = type.getBinaryName();
+		String binaryName = type.getQualifiedName();
 		
 		return Arrays.stream(typeBinaryNames).anyMatch(s -> Objects.equals(binaryName, s));		
 	}
@@ -45,18 +45,18 @@ public final class Types {
 	 * given type name.
 	 *  
 	 * @param type the type to check.
-	 * @param parentTypeBinaryNames the names to compare the type against.
+	 * @param parentTypeQualifiedNames the names to compare the type against.
 	 * 
 	 * @return false, if the given type does not adhere to any of the type names or
 	 * if any argument is {@code null}.
 	 * 
 	 * @see Types#isExactTypeOf(ITypeBinding, String...)
 	 */
-	public static boolean isTypeOf(ITypeBinding type, String... parentTypeBinaryNames) {
+	public static boolean isTypeOf(ITypeBinding type, String... parentTypeQualifiedNames) {
 				
 		ITypeBinding superType = type;		
 		while (superType != null) {
-			if (isExactTypeOf(superType, parentTypeBinaryNames)) {
+			if (isExactTypeOf(superType, parentTypeQualifiedNames)) {
 				return true;
 			}
 			

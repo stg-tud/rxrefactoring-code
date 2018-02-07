@@ -22,10 +22,10 @@ public interface IDataFlowStrategy<Vertex, Result> {
 	 * Merges all results in a collection to obtain a new non-null
 	 * result.
 	 * 
-	 * @param results A non-null, collection with at least 2 entries of results to merge.
+	 * @param results A non-null iterable with at least 2 entries of results to merge.
 	 * @return A new non-null result.
 	 */
-	@NonNull Result mergeAll(@NonNull Collection<Result> results);
+	@NonNull Result mergeAll(@NonNull Iterable<Result> results);
 	 
 	/**
 	 * Creates a new result by transforming an input result.

@@ -1,7 +1,8 @@
 package de.tudarmstadt.rxrefactoring.core.analysis.dataflow.strategy;
 
-import java.util.Arrays;
+import java.util.Objects;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AssertStatement;
 import org.eclipse.jdt.core.dom.Block;
@@ -38,7 +39,7 @@ public interface StatementDataFlowStrategy<Result> extends IDataFlowStrategy<Sta
 
 	@SuppressWarnings("unchecked")
 	@Override
-	default public Result transform(Statement statement, Result input) {
+	default public @NonNull Result transform(@NonNull Statement statement, @NonNull Result input) {
 		
 		final Object[] result = new Object[1];
 		statement.accept(new ASTVisitor() {
@@ -176,7 +177,7 @@ public interface StatementDataFlowStrategy<Result> extends IDataFlowStrategy<Sta
 			}			
 		}); 
 		
-		return (Result) result[0];
+		return Objects.requireNonNull((Result) result[0], "result for statement has been null. Statement:\n" + statement);
 	}
 	
 	Result transformStatement(AssertStatement statement, Result input);
