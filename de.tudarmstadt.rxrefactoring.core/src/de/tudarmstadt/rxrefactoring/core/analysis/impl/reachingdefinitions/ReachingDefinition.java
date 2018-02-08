@@ -45,7 +45,7 @@ public class ReachingDefinition {
 	}
 	
 	
-	void replace(Name key, Expression value) {
+	ReachingDefinition replace(Name key, Expression value) {
 		String id = nameAsString(key);
 		definitions.removeAll(id);
 		
@@ -59,6 +59,8 @@ public class ReachingDefinition {
 		}
 		
 		definitions.putAll(id, val);
+		
+		return this;
 	}
 	
 	public Collection<Expression> get(Name key) {
@@ -83,8 +85,8 @@ public class ReachingDefinition {
 	}
 	
 	private String nameAsString(Name name) {
-		IBinding binding = name.resolveBinding();	
-					 
+		IBinding binding = name.resolveBinding();
+				 
 		if (binding == null)
 			return name.getFullyQualifiedName();
 		else

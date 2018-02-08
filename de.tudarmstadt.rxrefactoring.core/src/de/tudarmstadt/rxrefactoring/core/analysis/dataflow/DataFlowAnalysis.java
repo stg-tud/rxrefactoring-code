@@ -218,14 +218,10 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 							predecessors.stream().map(node -> getResultOfSafe(node)).collect(Collectors.toList());				
 						incomingResult = strategy.mergeAll(incomingResults);
 					}
-					System.out.println("\tincoming " + incomingResult);	
 					//Compute the outgoing result by applying the transformation of the node.
 					Result outgoingResult = strategy.transform(currentVertex, incomingResult);
 					
-					System.out.println("\toutgoing " + outgoingResult);	
-					
-					//If the result has changed, then add all successors to the queue.
-											
+					//If the result has changed, then add all successors to the queue.											
 					if (resultHasChanged(currentVertex, outgoingResult)) {
 						setResult(currentVertex, outgoingResult);
 						queue.addAll(traversal.successorsOf(cfg, currentVertex));

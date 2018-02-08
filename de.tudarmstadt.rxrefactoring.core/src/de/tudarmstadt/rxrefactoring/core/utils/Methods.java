@@ -34,8 +34,6 @@ public final class Methods {
 				&& Objects.equals(mb.getName(), methodName)
 				&& parameterTypeNames.length == mbParameters.length;
 
-		Arrays.stream(mbParameters).forEach(par -> Log.info(Methods.class, "bin name: " + par.getQualifiedName()));
-		
 		if (!result) {
 			return false;
 		}

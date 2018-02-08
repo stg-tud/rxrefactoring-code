@@ -43,7 +43,7 @@ public class ReachingDefinitionsAnalysis extends DataFlowAnalysis<ASTNode, Reach
 		public @NonNull ReachingDefinition transform(@NonNull ASTNode vertex,
 				@NonNull ReachingDefinition input) {
 			
-			ReachingDefinition res = ReachingDefinition.from(input);
+			
 			
 			if (vertex instanceof Assignment) {
 				Assignment assignment = (Assignment) vertex;
@@ -53,7 +53,7 @@ public class ReachingDefinitionsAnalysis extends DataFlowAnalysis<ASTNode, Reach
 				
 				//TODO Add fields
 				if (lhs instanceof Name) {
-					res.replace((Name) lhs, rhs);					
+					return ReachingDefinition.from(input).replace((Name) lhs, rhs).setImmutable();
 				} else {
 					Log.error(getClass(), "Assignment to non-name");
 				}
@@ -64,12 +64,12 @@ public class ReachingDefinitionsAnalysis extends DataFlowAnalysis<ASTNode, Reach
 					VariableDeclarationFragment fragment = (VariableDeclarationFragment) o;
 					
 					if (fragment.getInitializer() != null) {
-						res.replace(fragment.getName(), fragment.getInitializer());						
+						return ReachingDefinition.from(input).replace(fragment.getName(), fragment.getInitializer()).setImmutable();
 					}
 				}
 			}
 			
-			return res.setImmutable();
+			return input;
 		}
 		
 		
