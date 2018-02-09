@@ -1,9 +1,15 @@
 package de.tudarmstadt.rxrefactoring.core.analysis.cfg.expression;
 
+import java.util.Map;
 import java.util.Objects;
 
 import org.eclipse.jdt.core.dom.Expression;
 import org.jgrapht.graph.AbstractBaseGraph;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IControlFlowGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IEdge;
@@ -25,6 +31,11 @@ implements IControlFlowGraph<Expression> {
 		ExpressionGraph graph = new ExpressionGraph();
 		addTo(expr, graph);
 		return graph;
+	}
+	
+	public static ExprAccess createAccess(Expression expr) {
+		ExpressionGraph graph = new ExpressionGraph();		
+		return addTo(expr, graph);
 	}
 	
 	/**
@@ -58,24 +69,49 @@ implements IControlFlowGraph<Expression> {
 		public final Expression entry;
 		public final Expression exit;
 		
-		ExprAccess(Expression entry, Expression exit) {
+		public final ImmutableMultimap<ExceptionIdentifier, Expression> exceptions;
+		
+		private ExprAccess(Expression entry, Expression exit, ImmutableMultimap<ExceptionIdentifier, Expression> exceptions) {
 			super();
 			this.entry = Objects.requireNonNull(entry);
 			this.exit = Objects.requireNonNull(exit);
+			this.exceptions = Objects.requireNonNull(exceptions);
 		}		
 		
-		public static ExprAccess create(Expression entry, Expression exit) {
-			return new ExprAccess(entry, exit);
+		static ExprAccess create(Expression entry, Expression exit, ImmutableMultimap<ExceptionIdentifier, Expression>... exceptMaps) {
+			
+			if (exceptMaps.length == 1) {
+				return new ExprAccess(entry, exit, exceptMaps[0]);
+			}
+			
+			ImmutableMultimap.Builder<ExceptionIdentifier, Expression> b = ImmutableMultimap.builder();
+			
+			for(Multimap<ExceptionIdentifier, Expression> map : exceptMaps)
+				b.putAll(map);
+			
+			return new ExprAccess(entry, exit, b.build());
+		}
+		
+		static ExprAccess create(Expression entry, Expression exit) {
+			return create(entry, exit, ImmutableMultimap.of());
 		}
 						
-		public ExprAccess withExit(Expression exit) {
-			return new ExprAccess(entry, exit);
-		}		
+		ExprAccess withExit(Expression exit) {
+			return create(entry, exit, exceptions);
+		}	
+		
+		ExprAccess withExceptions(ImmutableMultimap<ExceptionIdentifier, Expression>... exceptMaps) {			
+			return create(entry, exit, exceptMaps);
+		}
 		
 		@Override
 		public String toString() {
-			return "ExprAccess(entry=" + entry + ", exit=" + exit + ")";
-		}		
+			return "ExprAccess(entry=" + entry + ", exit=" + exit + ", exceptions=" + exceptions + ")";
+		}	
+		
+		ImmutableMultimap<ExceptionIdentifier, Expression> getExceptions() {
+			return exceptions;
+		}
 	}
 
 	

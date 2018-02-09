@@ -13,8 +13,7 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IControlFlowGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IEdge;
-import de.tudarmstadt.rxrefactoring.core.analysis.cfg.exception.ExceptionExits;
-import de.tudarmstadt.rxrefactoring.core.analysis.cfg.exception.ExceptionIdentifier;
+import de.tudarmstadt.rxrefactoring.core.analysis.cfg.expression.ExceptionIdentifier;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.expression.ExpressionGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement.ProgramGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
@@ -39,7 +38,7 @@ public final class Main {
 		
 		ExpressionGraph g = ExpressionGraph.createFrom((Expression) node);
 		
-		System.out.println(ExceptionExits.createFrom((Expression) node));
+		System.out.println(ExpressionGraph.createAccess((Expression) node));
 				
 		return g;
 	}
@@ -101,11 +100,23 @@ public final class Main {
 				+ "println(i);"
 				+ "return 0;";
 		
-				
+		String program7 = 
+				"if (o.g())"
+				+ "return 0;"
+				+ "return 1;";
+		
+		String program8 = 
+			"try {"
+			+	"if (1 / 0) return 1;"
+			+ "} catch (java.lang.ArithmeticException e) {"
+			+ 	"return 0;"
+			+ "}";
+		
+						
 		final ASTParser parser = ASTParser.newParser(AST.JLS9);
 		
 		parser.setKind(ASTParser.K_STATEMENTS);
-		parser.setSource(program6.toCharArray());
+		parser.setSource(program8.toCharArray());
 		parser.setBindingsRecovery(true);
 		parser.setStatementsRecovery(true);
 		
@@ -134,7 +145,7 @@ public final class Main {
 //	    IMember[] members = { method };
 //	    MethodWrapper[] callers = callHierarchy.getCallerRoots(members);
 		
-		IControlFlowGraph<? extends ASTNode> graph = expressionExample();
+		IControlFlowGraph<? extends ASTNode> graph = programExample();
 
 		for(IEdge<? extends ASTNode> e : graph.edgeSet()) {
 			System.out.println(e.getHead() + "\n-->\n" + e.getTail() + "\n#####");

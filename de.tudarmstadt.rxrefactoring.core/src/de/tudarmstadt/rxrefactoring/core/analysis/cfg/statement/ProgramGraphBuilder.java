@@ -2,11 +2,15 @@ package de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.BreakStatement;
+import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.ContinueStatement;
 import org.eclipse.jdt.core.dom.DoStatement;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
@@ -26,6 +30,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -34,6 +39,7 @@ import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IControlFlowGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IEdge;
+import de.tudarmstadt.rxrefactoring.core.analysis.cfg.expression.ExceptionIdentifier;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.expression.ExpressionGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.expression.ExpressionGraph.ExprAccess;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
@@ -48,9 +54,9 @@ import de.tudarmstadt.rxrefactoring.core.utils.Statements;
  */
 class ProgramGraphBuilder {
 	
-	private final IControlFlowGraph<? super ASTNode> graph;
+	private final ProgramGraph graph;
 	
-	public ProgramGraphBuilder(IControlFlowGraph<? super ASTNode> graph) {
+	public ProgramGraphBuilder(ProgramGraph graph) {
 		super();
 		this.graph = graph;
 	}
@@ -85,6 +91,10 @@ class ProgramGraphBuilder {
 		}
 		
 		
+		public boolean isEmpty() {
+			return callBlocks.length == 0;
+		}
+		
 		public Context enterStatement(Statement statement) {
 			return new Context(ObjectArrays.concat(statement, callBlocks));
 		}			
@@ -97,9 +107,7 @@ class ProgramGraphBuilder {
 		 */
 		public Statement enclosingContinueBlock(SimpleName label) {
 							
-			for (Object element : callBlocks) {
-				
-				Statement statement = (Statement) element;
+			for (Statement statement : callBlocks) {			
 				
 				if (Statements.isLoop(statement) && label == null 
 					|| statement instanceof LabeledStatement 
@@ -114,10 +122,8 @@ class ProgramGraphBuilder {
 		
 		public Statement enclosingBreakBlock(SimpleName label) {
 			
-			for (Object element : callBlocks) {
-				
-				Statement statement = (Statement) element;
-				
+			for (Statement statement : callBlocks) {				
+								
 				if (label == null && (Statements.isLoop(statement) || statement instanceof SwitchStatement) 
 					|| statement instanceof LabeledStatement && Objects.equals(label.getIdentifier(), ((LabeledStatement) statement).getLabel().getIdentifier())
 				) {
@@ -129,14 +135,40 @@ class ProgramGraphBuilder {
 		}
 		
 		public SwitchStatement enclosingSwitch() {
-			for (Object element : callBlocks) {					
+			for (Statement element : callBlocks) {					
 				if (element instanceof SwitchStatement) {
 					return (SwitchStatement) element;
 				}
 			}
 			
 			return null;
-		}			
+		}
+		
+		public @Nullable Set<CatchClause> enclosingExceptionHandler(ExceptionIdentifier exception) {
+			
+			Set<CatchClause> clauses = Sets.newHashSet();
+			
+			for (Statement statement : callBlocks) {
+				if (statement instanceof TryStatement) {
+					TryStatement tryStatement = (TryStatement) statement;
+					
+					for (Object o : tryStatement.catchClauses()) {
+						CatchClause clause = (CatchClause) o;						
+						
+						if (exception.isHandledBy(clause.getException().getType())) {
+							clauses.add(clause);
+							
+							//If it is any exception it can be handeled by multiple catch clauses. Else it is only handled by a specific clause.
+							if (!exception.isAnyException())
+								return clauses;
+						}
+					}
+				}
+			}
+			
+			return clauses;
+			
+		}
 		
 		
 		@Override
@@ -252,16 +284,22 @@ class ProgramGraphBuilder {
 			Context newContext = context.enterStatement(block);
 			
 			StatementExits result = StatementExits.create(); 
+			Statement statement = block;
 			
 			//Iterate through all statements in the block and establish links between them.
 			for (Object element : block.statements()) {
-				Statement statement = (Statement) element;					
+				statement = (Statement) element;					
 				addEdges(previousNodes, statement);
 				
 				StatementExits statementResult = process(statement, newContext);
 				previousNodes = statementResult.get(statement);
 				
 				result.copyFrom(statementResult).remove(statement);					 					
+			}
+			
+			//TODO Heuristic: If it is the outermost block then the last statement is an exit. Is this correct?
+			if (context.isEmpty() && !graph.hasExitNodes()) {
+				graph.addExitNode(statement);
 			}
 			
 			return result.add(block, previousNodes);
@@ -286,6 +324,7 @@ class ProgramGraphBuilder {
 			ExprAccess conditionResult = addExpr(ifStatement.getExpression());
 			addEdge(ifStatement, conditionResult.entry);
 			addEdge(conditionResult.exit, thenStatement);
+			handleExceptions(conditionResult, context);
 			
 			StatementExits thenResult = process(thenStatement, context.enterStatement(ifStatement));
 
@@ -309,8 +348,10 @@ class ProgramGraphBuilder {
 			
 		} else if (currentStatement instanceof SwitchStatement) {
 			SwitchStatement switchStatement = (SwitchStatement) currentStatement;
+			
 			ExprAccess expressionResult = addExpr(switchStatement.getExpression());
-			addEdge(switchStatement, expressionResult.entry);				
+			addEdge(switchStatement, expressionResult.entry);	
+			handleExceptions(expressionResult, context);
 			
 			Iterable<ASTNode> previousNodes = Collections.singleton(expressionResult.exit);
 			
@@ -345,7 +386,8 @@ class ProgramGraphBuilder {
 			}
 			
 			ExprAccess expressionResult = addExpr(expression);
-			addEdge(switchCase, expressionResult.entry);				
+			addEdge(switchCase, expressionResult.entry);		
+			handleExceptions(expressionResult, context);
 			
 			//Traverse further.
 			return StatementExits.create().add(switchCase, expressionResult.exit);
@@ -358,6 +400,7 @@ class ProgramGraphBuilder {
 			ExprAccess conditionResult = addExpr(whileStatement.getExpression());
 			addEdge(whileStatement, conditionResult.entry);
 			addEdge(conditionResult.exit, bodyStatement);
+			handleExceptions(conditionResult, context);
 						
 			//Create edges inside while-block with while as previous edge
 			StatementExits bodyResult = process(bodyStatement, context.enterStatement(whileStatement));
@@ -381,7 +424,8 @@ class ProgramGraphBuilder {
 			
 			ExprAccess conditionResult = addExpr(doStatement.getExpression());
 			addEdges(bodyResult.get(bodyStatement), conditionResult.entry);
-			addEdge(conditionResult.exit, bodyStatement);				
+			addEdge(conditionResult.exit, bodyStatement);	
+			handleExceptions(conditionResult, context);
 			
 			
 			//Add an edge from the end of the while block to the beginning of the while block
@@ -400,7 +444,8 @@ class ProgramGraphBuilder {
 				
 				ExprAccess initializerResult = addExpr(initializer);
 				addEdge(previousNode, initializerResult.entry);
-				previousNode = initializerResult.exit;					
+				previousNode = initializerResult.exit;		
+				handleExceptions(initializerResult, context);
 			}
 		
 			ExprAccess conditionResult = null;
@@ -408,6 +453,7 @@ class ProgramGraphBuilder {
 				conditionResult = addExpr(forStatement.getExpression());
 				addEdge(previousNode, conditionResult.entry);
 				previousNode = conditionResult.exit;
+				handleExceptions(conditionResult, context);
 			}
 			
 			StatementExits bodyExits = process(bodyStatement, context.enterStatement(forStatement));
@@ -423,6 +469,7 @@ class ProgramGraphBuilder {
 				} else {
 					addEdge(previousNode, updaterResult.entry);
 				}					
+				handleExceptions(updaterResult, context);
 				previousNode = updaterResult.exit;					
 			}
 			
@@ -448,6 +495,7 @@ class ProgramGraphBuilder {
 			ExprAccess exprResult = addExpr(enhancedForStatement.getExpression());
 			addEdge(enhancedForStatement, exprResult.entry);
 			addEdge(exprResult.exit, bodyStatement);
+			handleExceptions(exprResult, context);
 						
 			//Create edges inside while-block with while as previous edge
 			StatementExits bodyResult = process(bodyStatement, context.enterStatement(enhancedForStatement));
@@ -464,8 +512,50 @@ class ProgramGraphBuilder {
 		} else if (currentStatement instanceof TryStatement) {
 			//TODO: implement this
 			TryStatement tryStatement = (TryStatement) currentStatement;
-			Log.info(getClass(), "try statement is unsupported by CFG");
-			return process(tryStatement.getBody(), context.enterStatement(tryStatement));				
+			
+			if (!tryStatement.resources().isEmpty())
+				Log.error(getClass(), "try-with-resources statement is unsupported by CFG");
+			
+			//TODO add try-with-resources
+			Block body = tryStatement.getBody();			
+			addEdge(tryStatement, body);
+			
+			StatementExits bodyExits = process(body, context.enterStatement(tryStatement));						
+			
+			Block finallyBlock = tryStatement.getFinally();
+			if (finallyBlock == null) {
+				StatementExits result = StatementExits.create().copyFrom(bodyExits).move(body, tryStatement);
+				
+				tryStatement.catchClauses().forEach(o -> {
+					CatchClause clause = (CatchClause) o;
+					addEdge(clause, clause.getBody());
+					
+					StatementExits clauseExit =  process(clause.getBody(), context);
+					result.copyFrom(clauseExit).move(clause.getBody(), tryStatement);
+				});
+				
+				return result; 
+			} else {
+				
+				//TODO Improve finally block. At the moment only the exits of the
+				//try statement and the exits of the catch clauses enter the
+				//finally block.
+				
+				Log.error(getClass(), "finally is only partially supported.");
+				bodyExits.get(body).forEach(exit -> addEdge(exit, finallyBlock));
+				
+				tryStatement.catchClauses().forEach(o -> {
+					CatchClause clause = (CatchClause) o;
+					addEdge(clause, clause.getBody());
+					
+					StatementExits clauseExit =  process(clause.getBody(), context);
+					clauseExit.get(clause.getBody()).forEach(exit -> addEdge(exit, finallyBlock));
+				});
+				
+				StatementExits finallyExits = process(finallyBlock, context);
+				
+				return StatementExits.create().copyFrom(finallyExits).move(finallyBlock, tryStatement);
+			}			
 		} else if (currentStatement instanceof ThrowStatement) {
 			//TODO: implement this
 			ThrowStatement throwStatement = (ThrowStatement) currentStatement;
@@ -500,16 +590,19 @@ class ProgramGraphBuilder {
 			if (expression != null) {
 				ExprAccess expressionResult = addExpr(expression);
 				addEdge(returnStatement, expressionResult.entry);
+				handleExceptions(expressionResult, context);
 			}
 			
-			//Do not traverse further.
+			//Add exit and do not traverse further.
+			graph.addExitNode(returnStatement);
 			return StatementExits.create();
 		} else if (currentStatement instanceof ExpressionStatement) {				
 			ExpressionStatement expressionStatement = (ExpressionStatement) currentStatement;
 			Expression expression = expressionStatement.getExpression();
 							
 			ExprAccess expressionResult = addExpr(expression);
-			addEdge(expressionStatement, expressionResult.entry);				
+			addEdge(expressionStatement, expressionResult.entry);		
+			handleExceptions(expressionResult, context);
 			
 			//Do not traverse further.
 			return StatementExits.create().add(expressionStatement, expressionResult.exit);
@@ -530,6 +623,7 @@ class ProgramGraphBuilder {
 					ExprAccess initializerResult = addExpr(initializer);
 					addEdge(previousNode, initializerResult.entry);
 					addEdge(initializerResult.exit, name);
+					handleExceptions(initializerResult, context);
 					previousNode = name;
 				}
 				
@@ -540,7 +634,22 @@ class ProgramGraphBuilder {
 		} else {
 			//If the statement does not affect the control flow, then just go to the next statement.
 			return StatementExits.create().add(currentStatement, currentStatement);
-		}
+		}		
+	}
+	
+	private void handleExceptions(ExprAccess exprAccess, Context context) {
+		exprAccess.exceptions.entries().forEach(entry -> {
+			ExceptionIdentifier id = entry.getKey();
+			Expression expr = entry.getValue();
+			
+			Set<CatchClause> clauses = context.enclosingExceptionHandler(id);
+			
+			if (clauses.isEmpty()) {
+				graph.addExitNode(expr);
+			} else {
+				clauses.forEach(clause -> addEdge(expr, clause));
+			}			
+		});		
 	}
 
 	private IEdge<? super ASTNode> addEdge(ASTNode sourceVertex, ASTNode targetVertex) {
