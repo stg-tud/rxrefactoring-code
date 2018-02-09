@@ -1,54 +1,42 @@
 package de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions;
 
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.Name;
 
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 
 public class ReachingDefinition {
-	private Multimap<String, Expression> definitions;
+	private ImmutableMultimap<String, Expression> definitions;
 	
-	ReachingDefinition(Multimap<String, Expression> defintions) {
+	ReachingDefinition(ImmutableMultimap<String, Expression> defintions) {
 		this.definitions = defintions;
 	}
-	
-	ReachingDefinition setImmutable() {
-		definitions = Multimaps.unmodifiableMultimap(definitions);
-		return this;
-	}
-	
+			
 	static ReachingDefinition empty() {
 		ReachingDefinition result = new ReachingDefinition(ImmutableMultimap.of());
 		return result;
 	}
 	
 	static ReachingDefinition merge(Iterable<ReachingDefinition> iterable) {
-		SetMultimap<String, Expression> rmap = Multimaps.newSetMultimap(Maps.newHashMap(), () -> Sets.newHashSet());			
-		iterable.forEach(m -> rmap.putAll(m.definitions));			
+		ImmutableMultimap.Builder<String, Expression> builder = ImmutableMultimap.builder();			
+		iterable.forEach(m -> builder.putAll(m.definitions));			
 		
-		return new ReachingDefinition(rmap);
+		return new ReachingDefinition(builder.build());
 	}
 	
-	static ReachingDefinition from(ReachingDefinition other) {
-		SetMultimap<String, Expression> rmap = Multimaps.newSetMultimap(Maps.newHashMap(), () -> Sets.newHashSet());
-		rmap.putAll(other.definitions);
-				
-		return new ReachingDefinition(rmap);
-	}
 	
 	
 	ReachingDefinition replace(Name key, Expression value) {
 		String id = nameAsString(key);
-		definitions.removeAll(id);
 		
+		ImmutableMultimap.Builder<String, Expression> builder = ImmutableMultimap.builder();		
+		builder.putAll(definitions.entries().stream().filter(entry -> !entry.getKey().equals(id)).collect(Collectors.toList()));
+				
 		Collection<Expression> val;
 		String valId;
 		
@@ -58,9 +46,9 @@ public class ReachingDefinition {
 			val = Sets.newHashSet(value);
 		}
 		
-		definitions.putAll(id, val);
+		builder.putAll(id, val);
 		
-		return this;
+		return new ReachingDefinition(builder.build());
 	}
 	
 	public Collection<Expression> get(Name key) {

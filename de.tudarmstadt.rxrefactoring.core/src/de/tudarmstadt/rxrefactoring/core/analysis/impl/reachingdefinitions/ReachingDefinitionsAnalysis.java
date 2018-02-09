@@ -36,7 +36,7 @@ public class ReachingDefinitionsAnalysis extends DataFlowAnalysis<ASTNode, Reach
 
 		@Override
 		public @NonNull ReachingDefinition mergeAll(@NonNull Iterable<ReachingDefinition> results) {			
-			return ReachingDefinition.merge(results).setImmutable();
+			return ReachingDefinition.merge(results);
 		}
 
 		@Override
@@ -53,7 +53,7 @@ public class ReachingDefinitionsAnalysis extends DataFlowAnalysis<ASTNode, Reach
 				
 				//TODO Add fields
 				if (lhs instanceof Name) {
-					return ReachingDefinition.from(input).replace((Name) lhs, rhs).setImmutable();
+					return input.replace((Name) lhs, rhs);
 				} else {
 					Log.error(getClass(), "Assignment to non-name");
 				}
@@ -64,7 +64,7 @@ public class ReachingDefinitionsAnalysis extends DataFlowAnalysis<ASTNode, Reach
 					VariableDeclarationFragment fragment = (VariableDeclarationFragment) o;
 					
 					if (fragment.getInitializer() != null) {
-						return ReachingDefinition.from(input).replace(fragment.getName(), fragment.getInitializer()).setImmutable();
+						return input.replace(fragment.getName(), fragment.getInitializer());
 					}
 				}
 			}

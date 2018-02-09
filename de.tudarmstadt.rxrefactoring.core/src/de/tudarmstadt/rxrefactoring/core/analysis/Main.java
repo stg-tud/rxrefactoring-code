@@ -1,6 +1,5 @@
 package de.tudarmstadt.rxrefactoring.core.analysis;
 
-import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.AST;
@@ -9,11 +8,8 @@ import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.Statement;
 
-import com.google.common.collect.Multimap;
-
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IControlFlowGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IEdge;
-import de.tudarmstadt.rxrefactoring.core.analysis.cfg.expression.ExceptionIdentifier;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.expression.ExpressionGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement.ProgramGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
@@ -45,14 +41,14 @@ public final class Main {
 	
 	static IControlFlowGraph<? extends ASTNode> programExample() {
 		String program =
-				"{"
-				+ "Future<Integer> f1 = ask(\"Hello\");"
-				+ "Future<Integer> f2 = ask(\"World\");"
-				+ "if (b) {"
-				+ "f1 = f2;"
-				+ "f1.cancel();"
-				+ "}"
-				+ "f2.cancel();"
+				  "{"
+				+ 	"Future<Integer> f1 = ask(\"Hello\");"
+				+ 	"Future<Integer> f2 = ask(\"World\");"
+				+ 	"if (b) {"
+				+ 		"f1 = f2;"
+				+ 		"f1.cancel();"
+				+ 	"}"
+				+ 		"f2.cancel();"
 				+ "}";
 		
 		String program2 =
