@@ -108,11 +108,19 @@ public final class Main {
 			+ 	"return 0;"
 			+ "}";
 		
+		String program9 = 
+				"try {"
+				+	"throw new IllegalArgumentException();"
+				+ "} catch (java.lang.IllegalArgumentException e) {"
+				+ 	"return 0;"
+				+ "}"
+				+ "throw new NullPointerException();";
+		
 						
 		final ASTParser parser = ASTParser.newParser(AST.JLS9);
 		
 		parser.setKind(ASTParser.K_STATEMENTS);
-		parser.setSource(program8.toCharArray());
+		parser.setSource(program9.toCharArray());
 		parser.setBindingsRecovery(true);
 		parser.setStatementsRecovery(true);
 		

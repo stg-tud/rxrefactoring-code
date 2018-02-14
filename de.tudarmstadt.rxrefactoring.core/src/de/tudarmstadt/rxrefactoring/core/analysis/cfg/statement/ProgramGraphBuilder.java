@@ -17,6 +17,7 @@ import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
 import org.eclipse.jdt.core.dom.ForStatement;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.LabeledStatement;
 import org.eclipse.jdt.core.dom.ReturnStatement;
@@ -510,7 +511,6 @@ class ProgramGraphBuilder {
 					.move(bodyStatement, enhancedForStatement);		
 			
 		} else if (currentStatement instanceof TryStatement) {
-			//TODO: implement this
 			TryStatement tryStatement = (TryStatement) currentStatement;
 			
 			if (!tryStatement.resources().isEmpty())
@@ -557,10 +557,21 @@ class ProgramGraphBuilder {
 				return StatementExits.create().copyFrom(finallyExits).move(finallyBlock, tryStatement);
 			}			
 		} else if (currentStatement instanceof ThrowStatement) {
-			//TODO: implement this
 			ThrowStatement throwStatement = (ThrowStatement) currentStatement;
-			Log.info(getClass(), "throw statement is unsupported by CFG");
-			return StatementExits.create().add(throwStatement, throwStatement);
+			
+			ITypeBinding type = throwStatement.getExpression().resolveTypeBinding();
+			
+			ExceptionIdentifier id = type == null ? ExceptionIdentifier.ANY_EXCEPTION : ExceptionIdentifier.createFrom(type);
+			
+			Set<CatchClause> clauses = context.enclosingExceptionHandler(id);			
+			if (clauses.isEmpty()) {
+				graph.addExitNode(throwStatement);
+			} else {
+				clauses.forEach(clause -> addEdge(throwStatement, clause));
+			}						
+			
+			return StatementExits.create();
+						
 		} else if (currentStatement instanceof ContinueStatement) {
 			ContinueStatement continueStatement = (ContinueStatement) currentStatement;
 											

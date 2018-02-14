@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -196,7 +197,8 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 				//Queue of nodes that have to be processed
 				Queue<Vertex> queue = Lists.newLinkedList();
 				//Add the entry nodes to the queue.
-				queue.addAll(traversal.entryNodes(cfg));
+				Set<Vertex> entries = traversal.entryNodes(cfg);				
+				queue.addAll(entries);
 				
 				while (!queue.isEmpty()) {
 					Vertex currentVertex = queue.poll();	
@@ -208,14 +210,14 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 					Result incomingResult;
 					switch (predecessors.size()) {
 					case 0 :
-						incomingResult = strategy.entryResult();
+						incomingResult = entries.contains(currentVertex) ? strategy.entryResult() : strategy.initResult();
 						break;
 					case 1 :
-						incomingResult = getResultOfSafe(predecessors.iterator().next());
+						incomingResult = getResultOrInit(predecessors.iterator().next());
 						break;
 					default :
 						List<Result> incomingResults =
-							predecessors.stream().map(node -> getResultOfSafe(node)).collect(Collectors.toList());				
+							predecessors.stream().map(node -> getResultOrInit(node)).collect(Collectors.toList());				
 						incomingResult = strategy.mergeAll(incomingResults);
 					}
 					//Compute the outgoing result by applying the transformation of the node.
@@ -229,7 +231,7 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 				}
 			}
 			
-			private Result getResultOfSafe(Vertex node) {
+			private Result getResultOrInit(Vertex node) {
 				Result res = getResultOf(node);
 				if (res == null)
 					return strategy.initResult();
