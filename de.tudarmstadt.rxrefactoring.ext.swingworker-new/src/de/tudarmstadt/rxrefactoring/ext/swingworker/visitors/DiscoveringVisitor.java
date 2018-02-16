@@ -21,7 +21,7 @@ import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 
 /**
- * Description: This visitor collects different ASTNode types
+ * Description: This visitor collects different {@link ASTNode} types
  * and add them to lists.
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/11/2016

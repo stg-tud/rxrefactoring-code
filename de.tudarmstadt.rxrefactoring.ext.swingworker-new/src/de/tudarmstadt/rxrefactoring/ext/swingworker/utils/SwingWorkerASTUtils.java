@@ -22,7 +22,7 @@ import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
 
 /**
- * Description: Utils to change compilation units, which may be changed later<br>
+ * Description: Utils to change compilation units<br>
  * Author: Camila Gonzalez<br>
  * Created: 24/01/2017
  */
@@ -86,6 +86,16 @@ public class SwingWorkerASTUtils {
 		}
 	}
 	
+	/**
+	 * Creates a {@link SimpleName}
+	 * 
+	 * @param ast
+	 *            {@link AST} of level {@link AST#JLS8}
+	 * @param identifier
+	 *            identifier for new name
+	 * @returns a {@link SimpleName}
+	 * 
+	 */
 	public static @NonNull SimpleName newSimpleName(@NonNull AST ast, @NonNull String identifier) {
 		synchronized(ast)
 		{
@@ -93,6 +103,18 @@ public class SwingWorkerASTUtils {
 		}
 	}
 	
+	/**
+	 * Creates an {@link ExpressionStatement} which assigns a variable a newly created instance
+	 * 
+	 * @param ast
+	 *            {@link AST} of level {@link AST#JLS8}
+	 * @param variable
+	 *            name of the variable
+	 * @param type
+	 *            the type of the newly created instance
+	 * @returns an {@link ExpressionStatement}
+	 * 
+	 */
 	public static ExpressionStatement newAssignment(@NonNull AST ast, @NonNull String variable, @NonNull String type) {
 		synchronized(ast)
 		{
@@ -105,6 +127,16 @@ public class SwingWorkerASTUtils {
 		}
 	}
 	
+	/**
+	 * Creates a {@link ClassInstanceCreation}
+	 * 
+	 * @param ast
+	 *            {@link AST} of level {@link AST#JLS8}
+	 * @param className
+	 *            the name of the new class
+	 * @returns a {@link ClassInstanceCreation}
+	 * 
+	 */
 	public static ClassInstanceCreation newClassInstanceCreation(@NonNull AST ast, @NonNull String className) {
 		synchronized(ast)
 		{
@@ -113,7 +145,17 @@ public class SwingWorkerASTUtils {
 			return newClassInstanceCreation;
 		}
 	}
-	
+
+	/**
+	 * Copies the subtree of an {@link ASTNode}
+	 * 
+	 * @param ast
+	 *            {@link AST} of level {@link AST#JLS8}
+	 * @param node
+	 *            the original {@link ASTNode}
+	 * @returns a {@link ASTNode}
+	 * 
+	 */
 	public static ASTNode copySubtree(@NonNull AST ast, @NonNull ASTNode node) {
 		synchronized(ast)
 		{
@@ -121,6 +163,16 @@ public class SwingWorkerASTUtils {
 		}
 	}
 	
+	/**
+	 * Creates a {@link SimpleType}
+	 * 
+	 * @param ast
+	 *            {@link AST} of level {@link AST#JLS8}
+	 * @param identifier
+	 *            identifier for new type
+	 * @returns a {@link SimpleType}
+	 * 
+	 */
 	public static SimpleType newSimpleType(@NonNull AST ast, @NonNull String identifier) {
 		synchronized(ast)
 		{
