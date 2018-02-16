@@ -52,7 +52,7 @@ public class SwingWorkerExtension implements IRefactorExtension{
 
 	@Override
 	public @NonNull String getPlugInId() {
-		return "de.tudarmstadt.rxrefactoring.ext.swingworker-new";
+		return "de.tudarmstadt.rxrefactoring.ext.swingworker";
 	}
 	
 	
