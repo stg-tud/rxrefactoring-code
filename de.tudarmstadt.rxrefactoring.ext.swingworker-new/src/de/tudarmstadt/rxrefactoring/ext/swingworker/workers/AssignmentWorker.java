@@ -1,8 +1,8 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.List;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -25,6 +25,7 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.TemplateUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.RefactoringVisitor;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.TemplateVisitor;
 
 
 /**
@@ -47,7 +48,7 @@ public class AssignmentWorker extends GeneralWorker
 	for (Map.Entry<IRewriteCompilationUnit, Assignment> assignmentEntry : varDeclMap.entries())
 	{
 		IRewriteCompilationUnit icu = assignmentEntry.getKey();
-		Assignment assignment = assignmentEntry.getValue();		
+		Assignment assignment = assignmentEntry.getValue();	
 		
 		AST ast = assignment.getAST();
 
@@ -71,7 +72,10 @@ public class AssignmentWorker extends GeneralWorker
 			Log.info( getClass(),"METHOD=refactor - Refactoring right variable name: " + icu.getElementName() );
 			SimpleName simpleName = (SimpleName) rightHandSide;
 			String newIdentifier = RefactoringUtils.cleanSwingWorkerName( simpleName.getIdentifier() );
-			icu.replace(simpleName, ast.newSimpleName(newIdentifier));
+			synchronized(icu) 
+			{
+				icu.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newIdentifier));
+			}
 		}
 
 		Expression leftHandSide = assignment.getLeftHandSide();
@@ -80,11 +84,13 @@ public class AssignmentWorker extends GeneralWorker
 			Log.info( getClass(), "METHOD=refactor - Refactoring left variable name: " + icu.getElementName() );
 			SimpleName simpleName = (SimpleName) leftHandSide;
 			String newIdentifier = RefactoringUtils.cleanSwingWorkerName( simpleName.getIdentifier() );
-			icu.replace(simpleName, ast.newSimpleName(newIdentifier));
+			synchronized(icu) 
+			{
+				icu.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newIdentifier));
+			}
 			
 		}
-
-		// Add changes to the multiple compilation units write object
+		
 		Log.info( getClass(), "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );
 	
 		summary.addCorrect("Assignments");
@@ -116,26 +122,34 @@ public class AssignmentWorker extends GeneralWorker
 			RefactoringVisitor refactoringVisitor,
 			Assignment assignment )
 	{
-		String icuName = icu.getElementName();
-		SimpleName swingWorkerName = (SimpleName) assignment.getLeftHandSide();
+		SimpleName swingWorkerName;
+		if(assignment.getLeftHandSide() instanceof FieldAccess) 
+		{
+			FieldAccess fa = (FieldAccess) assignment.getLeftHandSide();
+			swingWorkerName = (SimpleName) fa.getName();
+		} else {
+			swingWorkerName = (SimpleName) assignment.getLeftHandSide();
+		}
 		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.getIdentifier() );
 		SWSubscriberModel subscriberDto = createSWSubscriberDto( rxObserverName, icu, refactoringVisitor );
-
+		
+		//Template is called
 		Map<String, Object> subscriberData = new HashMap<>();
 		subscriberData.put( "model", subscriberDto );
 		String subscriberTemplate = "subscriber.ftl";
-
 		String subscriberString = TemplateUtils.processTemplate( subscriberTemplate, subscriberData );
 		AST ast = assignment.getAST();
-		TypeDeclaration typeDeclaration = ASTNodeFactory.createTypeDeclarationFromText( ast, subscriberString );
 		
+		// Type declaration of RxObserver is added
+		TypeDeclaration typeDeclaration = TemplateVisitor.createTypeDeclarationFromText( ast, subscriberString );
 		Statement referenceStatement = ASTNodes.findParent( assignment, Statement.class ).get();
-		SwingWorkerASTUtils.addBefore(icu, typeDeclaration, referenceStatement);
-
-		String newAssignmentString = subscriberDto.getSubscriberName() + " = new " + subscriberDto.getClassName() + "()";
-		Statement newAssignment = ASTNodeFactory.createSingleStatementFromText( ast, newAssignmentString );
+		SwingWorkerASTUtils.addBefore(icu, typeDeclaration, referenceStatement);	
+		
+		// Assignment of new rxObserver is added
+		ExpressionStatement newAssignment = SwingWorkerASTUtils.newAssignment(ast, subscriberDto.getSubscriberName(), subscriberDto.getClassName());
 		Statements.addStatementBefore(icu, newAssignment, referenceStatement);
 		
+		// Assignment of new SwingWorker is removed
 		SwingWorkerASTUtils.removeStatement(icu, assignment);
 
 	}
@@ -145,35 +159,75 @@ public class AssignmentWorker extends GeneralWorker
 			RefactoringVisitor refactoringVisitor,
 			Assignment assignment )
 	{
-		String icuName = icu.getElementName();
 		RxObservableModel observableDto = createObservableDto( icu, refactoringVisitor );
-
+		/*
+		 * Sometimes doInbackground Block needs to be refactored futher like 
+		 * MainController.this.requestWorker.execute() --> MainController.this.requestRxObserver.executeObservable()
+		 * Scenario: 37--KolakCC--lol-jclient : MainController.java
+		 */
+		observableDto.setDoInBackgroundBlock(refactorDoInBgBlock(refactoringVisitor.getDoInBackgroundBlock()));
+		
 		Map<String, Object> observableData = new HashMap<>();
 		observableData.put( "model", observableDto );
 		String observableTemplate = "observable.ftl";
 
 		String observableString = TemplateUtils.processTemplate( observableTemplate, observableData );
-
+		
 		AST ast = assignment.getAST();
-		Statement observableStatement = ASTNodeFactory.createSingleStatementFromText( ast, observableString );
+		
+		Statement observableStatement = TemplateVisitor.createSingleStatementFromText( ast, observableString );
 
 		Statement referenceStatement = ASTNodes.findParent( assignment, Statement.class ).get();
 		Statements.addStatementBefore(icu, observableStatement, referenceStatement);
 		
-		SimpleName swingWorkerName = (SimpleName) assignment.getLeftHandSide();
-		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.getIdentifier() );
-		RxObserverModel observerDto = createObserverDto( rxObserverName, refactoringVisitor, observableDto );
-		observerDto.setVariableDecl( false );
+		SimpleName swingWorkerName = null;
+		if(assignment.getLeftHandSide() instanceof SimpleName) {
+			swingWorkerName = (SimpleName) assignment.getLeftHandSide();
+		}
+		else if(assignment.getLeftHandSide() instanceof FieldAccess)
+		{
+			FieldAccess fa = (FieldAccess) assignment.getLeftHandSide();
+			swingWorkerName = (SimpleName) fa.getName();
+		}
+		if (swingWorkerName != null) {
+			String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.getIdentifier() );
+			RxObserverModel observerDto = createObserverDto( rxObserverName, refactoringVisitor, observableDto );
+			observerDto.setVariableDecl( false );
 
-		Map<String, Object> observerData = new HashMap<>();
-		observerData.put( "model", observerDto );
-		String observerTemplate = "observer.ftl";
+			Map<String, Object> observerData = new HashMap<>();
+			observerData.put( "model", observerDto );
+			String observerTemplate = "observer.ftl";
 
-		String observerString = TemplateUtils.processTemplate( observerTemplate, observerData );
-		Statement observerStatement = ASTNodeFactory.createSingleStatementFromText( ast, observerString );
-		Statements.addStatementBefore(icu, observerStatement, referenceStatement);
+			String observerString = TemplateUtils.processTemplate( observerTemplate, observerData );
+			Statement observerStatement = TemplateVisitor.createSingleStatementFromText( ast, observerString );
+			Statements.addStatementBefore(icu, observerStatement, referenceStatement);
 
-		SwingWorkerASTUtils.removeStatement(icu, assignment);
+			SwingWorkerASTUtils.removeStatement(icu, assignment);	
+		}
+	}
+	
+	private String refactorDoInBgBlock(Block doInBgBlock) 
+	{
+		String doInBgBlockString = "";
+		List<Statement> list = doInBgBlock.statements();
+		StringBuilder sb = new StringBuilder();
+		sb.append("{ " + System.lineSeparator());
+		for(int i=0;i<list.size();i++) {
+				Statement stmnt = list.get(i);
+				if(stmnt instanceof ExpressionStatement) {
+					ExpressionStatement exprstmnt = (ExpressionStatement)stmnt;
+					if(exprstmnt.getExpression() instanceof MethodInvocation) {
+						MethodInvocation methodInvocation = (MethodInvocation) exprstmnt.getExpression();
+						SimpleName methodSimpleName = methodInvocation.getName();
+						String newMethodName = RefactoringUtils.getNewMethodName( methodSimpleName.toString() );
+						stmnt = TemplateVisitor.createSingleStatementFromText(doInBgBlock.getAST(), stmnt.toString().replace(methodSimpleName.toString(), newMethodName));
+					}
+				}
+				sb.append(stmnt.toString() + System.lineSeparator());
+		}
+		sb.append("}");
+		doInBgBlockString = RefactoringUtils.cleanSwingWorkerName(sb.toString());
+		return doInBgBlockString;
 	}
 	}
 	

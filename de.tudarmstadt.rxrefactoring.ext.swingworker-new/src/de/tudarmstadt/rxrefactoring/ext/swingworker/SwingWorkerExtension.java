@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.annotation.NonNull;
 
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
@@ -12,6 +14,9 @@ import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.*;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
+
+import java.net.URL;
+import org.osgi.framework.Bundle;
 
 /**
  * Description: Extension class for SwingWorker<br>
@@ -47,7 +52,7 @@ public class SwingWorkerExtension implements IRefactorExtension{
 
 	@Override
 	public @NonNull String getPlugInId() {
-		return "de.tudarmstadt.rxrefactoring.ext.swingworker";
+		return "de.tudarmstadt.rxrefactoring.ext.swingworker-new";
 	}
 	
 	
@@ -63,7 +68,16 @@ public class SwingWorkerExtension implements IRefactorExtension{
 
 	private void setupFreemaker()
 	{
-		String pluginDir = getPlugInId();
+		Bundle bundle = Platform.getBundle(getPlugInId());
+		URL pluginURL = null;
+		try {
+			pluginURL =  FileLocator.resolve(bundle.getEntry( "/" ));
+		} catch (IOException e) {
+			throw new RuntimeException( "Could not get installation directory of the plugin: " + getPlugInId());
+		}
+		String pluginDir = pluginURL.getPath().trim();
+		if ( Platform.getOS().compareTo( Platform.OS_WIN32 ) == 0 )
+			pluginDir = pluginDir.substring(1);
 		String templatesDirName = Paths.get( pluginDir, TEMPLATES_DIR_NAME ).toAbsolutePath().toString();
 		freemakerCfg = new Configuration( Configuration.VERSION_2_3_25 );
 		freemakerCfg.setDefaultEncoding( "UTF-8" );

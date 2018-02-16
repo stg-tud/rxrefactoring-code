@@ -1,9 +1,9 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
 
-import java.util.List;
 import java.util.Map;
 
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -40,7 +40,7 @@ public class MethodDeclarationWorker implements IWorker<RxCollector, Void>
 			MethodDeclaration methodDeclaration = methodDeclEntry.getValue();
 			
 			AST ast = methodDeclaration.getAST();
-
+			
 			Log.info( getClass(), "METHOD=refactor - Changing return type: " + icu.getElementName() );
 			Type type = methodDeclaration.getReturnType2();
 			if ( type instanceof ParameterizedType )
@@ -49,10 +49,11 @@ public class MethodDeclarationWorker implements IWorker<RxCollector, Void>
 			}
 			if ( ASTUtils.isClassOf( type, SwingWorkerInfo.getBinaryName() ) )
 			{
-        		System.out.println("++++++++++++++++");
-        		System.out.println("MethodDeclarationWorker: refactor");
-        		System.out.println("++++++++++++++++");
-				icu.replace(type, ast.newSimpleType(ast.newName("SWSubscriber")));
+				SimpleType newType = SwingWorkerASTUtils.newSimpleType(ast, "SWSubscriber");
+				synchronized(icu) 
+				{
+					icu.replace(type, newType);
+				}
 			}
 
 			// Add changes to the multiple compilation units write object

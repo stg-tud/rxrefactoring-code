@@ -16,9 +16,9 @@ import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
-import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
 
 /**
  * Author: Grebiel Jose Ifill Brito<br>
@@ -38,10 +38,10 @@ public class SingleVariableDeclWorker implements IWorker<RxCollector, Void>
 
 		for (Map.Entry<IRewriteCompilationUnit, SingleVariableDeclaration> singVarDeclEntry : singleVarDeclMap.entries())
 		{
+			
 			IRewriteCompilationUnit icu = singVarDeclEntry.getKey();
 			SingleVariableDeclaration singleVarDecl = singVarDeclEntry.getValue();
 			
-			// Get ast and writer
 			AST ast = singleVarDecl.getAST();
 
 			Log.info( getClass(), "METHOD=refactor - Refactoring single variable declaration in: " + icu.getElementName() );
@@ -52,23 +52,27 @@ public class SingleVariableDeclWorker implements IWorker<RxCollector, Void>
 			{
 				if ( "SwingWorker".equals( simpleName.toString() ) )
 				{
-					icu.replace(simpleName, ast.newSimpleName("SWSubscriber"));
+					synchronized(icu) 
+					{
+						icu.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, "SWSubscriber"));
+						icu.addImport( "de.tudarmstadt.stg.rx.swingworker.SWSubscriber" );
+					}
 					/*
 					 *  Scenario : 46--ggasoftware--indigo : variables present as an argument of some method, after renaming import should be added.
 					 *  E.g. ProgressStatusDialog.java(See executeSwingWorker method argument variable)
 					 */
-					icu.addImport( "de.tudarmstadt.stg.rx.swingworker.SWSubscriber" );
 				}
 				else
 				{
 				if(!(simpleName.getParent() instanceof QualifiedName))
-					icu.replace(simpleName, ast.newSimpleName(RefactoringUtils.cleanSwingWorkerName( simpleName.getIdentifier() )));
+					synchronized(icu) 
+					{
+						icu.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, RefactoringUtils.cleanSwingWorkerName( simpleName.getIdentifier() )));
+					}
 				}
 			}
 
-			// Add changes to the multiple compilation units write object
 			Log.info( getClass(), "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );
-			//rxMultipleUnitsWriter.addCompilationUnit( icu );
 			
 			summary.addCorrect("VariableDeclarations");
 		}

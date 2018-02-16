@@ -1,6 +1,5 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
 
-import java.util.List;
 import java.util.Map;
 
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
@@ -18,7 +17,7 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.RefactoringVisitor;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
 
 /**
  * Author: Grebiel Jose Ifill Brito<br>
@@ -47,15 +46,14 @@ public class MethodInvocationWorker implements IWorker<RxCollector, Void>
 			ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) expression;
 			if (!ASTUtils.isSubclassOf(classInstanceCreation, SwingWorkerInfo.getBinaryName(), false))
 			{
-				// another worker will handle this case
+				// Another worker will handle this case
 				continue;
 			}
 		}
 
-		// Get ast and writer
 		AST ast = methodInvocation.getAST();
 
-		// refactor invocation
+		// Refactor invocation
 		Log.info( getClass(), "METHOD=refactor - refactoring method invocation: "
 				+ methodInvocation.getName() + "in " + icu.getElementName() );
 		refactorInvocation( ast, icu, methodInvocation );
@@ -77,15 +75,23 @@ public class MethodInvocationWorker implements IWorker<RxCollector, Void>
 
 		SimpleName methodSimpleName = methodInvocation.getName();
 		String newMethodName = RefactoringUtils.getNewMethodName( methodSimpleName.toString() );
-
-		icu.replace(methodSimpleName, ast.newSimpleName(newMethodName));
+		
+		SimpleName newMethod = SwingWorkerASTUtils.newSimpleName(ast, newMethodName);
+		
+		synchronized(icu) 
+		{
+			icu.replace(methodSimpleName, newMethod);
+		}
 
 		Expression expression = methodInvocation.getExpression();
 		if ( expression instanceof SimpleName )
 		{
 			SimpleName simpleName = (SimpleName) expression;
 			String newName = RefactoringUtils.cleanSwingWorkerName( simpleName.getIdentifier() );
-			icu.replace(simpleName, ast.newSimpleName(newName));
+			synchronized(icu) 
+			{
+				icu.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newName));
+			}
 		}
 	}
 

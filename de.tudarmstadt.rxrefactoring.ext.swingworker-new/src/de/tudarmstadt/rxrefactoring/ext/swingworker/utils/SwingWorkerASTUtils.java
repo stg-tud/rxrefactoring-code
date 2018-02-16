@@ -3,17 +3,23 @@ package de.tudarmstadt.rxrefactoring.ext.swingworker.utils;
 import java.util.Optional;
 
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.ExpressionStatement;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
+import de.tudarmstadt.rxrefactoring.core.utils.Statements;
 
 /**
  * Description: Utils to change compilation units, which may be changed later<br>
@@ -30,17 +36,21 @@ public class SwingWorkerASTUtils {
 	 * @param elementInTargetStatement
 	 *            a node inside of a statement
 	 */
-	public static void removeStatement(@NonNull IRewriteCompilationUnit unit, @NonNull ASTNode node){
-		if (node instanceof Statement)
+	public static void removeStatement(@NonNull IRewriteCompilationUnit unit, @NonNull ASTNode node)
+	{
+		synchronized(unit)
 		{
-			unit.remove(node);
-		}
-		else
-		{
-			unit.remove(ASTNodes.findParent(node, Statement.class).get());
+			if (node instanceof Statement)
+			{
+				unit.remove(node);
+			}
+			else
+			{
+				unit.remove(ASTNodes.findParent(node, Statement.class).get());
+			}
 		}
 	}
-	
+
 	/**
 	 * Adds a new inner class after a reference node. The reference node can be
 	 * a {@link FieldDeclaration} or a {@link MethodDeclaration}. If the reference node is not
@@ -55,22 +65,66 @@ public class SwingWorkerASTUtils {
 	 */
 	public static void addInnerClassAfter(@NonNull IRewriteCompilationUnit unit, @NonNull TypeDeclaration typeDeclaration, @NonNull ASTNode referenceNode )
 	{
-		if ( referenceNode instanceof FieldDeclaration )
+		synchronized(unit)
 		{
-			ASTNode currentClass = referenceNode.getParent();
+			if ( referenceNode instanceof FieldDeclaration )
+			{
+				ASTNode currentClass = referenceNode.getParent();
+				ListRewrite classBlock = unit.getListRewrite(currentClass, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
+				classBlock.insertAfter(typeDeclaration, referenceNode, null);
+				return;
+			}
+			Optional<MethodDeclaration> referenceMethod = ASTNodes.findParent( referenceNode, MethodDeclaration.class );
+			if (!referenceMethod.isPresent()) {
+				throw new IllegalArgumentException( SwingWorkerASTUtils.class.getName() + ": referenceNode must be a " +
+						"FieldDeclaration, a MethodDeclaration or a child of a MethodDeclaration" );
+			}
+			ASTNode currentClass = ASTNodes.findParent(referenceMethod.get(), ASTNode.class).get();
+		
 			ListRewrite classBlock = unit.getListRewrite(currentClass, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
-			classBlock.insertAfter(typeDeclaration, referenceNode, null);
-			return;
+			classBlock.insertAfter( typeDeclaration, referenceMethod.get(), null );
 		}
-		Optional<MethodDeclaration> referenceMethod = ASTNodes.findParent( referenceNode, MethodDeclaration.class );
-		if (!referenceMethod.isPresent()) {
-			throw new IllegalArgumentException( SwingWorkerASTUtils.class.getName() + ": referenceNode must be a " +
-					"FieldDeclaration, a MethodDeclaration or a child of a MethodDeclaration" );
+	}
+	
+	public static @NonNull SimpleName newSimpleName(@NonNull AST ast, @NonNull String identifier) {
+		synchronized(ast)
+		{
+			return ast.newSimpleName(identifier);
 		}
-		ASTNode currentClass = ASTNodes.findParent(referenceMethod.get(), ASTNode.class).get();
-		synchronized(unit) {
-		ListRewrite classBlock = unit.getListRewrite(currentClass, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
-		classBlock.insertAfter( typeDeclaration, referenceMethod.get(), null );
+	}
+	
+	public static ExpressionStatement newAssignment(@NonNull AST ast, @NonNull String variable, @NonNull String type) {
+		synchronized(ast)
+		{
+			Assignment newAssignment = ast.newAssignment();
+			newAssignment.setLeftHandSide(newSimpleName(ast, variable));
+			ClassInstanceCreation right = ast.newClassInstanceCreation();
+			right.setType(ast.newSimpleType(ast.newName(type)));
+			newAssignment.setRightHandSide(right);
+			return ast.newExpressionStatement(newAssignment);
+		}
+	}
+	
+	public static ClassInstanceCreation newClassInstanceCreation(@NonNull AST ast, @NonNull String className) {
+		synchronized(ast)
+		{
+			ClassInstanceCreation newClassInstanceCreation = ast.newClassInstanceCreation();
+			newClassInstanceCreation.setType(ast.newSimpleType(ast.newName(className)));
+			return newClassInstanceCreation;
+		}
+	}
+	
+	public static ASTNode copySubtree(@NonNull AST ast, @NonNull ASTNode node) {
+		synchronized(ast)
+		{
+			return ASTNode.copySubtree(ast, node);
+		}
+	}
+	
+	public static SimpleType newSimpleType(@NonNull AST ast, @NonNull String identifier) {
+		synchronized(ast)
+		{
+			return ast.newSimpleType(ast.newName(identifier));
 		}
 	}
 	
@@ -88,9 +142,10 @@ public class SwingWorkerASTUtils {
 	 */
 	public static void addMethodBefore(@NonNull IRewriteCompilationUnit unit, @NonNull MethodDeclaration methodDeclaration, @NonNull ASTNode referenceNode )
 	{
-		MethodDeclaration referenceMethod = ASTNodes.findParent(referenceNode, MethodDeclaration.class).get();
-		ASTNode currentClass = referenceMethod.getParent();
-		synchronized(unit) {
+		synchronized(unit)
+		{
+			MethodDeclaration referenceMethod = ASTNodes.findParent(referenceNode, MethodDeclaration.class).get();
+			ASTNode currentClass = referenceMethod.getParent();
 			ListRewrite classBlock = unit.getListRewrite(currentClass, TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
 			classBlock.insertBefore( methodDeclaration, referenceMethod, null );
 		}
@@ -107,8 +162,9 @@ public class SwingWorkerASTUtils {
 	 */
 	public static void addStatement(@NonNull IRewriteCompilationUnit unit, @NonNull Statement statement, @NonNull MethodDeclaration methodDeclaration )
 	{
-		Block body = methodDeclaration.getBody();
-		synchronized(unit) {
+		synchronized(unit)
+		{
+			Block body = methodDeclaration.getBody();
 			ListRewrite listRewrite = unit.getListRewrite( body, Block.STATEMENTS_PROPERTY );
 			listRewrite.insertLast( statement, null );
 		}
@@ -122,15 +178,13 @@ public class SwingWorkerASTUtils {
 	 * @param referenceStatement
 	 */
 	public static void addBefore(@NonNull IRewriteCompilationUnit unit, @NonNull ASTNode newElement, @NonNull Statement referenceStatement) 
-	{		
-		Block parentBlock = (Block) referenceStatement.getParent();		
-		synchronized(unit) {
+	{
+		synchronized(unit)
+		{
+			Block parentBlock = (Block) referenceStatement.getParent();		
 			ListRewrite statementsBlock = unit.getListRewrite(parentBlock, Block.STATEMENTS_PROPERTY);
-			statementsBlock.insertBefore(newElement, referenceStatement, null);	
+			statementsBlock.insertBefore(newElement, referenceStatement, null);
 		}
 	}
-		
-
-
 	
 }

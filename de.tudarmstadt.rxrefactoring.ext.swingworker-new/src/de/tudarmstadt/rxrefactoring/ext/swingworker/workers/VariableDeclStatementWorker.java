@@ -36,6 +36,7 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.TemplateUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.RefactoringVisitor;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.TemplateVisitor;
 
 /**
  * Author: Grebiel Jose Ifill Brito<br>
@@ -79,14 +80,21 @@ public class VariableDeclStatementWorker extends GeneralWorker
 					Log.info( getClass(), "METHOD=refactor - Refactoring variable name: " + icu.getElementName() );
 					SimpleName simpleName = fragment.getName();
 					String newIdentifier = RefactoringUtils.cleanSwingWorkerName( simpleName.getIdentifier() );
-					icu.replace(simpleName, ast.newSimpleName(newIdentifier));
+					synchronized(icu) 
+					{
+						icu.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newIdentifier));
+					}
 				}
 			} 
 			else if (initializer instanceof SimpleName)
 			{
 	            SimpleName assignedVarSimpleName = (SimpleName) initializer;
 		        String newAssignedVarName = RefactoringUtils.cleanSwingWorkerName((assignedVarSimpleName).getIdentifier());
-		        icu.replace(assignedVarSimpleName, ast.newSimpleName(newAssignedVarName));
+		        SimpleName newAssignedVar = SwingWorkerASTUtils.newSimpleName(ast, newAssignedVarName);
+		        synchronized(icu) 
+		        {
+					icu.replace(assignedVarSimpleName, newAssignedVar);
+		        }
 			}
 
             // change type
@@ -98,17 +106,25 @@ public class VariableDeclStatementWorker extends GeneralWorker
 
             if (ASTUtils.isClassOf(type, SwingWorkerInfo.getBinaryName()))
             {
-                icu.addImport( "de.tudarmstadt.stg.rx.swingworker.SWSubscriber" );
-                icu.replace(type, ast.newSimpleType(ast.newName("SWSubscriber")));
+                synchronized(icu) 
+                {
+                	icu.addImport( "de.tudarmstadt.stg.rx.swingworker.SWSubscriber" );
+                	SimpleType newType = SwingWorkerASTUtils.newSimpleType(ast, "SWSubscriber");
+					icu.replace(type, newType);
+                }
             }
 
         	String newVarName = RefactoringUtils.cleanSwingWorkerName(fragment.getName().getIdentifier());
-       		icu.replace(fragment.getName(), ast.newSimpleName(newVarName));
+        	synchronized(icu) 
+        	{
+				icu.replace(fragment.getName(), SwingWorkerASTUtils.newSimpleName(ast, newVarName));
+        	}
 
 			// Add changes to the multiple compilation units write object
     		Log.info( getClass(), "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );
 			
 			summary.addCorrect("VariableDeclarations");
+			
 		}
 
 		return null;
@@ -139,7 +155,6 @@ public class VariableDeclStatementWorker extends GeneralWorker
 			VariableDeclarationStatement varDeclStatement,
 			VariableDeclarationFragment fragment )
 	{
-		String icuName = icu.getElementName();
 		SimpleName swingWorkerName = fragment.getName();
 		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.getIdentifier() );
 		SWSubscriberModel subscriberDto = createSWSubscriberDto( rxObserverName, icu, refactoringVisitor );
@@ -150,13 +165,13 @@ public class VariableDeclStatementWorker extends GeneralWorker
 
 		String subscriberString = TemplateUtils.processTemplate( subscriberTemplate, subscriberData );
 		AST ast = varDeclStatement.getAST();
-		TypeDeclaration typeDeclaration = ASTNodeFactory.createTypeDeclarationFromText( ast, subscriberString );
-
-		Statements.addStatementBefore(icu, Statements.enclosingStatement(typeDeclaration), varDeclStatement);
+		TypeDeclaration typeDeclaration = TemplateVisitor.createTypeDeclarationFromText( ast, subscriberString );	
+		
+		SwingWorkerASTUtils.addBefore(icu, typeDeclaration, varDeclStatement);
 		
 		String newVarDeclStatementString = "SWSubscriber<" + subscriberDto.getResultType() + ", " + subscriberDto.getProcessType() + "> " +
 				subscriberDto.getSubscriberName() + " = new " + subscriberDto.getClassName() + "()";
-		Statement newVarDeclStatement = ASTNodeFactory.createSingleStatementFromText( ast, newVarDeclStatementString );
+		Statement newVarDeclStatement = TemplateVisitor.createSingleStatementFromText( ast, newVarDeclStatementString );
 		Statements.addStatementBefore(icu, newVarDeclStatement, varDeclStatement);
 		SwingWorkerASTUtils.removeStatement(icu, varDeclStatement);
 	}
@@ -167,7 +182,6 @@ public class VariableDeclStatementWorker extends GeneralWorker
 			VariableDeclarationStatement varDeclStatement,
 			VariableDeclarationFragment fragment )
 	{
-		String icuName = icu.getElementName();
 		RxObservableModel observableDto = createObservableDto( icu, refactoringVisitor );
 		/*
 		 * Sometimes doInbackground Block needs to be refactored futher for handling java.util.concurrent.ExecutorService.submit() method calls 
@@ -182,7 +196,7 @@ public class VariableDeclStatementWorker extends GeneralWorker
 		String observableString = TemplateUtils.processTemplate( observableTemplate, observableData );
 
 		AST ast = varDeclStatement.getAST();
-		Statement observableStatement = ASTNodeFactory.createSingleStatementFromText( ast, observableString );
+		Statement observableStatement = TemplateVisitor.createSingleStatementFromText( ast, observableString );
 
 		Statements.addStatementBefore(icu, observableStatement, varDeclStatement);
 		
@@ -196,7 +210,7 @@ public class VariableDeclStatementWorker extends GeneralWorker
 		String observerTemplate = "observer.ftl";
 
 		String observerString = TemplateUtils.processTemplate( observerTemplate, observerData );
-		Statement observerStatement = ASTNodeFactory.createSingleStatementFromText( ast, observerString );
+		Statement observerStatement = TemplateVisitor.createSingleStatementFromText( ast, observerString );
 		Statements.addStatementBefore(icu, observerStatement, varDeclStatement);
 		SwingWorkerASTUtils.removeStatement(icu, varDeclStatement);
 	}
@@ -209,7 +223,7 @@ public class VariableDeclStatementWorker extends GeneralWorker
 		for(int i=0;i<list.size();i++) {
 				Statement stmnt = list.get(i);
 				if(stmnt instanceof TryStatement && stmnt.toString().contains("executorSC.submit(singleRun)")) {
-					stmnt = ASTNodeFactory.createSingleStatementFromText(doInBgBlock.getAST(), stmnt.toString().replace("executorSC.submit(singleRun)", "singleRun.executeObservable()"));
+					stmnt = TemplateVisitor.createSingleStatementFromText(doInBgBlock.getAST(), stmnt.toString().replace("executorSC.submit(singleRun)", "singleRun.executeObservable()"));
 				}
 				sb.append(stmnt.toString() + System.lineSeparator());
 		}

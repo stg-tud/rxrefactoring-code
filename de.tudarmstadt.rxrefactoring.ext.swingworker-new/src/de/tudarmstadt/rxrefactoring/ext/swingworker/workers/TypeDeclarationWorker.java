@@ -18,7 +18,6 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.SimpleType;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
@@ -39,6 +38,7 @@ import de.tudarmstadt.rxrefactoring.core.utils.Statements;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.TemplateUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.RefactoringVisitor;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.TemplateVisitor;
 /**
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/28/2016<br>
@@ -59,13 +59,11 @@ public class TypeDeclarationWorker extends GeneralWorker
 			IRewriteCompilationUnit icu = typeDeclEntry.getKey();
 			TypeDeclaration typeDeclaration = typeDeclEntry.getValue();
 			
-			AST ast = typeDeclaration.getAST();
-
 			if ( !ASTUtils.isSubclassOf( typeDeclaration, SwingWorkerInfo.getBinaryName(), true ) )
 			{
 				continue;
 			}
-
+			
 			// Collect details about the SwingWorker
 			Log.info( getClass(), "METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName() );
 			RefactoringVisitor refactoringVisitor = new RefactoringVisitor();
@@ -78,7 +76,6 @@ public class TypeDeclarationWorker extends GeneralWorker
 			
 			summary.addCorrect("TypeDeclarations");
 		}
-
 		return null;
 	}
 
@@ -102,14 +99,18 @@ public class TypeDeclarationWorker extends GeneralWorker
 			superclassType = parameterizedType.getType();
 
 		}
-		icu.replace(superclassType, icu.getAST().newSimpleType(icu.getAST().newName("SWSubscriber")));
+		SimpleType newType = SwingWorkerASTUtils.newSimpleType(icu.getAST(), "SWSubscriber");
+		synchronized(icu) 
+		{
+			icu.replace(superclassType, newType);
+		}
+		
 		AST ast = typeDeclaration.getAST();
 		addOrUpdateConstructor(ast, icu, refactoringVisitor, typeDeclaration, resultType);
 
 		Block doInBackgroundBlock = refactoringVisitor.getDoInBackgroundBlock();
 		if ( doInBackgroundBlock != null )
 		{
-			String icuName = icu.getElementName();
 			RxObservableModel observableDto = createObservableDto( icu, refactoringVisitor );
 			observableDto.setProcessType( processType );
 			observableDto.setResultType( resultType );
@@ -119,13 +120,15 @@ public class TypeDeclarationWorker extends GeneralWorker
 			String observableTemplate = "getRxObservable.ftl";
 
 			String observableString = TemplateUtils.processTemplate( observableTemplate, observableData );
-			MethodDeclaration observableGetMethod = ASTNodeFactory.createMethodFromText( ast, observableString );
+			MethodDeclaration observableGetMethod = TemplateVisitor.createMethodFromText( ast, observableString );
 			
 			SwingWorkerASTUtils.addMethodBefore( icu, observableGetMethod, doInBackgroundBlock );
 
 			MethodDeclaration doInBackgroundDecl = ASTNodes.findParent( doInBackgroundBlock, MethodDeclaration.class ).get();
-			//TODO
-			icu.remove( doInBackgroundDecl );
+			synchronized(icu)
+			{
+				icu.remove( doInBackgroundDecl );
+			}
 		}
 		methodInvocCheck(ast, icu, refactoringVisitor, typeDeclaration);
 	   /*
@@ -207,8 +210,11 @@ public class TypeDeclarationWorker extends GeneralWorker
 			if(!(refactoringVisitor.getMethodsofsubscriber().contains(methodInvocation.getName().getIdentifier()))) {
 			//if(!(refactoringVisitor.getMethodsofsubscriber().get(methodInvocation.getName().getIdentifier()) == null)) {
 				String methodNameString = className + ".this." + exprstmnt;
-				Statement newStatement = ASTNodeFactory.createSingleStatementFromText(ast, methodNameString);
-				icu.replace(exprstmnt, newStatement);
+				Statement newStatement = TemplateVisitor.createSingleStatementFromText(ast, methodNameString);
+				synchronized(icu) 
+				{
+					icu.replace(exprstmnt, newStatement);
+				}
 			}
 		}
 	}
@@ -267,7 +273,7 @@ public class TypeDeclarationWorker extends GeneralWorker
 				if(exprstmnt.getExpression() instanceof MethodInvocation) {
 					MethodInvocation methodInvocation = (MethodInvocation) exprstmnt.getExpression();
 					if(exprstmnt != null && exprstmnt.toString().trim().equals("executor.execute(worker);")) {
-						Statement newStatement = ASTNodeFactory.createSingleStatementFromText(ast, "rxObserver.executeObservable();");
+						Statement newStatement = TemplateVisitor.createSingleStatementFromText(ast, "rxObserver.executeObservable();");
 						Statements.addStatementBefore(icu, exprstmnt, newStatement);
 					}
 				}
@@ -289,7 +295,7 @@ public class TypeDeclarationWorker extends GeneralWorker
 				// add constructor
 				String className = typeDeclaration.getName().toString();
 				String constructorString = className + "() { setObservable(getRxObservable()); }";
-				MethodDeclaration newConstructor = ASTNodeFactory.createMethodFromText( ast, constructorString );
+				MethodDeclaration newConstructor = TemplateVisitor.createMethodFromText( ast, constructorString );
 				newConstructor.setConstructor( true );
 
 				List<MethodDeclaration> allMethodDeclarations = refactoringVisitor.getAllMethodDeclarations();
@@ -306,7 +312,7 @@ public class TypeDeclarationWorker extends GeneralWorker
 			} else {
 				//Abstract class : apply getObservable method in abstract class
 				String doInBackgroundBlockStr = "abstract " + resultType + " getRxObservable() throws Exception;";
-				MethodDeclaration doInBackgroundBlock = ASTNodeFactory.createMethodFromText( ast, doInBackgroundBlockStr );
+				MethodDeclaration doInBackgroundBlock = TemplateVisitor.createMethodFromText( ast, doInBackgroundBlockStr );
 				//Add method
 				icu.getListRewrite(typeDeclaration, TypeDeclaration.BODY_DECLARATIONS_PROPERTY).insertFirst( constructor, null );
 				
@@ -334,7 +340,10 @@ public class TypeDeclarationWorker extends GeneralWorker
 											if(childlist.get(j) instanceof MethodDeclaration) {
 												MethodDeclaration md = (MethodDeclaration)childlist.get(j);
 												if(md.getName() != null && md.getName().getIdentifier().equals("doInBackground")) {
-													icu.replace(md.getName(), ast.newSimpleName("getRxObservable"));
+													synchronized(icu) 
+													{
+														icu.replace(md.getName(), SwingWorkerASTUtils.newSimpleName(ast, "getRxObservable"));
+													}
 												}
 											}
 										}
@@ -374,7 +383,10 @@ public class TypeDeclarationWorker extends GeneralWorker
 															if(childlist.get(k) instanceof MethodDeclaration) {
 																MethodDeclaration mdInner = (MethodDeclaration)childlist.get(k);
 																if(mdInner.getName() != null && mdInner.getName().getIdentifier().equals("doInBackground")) {
-																	icu.replace(mdInner.getName(), ast.newSimpleName("getRxObservable"));
+																	synchronized(icu) 
+																	{
+																		icu.replace(mdInner.getName(), SwingWorkerASTUtils.newSimpleName(ast, "getRxObservable"));
+																	}
 																}
 															}
 														}
@@ -405,12 +417,12 @@ public class TypeDeclarationWorker extends GeneralWorker
 			 */
 			if(typeDeclaration.modifiers() != null && typeDeclaration.modifiers().toString().contains("abstract") && typeDeclaration.getName().toString().equals("NamedSwingWorker")) {
 				String doInBackgroundBlockStr = "protected abstract " + resultType + " getRxObservable() throws Exception;";
-				MethodDeclaration doInBackgroundBlock = ASTNodeFactory.createMethodFromText( ast, doInBackgroundBlockStr );
+				MethodDeclaration doInBackgroundBlock = TemplateVisitor.createMethodFromText( ast, doInBackgroundBlockStr );
 				//Add method
 				icu.getListRewrite(typeDeclaration, TypeDeclaration.BODY_DECLARATIONS_PROPERTY).insertFirst(doInBackgroundBlock, null );
 			} else {
 				// add statement to constructor
-				Statement setObservableStatement = ASTNodeFactory.createSingleStatementFromText( ast, "setObservable(getRxObservable())" );
+				Statement setObservableStatement = TemplateVisitor.createSingleStatementFromText( ast, "setObservable(getRxObservable())" );
 				SwingWorkerASTUtils.addStatement(icu, setObservableStatement, constructor );
 			}
 		}

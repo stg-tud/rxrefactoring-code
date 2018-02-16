@@ -1,7 +1,6 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -21,6 +20,7 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.TemplateUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.RefactoringVisitor;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.TemplateVisitor;
 
 /**
  * Author: Grebiel Jose Ifill Brito<br>
@@ -42,31 +42,33 @@ public class FieldDeclarationWorker extends GeneralWorker
 		{
 			IRewriteCompilationUnit icu = fieldDeclEntry.getKey();
 			FieldDeclaration fieldDeclaration = fieldDeclEntry.getValue();
-			
-			// Get ast and writer
+		
 			AST ast = fieldDeclaration.getAST();
-
+			
 			Log.info( getClass(), "METHOD=refactor - Changing type: " + icu.getElementName() );
 			Type type = fieldDeclaration.getType();
 			if ( type instanceof ParameterizedType )
-			{
+			{ 
 				type = ( (ParameterizedType) type ).getType();
 			}
 			if ( ASTUtils.isClassOf( type, SwingWorkerInfo.getBinaryName() ) )
 			{
-				System.out.println("++++++++++++++++");
-				System.out.println("FieldDeclarationWorker: refactor");
-				System.out.println(fieldDeclaration.toString());
-				icu.replace(type,ast.newSimpleType (ast.newName("SWSubscriber")));
-				System.out.println("++++++++++++++++");
+				SimpleType newType = SwingWorkerASTUtils.newSimpleType(ast, "SWSubscriber");
+				synchronized(icu) 
+				{
+					icu.replace(type, newType);
+				}
 			}
 
 			Log.info( getClass(), "METHOD=refactor - Changing field name: " + icu.getElementName() );
 			VariableDeclarationFragment varDeclFrag = (VariableDeclarationFragment) fieldDeclaration.fragments().get( 0 );
 			String oldIdentifier = varDeclFrag.getName().getIdentifier();
-			icu.replace(varDeclFrag.getName(), ast.newSimpleName(RefactoringUtils.cleanSwingWorkerName( oldIdentifier )));
-			icu.addImport( "de.tudarmstadt.stg.rx.swingworker.SWSubscriber" );
-
+			synchronized(icu) 
+			{
+				icu.replace(varDeclFrag.getName(), SwingWorkerASTUtils.newSimpleName(ast, RefactoringUtils.cleanSwingWorkerName( oldIdentifier )));
+				icu.addImport( "de.tudarmstadt.stg.rx.swingworker.SWSubscriber" );
+			}
+			
 			Expression initializer = varDeclFrag.getInitializer();
 			if ( initializer != null && initializer instanceof ClassInstanceCreation )
 			{
@@ -98,7 +100,6 @@ public class FieldDeclarationWorker extends GeneralWorker
 		removeSuperInvocations( refactoringVisitor );
 		updateImports(icu);
 
-		String icuName = icu.getElementName();
 		VariableDeclarationFragment varDeclFrag = (VariableDeclarationFragment) fieldDeclaration.fragments().get( 0 );
 		String oldIdentifier = varDeclFrag.getName().getIdentifier();
 		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( oldIdentifier );
@@ -110,15 +111,17 @@ public class FieldDeclarationWorker extends GeneralWorker
 
 		String subscriberString = TemplateUtils.processTemplate( subscriberTemplate, subscriberData );
 		AST ast = fieldDeclaration.getAST();
-		TypeDeclaration typeDeclaration = ASTNodeFactory.createTypeDeclarationFromText(ast, subscriberString);
+		TypeDeclaration typeDeclaration = TemplateVisitor.createTypeDeclarationFromText(ast, subscriberString);
 
 		SwingWorkerASTUtils.addInnerClassAfter(icu, typeDeclaration, fieldDeclaration);
 
-		ClassInstanceCreation newClassInstanceCreation = ast.newClassInstanceCreation();
-		newClassInstanceCreation.setType(ast.newSimpleType(ast.newName(subscriberDto.getClassName())));
-
+		ClassInstanceCreation newClassInstanceCreation = SwingWorkerASTUtils.newClassInstanceCreation(ast, subscriberDto.getClassName());
+		
 		ClassInstanceCreation oldClassInstanceCreation = (ClassInstanceCreation) varDeclFrag.getInitializer();
-		icu.replace(oldClassInstanceCreation, newClassInstanceCreation);
+		synchronized(icu) 
+		{
+			icu.replace(oldClassInstanceCreation, newClassInstanceCreation);
+		}
 	}
 
 }

@@ -105,7 +105,7 @@ public final class RefactoringUtils
 
 		return sb.toString();
 	}
-
+	
 	/**
 	 * Uses {@link SwingWorkerInfo} to determine the method name to be used
 	 * after refactoring. If no name for methodName is found in {@link SwingWorkerInfo},

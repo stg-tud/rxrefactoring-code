@@ -41,10 +41,13 @@ public abstract class GeneralWorker implements IWorker<RxCollector, Void>
 
 	protected void updateImports(IRewriteCompilationUnit unit)
 	{
+		synchronized(unit)
+		{
 		unit.addImport("rx.Emitter");
 		unit.addImport("de.tudarmstadt.stg.rx.swingworker.SWEmitter");
 		unit.addImport("de.tudarmstadt.stg.rx.swingworker.SWSubscriber");
 		unit.addImport("de.tudarmstadt.stg.rx.swingworker.SWPackage");
+		}
 	}
 
 	protected RxObservableModel createObservableDto(IRewriteCompilationUnit icuName, RefactoringVisitor refactoringVisitor )
@@ -72,7 +75,6 @@ public abstract class GeneralWorker implements IWorker<RxCollector, Void>
 		if (refactoringVisitor.getDoInBackgroundBlock() != null) 
 		{
 			TypeDeclaration typeDeclaration = ASTNodes.findParent( refactoringVisitor.getDoInBackgroundBlock(), TypeDeclaration.class ).get();
-			//TODO
 			String block = refactoringVisitor.getDoInBackgroundBlock().toString();
 			String className = typeDeclaration.getName().getIdentifier();
 			observableDto.setDoInBackgroundBlock( specifyClassOfKeywordThis( block, className ) );
@@ -122,7 +124,6 @@ public abstract class GeneralWorker implements IWorker<RxCollector, Void>
 		for ( SuperMethodInvocation methodInvocation : refactoringVisitor.getSuperMethodInvocationsToRemove() )
 		{
 			Statement statement = ASTNodes.findParent( methodInvocation, Statement.class ).get();
-			//TODO
 			statement.delete();
 		}
 	}

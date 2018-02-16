@@ -1,6 +1,5 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -20,6 +19,7 @@ import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.TemplateVisitor;
 
 /**
  * Author: Grebiel Jose Ifill Brito<br>
@@ -41,12 +41,10 @@ public class SimpleNameWorker implements IWorker<RxCollector, Void>
 			IRewriteCompilationUnit icu = simpleNameEntry.getKey();
 			SimpleName simpleName = simpleNameEntry.getValue();
 			
-			// Get ast and writer
 			AST ast = simpleName.getAST();
 
 			String newIdentifier = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
 			Optional<MethodInvocation> methodInvocation = ASTNodes.findParent( simpleName, MethodInvocation.class );
-			//TODO
 			if ( methodInvocation.isPresent() )
 			{
 				ITypeBinding declaringClass = methodInvocation.get().resolveMethodBinding().getDeclaringClass();
@@ -55,16 +53,19 @@ public class SimpleNameWorker implements IWorker<RxCollector, Void>
 				if ( executor && "submit".equals( methodInvocation.get().getName().toString() ) )
 				{
 					String executeObservableString = newIdentifier + ".executeObservable()";
-					Statement executeObservableStatement = ASTNodeFactory.createSingleStatementFromText(ast, executeObservableString);
+					Statement executeObservableStatement = TemplateVisitor.createSingleStatementFromText(ast, executeObservableString);
 					Statement referenceStatement = ASTNodes.findParent(simpleName, Statement.class).get();
-					//TODO
 					Statements.addStatementBefore(icu, executeObservableStatement, referenceStatement);
 					SwingWorkerASTUtils.removeStatement(icu, simpleName);
 				}
 			}
 			Log.info( getClass(), "METHOD=refactor - Refactoring simple name in: " + icu.getElementName() );
-			icu.replace(simpleName, ast.newSimpleName(newIdentifier));
-
+			SimpleName newName = SwingWorkerASTUtils.newSimpleName(ast, newIdentifier);
+			synchronized(icu) 
+			{
+				icu.replace(simpleName, newName);
+			}
+			
 			// Add changes to the multiple compilation units write object
 			Log.info( getClass(), "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );
 			

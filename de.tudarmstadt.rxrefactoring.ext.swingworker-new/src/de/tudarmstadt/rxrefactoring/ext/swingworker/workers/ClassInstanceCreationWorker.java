@@ -35,6 +35,7 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.TemplateUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.RefactoringVisitor;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.TemplateVisitor;
 
 /**
  * Author: Grebiel Jose Ifill Brito<br>
@@ -57,14 +58,11 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 		{
 			IRewriteCompilationUnit icu = classInsCreationEntry.getKey();
 			ClassInstanceCreation classInstanceCreation = classInsCreationEntry.getValue();
-
 			if ( !isRelevant( classInstanceCreation ) )
 			{
 				continue;
 			}
-
-			AST ast = classInstanceCreation.getAST();
-
+			
 			// Collect details about the SwingWorker
 			Log.info( getClass(), "METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName() );
 			RefactoringVisitor refactoringVisitor = new RefactoringVisitor();
@@ -85,13 +83,10 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 	private boolean isRelevant( ClassInstanceCreation classInstanceCreation )
 	{
 		Optional<Assignment> assignmentParent = ASTNodes.findParent( classInstanceCreation, Assignment.class );
-		//TODO
 		Optional<VariableDeclarationStatement> varDeclParent = ASTNodes.findParent( classInstanceCreation, VariableDeclarationStatement.class );
-		//TODO
 		Optional<FieldDeclaration> fieldDeclParent = ASTNodes.findParent( classInstanceCreation, FieldDeclaration.class );
-		//TODO
 		
-		// if any is not null, then another worker handles this case
+		// if any is present, then another worker handles this case
 		return (!assignmentParent.isPresent() && !varDeclParent.isPresent() && !fieldDeclParent.isPresent() );
 	}
 
@@ -102,7 +97,6 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 	{
 		// Check if the class instance creation corresponds to a subclass of SwingWorker
 		Optional<MethodInvocation> methodInvocation = ASTNodes.findParent( classInstanceCreation, MethodInvocation.class );
-		//TODO
 		if ( methodInvocation.isPresent() && methodInvocation.get().getExpression() instanceof ClassInstanceCreation )
 		{
 			if ( ASTUtils.isSubclassOf( classInstanceCreation, SwingWorkerInfo.getBinaryName(), false ) )
@@ -117,7 +111,10 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 						if(childlist.get(k) instanceof MethodDeclaration) {
 							MethodDeclaration mdInner = (MethodDeclaration)childlist.get(k);
 							if(mdInner.getName() != null && mdInner.getName().getIdentifier().equals("doInBackground")) {
-								icu.replace(mdInner.getName(), icu.getAST().newSimpleName("getRxObservable"));
+								synchronized(icu) 
+								{
+									icu.replace(mdInner.getName(), SwingWorkerASTUtils.newSimpleName(icu.getAST(), "getRxObservable"));
+								}
 							}
 						}
 					}
@@ -125,7 +122,10 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 				// Refactor only the method name
 				SimpleName methodInvocationName = methodInvocation.get().getName();
 				String newMethodName = RefactoringUtils.getNewMethodName( methodInvocationName.getIdentifier() );
-				icu.replace(methodInvocationName, icu.getAST().newSimpleName(newMethodName));
+				synchronized(icu) 
+				{
+					icu.replace(methodInvocationName, SwingWorkerASTUtils.newSimpleName(icu.getAST(), newMethodName));
+				}
 				return;
 			}
 		}
@@ -148,7 +148,6 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 			RefactoringVisitor refactoringVisitor,
 			ClassInstanceCreation classInstanceCreation )
 	{
-		String icuName = icu.getElementName();
 		String rxSubscriberName = "rxSubscriber";
 		SWSubscriberModel subscriberDto = createSWSubscriberDto( rxSubscriberName, icu, refactoringVisitor );
 
@@ -158,25 +157,24 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 
 		String subscriberString = TemplateUtils.processTemplate( subscriberTemplate, subscriberData );
 		AST ast = classInstanceCreation.getAST();
-		TypeDeclaration typeDeclaration = ASTNodeFactory.createTypeDeclarationFromText( ast, subscriberString );
+		TypeDeclaration typeDeclaration = TemplateVisitor.createTypeDeclarationFromText( ast, subscriberString );
 
 		Optional<Statement> referenceStatement = ASTNodes.findParent( classInstanceCreation, Statement.class );
-		//TODO
-		Statements.addStatementBefore(icu, Statements.enclosingStatement(typeDeclaration), referenceStatement.get());
+		
+		SwingWorkerASTUtils.addBefore(icu, typeDeclaration, referenceStatement.get());
 
 		Optional<MethodInvocation> methodInvocation = ASTNodes.findParent( classInstanceCreation, MethodInvocation.class );
-		//TODO
 		if ( methodInvocation.isPresent())
 		{
 			String invocation = getInvocationWithArguments( methodInvocation.get() );
 			String newInstanceCreationString = "new " + subscriberDto.getClassName() + "()." + invocation;
-			Statement newInstanceCreation = ASTNodeFactory.createSingleStatementFromText( ast, newInstanceCreationString );
+			Statement newInstanceCreation = TemplateVisitor.createSingleStatementFromText( ast, newInstanceCreationString );
 			Statements.addStatementBefore(icu, newInstanceCreation, referenceStatement.get());
 		}
 		else
 		{
 			String newInstanceCreationString = "new " + subscriberDto.getClassName() + "()";
-			Statement newInstanceCreation = ASTNodeFactory.createSingleStatementFromText( ast, newInstanceCreationString );
+			Statement newInstanceCreation = TemplateVisitor.createSingleStatementFromText( ast, newInstanceCreationString );
 			Statements.addStatementBefore(icu, newInstanceCreation, referenceStatement.get());
 		}
 
@@ -188,7 +186,6 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 			RefactoringVisitor refactoringVisitor,
 			ClassInstanceCreation classInstanceCreation )
 	{
-		String icuName = icu.getElementName();
 		RxObservableModel observableDto = createObservableDto( icu, refactoringVisitor );
 
 		Map<String, Object> observableData = new HashMap<>();
@@ -198,10 +195,10 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 		String observableString = TemplateUtils.processTemplate( observableTemplate, observableData );
 
 		AST ast = classInstanceCreation.getAST();
-		Statement observableStatement = ASTNodeFactory.createSingleStatementFromText( ast, observableString );
-
+		
+		Statement observableStatement = TemplateVisitor.createSingleStatementFromText( ast, observableString );
+		
 		Statement referenceStatement = ASTNodes.findParent( classInstanceCreation, Statement.class ).get();
-		//TODO
 		Statements.addStatementBefore(icu, observableStatement, referenceStatement);
 
 		RxObserverModel subscriberDto = createObserverDto( null, refactoringVisitor, observableDto );
@@ -213,7 +210,6 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 		String observerString = TemplateUtils.processTemplate( observerTemplate, observerData );
 
 		Optional<MethodInvocation> methodInvocation = ASTNodes.findParent( classInstanceCreation, MethodInvocation.class );
-		//TODO
 		if ( methodInvocation.isPresent())
 		{
 			String invocation = getInvocationWithArguments( methodInvocation.get() );
@@ -226,7 +222,7 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 			observerString = "return " + observerString;
 		}
 
-		Statement observerStatement = ASTNodeFactory.createSingleStatementFromText( ast, observerString );
+		Statement observerStatement = TemplateVisitor.createSingleStatementFromText( ast, observerString );
 		Statements.addStatementBefore(icu, observerStatement, referenceStatement);
 
 		SwingWorkerASTUtils.removeStatement(icu, classInstanceCreation);
@@ -241,7 +237,6 @@ public class ClassInstanceCreationWorker extends GeneralWorker
 		String replacement = newMethodName + "(";
 
 		String statement = ASTNodes.findParent( methodInvocation, Statement.class ).get().toString();
-		//TODO
 		String statementUpdated = statement.replace( target, replacement );
 		return statementUpdated.substring( statementUpdated.indexOf( replacement ) );
 	}
