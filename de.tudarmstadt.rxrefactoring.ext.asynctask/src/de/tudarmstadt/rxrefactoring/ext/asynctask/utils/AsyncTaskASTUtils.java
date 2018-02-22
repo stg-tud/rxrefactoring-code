@@ -5,8 +5,10 @@ import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IControlFlowGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement.ProgramGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
-import de.tudarmstadt.rxrefactoring.core.analysis.impl.UseDefAnalysis;
-import de.tudarmstadt.rxrefactoring.core.analysis.impl.UseDefAnalysis.UseDefResult;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.OldUseDefAnalysis;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.OldUseDefAnalysis.UseDefResult;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDefAnalysis;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
@@ -221,23 +223,23 @@ public class AsyncTaskASTUtils {
 //			return false;
 //		}
 
-		ASTNode declarationNode = asyncTask.getDeclaration();
-		if (declarationNode instanceof AnonymousClassDeclaration) {
-			Assignment assignment = ASTNodes.findParent(declarationNode, Assignment.class).orElse(null);
-			VariableDeclarationStatement parentStatement = ASTNodes.findParent(declarationNode, VariableDeclarationStatement.class).orElse(null);
-			Block parentBlock = ASTNodes.findParent(declarationNode, Block.class).orElse(null);
-			if (assignment != null && parentStatement != null && parentBlock != null) {
-				IControlFlowGraph<ASTNode> cfg = ProgramGraph.createFrom(parentBlock);
-				DataFlowAnalysis<ASTNode, UseDefResult> analysis = UseDefAnalysis.create(UseDefAnalysis.IS_ASYNC_TASK);
-				Map<ASTNode, UseDefResult> useDef = analysis.apply(cfg, analysis.mapExecutor());
-
-				for (SimpleName name : useDef.get(parentStatement).uses.get(assignment.getLeftHandSide().toString())) {
-					if (name.getIdentifier().equals("cancel")) {
-						return false;
-					}
-				}
-			}
-		}
+//		ASTNode declarationNode = asyncTask.getDeclaration();
+//		if (declarationNode instanceof AnonymousClassDeclaration) {
+//			Assignment assignment = ASTNodes.findParent(declarationNode, Assignment.class).orElse(null);
+//			VariableDeclarationStatement parentStatement = ASTNodes.findParent(declarationNode, VariableDeclarationStatement.class).orElse(null);
+//			Block parentBlock = ASTNodes.findParent(declarationNode, Block.class).orElse(null);
+//			if (assignment != null && parentStatement != null && parentBlock != null) {
+//				IControlFlowGraph<ASTNode> cfg = ProgramGraph.createFrom(parentBlock);
+//				UseDefAnalysis analysis = UseDefAnalysis.create();
+//				Map<ASTNode, UseDef> useDef = analysis.apply(cfg, analysis.mapExecutor());
+//
+//				for (SimpleName name : useDef.get(parentStatement).uses.get(assignment.getLeftHandSide().toString())) {
+//					if (name.getIdentifier().equals("cancel")) {
+//						return false;
+//					}
+//				}
+//			}
+//		}
 
 		return true;
 	}

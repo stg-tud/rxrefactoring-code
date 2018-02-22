@@ -25,7 +25,8 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
  * @author Kumar
  * @author Björn
  */
-public final class UseDefAnalysis {
+@Deprecated
+public final class OldUseDefAnalysis {
 
 	public static class UseDefResult {
 
@@ -78,7 +79,7 @@ public final class UseDefAnalysis {
 		return DataFlowAnalysis.create(new DataFlowStrategy(typeCheck), DataFlowAnalysis.traversalForwards());
 	}
 
-	private UseDefAnalysis() {
+	private OldUseDefAnalysis() {
 	}
 
 	private static <V> V getLast(Collection<V> collection) {
