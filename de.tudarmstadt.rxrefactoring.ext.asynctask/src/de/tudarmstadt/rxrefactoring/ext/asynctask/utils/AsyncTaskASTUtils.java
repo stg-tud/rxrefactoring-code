@@ -31,7 +31,7 @@ import org.eclipse.jdt.core.dom.ThisExpression;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
-import org.eclipse.recommenders.rcp.utils.ASTNodeUtils;
+
 
 
 /**
@@ -223,10 +223,9 @@ public class AsyncTaskASTUtils {
 
 		ASTNode declarationNode = asyncTask.getDeclaration();
 		if (declarationNode instanceof AnonymousClassDeclaration) {
-			Assignment assignment = ASTNodeUtils.getClosestParent(declarationNode, Assignment.class).orNull();
-			VariableDeclarationStatement parentStatement = ASTNodeUtils
-					.getClosestParent(declarationNode, VariableDeclarationStatement.class).orNull();
-			Block parentBlock = ASTNodeUtils.getClosestParent(declarationNode, Block.class).orNull();
+			Assignment assignment = ASTNodes.findParent(declarationNode, Assignment.class).orElse(null);
+			VariableDeclarationStatement parentStatement = ASTNodes.findParent(declarationNode, VariableDeclarationStatement.class).orElse(null);
+			Block parentBlock = ASTNodes.findParent(declarationNode, Block.class).orElse(null);
 			if (assignment != null && parentStatement != null && parentBlock != null) {
 				IControlFlowGraph<ASTNode> cfg = ProgramGraph.createFrom(parentBlock);
 				DataFlowAnalysis<ASTNode, UseDefResult> analysis = UseDefAnalysis.create(UseDefAnalysis.IS_ASYNC_TASK);
