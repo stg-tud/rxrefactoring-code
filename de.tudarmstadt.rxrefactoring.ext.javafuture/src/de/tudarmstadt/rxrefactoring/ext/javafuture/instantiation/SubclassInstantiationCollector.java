@@ -1,8 +1,10 @@
-package de.tudarmstadt.rxrefactoring.ext.asynctask.instantiation;
+package de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation;
 
 import java.util.Map.Entry;
 import java.util.Optional;
 
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -20,16 +22,16 @@ import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 
 /**
- * Description: Collects class instantiations of AsyncTask (the target class) subclasses and method invocations that 
- * return them<br>
+ * Description: Collects class instantiations, method invocations and class declarations for Future 
+ * subclasses declared in the package.<br>
  * Author: Camila Gonzalez<br>
- * Created: 01/03/2018
+ * Created: 24/02/2018
  */
 public class SubclassInstantiationCollector implements IWorker<InstantiationCollector, SubclassInstantiationCollector> {
 	
-	// TypeDeclarations of classes and interfaces that inherit directly or indirectly from the target class
+	// TypeDeclarations of classes and interfaces that inherit directly or indirectly from java.util.concurrent.Future
 	// and implement only allowed methods. If excludeExternal is set, only classes for which the entire 
-	// inheritance chain is in the package (except for the target class and java.lang.Object) are included.
+	// inheritance chain is in the package (except for java.util.concurrent.Future and java.lang.Object) are included.
 	public final Multimap<IRewriteCompilationUnit, TypeDeclaration> subclassDeclarations;
 	
 	// Map MethodDeclarations to ClassInstanceCreations of classes in subclassDeclarations if the result 
@@ -40,10 +42,14 @@ public class SubclassInstantiationCollector implements IWorker<InstantiationColl
 	// subclassDeclarations and do not discard the result.
 	public final Multimap<MethodDeclaration, MethodInvocation> methodInvReturnSubclass;
 	
+	// Map MethodDeclarations to MethodInvocations that return a java.util.Collection of a class in
+	// subclassDeclarations and do not discard the result.
+	public final Multimap<MethodDeclaration, MethodInvocation> methodInvReturnSubclassCollection;
+	
 	public Multimap<IRewriteCompilationUnit, TypeDeclaration> directSubclassDeclarations;
 	public Multimap<IRewriteCompilationUnit, TypeDeclaration> indirectSubclassDeclarations;
-	public Multimap<MethodDeclaration, ClassInstanceCreation> classInstanceCreations;
 	public Multimap<MethodDeclaration, MethodInvocation> methodInvReturnClass;
+	public Multimap<MethodDeclaration, MethodInvocation> methodInvReturnCollection;
 	
 	// Is set to true, only classes are included in subclassDeclarations that do not inherit from any class 
 	// outside the package except for the target class and java.lang.Object.
@@ -52,35 +58,37 @@ public class SubclassInstantiationCollector implements IWorker<InstantiationColl
 	private String binaryName;
 	private InstantiationCollector collector;
 	
-	public SubclassInstantiationCollector(boolean excludeExternal) 
-	{
-		subclassDeclarations = HashMultimap.create();
-		subclassInstanceCreations = HashMultimap.create();
-		methodInvReturnSubclass = HashMultimap.create();
-		this.excludeExternal = excludeExternal;
-	}
-	
 	public SubclassInstantiationCollector() 
 	{
 		subclassDeclarations = HashMultimap.create();
 		subclassInstanceCreations = HashMultimap.create();
 		methodInvReturnSubclass = HashMultimap.create();
+		methodInvReturnSubclassCollection = HashMultimap.create();
+	}
+	
+	public SubclassInstantiationCollector(boolean excludeExternal) 
+	{
+		subclassDeclarations = HashMultimap.create();
+		subclassInstanceCreations = HashMultimap.create();
+		methodInvReturnSubclass = HashMultimap.create();
+		methodInvReturnSubclassCollection = HashMultimap.create();
+		this.excludeExternal = excludeExternal;
 	}
 	
 	@Override
-	public SubclassInstantiationCollector refactor( IProjectUnits units,
-			 InstantiationCollector input,  WorkerSummary summary) throws Exception 
-	{
+	public @Nullable SubclassInstantiationCollector refactor(@NonNull IProjectUnits units,
+			@Nullable InstantiationCollector input, @NonNull WorkerSummary summary) throws Exception 
+	{		
 		binaryName = input.binaryName;
-		classInstanceCreations = input.classInstanceCreations;
 		declaredClassBindingNames = input.declaredClassBindingNames;
 		directSubclassDeclarations = input.directSubclassDeclarations;
 		indirectSubclassDeclarations = input.indirectSubclassDeclarations;
 		methodInvReturnClass = input.methodInvReturnClass;
+		methodInvReturnCollection = input.methodInvReturnCollection;
 		collector = input;
 		
-		for(Entry<IRewriteCompilationUnit, TypeDeclaration> e : directSubclassDeclarations.entries()) addToSubset(e);
-		for(Entry<IRewriteCompilationUnit, TypeDeclaration> e : indirectSubclassDeclarations.entries()) addToSubset(e);
+		for(Entry<IRewriteCompilationUnit, TypeDeclaration> e : input.directSubclassDeclarations.entries()) addToSubset(e);
+		for(Entry<IRewriteCompilationUnit, TypeDeclaration> e : input.indirectSubclassDeclarations.entries()) addToSubset(e);
 		
 		FutureInstantiationVisitor visitor = new FutureInstantiationVisitor();
 		units.accept(visitor);
@@ -90,9 +98,8 @@ public class SubclassInstantiationCollector implements IWorker<InstantiationColl
 		return this;
 	}
 	
-	
 	/**
-	 * Adds type declarations of target class subclasses to {@link SubclassInstantiationCollector#subclassDeclarations}.
+	 * Adds type declarations of subclasses to {@link SubclassInstantiationCollector#futureSubclassDeclarationsInternal}.
 	 */
 	private void addToSubset(Entry<IRewriteCompilationUnit, TypeDeclaration> e)
 	{
@@ -108,7 +115,9 @@ public class SubclassInstantiationCollector implements IWorker<InstantiationColl
 		} else subclassDeclarations.put(e.getKey(), e.getValue());
 	}
 	
-	
+	/**
+	 * Collects instance creations for {@link java.util.concurrent.Future} subclasses.
+	 */
 	public class FutureInstantiationVisitor extends UnitASTVisitor
 	{
 		/**
@@ -127,7 +136,7 @@ public class SubclassInstantiationCollector implements IWorker<InstantiationColl
 				subclassInstanceCreations.put(parent.get(), node);
 			}
 			return true;
-		}	
+		}
 		
 		/**
 		 * Collects method invocations that return instances of classes in {@link SubclassInstantiationCollector#subclassDeclarations} 
@@ -146,8 +155,19 @@ public class SubclassInstantiationCollector implements IWorker<InstantiationColl
 			{
 				methodInvReturnSubclass.put(parent.get(), node);
 			}
+			else 
+			{
+				if (collector.isCollectionOfClass(returnType) && collector.returnedValueUsed(node) && 
+						returnType.getTypeArguments().length>0 && 
+						subclassDeclarations.values().stream().anyMatch(d -> 
+						d.resolveBinding().getBinaryName().equals(returnType.getTypeArguments()[0].getBinaryName())))
+				{
+					methodInvReturnSubclassCollection.put(parent.get(), node);
+				}
+			}
 			return true;
 		}
+		
 	}
 
 }

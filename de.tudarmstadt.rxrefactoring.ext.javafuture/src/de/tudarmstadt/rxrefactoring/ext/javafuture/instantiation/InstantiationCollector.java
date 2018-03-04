@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.asynctask.instantiation;
+package de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,34 +30,35 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 
 /**
- * Description: Collects declarations of AsyncTask (the target class) subclasses, method invocations that 
- * return it and instance creations that create it (anonymously).<br>
+ * Description: Collects method invocations that return Futures and Future collections and 
+ * declarations of Future subclasses<br>
  * Author: Camila Gonzalez<br>
- * Created: 01/03/2018
+ * Created: 22/02/2018
  */
 public class InstantiationCollector implements IWorker<Void, InstantiationCollector> {
 	
-	// Direct subclasses of the target class that only implement allowed methods.
+	// Type declarations that implement java.util.concurrent.Future directly and only implement 
+	// allowed methods, if these are provided.
 	public final Multimap<IRewriteCompilationUnit, TypeDeclaration> directSubclassDeclarations;
 	
-	// All indirect subclasses of the target class that do not implement any method that is not 
-	// allowed or inherit from a class that does.
+	// Type declarations that implement java.util.concurrent.Future indirectly and only implement 
+	// allowed methods, if provided.
 	public final Multimap<IRewriteCompilationUnit, TypeDeclaration> indirectSubclassDeclarations;
 	
-	// Instance creations of the target class. Creation of anonymous classes come here.
-	public final Multimap<MethodDeclaration, ClassInstanceCreation> classInstanceCreations;
-	
-	// Method invocations that return an instance of the target class, and for which the returned value is
-	// not discarded (is used within a variable assignment, method invocation, class instance creation or return statement)
+	// Method invocations that return java.util.concurrent.Future, and for which the returned value is
+	// not discarded
 	public final Multimap<MethodDeclaration, MethodInvocation> methodInvReturnClass;
 	
-	// List of method names (e.g. "doInBackground") which, if set, define which methods can be implemented 
+	// Method invocations that return collections of java.util.concurrent.Future, and for which the returned 
+	// value is not discarded
+	public final Multimap<MethodDeclaration, MethodInvocation> methodInvReturnCollection;
+	
+	// List of method names (e.g. "get") which, if set, define which methods can be implemented 
 	// by a subclass for that subclass to be stored in subclassDeclarations. If the subclass declares any 
 	// additional methods or fields, or the parameter types are not valid, it is not stored.
 	private Optional<List<String>> implementableSubclassMethods = Optional.empty();
 	
-	// Name of class for which instantiations are searched.
-	public String binaryName = "android.os.AsyncTask";
+	public String binaryName = "java.util.concurrent.Future";
 	
 	final Multimap<String, String> declaredClassBindingNames;
 	
@@ -65,9 +66,9 @@ public class InstantiationCollector implements IWorker<Void, InstantiationCollec
 	{
 		directSubclassDeclarations = HashMultimap.create();
 		indirectSubclassDeclarations = HashMultimap.create();
-		classInstanceCreations = HashMultimap.create();
 		methodInvReturnClass = HashMultimap.create();
 		declaredClassBindingNames = HashMultimap.create();
+		methodInvReturnCollection = HashMultimap.create();
 	}
 	
 	public InstantiationCollector(List<String> implementableSubclassMethods) 
@@ -75,9 +76,9 @@ public class InstantiationCollector implements IWorker<Void, InstantiationCollec
 		this.implementableSubclassMethods = Optional.ofNullable(implementableSubclassMethods);
 		directSubclassDeclarations = HashMultimap.create();
 		indirectSubclassDeclarations = HashMultimap.create();
-		classInstanceCreations = HashMultimap.create();
 		methodInvReturnClass = HashMultimap.create();
 		declaredClassBindingNames = HashMultimap.create();
+		methodInvReturnCollection = HashMultimap.create();
 	}
 	
 	@Override
@@ -94,11 +95,9 @@ public class InstantiationCollector implements IWorker<Void, InstantiationCollec
 	public class FutureInstantiationVisitor extends UnitASTVisitor{
 		
 		/**
-		 * Collects class definitions in package that inherits from {@link InstantiationCollector#binaryName} directly 
-		 * in {@link InstantiationCollector#directSubclassDeclarations} and indirectly in 
-		 * {@link InstantiationCollector#indirectSubclassDeclarations}. The maps are disjoint.
-		 * If {@link InstantiationCollector#implementableSubclassMethods} is set, only methods from the target class
-		 * can be defined and these must match the parameter types of the superclass, otherwise the class declaration is ignored.
+		 * Collects class definitions in package that implement the {@link java.util.concurrent.Future} interface
+		 * directly in {@link InstantiationCollector#subclassesFuture} and indirectly in 
+		 * {@link InstantiationCollector#indirectSubclassesFuture}. The maps are disjoint.
 		 */
 		@Override
 		public boolean visit(TypeDeclaration node) 
@@ -162,9 +161,9 @@ public class InstantiationCollector implements IWorker<Void, InstantiationCollec
 		}
 		
 		/**
-		 * Collects method invocations that return instances of {@link InstantiationCollector#binaryName} in 
-		 * {@link InstantiationCollector#methodInvocationsReturnClass} if the result is not discarded (which is to
-		 * say if it is used within a variable assignment, method invocation, class instance creation or return statement).
+		 * Collects method invocations that return {@link java.util.concurrent.Future}s which is later used in 
+		 * {@link InstantiationCollector#methodInvocationsReturnFuture} and invocations that return collections of them
+		 * (implement {@link java.util.Collection}) in {@link InstantiationCollector#methodInvocationsReturnFutureColl}
 		 */
 		@Override
 		public boolean visit(MethodInvocation node) 
@@ -175,22 +174,36 @@ public class InstantiationCollector implements IWorker<Void, InstantiationCollec
 			if (!parent.isPresent() || returnType == null) return true;
 			if (binaryName.equals(returnType.getBinaryName()) && returnedValueUsed(node))
 				methodInvReturnClass.put(parent.get(), node);
+			else
+			{				
+				if (isCollectionOfClass(returnType) && returnedValueUsed(node) && 
+						returnType.getTypeArguments().length>0 && 
+						binaryName.equals(returnType.getTypeArguments()[0].getBinaryName()))
+				{
+					methodInvReturnCollection.put(parent.get(), node);
+				}
+			}			
 			return true;
 		}
-		
-		/**
-		 * Collects instance creations of {@link InstantiationCollector#binaryName} in if the result is not discarded. 
-		 */
-		@Override
-		public boolean visit(ClassInstanceCreation node) 
-		{	
-			ITypeBinding type = node.getType().resolveBinding();
-			Optional<MethodDeclaration> parent = ASTNodes.findParent(node, MethodDeclaration.class);
-			if (!parent.isPresent() || type == null) return true;
-			if (binaryName.equals(type.getBinaryName()) && returnedValueUsed(node))
-				classInstanceCreations.put(parent.get(), node);
-			return true;
+	}
+	
+	/**
+	 * @return true if the type is a collection.
+	 */
+	public boolean isCollectionOfClass(ITypeBinding type) 
+	{
+		LinkedList<ITypeBinding> interfaces = new LinkedList<ITypeBinding>();
+		Collections.addAll(interfaces, type.getInterfaces());
+		while (!interfaces.isEmpty()) 
+		{
+			ITypeBinding b = interfaces.removeFirst();
+			if ("java.util.Collection".equals(b.getBinaryName()))
+				{
+				return true;
+				}
+			Collections.addAll(interfaces, b.getInterfaces());
 		}
+		return false;
 	}
 	
 	/**
@@ -209,9 +222,7 @@ public class InstantiationCollector implements IWorker<Void, InstantiationCollec
 	}
 	
 	/**
-	 * Checks if the class only implements the allowed methods and declares no additional fields. The names
-	 * of the methods must be in {@link InstantiationCollector#implementableSubclassMethods}, and the parameter 
-	 * types must match those of a superclass declaration.
+	 * Checks if the class only implements the allowed methods and declares no additional fields.
 	 */
 	private boolean onlyAllowedMethods(ITypeBinding subclass, ITypeBinding superclass) 
 	{
@@ -242,5 +253,6 @@ public class InstantiationCollector implements IWorker<Void, InstantiationCollec
 		}
 		return true;
 	}
+
 }
 
