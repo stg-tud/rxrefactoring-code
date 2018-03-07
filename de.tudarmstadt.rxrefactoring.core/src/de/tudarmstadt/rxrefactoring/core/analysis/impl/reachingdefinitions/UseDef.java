@@ -31,6 +31,11 @@ public class UseDef {
 	Builder builder() {
 		return new Builder(this);
 	}
+	
+	@Override
+	public String toString() {
+		return "UseDef(" + map.toString() + ")";
+	}
 
 	static class Builder {
 
@@ -92,6 +97,11 @@ public class UseDef {
 
 		public ASTNode getOp() {
 			return op;
+		}
+		
+		@Override
+		public String toString() {
+			return "(" + name + ", " + op + ", " + kind + ")";
 		}
 	}
 }

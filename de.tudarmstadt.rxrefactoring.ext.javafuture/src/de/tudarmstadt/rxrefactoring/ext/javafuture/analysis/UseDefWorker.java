@@ -19,6 +19,8 @@ import de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement.ProgramGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.ReachingDefinition;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.ReachingDefinitionsAnalysis;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDefAnalysis;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 /**
@@ -27,18 +29,18 @@ import de.tudarmstadt.rxrefactoring.core.utils.Log;
  * @author mirko
  *
  */
-public class ReachingDefinitionsWorker implements IWorker<Void, Map<ASTNode, ReachingDefinition>> {
+public class UseDefWorker implements IWorker<Void, Map<ASTNode, UseDef>> {
 
 	
-	private static DataFlowAnalysis<ASTNode, ReachingDefinition> analysis = 
-			ReachingDefinitionsAnalysis.create();
+	private static DataFlowAnalysis<ASTNode, UseDef> analysis = 
+			UseDefAnalysis.create();
 			//DataFlowAnalysis.create(null, null);
 		
 	@Override
-	public @Nullable Map<ASTNode, ReachingDefinition> refactor(@NonNull IProjectUnits units, @Nullable Void input, @NonNull WorkerSummary summary)
+	public @Nullable Map<ASTNode, UseDef> refactor(@NonNull IProjectUnits units, @Nullable Void input, @NonNull WorkerSummary summary)
 			throws Exception {
 			
-		final Map<ASTNode, ReachingDefinition> result = Maps.newHashMap();
+		final Map<ASTNode, UseDef> result = Maps.newHashMap();
 		
 		units.accept(new UnitASTVisitor() {
 			public boolean visit(MethodDeclaration node) {
@@ -47,6 +49,8 @@ public class ReachingDefinitionsWorker implements IWorker<Void, Map<ASTNode, Rea
 				return false;
 			}
 		});		
+		
+		result.forEach((node, use) -> Log.info(getClass(), "Node: " + node + "\n" + "Use: " + use));
 		
 		return result;
 	}
