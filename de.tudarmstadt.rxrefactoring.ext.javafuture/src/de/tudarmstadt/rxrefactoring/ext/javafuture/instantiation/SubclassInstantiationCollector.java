@@ -1,10 +1,12 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation;
 
 import java.util.Map.Entry;
+import java.util.Map;
 import java.util.Optional;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -18,6 +20,7 @@ import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 
@@ -57,6 +60,7 @@ public class SubclassInstantiationCollector implements IWorker<InstantiationColl
 	private Multimap<String, String> declaredClassBindingNames;
 	private String binaryName;
 	private InstantiationCollector collector;
+	public Map<ASTNode, UseDef> analysis;
 	
 	public SubclassInstantiationCollector() 
 	{
@@ -78,7 +82,8 @@ public class SubclassInstantiationCollector implements IWorker<InstantiationColl
 	@Override
 	public @Nullable SubclassInstantiationCollector refactor(@NonNull IProjectUnits units,
 			@Nullable InstantiationCollector input, @NonNull WorkerSummary summary) throws Exception 
-	{		
+	{	
+		analysis = input.analysis;
 		binaryName = input.binaryName;
 		declaredClassBindingNames = input.declaredClassBindingNames;
 		directSubclassDeclarations = input.directSubclassDeclarations;

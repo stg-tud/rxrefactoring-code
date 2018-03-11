@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -27,6 +28,7 @@ import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 
 /**
@@ -35,7 +37,7 @@ import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
  * Author: Camila Gonzalez<br>
  * Created: 22/02/2018
  */
-public class InstantiationCollector implements IWorker<Void, InstantiationCollector> {
+public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, InstantiationCollector> {
 	
 	// Type declarations that implement java.util.concurrent.Future directly and only implement 
 	// allowed methods, if these are provided.
@@ -46,11 +48,11 @@ public class InstantiationCollector implements IWorker<Void, InstantiationCollec
 	public final Multimap<IRewriteCompilationUnit, TypeDeclaration> indirectSubclassDeclarations;
 	
 	// Method invocations that return java.util.concurrent.Future, and for which the returned value is
-	// not discarded
+	// not discarded.
 	public final Multimap<MethodDeclaration, MethodInvocation> methodInvReturnClass;
 	
 	// Method invocations that return collections of java.util.concurrent.Future, and for which the returned 
-	// value is not discarded
+	// value is not discarded.
 	public final Multimap<MethodDeclaration, MethodInvocation> methodInvReturnCollection;
 	
 	// List of method names (e.g. "get") which, if set, define which methods can be implemented 
@@ -61,6 +63,8 @@ public class InstantiationCollector implements IWorker<Void, InstantiationCollec
 	public String binaryName = "java.util.concurrent.Future";
 	
 	final Multimap<String, String> declaredClassBindingNames;
+	
+	public Map<ASTNode, UseDef> analysis;
 	
 	public InstantiationCollector() 
 	{
@@ -82,9 +86,11 @@ public class InstantiationCollector implements IWorker<Void, InstantiationCollec
 	}
 	
 	@Override
-	public InstantiationCollector refactor(IProjectUnits units, Void input, WorkerSummary summary) throws Exception 
+	public InstantiationCollector refactor(IProjectUnits units, Map<ASTNode, UseDef> input, WorkerSummary summary) throws Exception 
 	{
 		FutureInstantiationVisitor visitor = new FutureInstantiationVisitor();
+		analysis = input;
+		
 		units.accept(visitor);
 		
 		summary.setCorrect("numberOfCompilationUnits", units.size());
