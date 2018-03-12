@@ -2,7 +2,9 @@ package de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions;
 
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.SetMultimap;
+import java.util.HashMap;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Expression;
@@ -30,6 +32,18 @@ public class UseDef {
 
 	Builder builder() {
 		return new Builder(this);
+	}
+
+	@Override
+	public String toString() {
+		return map.asMap().entrySet().stream()
+				.map(e -> new HashMap.SimpleImmutableEntry<>(
+						e.getKey().toString().replace("\n", ""),
+						e.getValue().stream()
+								.map(Use::toString)
+								.collect(Collectors.joining(", ", "[", "]"))))
+				.map(e -> e.getKey() + " is used as " + e.getValue())
+				.collect(Collectors.joining("\n", "<UseDef>\n", "\n</UseDef>"));
 	}
 
 	static class Builder {
@@ -66,6 +80,7 @@ public class UseDef {
 	}
 
 	static class Use {
+
 		enum Kind {
 			METHOD_INVOCATION, METHOD_PARAMETER, RETURN, FIELD_ASSIGN
 		}
@@ -92,6 +107,12 @@ public class UseDef {
 
 		public ASTNode getOp() {
 			return op;
+		}
+
+		@Override
+		public String toString() {
+			return getKind().name() + "(" + op.toString().replaceAll("\n", "") + ")"
+					+ (name == null ? "" : " as '" + name.getFullyQualifiedName() + "'");
 		}
 	}
 }
