@@ -5,8 +5,16 @@ import java.util.Objects;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.FieldAccess;
+import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.IVariableBinding;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.Name;
+import org.eclipse.jdt.core.dom.SimpleName;
 
 public final class Methods {
 	
@@ -45,6 +53,40 @@ public final class Methods {
 		}
 
 		return true;	
+	}
+	
+	/**
+	 * Checks whether a method is called from a static class member. For example System.out.println() is not
+	 * a static method but called on a static class member. For this case the method will return true.
+	 * 
+	 * @param mb The method binding.
+	 * @return True, if called from a static class member or a static method.
+	 */
+	public static boolean hasStaticContext(MethodInvocation method) {
+		//TODO This does not seem to be exhaustive.
+		
+		IMethodBinding mb = method.resolveMethodBinding();
+		
+		if (mb == null) 
+			return false;
+		
+		if (Modifier.isStatic(mb.getModifiers())) 
+			return true;
+		
+		Expression expr = method.getExpression();
+		if (expr == null)
+			return false;
+		
+		if (expr instanceof FieldAccess) {
+			IVariableBinding field = ((FieldAccess) expr).resolveFieldBinding(); 
+			return field != null && Modifier.isStatic(field.getModifiers());
+		} else if (expr instanceof Name) {
+			IBinding binding = ((Name) expr).resolveBinding();
+			return binding != null && Modifier.isStatic(binding.getModifiers()); 			
+		}
+		
+		return false;
+			
 	}
 	
 	

@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.net.ssl.SSLEngineResult.HandshakeStatus;
+
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.AST;
@@ -16,7 +18,9 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.Type;
@@ -34,7 +38,9 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import de.tudarmstadt.rxrefactoring.core.utils.Methods;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.TemplateUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.RefactoringVisitor;
@@ -86,9 +92,11 @@ public class TypeDeclarationWorker extends GeneralWorker
 	{
 		removeSuperInvocations( refactoringVisitor );
 		updateImports( icu );
+		
+		//Change superclass type
 		String resultType = "Object";
 		String processType = "Object";
-
+		
 		Type superclassType = typeDeclaration.getSuperclassType();
 		if ( superclassType instanceof ParameterizedType )
 		{
@@ -105,6 +113,13 @@ public class TypeDeclarationWorker extends GeneralWorker
 			icu.replace(superclassType, newType);
 		}
 		
+		//Rename class accordingly
+//		SimpleName name = typeDeclaration.getName();
+//		String newName = RefactoringUtils.cleanSwingWorkerName(name.getIdentifier());
+//		
+//		icu.replace(name, icu.getAST().newSimpleName(newName));	
+		
+		//Update methods
 		AST ast = typeDeclaration.getAST();
 		addOrUpdateConstructor(ast, icu, refactoringVisitor, typeDeclaration, resultType);
 
@@ -207,7 +222,7 @@ public class TypeDeclarationWorker extends GeneralWorker
 		if(exprstmnt.getExpression() instanceof MethodInvocation) {
 			MethodInvocation methodInvocation = (MethodInvocation) exprstmnt.getExpression();
 			
-			if(!(refactoringVisitor.getMethodsofsubscriber().contains(methodInvocation.getName().getIdentifier()))) {
+			if(!(refactoringVisitor.getMethodsofsubscriber().contains(methodInvocation.getName().getIdentifier())) && !Methods.hasStaticContext(methodInvocation)) {
 			//if(!(refactoringVisitor.getMethodsofsubscriber().get(methodInvocation.getName().getIdentifier()) == null)) {
 				String methodNameString = className + ".this." + exprstmnt;
 				Statement newStatement = TemplateVisitor.createSingleStatementFromText(ast, methodNameString);
