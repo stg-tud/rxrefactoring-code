@@ -43,189 +43,165 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.TemplateVisitor;
  * Created: 12/21/2016<br>
  * Adapted to new core by Camila Gonzalez on 24/01/2018
  */
-public class VariableDeclStatementWorker extends GeneralWorker
-{
+public class VariableDeclStatementWorker extends GeneralWorker {
 	@Override
 	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable RxCollector input,
-			@NonNull WorkerSummary summary) throws Exception
-	{
+			@NonNull WorkerSummary summary) throws Exception {
 		Multimap<IRewriteCompilationUnit, VariableDeclarationStatement> varDeclMap = input.getVarDeclMap();
 		int total = varDeclMap.values().size();
-		Log.info( getClass(), "METHOD=refactor - Total number of <<VariableDeclarationStatement>>: " + total );
+		Log.info(getClass(), "METHOD=refactor - Total number of <<VariableDeclarationStatement>>: " + total);
 
-		for (Map.Entry<IRewriteCompilationUnit, VariableDeclarationStatement> varDelcEntry : varDeclMap.entries())
-		{
+		for (Map.Entry<IRewriteCompilationUnit, VariableDeclarationStatement> varDelcEntry : varDeclMap.entries()) {
 			IRewriteCompilationUnit icu = varDelcEntry.getKey();
 			VariableDeclarationStatement varDeclStatement = varDelcEntry.getValue();
-			
+
 			AST ast = varDeclStatement.getAST();
 
-			VariableDeclarationFragment fragment = (VariableDeclarationFragment) varDeclStatement.fragments().get( 0 );
+			VariableDeclarationFragment fragment = (VariableDeclarationFragment) varDeclStatement.fragments().get(0);
 			Expression initializer = fragment.getInitializer();
-			if ( initializer instanceof ClassInstanceCreation )
-			{
+			if (initializer instanceof ClassInstanceCreation) {
 				ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) initializer;
 
-				if ( ASTUtils.isClassOf( classInstanceCreation, SwingWorkerInfo.getBinaryName() ) )
-				{
-					Log.info( getClass(), "METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName() );
+				if (ASTUtils.isClassOf(classInstanceCreation, SwingWorkerInfo.getBinaryName())) {
+					Log.info(getClass(),
+							"METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName());
 					RefactoringVisitor refactoringVisitor = new RefactoringVisitor();
-					varDeclStatement.accept( refactoringVisitor );
+					varDeclStatement.accept(refactoringVisitor);
 
-					Log.info( getClass(), "METHOD=refactor - Refactoring variable declaration statement in: " + icu.getElementName() );
-					refactorVarDecl( icu, refactoringVisitor, varDeclStatement, fragment );
-				}
-				else
-				{
-					Log.info( getClass(), "METHOD=refactor - Refactoring variable name: " + icu.getElementName() );
+					Log.info(getClass(),
+							"METHOD=refactor - Refactoring variable declaration statement in: " + icu.getElementName());
+					refactorVarDecl(icu, refactoringVisitor, varDeclStatement, fragment);
+				} else {
+					Log.info(getClass(), "METHOD=refactor - Refactoring variable name: " + icu.getElementName());
 					SimpleName simpleName = fragment.getName();
-					String newIdentifier = RefactoringUtils.cleanSwingWorkerName( simpleName.getIdentifier() );
-					synchronized(icu) 
-					{
+					String newIdentifier = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
+					synchronized (icu) {
 						icu.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newIdentifier));
 					}
 				}
-			} 
-			else if (initializer instanceof SimpleName)
-			{
-	            SimpleName assignedVarSimpleName = (SimpleName) initializer;
-		        String newAssignedVarName = RefactoringUtils.cleanSwingWorkerName((assignedVarSimpleName).getIdentifier());
-		        SimpleName newAssignedVar = SwingWorkerASTUtils.newSimpleName(ast, newAssignedVarName);
-		        synchronized(icu) 
-		        {
+			} else if (initializer instanceof SimpleName) {
+				SimpleName assignedVarSimpleName = (SimpleName) initializer;
+				String newAssignedVarName = RefactoringUtils
+						.cleanSwingWorkerName((assignedVarSimpleName).getIdentifier());
+				SimpleName newAssignedVar = SwingWorkerASTUtils.newSimpleName(ast, newAssignedVarName);
+				synchronized (icu) {
 					icu.replace(assignedVarSimpleName, newAssignedVar);
-		        }
+				}
 			}
 
-            // change type
-            Type type = varDeclStatement.getType();
-            if (type instanceof ParameterizedType)
-            {
-                type = ((ParameterizedType) type).getType();
-            }
+			// change type
+			Type type = varDeclStatement.getType();
+			if (type instanceof ParameterizedType) {
+				type = ((ParameterizedType) type).getType();
+			}
 
-            if (ASTUtils.isClassOf(type, SwingWorkerInfo.getBinaryName()))
-            {
-                synchronized(icu) 
-                {
-                	icu.addImport( "de.tudarmstadt.stg.rx.swingworker.SWSubscriber" );
-                	SimpleType newType = SwingWorkerASTUtils.newSimpleType(ast, "SWSubscriber");
+			if (ASTUtils.isClassOf(type, SwingWorkerInfo.getBinaryName())) {
+				synchronized (icu) {
+					icu.addImport("de.tudarmstadt.stg.rx.swingworker.SWSubscriber");
+					SimpleType newType = SwingWorkerASTUtils.newSimpleType(ast, "SWSubscriber");
 					icu.replace(type, newType);
-                }
-            }
+				}
+			}
 
-        	String newVarName = RefactoringUtils.cleanSwingWorkerName(fragment.getName().getIdentifier());
-        	synchronized(icu) 
-        	{
+			String newVarName = RefactoringUtils.cleanSwingWorkerName(fragment.getName().getIdentifier());
+			synchronized (icu) {
 				icu.replace(fragment.getName(), SwingWorkerASTUtils.newSimpleName(ast, newVarName));
-        	}
+			}
 
 			// Add changes to the multiple compilation units write object
-    		Log.info( getClass(), "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );
-			
+			Log.info(getClass(), "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName());
+
 			summary.addCorrect("VariableDeclarations");
-			
+
 		}
 
 		return null;
 	}
 
-	private void refactorVarDecl(
-			IRewriteCompilationUnit icu,
-			RefactoringVisitor refactoringVisitor,
-			VariableDeclarationStatement varDeclStatement,
-			VariableDeclarationFragment fragment )
-	{
-		removeSuperInvocations( refactoringVisitor );
-		updateImports( icu );
+	private void refactorVarDecl(IRewriteCompilationUnit icu, RefactoringVisitor refactoringVisitor,
+			VariableDeclarationStatement varDeclStatement, VariableDeclarationFragment fragment) {
+		removeSuperInvocations(refactoringVisitor);
+		updateImports(icu);
 
-		if ( refactoringVisitor.hasAdditionalFieldsOrMethods() )
-		{
-			refactorStatefulSwingWorker( icu, refactoringVisitor, varDeclStatement, fragment );
-		}
-		else
-		{
-			refactorStatelessSwingWorker( icu, refactoringVisitor, varDeclStatement, fragment );
+		if (refactoringVisitor.hasAdditionalFieldsOrMethods()) {
+			refactorStatefulSwingWorker(icu, refactoringVisitor, varDeclStatement, fragment);
+		} else {
+			refactorStatelessSwingWorker(icu, refactoringVisitor, varDeclStatement, fragment);
 		}
 	}
 
-	private void refactorStatefulSwingWorker(
-			IRewriteCompilationUnit icu,
-			RefactoringVisitor refactoringVisitor,
-			VariableDeclarationStatement varDeclStatement,
-			VariableDeclarationFragment fragment )
-	{
+	private void refactorStatefulSwingWorker(IRewriteCompilationUnit icu, RefactoringVisitor refactoringVisitor,
+			VariableDeclarationStatement varDeclStatement, VariableDeclarationFragment fragment) {
 		SimpleName swingWorkerName = fragment.getName();
-		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.getIdentifier() );
-		SWSubscriberModel subscriberDto = createSWSubscriberDto( rxObserverName, icu, refactoringVisitor );
+		String rxObserverName = RefactoringUtils.cleanSwingWorkerName(swingWorkerName.getIdentifier());
+		SWSubscriberModel subscriberDto = createSWSubscriberDto(rxObserverName, icu, refactoringVisitor);
 
 		Map<String, Object> subscriberData = new HashMap<>();
-		subscriberData.put( "model", subscriberDto );
+		subscriberData.put("model", subscriberDto);
 		String subscriberTemplate = "subscriber.ftl";
 
-		String subscriberString = TemplateUtils.processTemplate( subscriberTemplate, subscriberData );
+		String subscriberString = TemplateUtils.processTemplate(subscriberTemplate, subscriberData);
 		AST ast = varDeclStatement.getAST();
-		TypeDeclaration typeDeclaration = TemplateVisitor.createTypeDeclarationFromText( ast, subscriberString );	
-		
+		TypeDeclaration typeDeclaration = TemplateVisitor.createTypeDeclarationFromText(ast, subscriberString);
+
 		SwingWorkerASTUtils.addBefore(icu, typeDeclaration, varDeclStatement);
-		
-		String newVarDeclStatementString = "SWSubscriber<" + subscriberDto.getResultType() + ", " + subscriberDto.getProcessType() + "> " +
-				subscriberDto.getSubscriberName() + " = new " + subscriberDto.getClassName() + "()";
-		Statement newVarDeclStatement = TemplateVisitor.createSingleStatementFromText( ast, newVarDeclStatementString );
+
+		String newVarDeclStatementString = "SWSubscriber<" + subscriberDto.getResultType() + ", "
+				+ subscriberDto.getProcessType() + "> " + subscriberDto.getSubscriberName() + " = new "
+				+ subscriberDto.getClassName() + "()";
+		Statement newVarDeclStatement = TemplateVisitor.createSingleStatementFromText(ast, newVarDeclStatementString);
 		Statements.addStatementBefore(icu, newVarDeclStatement, varDeclStatement);
 		SwingWorkerASTUtils.removeStatement(icu, varDeclStatement);
 	}
 
-	private void refactorStatelessSwingWorker(
-			IRewriteCompilationUnit icu,
-			RefactoringVisitor refactoringVisitor,
-			VariableDeclarationStatement varDeclStatement,
-			VariableDeclarationFragment fragment )
-	{
-		RxObservableModel observableDto = createObservableDto( icu, refactoringVisitor );
+	private void refactorStatelessSwingWorker(IRewriteCompilationUnit icu, RefactoringVisitor refactoringVisitor,
+			VariableDeclarationStatement varDeclStatement, VariableDeclarationFragment fragment) {
+		RxObservableModel observableDto = createObservableDto(icu, refactoringVisitor);
 		/*
-		 * Sometimes doInbackground Block needs to be refactored futher for handling java.util.concurrent.ExecutorService.submit() method calls 
-		 * executor.submit(singleRun) --> singleRun.executeObservable()
-		 * Scenario: CrysHomModeling-master : MainMenu.java
+		 * Sometimes doInbackground Block needs to be refactored futher for handling
+		 * java.util.concurrent.ExecutorService.submit() method calls
+		 * executor.submit(singleRun) --> singleRun.executeObservable() Scenario:
+		 * CrysHomModeling-master : MainMenu.java
 		 */
 		observableDto.setDoInBackgroundBlock(refactorDoInBgBlock(refactoringVisitor.getDoInBackgroundBlock()));
 		Map<String, Object> observableData = new HashMap<>();
-		observableData.put( "model", observableDto );
+		observableData.put("model", observableDto);
 		String observableTemplate = "observable.ftl";
 
-		String observableString = TemplateUtils.processTemplate( observableTemplate, observableData );
+		String observableString = TemplateUtils.processTemplate(observableTemplate, observableData);
 
 		AST ast = varDeclStatement.getAST();
-		Statement observableStatement = TemplateVisitor.createSingleStatementFromText( ast, observableString );
+		Statement observableStatement = TemplateVisitor.createSingleStatementFromText(ast, observableString);
 
 		Statements.addStatementBefore(icu, observableStatement, varDeclStatement);
-		
+
 		SimpleName swingWorkerName = fragment.getName();
-		String rxObserverName = RefactoringUtils.cleanSwingWorkerName( swingWorkerName.getIdentifier() );
-		RxObserverModel subscriberDto = createObserverDto( rxObserverName, refactoringVisitor, observableDto );
-		subscriberDto.setVariableDecl( true );
+		String rxObserverName = RefactoringUtils.cleanSwingWorkerName(swingWorkerName.getIdentifier());
+		RxObserverModel subscriberDto = createObserverDto(rxObserverName, refactoringVisitor, observableDto);
+		subscriberDto.setVariableDecl(true);
 
 		Map<String, Object> observerData = new HashMap<>();
-		observerData.put( "model", subscriberDto );
+		observerData.put("model", subscriberDto);
 		String observerTemplate = "observer.ftl";
 
-		String observerString = TemplateUtils.processTemplate( observerTemplate, observerData );
-		Statement observerStatement = TemplateVisitor.createSingleStatementFromText( ast, observerString );
+		String observerString = TemplateUtils.processTemplate(observerTemplate, observerData);
+		Statement observerStatement = TemplateVisitor.createSingleStatementFromText(ast, observerString);
 		Statements.addStatementBefore(icu, observerStatement, varDeclStatement);
 		SwingWorkerASTUtils.removeStatement(icu, varDeclStatement);
 	}
-	
+
 	private String refactorDoInBgBlock(Block doInBgBlock) {
 		String doInBgBlockString = "";
 		List<Statement> list = doInBgBlock.statements();
 		StringBuilder sb = new StringBuilder();
 		sb.append("{ " + System.lineSeparator());
-		for(int i=0;i<list.size();i++) {
-				Statement stmnt = list.get(i);
-				if(stmnt instanceof TryStatement && stmnt.toString().contains("executorSC.submit(singleRun)")) {
-					stmnt = TemplateVisitor.createSingleStatementFromText(doInBgBlock.getAST(), stmnt.toString().replace("executorSC.submit(singleRun)", "singleRun.executeObservable()"));
-				}
-				sb.append(stmnt.toString() + System.lineSeparator());
+		for (int i = 0; i < list.size(); i++) {
+			Statement stmnt = list.get(i);
+			if (stmnt instanceof TryStatement && stmnt.toString().contains("executorSC.submit(singleRun)")) {
+				stmnt = TemplateVisitor.createSingleStatementFromText(doInBgBlock.getAST(),
+						stmnt.toString().replace("executorSC.submit(singleRun)", "singleRun.executeObservable()"));
+			}
+			sb.append(stmnt.toString() + System.lineSeparator());
 		}
 		sb.append("}");
 		doInBgBlockString = RefactoringUtils.cleanSwingWorkerName(sb.toString());

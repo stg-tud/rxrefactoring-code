@@ -23,8 +23,7 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.DiscoveringVisitor;
  * Created: 11/11/2016<br>
  * Adapted to new core by Camila Gonzalez on 19/01/2018
  */
-public class RxCollector implements IWorker<Void, RxCollector>
-{
+public class RxCollector implements IWorker<Void, RxCollector> {
 	private final Multimap<IRewriteCompilationUnit, TypeDeclaration> typeDeclMap = HashMultimap.create();
 	private final Multimap<IRewriteCompilationUnit, FieldDeclaration> fieldDeclMap = HashMultimap.create();
 	private final Multimap<IRewriteCompilationUnit, Assignment> assigmentsMap = HashMultimap.create();
@@ -42,7 +41,7 @@ public class RxCollector implements IWorker<Void, RxCollector>
 		for (IRewriteCompilationUnit unit : units) {
 			// Initialize Visitor
 			DiscoveringVisitor discoveringVisitor = new DiscoveringVisitor(className);
-			
+
 			// Collect information using visitor
 			unit.accept(discoveringVisitor);
 			typeDeclMap.putAll(unit, discoveringVisitor.getTypeDeclarations());
@@ -54,85 +53,71 @@ public class RxCollector implements IWorker<Void, RxCollector>
 			singleVarDeclMap.putAll(unit, discoveringVisitor.getSingleVarDeclarations());
 			methodInvocationsMap.putAll(unit, discoveringVisitor.getMethodInvocations());
 			methodDeclarationsMap.putAll(unit, discoveringVisitor.getMethodDeclarations());
-			
+
 		}
-		summary.setCorrect("numberOfCompilationUnits", getNumberOfCompilationUnits());	
+		summary.setCorrect("numberOfCompilationUnits", getNumberOfCompilationUnits());
 		return this;
 	}
 
-	public Multimap<IRewriteCompilationUnit, TypeDeclaration> getTypeDeclMap()
-	{
+	public Multimap<IRewriteCompilationUnit, TypeDeclaration> getTypeDeclMap() {
 		return typeDeclMap;
 	}
 
-	public Multimap<IRewriteCompilationUnit, FieldDeclaration> getFieldDeclMap()
-	{
+	public Multimap<IRewriteCompilationUnit, FieldDeclaration> getFieldDeclMap() {
 		return fieldDeclMap;
 	}
 
-	public Multimap<IRewriteCompilationUnit, Assignment> getAssigmentsMap()
-	{
+	public Multimap<IRewriteCompilationUnit, Assignment> getAssigmentsMap() {
 		return assigmentsMap;
 	}
 
-	public Multimap<IRewriteCompilationUnit, VariableDeclarationStatement> getVarDeclMap()
-	{
+	public Multimap<IRewriteCompilationUnit, VariableDeclarationStatement> getVarDeclMap() {
 		return varDeclMap;
 	}
 
-	public Multimap<IRewriteCompilationUnit, SimpleName> getSimpleNamesMap()
-	{
+	public Multimap<IRewriteCompilationUnit, SimpleName> getSimpleNamesMap() {
 		return simpleNamesMap;
 	}
 
-	public Multimap<IRewriteCompilationUnit, ClassInstanceCreation> getClassInstanceMap()
-	{
+	public Multimap<IRewriteCompilationUnit, ClassInstanceCreation> getClassInstanceMap() {
 		return classInstanceMap;
 	}
 
-	public Multimap<IRewriteCompilationUnit, SingleVariableDeclaration> getSingleVarDeclMap()
-	{
+	public Multimap<IRewriteCompilationUnit, SingleVariableDeclaration> getSingleVarDeclMap() {
 		return singleVarDeclMap;
 	}
 
-	public Multimap<IRewriteCompilationUnit, MethodInvocation> getMethodInvocationsMap()
-	{
+	public Multimap<IRewriteCompilationUnit, MethodInvocation> getMethodInvocationsMap() {
 		return methodInvocationsMap;
 	}
 
-	public Multimap<IRewriteCompilationUnit, MethodDeclaration> getMethodDeclarationsMap()
-	{
+	public Multimap<IRewriteCompilationUnit, MethodDeclaration> getMethodDeclarationsMap() {
 		return methodDeclarationsMap;
 	}
 
-	public int getNumberOfCompilationUnits()
-	{
+	public int getNumberOfCompilationUnits() {
 		Set<IRewriteCompilationUnit> allCompilationUnits = new HashSet<>();
-		allCompilationUnits.addAll( typeDeclMap.keySet() );
-		allCompilationUnits.addAll( fieldDeclMap.keySet() );
-		allCompilationUnits.addAll( assigmentsMap.keySet() );
-		allCompilationUnits.addAll( varDeclMap.keySet() );
-		allCompilationUnits.addAll( simpleNamesMap.keySet() );
-		allCompilationUnits.addAll( classInstanceMap.keySet() );
-		allCompilationUnits.addAll( singleVarDeclMap.keySet() );
-		allCompilationUnits.addAll( methodInvocationsMap.keySet() );
-		allCompilationUnits.addAll( methodDeclarationsMap.keySet() );
+		allCompilationUnits.addAll(typeDeclMap.keySet());
+		allCompilationUnits.addAll(fieldDeclMap.keySet());
+		allCompilationUnits.addAll(assigmentsMap.keySet());
+		allCompilationUnits.addAll(varDeclMap.keySet());
+		allCompilationUnits.addAll(simpleNamesMap.keySet());
+		allCompilationUnits.addAll(classInstanceMap.keySet());
+		allCompilationUnits.addAll(singleVarDeclMap.keySet());
+		allCompilationUnits.addAll(methodInvocationsMap.keySet());
+		allCompilationUnits.addAll(methodDeclarationsMap.keySet());
 		return allCompilationUnits.size();
 	}
 
-	public String getDetails()
-	{
-		return "Nr. files: " + getNumberOfCompilationUnits() + "\n" +
-				"TypeDeclarations = " + typeDeclMap.values().size() + "\n" +
-				"FieldDeclarations = " + fieldDeclMap.values().size() + "\n" +
-				"Assignments = " + assigmentsMap.values().size() + "\n" +
-				"VariableDeclarationStatements = " + varDeclMap.values().size() + "\n" +
-				"SimpleNames = " + simpleNamesMap.values().size() + "\n" +
-				"ClassInstanceCreations = " + classInstanceMap.values().size() + "\n" +
-				"SingleVariableDeclarations = " + singleVarDeclMap.values().size() + "\n" +
-				"MethodInvocations = " + methodInvocationsMap.values().size() + "\n" +
-				"MethodDeclarations = " + methodDeclarationsMap.values().size();
+	public String getDetails() {
+		return "Nr. files: " + getNumberOfCompilationUnits() + "\n" + "TypeDeclarations = "
+				+ typeDeclMap.values().size() + "\n" + "FieldDeclarations = " + fieldDeclMap.values().size() + "\n"
+				+ "Assignments = " + assigmentsMap.values().size() + "\n" + "VariableDeclarationStatements = "
+				+ varDeclMap.values().size() + "\n" + "SimpleNames = " + simpleNamesMap.values().size() + "\n"
+				+ "ClassInstanceCreations = " + classInstanceMap.values().size() + "\n"
+				+ "SingleVariableDeclarations = " + singleVarDeclMap.values().size() + "\n" + "MethodInvocations = "
+				+ methodInvocationsMap.values().size() + "\n" + "MethodDeclarations = "
+				+ methodDeclarationsMap.values().size();
 	}
-	
 
 }

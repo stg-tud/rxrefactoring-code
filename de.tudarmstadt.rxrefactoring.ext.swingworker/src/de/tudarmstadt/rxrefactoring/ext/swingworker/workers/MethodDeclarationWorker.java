@@ -23,42 +23,36 @@ import de.tudarmstadt.rxrefactoring.core.utils.Log;
  * Created: 12/21/2016<br>
  * Adapted to new core by Camila Gonzalez on 24/01/2018
  */
-public class MethodDeclarationWorker implements IWorker<RxCollector, Void>
-{
+public class MethodDeclarationWorker implements IWorker<RxCollector, Void> {
 
 	@Override
 	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable RxCollector input,
-			@NonNull WorkerSummary summary) throws Exception
-	{
+			@NonNull WorkerSummary summary) throws Exception {
 		Multimap<IRewriteCompilationUnit, MethodDeclaration> methodDeclMap = input.getMethodDeclarationsMap();
 		int total = methodDeclMap.values().size();
-		Log.info( getClass(), "METHOD=refactor - Total number of <<MethodDeclaration>>: " + total );
+		Log.info(getClass(), "METHOD=refactor - Total number of <<MethodDeclaration>>: " + total);
 
-		for (Map.Entry<IRewriteCompilationUnit, MethodDeclaration> methodDeclEntry : methodDeclMap.entries())
-		{
+		for (Map.Entry<IRewriteCompilationUnit, MethodDeclaration> methodDeclEntry : methodDeclMap.entries()) {
 			IRewriteCompilationUnit icu = methodDeclEntry.getKey();
 			MethodDeclaration methodDeclaration = methodDeclEntry.getValue();
-			
+
 			AST ast = methodDeclaration.getAST();
-			
-			Log.info( getClass(), "METHOD=refactor - Changing return type: " + icu.getElementName() );
+
+			Log.info(getClass(), "METHOD=refactor - Changing return type: " + icu.getElementName());
 			Type type = methodDeclaration.getReturnType2();
-			if ( type instanceof ParameterizedType )
-			{
-				type = ( (ParameterizedType) type ).getType();
+			if (type instanceof ParameterizedType) {
+				type = ((ParameterizedType) type).getType();
 			}
-			if ( ASTUtils.isClassOf( type, SwingWorkerInfo.getBinaryName() ) )
-			{
+			if (ASTUtils.isClassOf(type, SwingWorkerInfo.getBinaryName())) {
 				SimpleType newType = SwingWorkerASTUtils.newSimpleType(ast, "SWSubscriber");
-				synchronized(icu) 
-				{
+				synchronized (icu) {
 					icu.replace(type, newType);
 				}
 			}
 
 			// Add changes to the multiple compilation units write object
-			Log.info( getClass(), "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName() );
-			
+			Log.info(getClass(), "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName());
+
 			summary.addCorrect("MethodDeclarations");
 		}
 

@@ -6,8 +6,7 @@ package de.tudarmstadt.rxrefactoring.ext.swingworker.domain;
  * Created: 12/21/2016<br>
  * Adapted to new core by Camila Gonzalez on 18/01/2018
  */
-public class RxObserverModel
-{
+public class RxObserverModel {
 	private String observerName;
 	private String resultType;
 	private String processType;
@@ -17,83 +16,67 @@ public class RxObserverModel
 	private String doneBlock;
 	private boolean variableDecl;
 
-	public String getObserverName()
-	{
+	public String getObserverName() {
 		return observerName;
 	}
 
-	public void setObserverName( String observerName )
-	{
+	public void setObserverName(String observerName) {
 		this.observerName = observerName;
 	}
 
-	public String getResultType()
-	{
+	public String getResultType() {
 		return resultType;
 	}
 
-	public void setResultType( String resultType )
-	{
+	public void setResultType(String resultType) {
 		this.resultType = resultType;
 	}
 
-	public String getProcessType()
-	{
+	public String getProcessType() {
 		return processType;
 	}
 
-	public void setProcessType( String processType )
-	{
+	public void setProcessType(String processType) {
 		this.processType = processType;
 	}
 
-	public String getObservableName()
-	{
+	public String getObservableName() {
 		return observableName;
 	}
 
-	public void setObservableName( String observableName )
-	{
+	public void setObservableName(String observableName) {
 		this.observableName = observableName;
 	}
 
-	public String getChunksName()
-	{
+	public String getChunksName() {
 		return chunksName;
 	}
 
-	public void setChunksName( String chunksName )
-	{
+	public void setChunksName(String chunksName) {
 		this.chunksName = chunksName;
 	}
 
-	public String getProcessBlock()
-	{
+	public String getProcessBlock() {
 		return processBlock;
 	}
 
-	public void setProcessBlock( String processBlock )
-	{
+	public void setProcessBlock(String processBlock) {
 		this.processBlock = processBlock;
 	}
 
-	public String getDoneBlock()
-	{
+	public String getDoneBlock() {
 		return doneBlock;
 	}
 
-	public void setDoneBlock( String doneBlock )
-	{
+	public void setDoneBlock(String doneBlock) {
 		this.doneBlock = doneBlock;
 	}
 
-	public boolean isVariableDecl()
-	{
+	public boolean isVariableDecl() {
 		return variableDecl;
 	}
 
-	public void setVariableDecl( boolean variableDecl )
-	{
+	public void setVariableDecl(boolean variableDecl) {
 		this.variableDecl = variableDecl;
 	}
 }

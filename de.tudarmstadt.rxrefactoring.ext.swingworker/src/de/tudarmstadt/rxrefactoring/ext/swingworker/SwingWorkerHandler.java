@@ -10,7 +10,7 @@ import de.tudarmstadt.rxrefactoring.core.RefactoringE4Handler;
  * Author: Camila Gonzalez<br>
  * Created: 18/01/2018
  */
-public class SwingWorkerHandler  extends RefactoringE4Handler {
+public class SwingWorkerHandler extends RefactoringE4Handler {
 
 	@Override
 	public @NonNull IRefactorExtension createExtension() {

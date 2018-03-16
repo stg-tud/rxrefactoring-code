@@ -61,14 +61,15 @@ public class SingleVariableDeclWorker implements IWorker<RxCollector, Void> {
 				} else {
 
 					ITypeBinding typeBinding = simpleName.resolveTypeBinding();
-					boolean isTopLevel = typeBinding != null && typeBinding.isTopLevel();	
-					
-					IBinding binding= simpleName.resolveBinding();
+					boolean isTopLevel = typeBinding != null && typeBinding.isTopLevel();
+
+					IBinding binding = simpleName.resolveBinding();
 					boolean isTypeName = binding != null && binding.getKind() == IBinding.TYPE;
-										
-					if (!(simpleName.getParent() instanceof QualifiedName) && 
-							//if isTypeName then !isTopLevel. Only rename types if they are not top level types.
-							(!isTypeName || !isTopLevel)  )
+
+					if (!(simpleName.getParent() instanceof QualifiedName) &&
+					// if isTypeName then !isTopLevel. Only rename types if they are not top level
+					// types.
+							(!isTypeName || !isTopLevel))
 						synchronized (icu) {
 							String s = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
 							icu.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, s));

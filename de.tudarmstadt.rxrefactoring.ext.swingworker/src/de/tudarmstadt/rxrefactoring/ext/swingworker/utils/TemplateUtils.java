@@ -7,7 +7,6 @@ import java.util.Map;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 
-
 import de.tudarmstadt.rxrefactoring.ext.swingworker.SwingWorkerExtension;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
@@ -17,12 +16,10 @@ import de.tudarmstadt.rxrefactoring.core.utils.Log;
  * Created: 12/21/2016<br>
  * Adapted to new core by Camila Gonzalez on 18/01/2018
  */
-public final class TemplateUtils
-{
+public final class TemplateUtils {
 	private static Object lock = new Object();
 
-	private TemplateUtils()
-	{
+	private TemplateUtils() {
 		// This class should not be instantiated
 	}
 
@@ -35,22 +32,18 @@ public final class TemplateUtils
 	 *            data to be place into the template
 	 * @return the template after being processed
 	 */
-	public static String processTemplate( String templateName, Map<String, Object> data )
-	{
-		synchronized ( lock )
-		{
+	public static String processTemplate(String templateName, Map<String, Object> data) {
+		synchronized (lock) {
 			String observableString = "";
-			try
-			{
-				Template template = SwingWorkerExtension.getFreemakerCfg().getTemplate( templateName );
+			try {
+				Template template = SwingWorkerExtension.getFreemakerCfg().getTemplate(templateName);
 				StringWriter out = new StringWriter();
-				template.process( data, out );
+				template.process(data, out);
 				observableString = out.toString();
-			}
-			catch ( IOException | TemplateException e )
-			{
-				Log.error( TemplateUtils.class, "METHOD=createObservable - Failed", e );
-				throw new IllegalArgumentException( "Template could not be processed. TEMPLATE=" + templateName + "DATA=" + data, e );
+			} catch (IOException | TemplateException e) {
+				Log.error(TemplateUtils.class, "METHOD=createObservable - Failed", e);
+				throw new IllegalArgumentException(
+						"Template could not be processed. TEMPLATE=" + templateName + "DATA=" + data, e);
 			}
 			return observableString;
 		}

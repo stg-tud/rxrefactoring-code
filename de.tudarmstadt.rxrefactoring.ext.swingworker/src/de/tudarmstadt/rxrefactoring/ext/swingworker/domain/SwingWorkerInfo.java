@@ -15,24 +15,22 @@ import java.util.Map;
  * Created: 11/11/2016<br>
  * Adapted to new core by Camila Gonzalez on 18/01/2018
  */
-public class SwingWorkerInfo
-{
+public class SwingWorkerInfo {
 	private static final String binaryName = "javax.swing.SwingWorker";
-	private static final Map<String, String> publicMethodsMap = new HashMap<String, String>()
-	{
+	private static final Map<String, String> publicMethodsMap = new HashMap<String, String>() {
 		{
-			put( "addPropertyChangeListener", "addPropertyChangeListener" );
-			put( "cancel", "cancelObservable" );
-			put( "execute", "executeObservable" );
-			put( "firePropertyChange", "firePropertyChange" );
-			put( "get", "get" );
-			put( "getProgress", "getProgress" );
-			put( "getPropertyChangeSupport", "getPropertyChangeSupport" );
-			put( "getState", "getState" );
-			put( "isCancelled", "isCancelled" );
-			put( "isDone", "isDone" );
-			put( "removePropertyChangeListener", "removePropertyChangeListener" );
-			put( "run", "runObservable" );
+			put("addPropertyChangeListener", "addPropertyChangeListener");
+			put("cancel", "cancelObservable");
+			put("execute", "executeObservable");
+			put("firePropertyChange", "firePropertyChange");
+			put("get", "get");
+			put("getProgress", "getProgress");
+			put("getPropertyChangeSupport", "getPropertyChangeSupport");
+			put("getState", "getState");
+			put("isCancelled", "isCancelled");
+			put("isDone", "isDone");
+			put("removePropertyChangeListener", "removePropertyChangeListener");
+			put("run", "runObservable");
 		}
 	};
 
@@ -40,18 +38,16 @@ public class SwingWorkerInfo
 	 *
 	 * @return full name of the class. i.e: android.os.AsyncTask
 	 */
-	public static String getBinaryName()
-	{
+	public static String getBinaryName() {
 		return binaryName;
 	}
 
 	/**
 	 *
-	 * @return map containing public methods and its equivalent (if any) when
-	 *         using RxJava
+	 * @return map containing public methods and its equivalent (if any) when using
+	 *         RxJava
 	 */
-	public static Map<String, String> getPublicMethodsMap()
-	{
+	public static Map<String, String> getPublicMethodsMap() {
 		return publicMethodsMap;
 	}
 }
