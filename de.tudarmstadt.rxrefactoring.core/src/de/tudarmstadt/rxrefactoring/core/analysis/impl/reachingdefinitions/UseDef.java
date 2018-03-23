@@ -34,7 +34,7 @@ public class UseDef {
 		return new Builder(this);
 	}
 	
-
+	
 	@Override
 	public String toString() {
 		return map.asMap().entrySet().stream()
@@ -80,7 +80,7 @@ public class UseDef {
 		}
 	}
 
-	static class Use {
+	public static class Use {
 
 		enum Kind {
 			METHOD_INVOCATION, METHOD_PARAMETER, RETURN, FIELD_ASSIGN
