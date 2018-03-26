@@ -2,59 +2,61 @@ package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor;
 
 import java.util.Map;
 
-import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.RxCollector;
-
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.jdt.core.dom.*;
-
-import com.google.common.collect.Multimap;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.Type;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
-import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
-import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
 
 /**
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016<br>
  * Adapted to new core by Camila Gonzalez on 24/01/2018
  */
-public class MethodDeclarationWorker implements IWorker<RxCollector, Void> {
+public class MethodDeclarationWorker implements IWorker<TypeOutput, Void> {
 
 	@Override
-	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable RxCollector input,
+	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,
 			@NonNull WorkerSummary summary) throws Exception {
-		Multimap<IRewriteCompilationUnit, MethodDeclaration> methodDeclMap = input.getMethodDeclarationsMap();
-		int total = methodDeclMap.values().size();
-		Log.info(getClass(), "METHOD=refactor - Total number of <<MethodDeclaration>>: " + total);
 
-		for (Map.Entry<IRewriteCompilationUnit, MethodDeclaration> methodDeclEntry : methodDeclMap.entries()) {
-			IRewriteCompilationUnit icu = methodDeclEntry.getKey();
+		RefactorInfo info = input.info;
+
+		for (Map.Entry<IRewriteCompilationUnit, MethodDeclaration> methodDeclEntry : input.collector
+				.getMethodDeclarationsMap().entries()) {
+			IRewriteCompilationUnit unit = methodDeclEntry.getKey();
 			MethodDeclaration methodDeclaration = methodDeclEntry.getValue();
+
+			if (!info.shouldBeRefactored(methodDeclaration.resolveBinding().getDeclaringClass())) {
+				summary.addSkipped("methodDeclarations");
+				continue;
+			}
 
 			AST ast = methodDeclaration.getAST();
 
-			Log.info(getClass(), "METHOD=refactor - Changing return type: " + icu.getElementName());
 			Type type = methodDeclaration.getReturnType2();
 			if (type instanceof ParameterizedType) {
 				type = ((ParameterizedType) type).getType();
 			}
-			if (ASTUtils.isClassOf(type, SwingWorkerInfo.getBinaryName())) {
+			if (Types.isTypeOf(type.resolveBinding(), SwingWorkerInfo.getBinaryName())) {
 				SimpleType newType = SwingWorkerASTUtils.newSimpleType(ast, "SWSubscriber");
-				synchronized (icu) {
-					icu.replace(type, newType);
+				synchronized (unit) {
+					unit.replace(type, newType);
 				}
 			}
 
-			// Add changes to the multiple compilation units write object
-			Log.info(getClass(), "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName());
-
-			summary.addCorrect("MethodDeclarations");
+			summary.addCorrect("methodDeclarations");
 		}
 
 		return null;

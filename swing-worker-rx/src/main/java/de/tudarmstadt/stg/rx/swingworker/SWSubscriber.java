@@ -22,7 +22,6 @@ import rx.Subscription;
 import rx.functions.Action1;
 import rx.observables.ConnectableObservable;
 import rx.schedulers.Schedulers;
-import rx.schedulers.SwingScheduler;
 import rx.subjects.ReplaySubject;
 
 /**
@@ -38,6 +37,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 		implements RxSwingWorkerAPI<ResultType>
 {
 
+	
 	
 	private ConnectableObservable<SWPackage<ResultType, ProcessType>> observable;
 	private ReplaySubject<SWPackage<ResultType, ProcessType>> outgoingObservable;
@@ -62,6 +62,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 		this.propertyChangeSupport = new PropertyChangeSupport( this );
 		setObservable(observable);
 		initialize();
+		
 	}
 
 	/**
@@ -456,7 +457,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	{
 		validateObservableNotNull();
 		this.subscription = this.observable
-				.observeOn( SwingScheduler.getInstance() )
+				.observeOn( rx.schedulers.Schedulers.io() )
 				.subscribeOn( scheduler )
 				.subscribe( this );
 		

@@ -113,9 +113,12 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 	@SuppressWarnings("null")
 	public @NonNull AST getAST() {
 		if (ast == null) {
-			ast = getRoot().getAST();
+			synchronized (this) {
+				if (ast == null) {
+					ast = getRoot().getAST();
+				}					
+			}			
 		}
-
 		return ast;
 	}
 
@@ -123,7 +126,11 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 	@SuppressWarnings("null")
 	public @NonNull ASTRewrite writer() {
 		if (writer == null) {
-			writer = ASTRewrite.create(getAST());
+			synchronized (this) {
+				if (writer == null) {
+					writer = ASTRewrite.create(getAST());
+				}
+			}
 		}
 
 		return writer;
@@ -133,10 +140,12 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 	@SuppressWarnings("null")
 	public @NonNull ImportRewrite imports() {
 		if (imports == null) {
-			try {
-				imports = ImportRewrite.create(unit, true);
-			} catch (JavaModelException e) {
-				throw new IllegalStateException(e);
+			synchronized (this) {
+				try {
+					imports = ImportRewrite.create(unit, true);
+				} catch (JavaModelException e) {
+					throw new IllegalStateException(e);
+				}
 			}
 		}
 

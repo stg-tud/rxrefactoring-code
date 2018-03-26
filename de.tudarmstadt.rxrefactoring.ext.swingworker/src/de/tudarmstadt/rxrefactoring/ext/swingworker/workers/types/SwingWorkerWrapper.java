@@ -6,9 +6,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
-import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Block;
@@ -21,13 +19,13 @@ import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
+import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
+
 //import rx.Subscriber;
 
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
-
-import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
-
-import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 
 /**
  * Description: Visitor to extract relevant information about SwingWorkers<br>
@@ -86,7 +84,7 @@ public class SwingWorkerWrapper extends ASTVisitor {
 	@Override
 	public boolean visit(ClassInstanceCreation node) {
 		Type type = node.getType();
-		boolean target = ASTUtils.isClassOf(node, SwingWorkerInfo.getBinaryName());
+		boolean target = Types.isTypeOf(node.resolveTypeBinding(), SwingWorkerInfo.getBinaryName());
 		if (target && type instanceof ParameterizedType) {
 			List argumentTypes = ((ParameterizedType) type).typeArguments();
 			resultType = (Type) argumentTypes.get(0);

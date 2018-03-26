@@ -11,26 +11,25 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-import com.google.common.collect.Multimap;
-
-import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObservableModel;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObserverModel;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SWSubscriberModel;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
-import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObservableModel;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObserverModel;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SWSubscriberModel;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
@@ -48,25 +47,32 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
 public class ClassInstanceCreationWorker extends GeneralWorker<TypeOutput, Void> {
 
 	@Override
-	public @Nullable Void refactor(@NonNull IProjectUnits units,
-			@Nullable TypeOutput input,
+	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,
 			@NonNull WorkerSummary summary) throws Exception {
-		
+
 		RefactorInfo info = input.info;
-		
-		for (Map.Entry<IRewriteCompilationUnit, ClassInstanceCreation> entry : input.collector.getClassInstanceMap().entries()) {
-			
+
+		for (Map.Entry<IRewriteCompilationUnit, ClassInstanceCreation> entry : input.collector.getClassInstanceMap()
+				.entries()) {
+
 			IRewriteCompilationUnit unit = entry.getKey();
 			ClassInstanceCreation classInstanceCreation = entry.getValue();
-			
-			if (!isRelevant(classInstanceCreation) || !info.shouldBeRefactored(classInstanceCreation.resolveTypeBinding())) {
+
+			if (!isRelevant(classInstanceCreation)) {
+				// Is handled by other workers
+				continue;
+			}
+
+			ITypeBinding typeBinding = classInstanceCreation.resolveTypeBinding();
+			if (!info.shouldBeRefactored(classInstanceCreation.resolveTypeBinding())
+					&& !Types.isTypeOf(typeBinding, "javax.swing.SwingWorker")) {
 				summary.addSkipped("classInstanceCreation");
 				continue;
-			}			
-			
+			}
+
 			SwingWorkerWrapper wrapper = new SwingWorkerWrapper();
 			classInstanceCreation.accept(wrapper);
-			refactorClassInstanceCreation(unit, wrapper, classInstanceCreation);			
+			refactorClassInstanceCreation(unit, wrapper, classInstanceCreation);
 
 			summary.addCorrect("classInstanceCreation");
 		}
@@ -74,15 +80,14 @@ public class ClassInstanceCreationWorker extends GeneralWorker<TypeOutput, Void>
 		return null;
 	}
 
-	//TODO: What is this for? Why do we have to check it?
+	// TODO: What is this for? Why do we have to check it?
 	private boolean isRelevant(ClassInstanceCreation classInstanceCreation) {
-		Optional<Assignment> assignmentParent = ASTNodes.findParent(classInstanceCreation, Assignment.class);
-		Optional<VariableDeclarationStatement> varDeclParent = ASTNodes.findParent(classInstanceCreation,
-				VariableDeclarationStatement.class);
-		Optional<FieldDeclaration> fieldDeclParent = ASTNodes.findParent(classInstanceCreation, FieldDeclaration.class);
+		boolean relevant = ASTNodes.findParent(classInstanceCreation, Assignment.class).isPresent()
+				|| ASTNodes.findParent(classInstanceCreation, VariableDeclarationFragment.class).isPresent()
+				|| ASTNodes.findParent(classInstanceCreation, FieldDeclaration.class).isPresent();
 
 		// if any is present, then another worker handles this case
-		return (!assignmentParent.isPresent() && !varDeclParent.isPresent() && !fieldDeclParent.isPresent());
+		return relevant;
 	}
 
 	private void refactorClassInstanceCreation(IRewriteCompilationUnit icu, SwingWorkerWrapper refactoringVisitor,

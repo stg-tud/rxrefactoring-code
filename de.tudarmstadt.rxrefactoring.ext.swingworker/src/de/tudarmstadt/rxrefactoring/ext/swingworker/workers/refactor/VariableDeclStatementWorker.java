@@ -14,24 +14,21 @@ import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.Statement;
-import org.eclipse.jdt.core.dom.TryStatement;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
-import com.google.common.collect.Multimap;
-
+import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
+import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import de.tudarmstadt.rxrefactoring.core.utils.Statements;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObservableModel;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObserverModel;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SWSubscriberModel;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
-import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
-import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
-import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
-import de.tudarmstadt.rxrefactoring.core.utils.Log;
-import de.tudarmstadt.rxrefactoring.core.utils.Statements;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
@@ -47,15 +44,16 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
  * Adapted to new core by Camila Gonzalez on 24/01/2018
  */
 public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void> {
-	
+
 	@Override
 	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,
 			@NonNull WorkerSummary summary) throws Exception {
-		
-		RefactorInfo info = input.info;		
 
-		for (Map.Entry<IRewriteCompilationUnit, VariableDeclarationStatement> entry : input.collector.getVarDeclMap().entries()) {
-			
+		RefactorInfo info = input.info;
+
+		for (Map.Entry<IRewriteCompilationUnit, VariableDeclarationStatement> entry : input.collector.getVarDeclMap()
+				.entries()) {
+
 			IRewriteCompilationUnit icu = entry.getKey();
 			VariableDeclarationStatement varDeclStatement = entry.getValue();
 
@@ -63,7 +61,7 @@ public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void>
 				summary.addSkipped("variableDeclarations");
 				continue;
 			}
-			
+
 			AST ast = varDeclStatement.getAST();
 
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) varDeclStatement.fragments().get(0);
@@ -71,17 +69,12 @@ public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void>
 			if (initializer instanceof ClassInstanceCreation) {
 				ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) initializer;
 
-				if (ASTUtils.isClassOf(classInstanceCreation, SwingWorkerInfo.getBinaryName())) {
-					Log.info(getClass(),
-							"METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName());
+				if (Types.isExactTypeOf(classInstanceCreation.resolveTypeBinding().getErasure(),
+						SwingWorkerInfo.getBinaryName())) {
 					SwingWorkerWrapper refactoringVisitor = new SwingWorkerWrapper();
 					varDeclStatement.accept(refactoringVisitor);
-
-					Log.info(getClass(),
-							"METHOD=refactor - Refactoring variable declaration statement in: " + icu.getElementName());
 					refactorVarDecl(icu, refactoringVisitor, varDeclStatement, fragment);
 				} else {
-					Log.info(getClass(), "METHOD=refactor - Refactoring variable name: " + icu.getElementName());
 					SimpleName simpleName = fragment.getName();
 					String newIdentifier = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
 					synchronized (icu) {
@@ -104,7 +97,7 @@ public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void>
 				type = ((ParameterizedType) type).getType();
 			}
 
-			if (ASTUtils.isClassOf(type, SwingWorkerInfo.getBinaryName())) {
+			if (Types.isExactTypeOf(type.resolveBinding().getErasure(), SwingWorkerInfo.getBinaryName())) {
 				synchronized (icu) {
 					icu.addImport("de.tudarmstadt.stg.rx.swingworker.SWSubscriber");
 					SimpleType newType = SwingWorkerASTUtils.newSimpleType(ast, "SWSubscriber");
@@ -202,17 +195,16 @@ public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void>
 	private String refactorDoInBgBlock(Block doInBgBlock) {
 		String doInBgBlockString = "";
 		List<Statement> list = doInBgBlock.statements();
+
 		StringBuilder sb = new StringBuilder();
 		sb.append("{ " + System.lineSeparator());
+
 		for (int i = 0; i < list.size(); i++) {
 			Statement stmnt = list.get(i);
-			if (stmnt instanceof TryStatement && stmnt.toString().contains("executorSC.submit(singleRun)")) {
-				stmnt = TemplateVisitor.createSingleStatementFromText(doInBgBlock.getAST(),
-						stmnt.toString().replace("executorSC.submit(singleRun)", "singleRun.executeObservable()"));
-			}
 			sb.append(stmnt.toString() + System.lineSeparator());
 		}
 		sb.append("}");
+
 		doInBgBlockString = RefactoringUtils.cleanSwingWorkerName(sb.toString());
 		return doInBgBlockString;
 	}

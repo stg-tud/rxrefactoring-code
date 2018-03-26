@@ -4,11 +4,10 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Map;
 
+import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.SwingWorkerExtension;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
-
-import de.tudarmstadt.rxrefactoring.ext.swingworker.SwingWorkerExtension;
-import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 /**
  * Description: <br>

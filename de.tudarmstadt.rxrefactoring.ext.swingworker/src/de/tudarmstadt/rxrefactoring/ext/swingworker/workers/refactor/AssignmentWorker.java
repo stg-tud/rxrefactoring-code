@@ -1,19 +1,23 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.ExpressionStatement;
+import org.eclipse.jdt.core.dom.FieldAccess;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
-import com.google.common.collect.Multimap;
-
-import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObservableModel;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObserverModel;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SWSubscriberModel;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
@@ -21,6 +25,10 @@ import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObservableModel;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObserverModel;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SWSubscriberModel;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
@@ -38,15 +46,16 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
 public class AssignmentWorker extends GeneralWorker<TypeOutput, Void> {
 
 	@Override
-	public @Nullable Void refactor(@NonNull IProjectUnits units,
-			@Nullable TypeOutput input, @NonNull WorkerSummary summary) throws Exception {
-				
+	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,
+			@NonNull WorkerSummary summary) throws Exception {
+
 		RefactorInfo info = input.info;
 
-		for (Map.Entry<IRewriteCompilationUnit, Assignment> assignmentEntry : input.collector.getAssigmentsMap().entries()) {					
+		for (Map.Entry<IRewriteCompilationUnit, Assignment> assignmentEntry : input.collector.getAssigmentsMap()
+				.entries()) {
 			IRewriteCompilationUnit icu = assignmentEntry.getKey();
 			Assignment assignment = assignmentEntry.getValue();
-			
+
 			if (info.shouldBeRefactored(assignment.getRightHandSide().resolveTypeBinding())) {
 				summary.addSkipped("assignment");
 				continue;

@@ -1,7 +1,6 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.utils;
 
 import java.util.List;
-import java.util.Objects;
 
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ITypeBinding;
@@ -17,63 +16,69 @@ import com.google.common.collect.Lists;
  *
  */
 public class RefactorInfo {
-	
+
 	private final List<TypeInfo> types = Lists.newLinkedList();
-	
+
 	private class TypeInfo {
 		private final TypeDeclaration decl;
 		private final ITypeBinding binding;
-		
+
 		/**
 		 * Specifies manually whether this type can be refactored.
 		 */
 		private final boolean isRefactorable;
-				
+
 		public TypeInfo(TypeDeclaration decl, boolean isRefactorable) {
 			this.decl = decl;
 			this.binding = decl.resolveBinding();
-			
+
 			this.isRefactorable = isRefactorable;
 		}
-	
+
 		public TypeInfo(TypeDeclaration decl) {
 			this(decl, true);
 		}
-		
+
 		public boolean shouldBeRefactored() {
 			if (!isRefactorable)
 				return false;
-			
-			return true;			
+
+			return true;
 		}
-			
+
+		public String toString() {
+			return decl.getName() + ": " + shouldBeRefactored();
+		}
+
 	}
-		
+
 	public void add(TypeDeclaration decl) {
 		add(decl, true);
 	}
-	
+
 	public void add(TypeDeclaration decl, boolean isRefactorable) {
 		types.add(new TypeInfo(decl, isRefactorable));
 	}
-	
-	
+
 	public boolean shouldBeRefactored(Type type) {
 		return shouldBeRefactored(type.resolveBinding());
 	}
-	
+
 	public boolean shouldBeRefactored(Expression expr) {
 		return shouldBeRefactored(expr.resolveTypeBinding());
 	}
-	
-	public boolean shouldBeRefactored(ITypeBinding binding) {		
+
+	public boolean shouldBeRefactored(ITypeBinding binding) {
 		if (binding == null)
-			return false;					
-		
+			return false;
+
 		return types.stream()
-			.filter(info -> Objects.equals(binding, info.binding))
-			.findFirst()
-			.map(info -> info.shouldBeRefactored())
-			.isPresent();		
-	}	
+				// TODO How to sensibly compare type bindings?
+				.filter(info -> binding.getQualifiedName().equals(info.binding.getQualifiedName())).findFirst()
+				.map(info -> info.shouldBeRefactored()).isPresent();
+	}
+
+	public String toString() {
+		return types.toString();
+	}
 }

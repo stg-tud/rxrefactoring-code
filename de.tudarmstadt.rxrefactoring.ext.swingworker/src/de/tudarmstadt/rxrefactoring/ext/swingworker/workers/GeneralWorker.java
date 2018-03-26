@@ -14,15 +14,14 @@ import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IWorker;
+import de.tudarmstadt.rxrefactoring.core.legacy.IdManager;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObservableModel;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObserverModel;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SWSubscriberModel;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.SwingWorkerWrapper;
-import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorker;
-import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
-import de.tudarmstadt.rxrefactoring.core.legacy.IdManager;
-import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 
 /**
  * Author: Grebiel Jose Ifill Brito<br>

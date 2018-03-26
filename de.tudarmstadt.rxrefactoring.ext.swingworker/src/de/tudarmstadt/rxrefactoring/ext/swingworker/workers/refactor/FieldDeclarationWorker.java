@@ -5,17 +5,23 @@ import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-import com.google.common.collect.Multimap;
-
-import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SWSubscriberModel;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
-import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SWSubscriberModel;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
@@ -32,17 +38,17 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
  */
 public class FieldDeclarationWorker extends GeneralWorker<TypeOutput, Void> {
 	@Override
-	public @Nullable Void refactor(@NonNull IProjectUnits units,
-			@Nullable TypeOutput input,
+	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,
 			@NonNull WorkerSummary summary) throws Exception {
-		
-		RefactorInfo info = input.info;		
-		
+
+		RefactorInfo info = input.info;
+
 		for (Map.Entry<IRewriteCompilationUnit, FieldDeclaration> entry : input.collector.getFieldDeclMap().entries()) {
 			IRewriteCompilationUnit icu = entry.getKey();
 			FieldDeclaration fieldDeclaration = entry.getValue();
-			
-			if (!info.shouldBeRefactored(fieldDeclaration.getType())) {
+
+			if (!info.shouldBeRefactored(fieldDeclaration.getType()) && !fieldDeclaration.getType().resolveBinding()
+					.getErasure().getQualifiedName().equals("javax.swing.SwingWorker")) {
 				summary.addSkipped("fieldDeclarations");
 				continue;
 			}
@@ -53,7 +59,7 @@ public class FieldDeclarationWorker extends GeneralWorker<TypeOutput, Void> {
 			if (type instanceof ParameterizedType) {
 				type = ((ParameterizedType) type).getType();
 			}
-			if (ASTUtils.isClassOf(type, SwingWorkerInfo.getBinaryName())) {
+			if (Types.isTypeOf(type.resolveBinding(), SwingWorkerInfo.getBinaryName())) {
 				SimpleType newType = SwingWorkerASTUtils.newSimpleType(ast, "SWSubscriber");
 				synchronized (icu) {
 					icu.replace(type, newType);
@@ -71,14 +77,14 @@ public class FieldDeclarationWorker extends GeneralWorker<TypeOutput, Void> {
 			Expression initializer = varDeclFrag.getInitializer();
 			if (initializer != null && initializer instanceof ClassInstanceCreation) {
 				ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) initializer;
-				if (ASTUtils.isClassOf(classInstanceCreation, SwingWorkerInfo.getBinaryName())) {					
+				if (ASTUtils.isClassOf(classInstanceCreation, SwingWorkerInfo.getBinaryName())) {
 					SwingWorkerWrapper refactoringVisitor = new SwingWorkerWrapper();
 					classInstanceCreation.accept(refactoringVisitor);
 
 					refactor(icu, refactoringVisitor, fieldDeclaration);
 				}
 			}
-			
+
 			summary.addCorrect("fieldDeclarations");
 		}
 		return null;

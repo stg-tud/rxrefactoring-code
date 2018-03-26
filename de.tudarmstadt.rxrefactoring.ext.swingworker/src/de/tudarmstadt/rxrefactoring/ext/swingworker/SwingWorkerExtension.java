@@ -2,6 +2,7 @@ package de.tudarmstadt.rxrefactoring.ext.swingworker;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -9,11 +10,12 @@ import java.util.concurrent.Executors;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.annotation.NonNull;
+import org.osgi.framework.Bundle;
 
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.*;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.RxCollector;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.AssignmentWorker;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.ClassInstanceCreationWorker;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.FieldDeclarationWorker;
@@ -27,9 +29,6 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeDeclaratio
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
-
-import java.net.URL;
-import org.osgi.framework.Bundle;
 
 /**
  * Description: Extension class for SwingWorker<br>
@@ -52,20 +51,18 @@ public class SwingWorkerExtension implements IRefactorExtension {
 	public void addWorkersTo(@NonNull IWorkerTree workerTree) {
 		setupFreemaker();
 		IWorkerRef<Void, RxCollector> collector = workerTree.addWorker(new RxCollector());
-		
+
 		IWorkerRef<RxCollector, TypeOutput> typeWorker = workerTree.addWorker(collector, new TypeDeclarationWorker());
-		
-		
+
 		workerTree.addWorker(typeWorker, new AssignmentWorker());
 		workerTree.addWorker(typeWorker, new FieldDeclarationWorker());
-		//workerTree.addWorker(collector, new MethodInvocationWorker());
+		workerTree.addWorker(typeWorker, new MethodInvocationWorker());
 		workerTree.addWorker(typeWorker, new VariableDeclStatementWorker());
-//		workerTree.addWorker(collector, new SimpleNameWorker());
-//		workerTree.addWorker(collector, new SingleVariableDeclWorker());
+		workerTree.addWorker(typeWorker, new SimpleNameWorker());
+		workerTree.addWorker(typeWorker, new SingleVariableDeclWorker());
 		workerTree.addWorker(typeWorker, new ClassInstanceCreationWorker());
-//		workerTree.addWorker(collector, new TypeDeclarationWorker());
-//		workerTree.addWorker(collector, new MethodDeclarationWorker());
-//		workerTree.addWorker(collector, new RelevantInvocationsWorker());
+		workerTree.addWorker(typeWorker, new MethodDeclarationWorker());
+		workerTree.addWorker(typeWorker, new RelevantInvocationsWorker());
 	}
 
 	@Override
@@ -104,7 +101,7 @@ public class SwingWorkerExtension implements IRefactorExtension {
 			throw new RuntimeException("Exception in setDirectoryForTemplateLoading", e);
 		}
 	}
-	
+
 	@Override
 	public @NonNull ExecutorService createExecutorService() {
 		return Executors.newSingleThreadExecutor();

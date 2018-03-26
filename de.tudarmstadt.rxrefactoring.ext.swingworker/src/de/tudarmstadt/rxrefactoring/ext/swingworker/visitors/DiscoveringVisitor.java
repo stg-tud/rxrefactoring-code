@@ -90,7 +90,7 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 		IBinding iBinding = simpleName.resolveBinding();
 		if (iBinding != null) {
 			int kind = iBinding.getKind();
-			if (ASTUtils.isTypeOf(typeBinding, classBinaryName) && kind == IBinding.VARIABLE) {
+			if (Types.isTypeOf(typeBinding, classBinaryName) && kind == IBinding.VARIABLE) {
 				if (!simpleNames.contains(simpleName)) {
 					simpleNames.add(simpleName);
 				}
@@ -134,25 +134,21 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 		IMethodBinding binding = node.resolveMethodBinding();
 		if (binding != null) {
 			ITypeBinding type = binding.getDeclaringClass();
-			
-			if (ASTUtils.isTypeOf(type, classBinaryName)) {
+
+			if (Types.isTypeOf(type, classBinaryName)) {
 				methodInvocations.add(node);
-			} 
-			
+			}
+
 			if (Methods.hasSignature(binding, "java.util.concurrent.Executor", "execute", "java.lang.Runnable")) {
 				relevantInvocations.add(node);
 			}
 		}
-			
-			
-			
-		
 
 		for (Object arg : node.arguments()) {
 			if (arg instanceof SimpleName) {
 				SimpleName simpleName = (SimpleName) arg;
 				ITypeBinding argType = simpleName.resolveTypeBinding();
-				if (ASTUtils.isTypeOf(argType, classBinaryName)) {
+				if (Types.isTypeOf(argType, classBinaryName)) {
 					if (!simpleNames.contains(simpleName)) {
 						simpleNames.add(simpleName);
 					}
@@ -206,7 +202,7 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 	public List<MethodDeclaration> getMethodDeclarations() {
 		return methodDeclarations;
 	}
-	
+
 	public List<MethodInvocation> getRelevantInvocations() {
 		return relevantInvocations;
 	}

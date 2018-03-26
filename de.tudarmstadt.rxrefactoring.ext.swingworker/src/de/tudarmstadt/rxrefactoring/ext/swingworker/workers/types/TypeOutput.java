@@ -8,14 +8,14 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.RxCollector;
 
 public class TypeOutput {
-	@NonNull public final RxCollector collector;
-	@NonNull public final RefactorInfo info;
-	
+	@NonNull
+	public final RxCollector collector;
+	@NonNull
+	public final RefactorInfo info;
+
 	public TypeOutput(RxCollector collector, RefactorInfo info) {
 		super();
 		this.collector = Objects.requireNonNull(collector);
 		this.info = Objects.requireNonNull(info);
-	} 	
+	}
 }
-
-
