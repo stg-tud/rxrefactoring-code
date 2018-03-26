@@ -17,8 +17,12 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
+import com.google.common.collect.Lists;
+
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.Methods;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 
 /**
  * Description: This visitor collects different {@link ASTNode} types and add
@@ -37,6 +41,7 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 	private final List<SingleVariableDeclaration> singleVarDeclarations;
 	private final List<MethodDeclaration> methodDeclarations;
 	private final List<MethodInvocation> methodInvocations;
+	private final List<MethodInvocation> relevantInvocations;
 
 	public DiscoveringVisitor(String classBinaryName) {
 		this.classBinaryName = classBinaryName;
@@ -49,6 +54,7 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 		classInstanceCreations = new ArrayList<>();
 		singleVarDeclarations = new ArrayList<>();
 		methodDeclarations = new ArrayList<>();
+		relevantInvocations = Lists.newLinkedList();
 	}
 
 	@Override
@@ -128,10 +134,19 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 		IMethodBinding binding = node.resolveMethodBinding();
 		if (binding != null) {
 			ITypeBinding type = binding.getDeclaringClass();
+			
 			if (ASTUtils.isTypeOf(type, classBinaryName)) {
 				methodInvocations.add(node);
+			} 
+			
+			if (Methods.hasSignature(binding, "java.util.concurrent.Executor", "execute", "java.lang.Runnable")) {
+				relevantInvocations.add(node);
 			}
 		}
+			
+			
+			
+		
 
 		for (Object arg : node.arguments()) {
 			if (arg instanceof SimpleName) {
@@ -190,6 +205,10 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 
 	public List<MethodDeclaration> getMethodDeclarations() {
 		return methodDeclarations;
+	}
+	
+	public List<MethodInvocation> getRelevantInvocations() {
+		return relevantInvocations;
 	}
 
 }

@@ -25,7 +25,7 @@ public abstract class RxRefactoringTest {
 	public final Block parse(String statements) {
 		statements += "assert Boolean.TRUE;\n";
 
-		final ASTParser parser = ASTParser.newParser(AST.JLS9);
+		final ASTParser parser = ASTParser.newParser(AST.JLS10);
 
 		parser.setKind(ASTParser.K_STATEMENTS);
 		parser.setSource(statements.toCharArray());

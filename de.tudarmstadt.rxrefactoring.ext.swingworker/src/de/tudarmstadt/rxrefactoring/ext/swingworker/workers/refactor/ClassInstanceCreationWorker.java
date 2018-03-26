@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
+package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor;
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,52 +31,50 @@ import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.TemplateUtils;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.RefactoringVisitor;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.TemplateVisitor;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.GeneralWorker;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.SwingWorkerWrapper;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
 
 /**
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016<br>
  * Adapted to new core by Camila Gonzalez on 24/01/2018
  */
-public class ClassInstanceCreationWorker extends GeneralWorker {
+public class ClassInstanceCreationWorker extends GeneralWorker<TypeOutput, Void> {
 
 	@Override
 	public @Nullable Void refactor(@NonNull IProjectUnits units,
-			de.tudarmstadt.rxrefactoring.ext.swingworker.workers.@Nullable RxCollector input,
+			@Nullable TypeOutput input,
 			@NonNull WorkerSummary summary) throws Exception {
-		Multimap<IRewriteCompilationUnit, ClassInstanceCreation> classInstanceMap = input.getClassInstanceMap();
-		int total = classInstanceMap.values().size();
-		Log.info(getClass(), "METHOD=refactor - Total number of <<ClassInstanceCreation>>: " + total);
-
-		for (Map.Entry<IRewriteCompilationUnit, ClassInstanceCreation> classInsCreationEntry : classInstanceMap
-				.entries()) {
-			IRewriteCompilationUnit icu = classInsCreationEntry.getKey();
-			ClassInstanceCreation classInstanceCreation = classInsCreationEntry.getValue();
-			if (!isRelevant(classInstanceCreation)) {
+		
+		RefactorInfo info = input.info;
+		
+		for (Map.Entry<IRewriteCompilationUnit, ClassInstanceCreation> entry : input.collector.getClassInstanceMap().entries()) {
+			
+			IRewriteCompilationUnit unit = entry.getKey();
+			ClassInstanceCreation classInstanceCreation = entry.getValue();
+			
+			if (!isRelevant(classInstanceCreation) || !info.shouldBeRefactored(classInstanceCreation.resolveTypeBinding())) {
+				summary.addSkipped("classInstanceCreation");
 				continue;
-			}
+			}			
+			
+			SwingWorkerWrapper wrapper = new SwingWorkerWrapper();
+			classInstanceCreation.accept(wrapper);
+			refactorClassInstanceCreation(unit, wrapper, classInstanceCreation);			
 
-			// Collect details about the SwingWorker
-			Log.info(getClass(), "METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName());
-			RefactoringVisitor refactoringVisitor = new RefactoringVisitor();
-			classInstanceCreation.accept(refactoringVisitor);
-
-			Log.info(getClass(), "METHOD=refactor - Refactoring class instance creation in: " + icu.getElementName());
-			refactorClassInstanceCreation(icu, refactoringVisitor, classInstanceCreation);
-
-			// Add changes to the multiple compilation units write object
-			Log.info(getClass(), "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName());
-
-			summary.addCorrect("ClassInstances");
+			summary.addCorrect("classInstanceCreation");
 		}
 
 		return null;
 	}
 
+	//TODO: What is this for? Why do we have to check it?
 	private boolean isRelevant(ClassInstanceCreation classInstanceCreation) {
 		Optional<Assignment> assignmentParent = ASTNodes.findParent(classInstanceCreation, Assignment.class);
 		Optional<VariableDeclarationStatement> varDeclParent = ASTNodes.findParent(classInstanceCreation,
@@ -87,7 +85,7 @@ public class ClassInstanceCreationWorker extends GeneralWorker {
 		return (!assignmentParent.isPresent() && !varDeclParent.isPresent() && !fieldDeclParent.isPresent());
 	}
 
-	private void refactorClassInstanceCreation(IRewriteCompilationUnit icu, RefactoringVisitor refactoringVisitor,
+	private void refactorClassInstanceCreation(IRewriteCompilationUnit icu, SwingWorkerWrapper refactoringVisitor,
 			ClassInstanceCreation classInstanceCreation) {
 		// Check if the class instance creation corresponds to a subclass of SwingWorker
 		Optional<MethodInvocation> methodInvocation = ASTNodes.findParent(classInstanceCreation,
@@ -134,7 +132,7 @@ public class ClassInstanceCreationWorker extends GeneralWorker {
 		}
 	}
 
-	private void refactorStatefulSwingWorker(IRewriteCompilationUnit icu, RefactoringVisitor refactoringVisitor,
+	private void refactorStatefulSwingWorker(IRewriteCompilationUnit icu, SwingWorkerWrapper refactoringVisitor,
 			ClassInstanceCreation classInstanceCreation) {
 		String rxSubscriberName = "rxSubscriber";
 		SWSubscriberModel subscriberDto = createSWSubscriberDto(rxSubscriberName, icu, refactoringVisitor);
@@ -169,7 +167,7 @@ public class ClassInstanceCreationWorker extends GeneralWorker {
 		SwingWorkerASTUtils.removeStatement(icu, classInstanceCreation);
 	}
 
-	private void refactorStatelessSwingWorker(IRewriteCompilationUnit icu, RefactoringVisitor refactoringVisitor,
+	private void refactorStatelessSwingWorker(IRewriteCompilationUnit icu, SwingWorkerWrapper refactoringVisitor,
 			ClassInstanceCreation classInstanceCreation) {
 		RxObservableModel observableDto = createObservableDto(icu, refactoringVisitor);
 

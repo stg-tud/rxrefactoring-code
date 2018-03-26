@@ -1,9 +1,10 @@
-package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
+package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor;
 
 import java.util.Map;
 
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.RxCollector;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;

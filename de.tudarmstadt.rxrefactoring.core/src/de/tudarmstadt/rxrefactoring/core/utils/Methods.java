@@ -35,10 +35,10 @@ public final class Methods {
 		if (mb == null) {
 			return false;
 		}
-			
+					
 		ITypeBinding[] mbParameters = mb.getParameterTypes();
 		boolean result = 
-				(className == null || Types.isExactTypeOf(mb.getDeclaringClass(), className))
+				(className == null || Types.isTypeOf(mb.getDeclaringClass(), className))
 				&& Objects.equals(mb.getName(), methodName)
 				&& parameterTypeNames.length == mbParameters.length;
 

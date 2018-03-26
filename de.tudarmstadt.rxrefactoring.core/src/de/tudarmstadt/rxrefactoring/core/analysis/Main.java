@@ -25,7 +25,7 @@ public final class Main {
 		String program =
 				"a = b == 1 ? f(g.h(x), y) : z";
 				
-		final ASTParser parser = ASTParser.newParser(AST.JLS9);
+		final ASTParser parser = ASTParser.newParser(AST.JLS10);
 		
 		parser.setKind(ASTParser.K_EXPRESSION);
 		parser.setSource(program.toCharArray());
@@ -117,7 +117,7 @@ public final class Main {
 				+ "throw new NullPointerException();";
 		
 						
-		final ASTParser parser = ASTParser.newParser(AST.JLS9);
+		final ASTParser parser = ASTParser.newParser(AST.JLS10);
 		
 		parser.setKind(ASTParser.K_STATEMENTS);
 		parser.setSource(program.toCharArray());

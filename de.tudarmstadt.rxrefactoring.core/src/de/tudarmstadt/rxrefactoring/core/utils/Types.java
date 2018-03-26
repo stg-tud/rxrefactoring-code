@@ -35,8 +35,7 @@ public final class Types {
 			return false;
 		}
 				
-		String binaryName = type.getQualifiedName();
-		
+		String binaryName = type.getQualifiedName();		
 		return Arrays.stream(typeBinaryNames).anyMatch(s -> Objects.equals(binaryName, s));		
 	}
 	
@@ -56,7 +55,7 @@ public final class Types {
 				
 		ITypeBinding superType = type;		
 		while (superType != null) {
-			if (isExactTypeOf(superType, parentTypeQualifiedNames)) {
+			if (isExactTypeOf(superType, parentTypeQualifiedNames) || isExactTypeOf(superType.getErasure(), parentTypeQualifiedNames)) {
 				return true;
 			}
 			

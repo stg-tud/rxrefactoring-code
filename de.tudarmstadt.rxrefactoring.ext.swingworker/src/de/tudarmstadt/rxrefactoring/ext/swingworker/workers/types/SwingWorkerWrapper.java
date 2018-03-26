@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.swingworker.visitors;
+package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/16/2016 Adapted to new structure: 13/01/2018 by Camila Gonzalez
  */
-public class RefactoringVisitor extends ASTVisitor {
+public class SwingWorkerWrapper extends ASTVisitor {
 	private static final String DO_IN_BACKGROUND = "doInBackground";
 	private static final String DONE = "done";
 	private static final String PROCESS = "process";
@@ -68,7 +68,7 @@ public class RefactoringVisitor extends ASTVisitor {
 
 	private final Map<String, Method> methodsOfSubscriber = new HashMap<String, Method>();
 
-	public RefactoringVisitor() {
+	public SwingWorkerWrapper() {
 		fieldDeclarations = new ArrayList<>();
 		additionalMethodDeclarations = new ArrayList<>();
 		allMethodDeclarations = new ArrayList<>();

@@ -249,12 +249,10 @@ public class RefactorSummary {
 
 		}
 
-		private static String mapToString(Map<String, CountEntry> map, int padding) {
-			String result = "";
-			for (Entry<String, CountEntry> entry : map.entrySet()) {
-				result += "\n" + fromPadding(padding) + entry.getKey() + ": " + entry.getValue();
-			}
-			return result;
+		private static String mapToString(Map<String, CountEntry> map, int padding) {			
+			return map.entrySet().stream()
+				.sorted((e1, e2) -> e1.getKey().compareTo(e2.getKey()))
+				.reduce("", (acc, s) -> acc + "\n" + fromPadding(padding) + s.getKey() + ": " + s.getValue(), (s1, s2) -> s1 + "\n" + s2);
 		}
 
 		private static Map<String, CountEntry> combine(Map<String, CountEntry> a, Map<String, CountEntry> b) {

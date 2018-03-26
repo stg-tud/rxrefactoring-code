@@ -1,10 +1,8 @@
-package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
+package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -18,9 +16,7 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.ParameterizedType;
-import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.Type;
@@ -28,61 +24,58 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
-import com.google.common.collect.Multimap;
-
-import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObservableModel;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
-import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
-import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.Methods;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObservableModel;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.TemplateUtils;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.RefactoringVisitor;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.TemplateVisitor;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.GeneralWorker;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.RxCollector;
 
 /**
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/28/2016<br>
  * Adapted to new core by Camila Gonzalez on 24/01/2018
  */
-public class TypeDeclarationWorker extends GeneralWorker {
+public class TypeDeclarationWorker extends GeneralWorker<RxCollector, TypeOutput> {	
+	
 	@Override
-	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable RxCollector input,
+	public @Nullable TypeOutput refactor(@NonNull IProjectUnits units, @Nullable RxCollector input,
 			@NonNull WorkerSummary summary) throws Exception {
-		Multimap<IRewriteCompilationUnit, TypeDeclaration> typeDeclMap = input.getTypeDeclMap();
-		int total = typeDeclMap.values().size();
-		Log.info(getClass(), "METHOD=refactor - Total number of <<TypeDeclaration>>: " + total);
+		
+			
+		RefactorInfo info = new RefactorInfo();
 
-		for (Map.Entry<IRewriteCompilationUnit, TypeDeclaration> typeDeclEntry : typeDeclMap.entries()) {
+		for (Map.Entry<IRewriteCompilationUnit, TypeDeclaration> typeDeclEntry : input.getTypeDeclMap().entries()) {
 			IRewriteCompilationUnit icu = typeDeclEntry.getKey();
 			TypeDeclaration typeDeclaration = typeDeclEntry.getValue();
 
-			if (!ASTUtils.isSubclassOf(typeDeclaration, SwingWorkerInfo.getBinaryName(), true)) {
+			if (!Types.isTypeOf(typeDeclaration.resolveBinding(), SwingWorkerInfo.getBinaryName())) {
+				summary.addSkipped("typeDeclarations");
 				continue;
 			}
 
 			// Collect details about the SwingWorker
-			Log.info(getClass(), "METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName());
-			RefactoringVisitor refactoringVisitor = new RefactoringVisitor();
+			SwingWorkerWrapper refactoringVisitor = new SwingWorkerWrapper();
 			typeDeclaration.accept(refactoringVisitor);
 			refactorTypeDeclaration(icu, refactoringVisitor, typeDeclaration);
 
-			// Add changes to the multiple compilation units write object
-			Log.info(getClass(), "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName());
-			// rxMultipleUnitsWriter.addCompilationUnit( icu );
-
-			summary.addCorrect("TypeDeclarations");
+			info.add(typeDeclaration, true);
+			summary.addCorrect("typeDeclarations");
 		}
-		return null;
+		
+		return new TypeOutput(input, info);
 	}
 
-	private void refactorTypeDeclaration(IRewriteCompilationUnit icu, RefactoringVisitor refactoringVisitor,
+	private void refactorTypeDeclaration(IRewriteCompilationUnit icu, SwingWorkerWrapper refactoringVisitor,
 			TypeDeclaration typeDeclaration) {
 		removeSuperInvocations(refactoringVisitor);
 		updateImports(icu);
@@ -117,12 +110,12 @@ public class TypeDeclarationWorker extends GeneralWorker {
 
 		Block doInBackgroundBlock = refactoringVisitor.getDoInBackgroundBlock();
 		if (doInBackgroundBlock != null) {
-			RxObservableModel observableDto = createObservableDto(icu, refactoringVisitor);
-			observableDto.setProcessType(processType);
-			observableDto.setResultType(resultType);
+			RxObservableModel observableModel = createObservableDto(icu, refactoringVisitor);
+			observableModel.setProcessType(processType);
+			observableModel.setResultType(resultType);
 
 			Map<String, Object> observableData = new HashMap<>();
-			observableData.put("model", observableDto);
+			observableData.put("model", observableModel);
 			String observableTemplate = "getRxObservable.ftl";
 
 			String observableString = TemplateUtils.processTemplate(observableTemplate, observableData);
@@ -142,7 +135,7 @@ public class TypeDeclarationWorker extends GeneralWorker {
 		 * executor.execute(worker) needs to be replaced with
 		 * observer.executeObservable()
 		 */
-		removeExecutorServiceStmnt(ast, icu, refactoringVisitor, typeDeclaration);
+	//	removeExecutorServiceStmnt(ast, icu, refactoringVisitor, typeDeclaration);
 	}
 
 	/**
@@ -155,7 +148,7 @@ public class TypeDeclarationWorker extends GeneralWorker {
 	 * @param typeDeclaration
 	 * 
 	 */
-	private void methodInvocCheck(AST ast, IRewriteCompilationUnit icu, RefactoringVisitor refactoringVisitor,
+	private void methodInvocCheck(AST ast, IRewriteCompilationUnit icu, SwingWorkerWrapper refactoringVisitor,
 			TypeDeclaration typeDeclaration) {
 		String className = "";
 		if (typeDeclaration.getParent() instanceof CompilationUnit) {
@@ -190,7 +183,7 @@ public class TypeDeclarationWorker extends GeneralWorker {
 	}
 
 	private void refactorBlock(Block block, AST ast, IRewriteCompilationUnit icu, String className,
-			RefactoringVisitor refactoringVisitor, TypeDeclaration typeDeclaration) {
+			SwingWorkerWrapper refactoringVisitor, TypeDeclaration typeDeclaration) {
 		List<Statement> list = block.statements();
 		for (int i = 0; i < list.size(); i++) {
 			Statement stmnt = (Statement) list.get(i);
@@ -200,7 +193,7 @@ public class TypeDeclarationWorker extends GeneralWorker {
 		}
 	}
 
-	private void refactorExpressionStatement(Statement stmnt, RefactoringVisitor refactoringVisitor, String className,
+	private void refactorExpressionStatement(Statement stmnt, SwingWorkerWrapper refactoringVisitor, String className,
 			AST ast, IRewriteCompilationUnit icu, TypeDeclaration typeDeclaration) {
 		ExpressionStatement exprstmnt = (ExpressionStatement) stmnt;
 		if (exprstmnt.getExpression() instanceof MethodInvocation) {
@@ -229,38 +222,38 @@ public class TypeDeclarationWorker extends GeneralWorker {
 	 * @param typeDeclaration
 	 * 
 	 */
-	private void removeExecutorServiceStmnt(AST ast, IRewriteCompilationUnit icu, RefactoringVisitor refactoringVisitor,
-			TypeDeclaration typeDeclaration) {
-		if (typeDeclaration.getName().toString().equals("SMSWorker")) {
-			for (IMethodBinding imb : typeDeclaration.resolveBinding().getDeclaringClass().getDeclaredMethods()) {
-				if (!imb.isConstructor()) {
-					TypeDeclaration tb = (TypeDeclaration) typeDeclaration.getParent();
-					List list = tb.bodyDeclarations();
-					for (int i = 0; i < list.size(); i++) {
-						if (list.get(i) instanceof MethodDeclaration) {
-							MethodDeclaration md = (MethodDeclaration) list.get(i);
-							if (md.getName() != null && md.getName().getIdentifier().equals("sendNew")) {
-								Block methodblock = md.getBody();
-								if (methodblock != null
-										&& methodblock.toString().contains("executor.execute(worker);")) {
-									List<Statement> blocklist = methodblock.statements();
-									for (int j = 0; j < blocklist.size(); j++) {
-										Statement stmnt = (Statement) blocklist.get(j);
-										if (stmnt instanceof EnhancedForStatement) {
-											refactorEhncdForStatement(stmnt, refactoringVisitor, ast, icu);
-										}
-									}
-								}
-							}
-						}
-					}
-					break;
-				}
-			}
-		}
-	}
+//	private void removeExecutorServiceStmnt(AST ast, IRewriteCompilationUnit icu, RefactoringVisitor refactoringVisitor,
+//			TypeDeclaration typeDeclaration) {
+//		if (typeDeclaration.getName().toString().equals("SMSWorker")) {
+//			for (IMethodBinding imb : typeDeclaration.resolveBinding().getDeclaringClass().getDeclaredMethods()) {
+//				if (!imb.isConstructor()) {
+//					TypeDeclaration tb = (TypeDeclaration) typeDeclaration.getParent();
+//					List list = tb.bodyDeclarations();
+//					for (int i = 0; i < list.size(); i++) {
+//						if (list.get(i) instanceof MethodDeclaration) {
+//							MethodDeclaration md = (MethodDeclaration) list.get(i);
+//							if (md.getName() != null && md.getName().getIdentifier().equals("sendNew")) {
+//								Block methodblock = md.getBody();
+//								if (methodblock != null
+//										&& methodblock.toString().contains("executor.execute(worker);")) {
+//									List<Statement> blocklist = methodblock.statements();
+//									for (int j = 0; j < blocklist.size(); j++) {
+//										Statement stmnt = (Statement) blocklist.get(j);
+//										if (stmnt instanceof EnhancedForStatement) {
+//											refactorEhncdForStatement(stmnt, refactoringVisitor, ast, icu);
+//										}
+//									}
+//								}
+//							}
+//						}
+//					}
+//					break;
+//				}
+//			}
+//		}
+//	}
 
-	private void refactorEhncdForStatement(Statement stmnt, RefactoringVisitor refactoringVisitor, AST ast,
+	private void refactorEhncdForStatement(Statement stmnt, SwingWorkerWrapper refactoringVisitor, AST ast,
 			IRewriteCompilationUnit icu) {
 		List<Statement> enhncdForStmntlist = ((Block) ((EnhancedForStatement) stmnt).getBody()).statements();
 		for (int j = 0; j < enhncdForStmntlist.size(); j++) {
@@ -279,7 +272,7 @@ public class TypeDeclarationWorker extends GeneralWorker {
 		}
 	}
 
-	private void addOrUpdateConstructor(AST ast, IRewriteCompilationUnit icu, RefactoringVisitor refactoringVisitor,
+	private void addOrUpdateConstructor(AST ast, IRewriteCompilationUnit icu, SwingWorkerWrapper refactoringVisitor,
 			TypeDeclaration typeDeclaration, String resultType) {
 		MethodDeclaration constructor = refactoringVisitor.getConstructor();
 		if (constructor == null) {
@@ -370,8 +363,7 @@ public class TypeDeclarationWorker extends GeneralWorker {
 											&& methodblock.toString().contains("new " + typeDeclaration.getName())
 											&& !md.isConstructor()) {
 										List<Statement> blocklist = methodblock.statements();
-										for (int j = 0; j < blocklist.size(); j++) {
-											Statement stmnt = (Statement) blocklist.get(j);
+										for (Statement stmnt : blocklist) {
 											if (stmnt instanceof VariableDeclarationStatement) {
 												VariableDeclarationStatement vdstmnt = (VariableDeclarationStatement) stmnt;
 												VariableDeclarationFragment fragment = (VariableDeclarationFragment) vdstmnt
@@ -425,22 +417,23 @@ public class TypeDeclarationWorker extends GeneralWorker {
 			 * typeDeclaration.getName().toString().equals("NamedSwingWorker") is ammended
 			 * in below if condition.
 			 */
-			if (typeDeclaration.modifiers() != null && typeDeclaration.modifiers().toString().contains("abstract")
-					&& typeDeclaration.getName().toString().equals("NamedSwingWorker")) {
-				String doInBackgroundBlockStr = "protected abstract " + resultType
-						+ " getRxObservable() throws Exception;";
-				MethodDeclaration doInBackgroundBlock = TemplateVisitor.createMethodFromText(ast,
-						doInBackgroundBlockStr);
-				// Add method
-				icu.getListRewrite(typeDeclaration, TypeDeclaration.BODY_DECLARATIONS_PROPERTY)
-						.insertFirst(doInBackgroundBlock, null);
-			} else {
-				// add statement to constructor
-				Statement setObservableStatement = TemplateVisitor.createSingleStatementFromText(ast,
-						"setObservable(getRxObservable())");
-				SwingWorkerASTUtils.addStatement(icu, setObservableStatement, constructor);
-			}
+//			if (typeDeclaration.modifiers() != null && typeDeclaration.modifiers().toString().contains("abstract")
+//					&& typeDeclaration.getName().toString().equals("NamedSwingWorker")) {
+//				String doInBackgroundBlockStr = "protected abstract " + resultType
+//						+ " getRxObservable() throws Exception;";
+//				MethodDeclaration doInBackgroundBlock = TemplateVisitor.createMethodFromText(ast,
+//						doInBackgroundBlockStr);
+//				// Add method
+//				icu.getListRewrite(typeDeclaration, TypeDeclaration.BODY_DECLARATIONS_PROPERTY)
+//						.insertFirst(doInBackgroundBlock, null);
+//			} else {
+//				// add statement to constructor
+//				Statement setObservableStatement = TemplateVisitor.createSingleStatementFromText(ast,
+//						"setObservable(getRxObservable())");
+//				SwingWorkerASTUtils.addStatement(icu, setObservableStatement, constructor);
+//			}
 		}
 	}
-
 }
+
+

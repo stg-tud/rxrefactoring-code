@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
+package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,30 +21,36 @@ import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.TemplateUtils;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.RefactoringVisitor;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.TemplateVisitor;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.GeneralWorker;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.SwingWorkerWrapper;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
 
 /**
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016<br>
  * Adapted to new core by Camila Gonzalez on 24/01/2018
  */
-public class AssignmentWorker extends GeneralWorker {
+public class AssignmentWorker extends GeneralWorker<TypeOutput, Void> {
 
 	@Override
 	public @Nullable Void refactor(@NonNull IProjectUnits units,
-			de.tudarmstadt.rxrefactoring.ext.swingworker.workers.@Nullable RxCollector input,
-			@NonNull WorkerSummary summary) throws Exception {
-		Multimap<IRewriteCompilationUnit, Assignment> varDeclMap = input.getAssigmentsMap();
-		int total = varDeclMap.values().size();
-		Log.info(getClass(), "METHOD=refactor - Total number of <<Assignment>>: " + total);
+			@Nullable TypeOutput input, @NonNull WorkerSummary summary) throws Exception {
+				
+		RefactorInfo info = input.info;
 
-		for (Map.Entry<IRewriteCompilationUnit, Assignment> assignmentEntry : varDeclMap.entries()) {
+		for (Map.Entry<IRewriteCompilationUnit, Assignment> assignmentEntry : input.collector.getAssigmentsMap().entries()) {					
 			IRewriteCompilationUnit icu = assignmentEntry.getKey();
 			Assignment assignment = assignmentEntry.getValue();
+			
+			if (info.shouldBeRefactored(assignment.getRightHandSide().resolveTypeBinding())) {
+				summary.addSkipped("assignment");
+				continue;
+			}
 
 			AST ast = assignment.getAST();
 
@@ -55,7 +61,7 @@ public class AssignmentWorker extends GeneralWorker {
 				if (ASTUtils.isClassOf(classInstanceCreation, SwingWorkerInfo.getBinaryName())) {
 					Log.info(getClass(),
 							"METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName());
-					RefactoringVisitor refactoringVisitor = new RefactoringVisitor();
+					SwingWorkerWrapper refactoringVisitor = new SwingWorkerWrapper();
 					assignment.accept(refactoringVisitor);
 
 					Log.info(getClass(), "METHOD=refactor - Refactoring assignment in: " + icu.getElementName());
@@ -83,13 +89,13 @@ public class AssignmentWorker extends GeneralWorker {
 
 			Log.info(getClass(), "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName());
 
-			summary.addCorrect("Assignments");
+			summary.addCorrect("assignment");
 		}
 
 		return null;
 	}
 
-	private void refactorAssignment(IRewriteCompilationUnit icu, RefactoringVisitor refactoringVisitor,
+	private void refactorAssignment(IRewriteCompilationUnit icu, SwingWorkerWrapper refactoringVisitor,
 			Assignment assignment) {
 		removeSuperInvocations(refactoringVisitor);
 		updateImports(icu);
@@ -101,7 +107,7 @@ public class AssignmentWorker extends GeneralWorker {
 		}
 	}
 
-	private void refactorStatefulSwingWorker(IRewriteCompilationUnit icu, RefactoringVisitor refactoringVisitor,
+	private void refactorStatefulSwingWorker(IRewriteCompilationUnit icu, SwingWorkerWrapper refactoringVisitor,
 			Assignment assignment) {
 		SimpleName swingWorkerName;
 		if (assignment.getLeftHandSide() instanceof FieldAccess) {
@@ -111,11 +117,11 @@ public class AssignmentWorker extends GeneralWorker {
 			swingWorkerName = (SimpleName) assignment.getLeftHandSide();
 		}
 		String rxObserverName = RefactoringUtils.cleanSwingWorkerName(swingWorkerName.getIdentifier());
-		SWSubscriberModel subscriberDto = createSWSubscriberDto(rxObserverName, icu, refactoringVisitor);
+		SWSubscriberModel subscriberModel = createSWSubscriberDto(rxObserverName, icu, refactoringVisitor);
 
 		// Template is called
 		Map<String, Object> subscriberData = new HashMap<>();
-		subscriberData.put("model", subscriberDto);
+		subscriberData.put("model", subscriberModel);
 		String subscriberTemplate = "subscriber.ftl";
 		String subscriberString = TemplateUtils.processTemplate(subscriberTemplate, subscriberData);
 		AST ast = assignment.getAST();
@@ -126,8 +132,8 @@ public class AssignmentWorker extends GeneralWorker {
 		SwingWorkerASTUtils.addBefore(icu, typeDeclaration, referenceStatement);
 
 		// Assignment of new rxObserver is added
-		ExpressionStatement newAssignment = SwingWorkerASTUtils.newAssignment(ast, subscriberDto.getSubscriberName(),
-				subscriberDto.getClassName());
+		ExpressionStatement newAssignment = SwingWorkerASTUtils.newAssignment(ast, subscriberModel.getSubscriberName(),
+				subscriberModel.getClassName());
 		Statements.addStatementBefore(icu, newAssignment, referenceStatement);
 
 		// Assignment of new SwingWorker is removed
@@ -135,7 +141,7 @@ public class AssignmentWorker extends GeneralWorker {
 
 	}
 
-	private void refactorStatelessSwingWorker(IRewriteCompilationUnit icu, RefactoringVisitor refactoringVisitor,
+	private void refactorStatelessSwingWorker(IRewriteCompilationUnit icu, SwingWorkerWrapper refactoringVisitor,
 			Assignment assignment) {
 		RxObservableModel observableDto = createObservableDto(icu, refactoringVisitor);
 		/*
@@ -144,7 +150,7 @@ public class AssignmentWorker extends GeneralWorker {
 		 * MainController.this.requestRxObserver.executeObservable() Scenario:
 		 * 37--KolakCC--lol-jclient : MainController.java
 		 */
-		observableDto.setDoInBackgroundBlock(refactorDoInBgBlock(refactoringVisitor.getDoInBackgroundBlock()));
+		observableDto.setDoInBackgroundBlock(refactorDoInBackgroundBlock(refactoringVisitor.getDoInBackgroundBlock()));
 
 		Map<String, Object> observableData = new HashMap<>();
 		observableData.put("model", observableDto);
@@ -183,7 +189,7 @@ public class AssignmentWorker extends GeneralWorker {
 		}
 	}
 
-	private String refactorDoInBgBlock(Block doInBgBlock) {
+	private String refactorDoInBackgroundBlock(Block doInBgBlock) {
 		String doInBgBlockString = "";
 		List<Statement> list = doInBgBlock.statements();
 		StringBuilder sb = new StringBuilder();

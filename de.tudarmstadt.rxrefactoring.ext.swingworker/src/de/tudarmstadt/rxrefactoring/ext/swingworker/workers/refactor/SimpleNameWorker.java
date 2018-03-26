@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
+package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor;
 
 import java.util.Map;
 import java.util.Optional;
@@ -20,6 +20,7 @@ import de.tudarmstadt.rxrefactoring.core.utils.Statements;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.TemplateVisitor;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.RxCollector;
 
 /**
  * Author: Grebiel Jose Ifill Brito<br>

@@ -17,19 +17,19 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObservableModel;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObserverModel;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SWSubscriberModel;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.SwingWorkerWrapper;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.legacy.IdManager;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.RefactoringVisitor;
 
 /**
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016<br>
  * Adapted to new core by Camila Gonzalez on 19/01/2018
  */
-public abstract class GeneralWorker implements IWorker<RxCollector, Void> {
+public abstract class GeneralWorker<In, Out> implements IWorker<In, Out> {
 
 	public static final String KEYWORD_THIS_WITH_DOT = "this.";
 	public static final String EMPTY = "";
@@ -47,7 +47,7 @@ public abstract class GeneralWorker implements IWorker<RxCollector, Void> {
 	}
 
 	protected RxObservableModel createObservableDto(IRewriteCompilationUnit icuName,
-			RefactoringVisitor refactoringVisitor) {
+			SwingWorkerWrapper refactoringVisitor) {
 		String varName = "rxObservable" + IdManager.getNextObservableId(icuName);
 		RxObservableModel observableDto = new RxObservableModel(varName);
 		Type resultType = refactoringVisitor.getResultType();
@@ -72,7 +72,7 @@ public abstract class GeneralWorker implements IWorker<RxCollector, Void> {
 		return observableDto;
 	}
 
-	protected RxObserverModel createObserverDto(String observerName, RefactoringVisitor refactoringVisitor,
+	protected RxObserverModel createObserverDto(String observerName, SwingWorkerWrapper refactoringVisitor,
 			RxObservableModel observableDto) {
 		RxObserverModel observerDto = new RxObserverModel();
 		observerDto.setObserverName(observerName);
@@ -101,7 +101,7 @@ public abstract class GeneralWorker implements IWorker<RxCollector, Void> {
 		return observerDto;
 	}
 
-	protected void removeSuperInvocations(RefactoringVisitor refactoringVisitor) {
+	protected void removeSuperInvocations(SwingWorkerWrapper refactoringVisitor) {
 		for (SuperMethodInvocation methodInvocation : refactoringVisitor.getSuperMethodInvocationsToRemove()) {
 			Statement statement = ASTNodes.findParent(methodInvocation, Statement.class).get();
 			statement.delete();
@@ -109,7 +109,7 @@ public abstract class GeneralWorker implements IWorker<RxCollector, Void> {
 	}
 
 	protected SWSubscriberModel createSWSubscriberDto(String subscriberName, IRewriteCompilationUnit icu,
-			RefactoringVisitor refactoringVisitor) {
+			SwingWorkerWrapper refactoringVisitor) {
 		String nextObserverId = IdManager.getNextObserverId(icu);
 		String className = "RxObserver" + nextObserverId;
 		subscriberName = subscriberName + nextObserverId;

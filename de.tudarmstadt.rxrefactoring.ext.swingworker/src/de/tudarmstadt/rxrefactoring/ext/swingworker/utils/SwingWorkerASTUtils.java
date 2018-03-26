@@ -87,7 +87,7 @@ public class SwingWorkerASTUtils {
 	 * Creates a {@link SimpleName}
 	 * 
 	 * @param ast
-	 *            {@link AST} of level {@link AST#JLS8}
+	 *            {@link AST}
 	 * @param identifier
 	 *            identifier for new name
 	 * @returns a {@link SimpleName}
@@ -104,7 +104,7 @@ public class SwingWorkerASTUtils {
 	 * created instance
 	 * 
 	 * @param ast
-	 *            {@link AST} of level {@link AST#JLS8}
+	 *            {@link AST}
 	 * @param variable
 	 *            name of the variable
 	 * @param type
@@ -127,7 +127,7 @@ public class SwingWorkerASTUtils {
 	 * Creates a {@link ClassInstanceCreation}
 	 * 
 	 * @param ast
-	 *            {@link AST} of level {@link AST#JLS8}
+	 *            {@link AST}
 	 * @param className
 	 *            the name of the new class
 	 * @returns a {@link ClassInstanceCreation}
@@ -145,7 +145,7 @@ public class SwingWorkerASTUtils {
 	 * Copies the subtree of an {@link ASTNode}
 	 * 
 	 * @param ast
-	 *            {@link AST} of level {@link AST#JLS8}
+	 *            {@link AST}
 	 * @param node
 	 *            the original {@link ASTNode}
 	 * @returns a {@link ASTNode}
@@ -161,7 +161,7 @@ public class SwingWorkerASTUtils {
 	 * Creates a {@link SimpleType}
 	 * 
 	 * @param ast
-	 *            {@link AST} of level {@link AST#JLS8}
+	 *            {@link AST}
 	 * @param identifier
 	 *            identifier for new type
 	 * @returns a {@link SimpleType}

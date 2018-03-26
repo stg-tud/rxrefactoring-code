@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
+package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,33 +16,39 @@ import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.TemplateUtils;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.RefactoringVisitor;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.TemplateVisitor;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.GeneralWorker;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.SwingWorkerWrapper;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
 
 /**
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/22/2016<br>
  * Adapted to new core by Camila Gonzalez on 24/01/2018
  */
-public class FieldDeclarationWorker extends GeneralWorker {
+public class FieldDeclarationWorker extends GeneralWorker<TypeOutput, Void> {
 	@Override
 	public @Nullable Void refactor(@NonNull IProjectUnits units,
-			de.tudarmstadt.rxrefactoring.ext.swingworker.workers.@Nullable RxCollector input,
+			@Nullable TypeOutput input,
 			@NonNull WorkerSummary summary) throws Exception {
-		Multimap<IRewriteCompilationUnit, FieldDeclaration> fieldDeclMap = input.getFieldDeclMap();
-		int total = fieldDeclMap.values().size();
-		Log.info(getClass(), "METHOD=refactor - Total number of <<FieldDeclaration>>: " + total);
-
-		for (Map.Entry<IRewriteCompilationUnit, FieldDeclaration> fieldDeclEntry : fieldDeclMap.entries()) {
-			IRewriteCompilationUnit icu = fieldDeclEntry.getKey();
-			FieldDeclaration fieldDeclaration = fieldDeclEntry.getValue();
+		
+		RefactorInfo info = input.info;		
+		
+		for (Map.Entry<IRewriteCompilationUnit, FieldDeclaration> entry : input.collector.getFieldDeclMap().entries()) {
+			IRewriteCompilationUnit icu = entry.getKey();
+			FieldDeclaration fieldDeclaration = entry.getValue();
+			
+			if (!info.shouldBeRefactored(fieldDeclaration.getType())) {
+				summary.addSkipped("fieldDeclarations");
+				continue;
+			}
 
 			AST ast = fieldDeclaration.getAST();
 
-			Log.info(getClass(), "METHOD=refactor - Changing type: " + icu.getElementName());
 			Type type = fieldDeclaration.getType();
 			if (type instanceof ParameterizedType) {
 				type = ((ParameterizedType) type).getType();
@@ -54,7 +60,6 @@ public class FieldDeclarationWorker extends GeneralWorker {
 				}
 			}
 
-			Log.info(getClass(), "METHOD=refactor - Changing field name: " + icu.getElementName());
 			VariableDeclarationFragment varDeclFrag = (VariableDeclarationFragment) fieldDeclaration.fragments().get(0);
 			String oldIdentifier = varDeclFrag.getName().getIdentifier();
 			synchronized (icu) {
@@ -66,26 +71,20 @@ public class FieldDeclarationWorker extends GeneralWorker {
 			Expression initializer = varDeclFrag.getInitializer();
 			if (initializer != null && initializer instanceof ClassInstanceCreation) {
 				ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) initializer;
-				if (ASTUtils.isClassOf(classInstanceCreation, SwingWorkerInfo.getBinaryName())) {
-					Log.info(getClass(),
-							"METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName());
-					RefactoringVisitor refactoringVisitor = new RefactoringVisitor();
+				if (ASTUtils.isClassOf(classInstanceCreation, SwingWorkerInfo.getBinaryName())) {					
+					SwingWorkerWrapper refactoringVisitor = new SwingWorkerWrapper();
 					classInstanceCreation.accept(refactoringVisitor);
 
-					Log.info(getClass(), "METHOD=refactor - Refactoring assignment in: " + icu.getElementName());
 					refactor(icu, refactoringVisitor, fieldDeclaration);
 				}
 			}
-
-			// Add changes to the multiple compilation units write object
-			Log.info(getClass(), "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName());
-
-			summary.addCorrect("FieldDeclarations");
+			
+			summary.addCorrect("fieldDeclarations");
 		}
 		return null;
 	}
 
-	private void refactor(IRewriteCompilationUnit icu, RefactoringVisitor refactoringVisitor,
+	private void refactor(IRewriteCompilationUnit icu, SwingWorkerWrapper refactoringVisitor,
 			FieldDeclaration fieldDeclaration) {
 		removeSuperInvocations(refactoringVisitor);
 		updateImports(icu);

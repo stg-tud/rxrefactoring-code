@@ -10,7 +10,7 @@ class RewriteCompilationUnitFactory {
 	private final ASTParser parser;
 
 	RewriteCompilationUnitFactory() {
-		parser = ASTParser.newParser(AST.JLS8);
+		parser = ASTParser.newParser(AST.JLS10);
 	}
 
 	@SuppressWarnings("null")

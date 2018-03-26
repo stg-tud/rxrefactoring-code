@@ -33,6 +33,7 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 	private final Multimap<IRewriteCompilationUnit, SingleVariableDeclaration> singleVarDeclMap = HashMultimap.create();
 	private final Multimap<IRewriteCompilationUnit, MethodInvocation> methodInvocationsMap = HashMultimap.create();
 	private final Multimap<IRewriteCompilationUnit, MethodDeclaration> methodDeclarationsMap = HashMultimap.create();
+	private final Multimap<IRewriteCompilationUnit, MethodInvocation> relevantInvocationsMap = HashMultimap.create();
 
 	@Override
 	public @Nullable RxCollector refactor(@NonNull IProjectUnits units, @Nullable Void input,
@@ -53,6 +54,7 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 			singleVarDeclMap.putAll(unit, discoveringVisitor.getSingleVarDeclarations());
 			methodInvocationsMap.putAll(unit, discoveringVisitor.getMethodInvocations());
 			methodDeclarationsMap.putAll(unit, discoveringVisitor.getMethodDeclarations());
+			relevantInvocationsMap.putAll(unit, discoveringVisitor.getRelevantInvocations());
 
 		}
 		summary.setCorrect("numberOfCompilationUnits", getNumberOfCompilationUnits());
@@ -93,6 +95,10 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 
 	public Multimap<IRewriteCompilationUnit, MethodDeclaration> getMethodDeclarationsMap() {
 		return methodDeclarationsMap;
+	}
+	
+	public Multimap<IRewriteCompilationUnit, MethodInvocation> getRelevantInvocations() {
+		return relevantInvocationsMap;
 	}
 
 	public int getNumberOfCompilationUnits() {

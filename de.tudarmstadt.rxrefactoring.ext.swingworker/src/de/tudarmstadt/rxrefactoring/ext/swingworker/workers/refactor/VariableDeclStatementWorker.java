@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
+package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor;
 
 import java.util.HashMap;
 import java.util.List;
@@ -32,29 +32,38 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.TemplateUtils;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.RefactoringVisitor;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.TemplateVisitor;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.GeneralWorker;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.SwingWorkerWrapper;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
 
 /**
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/21/2016<br>
  * Adapted to new core by Camila Gonzalez on 24/01/2018
  */
-public class VariableDeclStatementWorker extends GeneralWorker {
+public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void> {
+	
 	@Override
-	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable RxCollector input,
+	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,
 			@NonNull WorkerSummary summary) throws Exception {
-		Multimap<IRewriteCompilationUnit, VariableDeclarationStatement> varDeclMap = input.getVarDeclMap();
-		int total = varDeclMap.values().size();
-		Log.info(getClass(), "METHOD=refactor - Total number of <<VariableDeclarationStatement>>: " + total);
+		
+		RefactorInfo info = input.info;		
 
-		for (Map.Entry<IRewriteCompilationUnit, VariableDeclarationStatement> varDelcEntry : varDeclMap.entries()) {
-			IRewriteCompilationUnit icu = varDelcEntry.getKey();
-			VariableDeclarationStatement varDeclStatement = varDelcEntry.getValue();
+		for (Map.Entry<IRewriteCompilationUnit, VariableDeclarationStatement> entry : input.collector.getVarDeclMap().entries()) {
+			
+			IRewriteCompilationUnit icu = entry.getKey();
+			VariableDeclarationStatement varDeclStatement = entry.getValue();
 
+			if (!info.shouldBeRefactored(varDeclStatement.getType())) {
+				summary.addSkipped("variableDeclarations");
+				continue;
+			}
+			
 			AST ast = varDeclStatement.getAST();
 
 			VariableDeclarationFragment fragment = (VariableDeclarationFragment) varDeclStatement.fragments().get(0);
@@ -65,7 +74,7 @@ public class VariableDeclStatementWorker extends GeneralWorker {
 				if (ASTUtils.isClassOf(classInstanceCreation, SwingWorkerInfo.getBinaryName())) {
 					Log.info(getClass(),
 							"METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName());
-					RefactoringVisitor refactoringVisitor = new RefactoringVisitor();
+					SwingWorkerWrapper refactoringVisitor = new SwingWorkerWrapper();
 					varDeclStatement.accept(refactoringVisitor);
 
 					Log.info(getClass(),
@@ -111,14 +120,14 @@ public class VariableDeclStatementWorker extends GeneralWorker {
 			// Add changes to the multiple compilation units write object
 			Log.info(getClass(), "METHOD=refactor - Add changes to multiple units writer: " + icu.getElementName());
 
-			summary.addCorrect("VariableDeclarations");
+			summary.addCorrect("variableDeclarations");
 
 		}
 
 		return null;
 	}
 
-	private void refactorVarDecl(IRewriteCompilationUnit icu, RefactoringVisitor refactoringVisitor,
+	private void refactorVarDecl(IRewriteCompilationUnit icu, SwingWorkerWrapper refactoringVisitor,
 			VariableDeclarationStatement varDeclStatement, VariableDeclarationFragment fragment) {
 		removeSuperInvocations(refactoringVisitor);
 		updateImports(icu);
@@ -130,7 +139,7 @@ public class VariableDeclStatementWorker extends GeneralWorker {
 		}
 	}
 
-	private void refactorStatefulSwingWorker(IRewriteCompilationUnit icu, RefactoringVisitor refactoringVisitor,
+	private void refactorStatefulSwingWorker(IRewriteCompilationUnit icu, SwingWorkerWrapper refactoringVisitor,
 			VariableDeclarationStatement varDeclStatement, VariableDeclarationFragment fragment) {
 		SimpleName swingWorkerName = fragment.getName();
 		String rxObserverName = RefactoringUtils.cleanSwingWorkerName(swingWorkerName.getIdentifier());
@@ -154,7 +163,7 @@ public class VariableDeclStatementWorker extends GeneralWorker {
 		SwingWorkerASTUtils.removeStatement(icu, varDeclStatement);
 	}
 
-	private void refactorStatelessSwingWorker(IRewriteCompilationUnit icu, RefactoringVisitor refactoringVisitor,
+	private void refactorStatelessSwingWorker(IRewriteCompilationUnit icu, SwingWorkerWrapper refactoringVisitor,
 			VariableDeclarationStatement varDeclStatement, VariableDeclarationFragment fragment) {
 		RxObservableModel observableDto = createObservableDto(icu, refactoringVisitor);
 		/*

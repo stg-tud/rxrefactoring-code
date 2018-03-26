@@ -225,7 +225,7 @@ public interface IRewriteCompilationUnit extends ICompilationUnit {
 	 * @return The possible rewriting of the original node, or the original node.
 	 */
 	@Beta
-	default public ASTNode getRewrittenNode(ASTNode node) {
+	default public <T extends ASTNode> T getRewrittenNode(T node) {
 		Objects.requireNonNull(node, "node can not be null.");
 
 		StructuralPropertyDescriptor descriptor = node.getLocationInParent();
@@ -246,7 +246,7 @@ public interface IRewriteCompilationUnit extends ICompilationUnit {
 			for (int i = 0; i < original.size(); i++) {
 				if (Objects.equals(original.get(i), node)) {
 					try {
-						return (ASTNode) rewritten.get(i);
+						return (T) rewritten.get(i);
 					} catch (IndexOutOfBoundsException e) {
 						return node;
 					}
@@ -255,7 +255,7 @@ public interface IRewriteCompilationUnit extends ICompilationUnit {
 
 			return node;
 		} else {
-			return (ASTNode) writer().get(node, descriptor);
+			return (T) writer().get(node, descriptor);
 		}
 	}
 

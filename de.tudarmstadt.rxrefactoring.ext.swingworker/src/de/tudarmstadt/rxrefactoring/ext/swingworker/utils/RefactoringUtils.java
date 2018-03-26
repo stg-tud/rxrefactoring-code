@@ -1,5 +1,8 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.utils;
 
+import org.eclipse.jdt.core.dom.ITypeBinding;
+
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
 
 /**
@@ -105,4 +108,6 @@ public final class RefactoringUtils {
 		}
 		return newMethodName;
 	}
+	
+	
 }

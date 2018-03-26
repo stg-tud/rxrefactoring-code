@@ -50,7 +50,7 @@ public class TemplateVisitor extends ASTVisitor {
 	 * @return a {@link TemplateVisitor}
 	 */
 	private static synchronized TemplateVisitor initVisitor(String sc) {
-		ASTParser javaParser = ASTParser.newParser(AST.JLS8);
+		ASTParser javaParser = ASTParser.newParser(AST.JLS10);
 		javaParser.setSource(sc.toCharArray());
 		TemplateVisitor visitor = new TemplateVisitor();
 		javaParser.createAST(null).accept(visitor);
@@ -61,7 +61,7 @@ public class TemplateVisitor extends ASTVisitor {
 	 * Creates a {@link TypeDeclaration} given its source code
 	 * 
 	 * @param targetAST
-	 *            target {@link AST} of level {@link AST#JLS8}
+	 *            target {@link AST}
 	 * @param typeDeclaration
 	 *            class (Type) source code. It must have a valid syntax
 	 * @return a {@link TypeDeclaration} based on the source code
@@ -77,7 +77,7 @@ public class TemplateVisitor extends ASTVisitor {
 	 * Creates a {@link MethodDeclaration} given its source code
 	 * 
 	 * @param targetAST
-	 *            target {@link AST} of level {@link AST#JLS8}
+	 *            target {@link AST}
 	 * @param method
 	 *            method source code. It must have a valid syntax
 	 * @return a {@link MethodDeclaration} based on the source code
@@ -96,7 +96,7 @@ public class TemplateVisitor extends ASTVisitor {
 	 * Creates a {@link Statement} given its source code (without ";")
 	 * 
 	 * @param targetAST
-	 *            target {@link AST} of level {@link AST#JLS8}
+	 *            target {@link AST}
 	 * @param statement
 	 *            statement source code. It must have a valid syntax. It cannot
 	 *            contain a ";".
