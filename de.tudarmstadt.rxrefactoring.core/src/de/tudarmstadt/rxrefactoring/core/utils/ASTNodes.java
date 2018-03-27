@@ -7,6 +7,8 @@ import java.util.function.Function;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.Statement;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
@@ -21,9 +23,9 @@ public final class ASTNodes {
 	 * already of the target class, then this node is returned.
 	 *
 	 * @param node
-	 *            The source node whose class should be found.
+	 *            The source node for which the parent should be found.
 	 * @param target
-	 *            The class of the parent node that should be found (i.e.
+	 *            The class of the parent node that should be found (e.g.
 	 *            VariableDeclaration.class).
 	 * @param <T>
 	 *            The type of the node that is returned.
@@ -38,11 +40,49 @@ public final class ASTNodes {
 		Objects.requireNonNull(target, "argument 'target' was null.");
 
 		ASTNode parent = node;
-		while (parent != null && !target.isInstance(parent)) {
+		while (parent != null) {
+			if (target.isInstance(parent)) {
+				return (Optional<T>) Optional.of(parent);
+			}		
 			parent = parent.getParent();
 		}
 
-		return (Optional<T>) Optional.ofNullable(parent);
+		return Optional.empty();
+	}
+	
+	/**
+	 * Find the parent of a node given the target class.
+	 * The search for a parent to be within the bounds of one statement.
+	 * If the given node is already of the target class, then this node is returned.
+	 *
+	 * @param expr
+	 *            The source expression for which the parent should be found.
+	 * @param target
+	 *            The class of the parent node that should be found (e.g.
+	 *            VariableDeclaration.class).
+	 * @param <T>
+	 *            The type of the node that is returned.
+	 * 
+	 * @return The parent node based on the target, or the given node if it is
+	 *         already an instance of the given class, or an empty Optional if no matching parent
+	 *         could be found within a statement.
+	 */
+	@SuppressWarnings({ "null", "unchecked" })
+	public static @NonNull <T extends ASTNode> Optional<T> findParentInStatement(@NonNull Expression expr, @NonNull Class<T> target) {
+		Objects.requireNonNull(expr, "argument 'node' was null.");
+		Objects.requireNonNull(target, "argument 'target' was null.");
+
+		ASTNode parent = expr;
+		while (parent != null) {
+			if (target.isInstance(parent)) {
+				return (Optional<T>) Optional.of(parent);
+			}			
+			if (parent instanceof Statement) {
+				return Optional.empty();
+			}
+			parent = parent.getParent();
+		}
+		return Optional.empty();
 	}
 	
 		

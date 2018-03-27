@@ -42,11 +42,13 @@ public class MethodInvocationWorker implements IWorker<TypeOutput, Void> {
 			Expression expression = methodInvocation.getExpression();
 
 			boolean receiverIsRefactored = expression == null
-					|| info.shouldBeRefactored(expression.resolveTypeBinding());
+					|| info.shouldBeRefactored(expression.resolveTypeBinding())
+					|| Types.isExactTypeOf(expression.resolveTypeBinding().getErasure(), "javax.swing.SwingWorker");
+			
 			boolean methodDeclaredBySwingWorker = Types
 					.isTypeOf(methodInvocation.resolveMethodBinding().getDeclaringClass(), "javax.swing.SwingWorker");
 
-			if (!receiverIsRefactored && !methodDeclaredBySwingWorker) {
+			if (!receiverIsRefactored) {
 				summary.addSkipped("methodInvocations");
 				continue;
 			}
@@ -69,23 +71,23 @@ public class MethodInvocationWorker implements IWorker<TypeOutput, Void> {
 		return null;
 	}
 
-	private void refactorInvocation(AST ast, IRewriteCompilationUnit icu, MethodInvocation methodInvocation) {
+	private void refactorInvocation(AST ast, IRewriteCompilationUnit unit, MethodInvocation methodInvocation) {
 
 		SimpleName methodSimpleName = methodInvocation.getName();
 		String newMethodName = RefactoringUtils.getNewMethodName(methodSimpleName.toString());
 
 		SimpleName newMethod = SwingWorkerASTUtils.newSimpleName(ast, newMethodName);
 
-		synchronized (icu) {
-			icu.replace(methodSimpleName, newMethod);
+		synchronized (unit) {
+			unit.replace(methodSimpleName, newMethod);
 		}
 
 		Expression expression = methodInvocation.getExpression();
 		if (expression instanceof SimpleName) {
 			SimpleName simpleName = (SimpleName) expression;
 			String newName = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
-			synchronized (icu) {
-				icu.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newName));
+			synchronized (unit) {
+				unit.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newName));
 			}
 		}
 	}

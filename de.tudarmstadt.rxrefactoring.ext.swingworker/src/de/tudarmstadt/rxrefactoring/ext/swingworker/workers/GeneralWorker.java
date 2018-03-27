@@ -3,6 +3,7 @@ package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
@@ -62,11 +63,20 @@ public abstract class GeneralWorker<In, Out> implements IWorker<In, Out> {
 			observableDto.setProcessType(OBJECT_TYPE_NAME);
 		}
 		if (refactoringVisitor.getDoInBackgroundBlock() != null) {
-			TypeDeclaration typeDeclaration = ASTNodes
-					.findParent(refactoringVisitor.getDoInBackgroundBlock(), TypeDeclaration.class).get();
-			String block = refactoringVisitor.getDoInBackgroundBlock().toString();
-			String className = typeDeclaration.getName().getIdentifier();
-			observableDto.setDoInBackgroundBlock(specifyClassOfKeywordThis(block, className));
+			Optional<TypeDeclaration> typeDeclaration = ASTNodes.findParent(refactoringVisitor.getDoInBackgroundBlock(), TypeDeclaration.class);
+			
+			if (typeDeclaration.isPresent()) {
+				String block = refactoringVisitor.getDoInBackgroundBlock().toString();
+				String className = typeDeclaration.get().getName().getIdentifier();
+				
+				observableDto.setDoInBackgroundBlock(specifyClassOfKeywordThis(block, className));
+			} else {
+				String block = refactoringVisitor.getDoInBackgroundBlock().toString();
+				
+				observableDto.setDoInBackgroundBlock(block);
+			}
+			
+			
 		}
 		return observableDto;
 	}

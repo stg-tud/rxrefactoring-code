@@ -59,7 +59,7 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 
 	@Override
 	public boolean visit(FieldDeclaration node) {
-		if (ASTUtils.isTypeOf(node, classBinaryName)) {
+		if (Types.isTypeOf(node.getType().resolveBinding(), classBinaryName)) {
 			fieldDeclarations.add(node);
 		}
 		return true;
@@ -69,7 +69,7 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 	public boolean visit(Assignment node) {
 		Expression leftHandSide = node.getLeftHandSide();
 		ITypeBinding type = leftHandSide.resolveTypeBinding();
-		if (ASTUtils.isTypeOf(type, classBinaryName)) {
+		if (Types.isTypeOf(type, classBinaryName)) {
 			assignments.add(node);
 		}
 		return true;
@@ -78,7 +78,7 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 	@Override
 	public boolean visit(VariableDeclarationStatement node) {
 		ITypeBinding type = node.getType().resolveBinding();
-		if (ASTUtils.isTypeOf(type, classBinaryName)) {
+		if (Types.isTypeOf(type, classBinaryName)) {
 			varDeclStatements.add(node);
 		}
 		return true;
@@ -102,7 +102,7 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 	@Override
 	public boolean visit(ClassInstanceCreation node) {
 		ITypeBinding type = node.getType().resolveBinding();
-		if (ASTUtils.isTypeOf(type, classBinaryName)) {
+		if (Types.isTypeOf(type, classBinaryName)) {
 			classInstanceCreations.add(node);
 		}
 		return true;
@@ -110,7 +110,7 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 
 	@Override
 	public boolean visit(TypeDeclaration node) {
-		if (ASTUtils.isTypeOf(node, classBinaryName)) {
+		if (Types.isTypeOf(node.resolveBinding(), classBinaryName)) {
 			typeDeclarations.add(node);
 		}
 		return true;
@@ -122,7 +122,7 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 		if (binding != null) {
 			ITypeBinding returnType = binding.getReturnType();
 
-			if (ASTUtils.isTypeOf(returnType, classBinaryName)) {
+			if (Types.isTypeOf(returnType, classBinaryName)) {
 				methodDeclarations.add(node);
 			}
 		}
@@ -161,7 +161,7 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 	@Override
 	public boolean visit(SingleVariableDeclaration node) {
 		ITypeBinding type = node.getType().resolveBinding();
-		if (ASTUtils.isTypeOf(type, classBinaryName)) {
+		if (Types.isTypeOf(type, classBinaryName)) {
 			singleVarDeclarations.add(node);
 		}
 		return true;

@@ -134,8 +134,11 @@ public class SwingWorkerWrapper extends ASTVisitor {
 			allMethodDeclarations.add(node);
 		}
 
-		TypeDeclaration parent = ASTNodes.findParent(node, TypeDeclaration.class).get();
-		if (isRelevant(parent)) {
+		boolean isRelevant = ASTNodes.findParent(node, TypeDeclaration.class)
+				.map(parent -> isRelevant(parent))
+				.orElse(false);
+						
+		if (isRelevant) {
 			String methodDeclarationName = node.getName().toString();
 			if (!DO_IN_BACKGROUND.equals(methodDeclarationName) && !DONE.equals(methodDeclarationName)
 					&& !PROCESS.equals(methodDeclarationName)) {

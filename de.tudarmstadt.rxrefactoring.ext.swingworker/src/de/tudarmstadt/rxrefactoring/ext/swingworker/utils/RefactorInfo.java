@@ -72,10 +72,12 @@ public class RefactorInfo {
 		if (binding == null)
 			return false;
 
-		return types.stream()
+		boolean res = types.stream()
 				// TODO How to sensibly compare type bindings?
 				.filter(info -> binding.getQualifiedName().equals(info.binding.getQualifiedName())).findFirst()
-				.map(info -> info.shouldBeRefactored()).isPresent();
+				.map(info -> info.shouldBeRefactored()).orElse(false);
+		
+		return res;
 	}
 
 	public String toString() {

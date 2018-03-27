@@ -215,13 +215,10 @@ public interface IRewriteCompilationUnit extends ICompilationUnit {
 
 	/**
 	 * Returns the rewritten node of the given node. If the node has not been
-	 * rewritten, then it returns the original node. If the node is located in a
-	 * list, then the index of the node has to be given as well.
+	 * rewritten, then it returns the original node. 
 	 * 
 	 * @param node
 	 *            The node to check.
-	 * @param index
-	 *            The index of the enclosing list (if any).
 	 * @return The possible rewriting of the original node, or the original node.
 	 */
 	@Beta
@@ -259,16 +256,27 @@ public interface IRewriteCompilationUnit extends ICompilationUnit {
 		}
 	}
 
+	/**
+	 * Returns the rewritten node of the given node. If the node has not been
+	 * rewritten, then it returns the original node. If the node is located in a
+	 * list, then the index of the node has to be given as well.
+	 * 
+	 * @param node
+	 *            The node to check.
+	 * @param index
+	 *            The index of the enclosing list (if any).
+	 * @return The possible rewriting of the original node, or the original node.
+	 * 
+	 * @see IRewriteCompilationUnit#getRewrittenNode(ASTNode)
+	 */
 	@Beta
 	default public ASTNode getRewrittenNode(ASTNode node, int index) {
 		Objects.requireNonNull(node, "node can not be null.");
 
-		StructuralPropertyDescriptor descriptor = node.getLocationInParent();
-		ASTNode parent = node.getParent();
+		StructuralPropertyDescriptor descriptor = Objects.requireNonNull(node.getLocationInParent());
+		ASTNode parent = Objects.requireNonNull(node.getParent());
 
-		if (parent == null || descriptor == null)
-			throw new IllegalStateException("parent or descriptor are null.");
-
+		
 		if (descriptor instanceof ChildListPropertyDescriptor) {
 			ChildListPropertyDescriptor clpd = (ChildListPropertyDescriptor) descriptor;
 			ListRewrite l = writer().getListRewrite(parent, clpd);

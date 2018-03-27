@@ -7,9 +7,11 @@ import java.util.Map;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SimpleType;
@@ -57,7 +59,9 @@ public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void>
 			IRewriteCompilationUnit icu = entry.getKey();
 			VariableDeclarationStatement varDeclStatement = entry.getValue();
 
-			if (!info.shouldBeRefactored(varDeclStatement.getType())) {
+			ITypeBinding typeBinding = varDeclStatement.getType().resolveBinding();
+			
+			if (!info.shouldBeRefactored(typeBinding) && !Types.isExactTypeOf(typeBinding.getErasure(), "javax.swing.SwingWorker")) {
 				summary.addSkipped("variableDeclarations");
 				continue;
 			}
@@ -69,8 +73,9 @@ public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void>
 			if (initializer instanceof ClassInstanceCreation) {
 				ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) initializer;
 
-				if (Types.isExactTypeOf(classInstanceCreation.resolveTypeBinding().getErasure(),
-						SwingWorkerInfo.getBinaryName())) {
+				//if (Types.isExactTypeOf(classInstanceCreation.resolveTypeBinding().getErasure(), "javax.swing.SwingWorker")) {
+				if (classInstanceCreation.getAnonymousClassDeclaration() != null) {
+						//&& Types.isExactTypeOf(classInstanceCreation.resolveTypeBinding(), "javax.swing.SwingWorker")) {
 					SwingWorkerWrapper refactoringVisitor = new SwingWorkerWrapper();
 					varDeclStatement.accept(refactoringVisitor);
 					refactorVarDecl(icu, refactoringVisitor, varDeclStatement, fragment);
@@ -84,8 +89,9 @@ public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void>
 			} else if (initializer instanceof SimpleName) {
 				SimpleName assignedVarSimpleName = (SimpleName) initializer;
 				String newAssignedVarName = RefactoringUtils
-						.cleanSwingWorkerName((assignedVarSimpleName).getIdentifier());
+						.cleanSwingWorkerName(assignedVarSimpleName.getIdentifier());
 				SimpleName newAssignedVar = SwingWorkerASTUtils.newSimpleName(ast, newAssignedVarName);
+				
 				synchronized (icu) {
 					icu.replace(assignedVarSimpleName, newAssignedVar);
 				}
@@ -129,6 +135,7 @@ public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void>
 			refactorStatefulSwingWorker(icu, refactoringVisitor, varDeclStatement, fragment);
 		} else {
 			refactorStatelessSwingWorker(icu, refactoringVisitor, varDeclStatement, fragment);
+			//refactorStatefulSwingWorker(icu, refactoringVisitor, varDeclStatement, fragment);
 		}
 	}
 
@@ -165,7 +172,7 @@ public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void>
 		 * executor.submit(singleRun) --> singleRun.executeObservable() Scenario:
 		 * CrysHomModeling-master : MainMenu.java
 		 */
-		observableDto.setDoInBackgroundBlock(refactorDoInBgBlock(refactoringVisitor.getDoInBackgroundBlock()));
+		observableDto.setDoInBackgroundBlock(cleanBlock(refactoringVisitor.getDoInBackgroundBlock()));
 		Map<String, Object> observableData = new HashMap<>();
 		observableData.put("model", observableDto);
 		String observableTemplate = "observable.ftl";
@@ -192,21 +199,8 @@ public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void>
 		SwingWorkerASTUtils.removeStatement(icu, varDeclStatement);
 	}
 
-	private String refactorDoInBgBlock(Block doInBgBlock) {
-		String doInBgBlockString = "";
-		List<Statement> list = doInBgBlock.statements();
-
-		StringBuilder sb = new StringBuilder();
-		sb.append("{ " + System.lineSeparator());
-
-		for (int i = 0; i < list.size(); i++) {
-			Statement stmnt = list.get(i);
-			sb.append(stmnt.toString() + System.lineSeparator());
-		}
-		sb.append("}");
-
-		doInBgBlockString = RefactoringUtils.cleanSwingWorkerName(sb.toString());
-		return doInBgBlockString;
+	private String cleanBlock(Block block) {	
+		return RefactoringUtils.cleanSwingWorkerName(block.toString());
 	}
 
 }

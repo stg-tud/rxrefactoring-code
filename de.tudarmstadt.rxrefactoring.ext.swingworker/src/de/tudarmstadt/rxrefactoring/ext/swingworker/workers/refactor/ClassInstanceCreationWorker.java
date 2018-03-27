@@ -18,6 +18,7 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
@@ -58,12 +59,14 @@ public class ClassInstanceCreationWorker extends GeneralWorker<TypeOutput, Void>
 			IRewriteCompilationUnit unit = entry.getKey();
 			ClassInstanceCreation classInstanceCreation = entry.getValue();
 
-			if (!isRelevant(classInstanceCreation)) {
+			if (!isRefactoredHere(classInstanceCreation)) {
+				//This does NOT use the refactorinfo
 				// Is handled by other workers
 				continue;
 			}
 
 			ITypeBinding typeBinding = classInstanceCreation.resolveTypeBinding();
+			
 			if (!info.shouldBeRefactored(classInstanceCreation.resolveTypeBinding())
 					&& !Types.isTypeOf(typeBinding, "javax.swing.SwingWorker")) {
 				summary.addSkipped("classInstanceCreation");
@@ -80,14 +83,13 @@ public class ClassInstanceCreationWorker extends GeneralWorker<TypeOutput, Void>
 		return null;
 	}
 
-	// TODO: What is this for? Why do we have to check it?
-	private boolean isRelevant(ClassInstanceCreation classInstanceCreation) {
-		boolean relevant = ASTNodes.findParent(classInstanceCreation, Assignment.class).isPresent()
-				|| ASTNodes.findParent(classInstanceCreation, VariableDeclarationFragment.class).isPresent()
-				|| ASTNodes.findParent(classInstanceCreation, FieldDeclaration.class).isPresent();
+	private boolean isRefactoredHere(ClassInstanceCreation classInstanceCreation) {
+		boolean relevant = ASTNodes.findParentInStatement(classInstanceCreation, Assignment.class).isPresent()
+				|| ASTNodes.findParentInStatement(classInstanceCreation, VariableDeclarationStatement.class).isPresent()
+				|| ASTNodes.findParentInStatement(classInstanceCreation, FieldDeclaration.class).isPresent();
 
 		// if any is present, then another worker handles this case
-		return relevant;
+		return !relevant;
 	}
 
 	private void refactorClassInstanceCreation(IRewriteCompilationUnit icu, SwingWorkerWrapper refactoringVisitor,
@@ -96,7 +98,7 @@ public class ClassInstanceCreationWorker extends GeneralWorker<TypeOutput, Void>
 		Optional<MethodInvocation> methodInvocation = ASTNodes.findParent(classInstanceCreation,
 				MethodInvocation.class);
 		if (methodInvocation.isPresent() && methodInvocation.get().getExpression() instanceof ClassInstanceCreation) {
-			if (ASTUtils.isSubclassOf(classInstanceCreation, SwingWorkerInfo.getBinaryName(), false)) {
+			if (Types.isTypeOf(classInstanceCreation.resolveTypeBinding(), SwingWorkerInfo.getBinaryName())) {
 				/*
 				 * Abstract class : For anonymous swingworker classes, we need to replace
 				 * doInBackground method name with getRxObservable Scenario:

@@ -141,10 +141,12 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 	public @NonNull ImportRewrite imports() {
 		if (imports == null) {
 			synchronized (this) {
-				try {
-					imports = ImportRewrite.create(unit, true);
-				} catch (JavaModelException e) {
-					throw new IllegalStateException(e);
+				if (imports == null) {
+					try {
+						imports = ImportRewrite.create(unit, true);
+					} catch (JavaModelException e) {
+						throw new IllegalStateException(e);
+					}
 				}
 			}
 		}

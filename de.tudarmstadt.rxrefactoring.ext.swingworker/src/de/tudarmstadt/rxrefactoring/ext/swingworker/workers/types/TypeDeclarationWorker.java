@@ -17,6 +17,7 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.Statement;
@@ -65,7 +66,7 @@ public class TypeDeclarationWorker extends GeneralWorker<RxCollector, TypeOutput
 				continue;
 			}
 
-			if (!checkInvocations(input, binding)) {
+			if (!checkType(input, binding)) {
 				summary.addSkipped("typeDeclarations");
 				info.add(typeDeclaration, false);
 				continue;
@@ -86,7 +87,11 @@ public class TypeDeclarationWorker extends GeneralWorker<RxCollector, TypeOutput
 	}
 
 	// TODO Add sensible preconditions here!
-	private boolean checkInvocations(RxCollector collector, ITypeBinding type) {
+	private boolean checkType(RxCollector collector, ITypeBinding type) {
+		if (Modifier.isAbstract(type.getModifiers())) {
+			return false;
+		}
+		
 		Collection<MethodInvocation> invocations = collector.getMethodInvocationsMap().values();
 
 		for (MethodInvocation m : invocations) {
