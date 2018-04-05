@@ -35,8 +35,9 @@ public class ReachingDefinition {
 		
 
 		ImmutableMultimap.Builder<IVariableBinding, Expression> builder = ImmutableMultimap.builder();
+		
 		definitions.entries().stream()
-				.filter(entry -> !entry.getKey().equals(key))
+				.filter(entry -> !entry.getKey().isEqualTo(key))
 				.forEach(e -> builder.put(e.getKey(), e.getValue()));
 
 		Collection<Expression> val;

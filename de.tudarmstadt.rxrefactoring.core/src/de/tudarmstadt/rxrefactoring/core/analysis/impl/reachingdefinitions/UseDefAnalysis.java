@@ -123,6 +123,9 @@ public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 		ReachingDefinitionsAnalysis analysis = ReachingDefinitionsAnalysis.create();
 		Map<ASTNode, ReachingDefinition> reaching = analysis.apply(cfg, analysis.mapExecutor());
 		strategy.setReachingDefinitions(reaching);
+		
+		reaching.entrySet().forEach(System.out::println);
+		
 		return super.apply(cfg, executionFactory);
 	}
 }

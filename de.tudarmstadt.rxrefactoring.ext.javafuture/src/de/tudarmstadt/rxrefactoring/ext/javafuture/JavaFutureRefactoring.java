@@ -16,7 +16,10 @@ import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.ReachingDefinition;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.InstantiationUseWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.UseDefWorker;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.InstantiationCollector;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.SubclassInstantiationCollector;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.FutureCollector;
 
 /**
@@ -27,7 +30,7 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 	private EnumSet<RefactoringOptions> options;
 
 	public JavaFutureRefactoring() {
-		options = EnumSet.of(RefactoringOptions.FUTURE, RefactoringOptions.FUTURETASK);
+		options = EnumSet.of(RefactoringOptions.FUTURE);//, RefactoringOptions.FUTURETASK);
 	}
 	
 
@@ -53,17 +56,22 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 
 	@Override
 	public void addWorkersTo(@NonNull IWorkerTree workerTree) {
-		IWorkerRef<Void, Map<ASTNode, UseDef>> analysisRef = workerTree.addWorker(new UseDefWorker());
+		IWorkerRef<Void, Map<ASTNode, UseDef>> analysisRef = workerTree.addWorker(new UseDefWorker());	
+		
+		IWorkerRef<Map<ASTNode, UseDef>, InstantiationCollector> instRef = workerTree.addWorker(analysisRef, new InstantiationCollector());
+		IWorkerRef<InstantiationCollector, SubclassInstantiationCollector> subclassInstRef = workerTree.addWorker(instRef, new SubclassInstantiationCollector());
+		IWorkerRef<SubclassInstantiationCollector, InstantiationUseWorker> instUseRef = workerTree.addWorker(subclassInstRef, new InstantiationUseWorker());
+
 		IWorkerRef<Void, FutureCollector> collector = workerTree.addWorker(new FutureCollector(options));
 		
 		if(options.contains(RefactoringOptions.FUTURE)) {
-			workerTree.addWorker(collector, new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.SimpleNameWorker());
-			workerTree.addWorker(collector, new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.VariableDeclStatementWorker());
-			workerTree.addWorker(collector, new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.AssignmentWorker());
-			workerTree.addWorker(collector, new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.MethodInvocationWorker());
-			workerTree.addWorker(collector, new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.MethodDeclarationWorker());
-			workerTree.addWorker(collector, new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.SingleVariableDeclWorker());
-			workerTree.addWorker(collector, new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.FieldDeclarationWorker());
+//			workerTree.addWorker(collector, new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.SimpleNameWorker());
+//			workerTree.addWorker(collector, new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.VariableDeclStatementWorker());
+//			workerTree.addWorker(collector, new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.AssignmentWorker());
+//			workerTree.addWorker(collector, new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.MethodInvocationWorker());
+//			workerTree.addWorker(collector, new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.MethodDeclarationWorker());
+//			workerTree.addWorker(collector, new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.SingleVariableDeclWorker());
+//			workerTree.addWorker(collector, new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.FieldDeclarationWorker());
 
 //			workerTree.addWorker(collector, new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.SimpleNameWorker());
 //			workerTree.addWorker(collector, new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.VariableDeclStatementWorker());

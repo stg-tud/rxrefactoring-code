@@ -10,7 +10,7 @@ public interface IWorker<Input, Output> {
 
 	@SuppressWarnings("null")
 	default public @NonNull String getName() {
-		return getClass().getSimpleName();
+		return getClass().getName();
 	}
 
 	/**

@@ -54,7 +54,8 @@ public class VariableDeclStatementWorker extends AbstractFutureWorker<VariableDe
 		if (type instanceof ParameterizedType) {
 			type = ((ParameterizedType) type).getType();
 		}
-		JavaFutureASTUtils.replaceType(unit, type, "Observable");
+						
+		JavaFutureASTUtils.replaceType(unit, type, "Flowable");
 	}
 
 	/**
@@ -78,7 +79,7 @@ public class VariableDeclStatementWorker extends AbstractFutureWorker<VariableDe
 		if(visitor.isExternalMethod().orElse(false)) {
 			// move the initializer expression inside an "Observable.from(initializer)"
 			
-			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Observable", "from", initializer);
+			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Flowable", "from", initializer);
 			summary.addCorrect("futureCreation");
 		}
 	}

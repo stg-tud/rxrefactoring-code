@@ -58,13 +58,11 @@ public class ReachingDefinitionsAnalysis extends DataFlowAnalysis<ASTNode, Reach
 				Expression rhs = assignment.getRightHandSide();
 							
 				IVariableBinding variable = Expressions.resolveVariableBinding(lhs);
-				
-			
-				
+								
 				if (variable == null) {
 					Log.error(getClass(), "assignment to non-variable.");
 				} else {
-					input.replace(variable, rhs);
+					return input.replace(variable, rhs);
 				}				
 				
 			} else if (vertex instanceof VariableDeclarationStatement || vertex instanceof VariableDeclarationExpression) {
@@ -82,9 +80,13 @@ public class ReachingDefinitionsAnalysis extends DataFlowAnalysis<ASTNode, Reach
 					VariableDeclarationFragment fragment = (VariableDeclarationFragment) o;
 					
 					if (fragment.getInitializer() != null) {
-						return input.replace(fragment.resolveBinding(), fragment.getInitializer());
+						IVariableBinding variable = fragment.resolveBinding();
+						
+						input = input.replace(variable, fragment.getInitializer());
 					}
 				}
+				
+				return input;
 			}
 			
 			return input;

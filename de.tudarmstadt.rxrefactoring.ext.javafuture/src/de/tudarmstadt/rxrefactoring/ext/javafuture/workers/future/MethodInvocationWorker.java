@@ -47,16 +47,16 @@ public class MethodInvocationWorker extends AbstractFutureWorker<MethodInvocatio
 			
 			if (expression instanceof SimpleName) {
 				SimpleName simpleName = (SimpleName)expression;
-				newName = simpleName.getIdentifier() + "Observable";
+				newName = simpleName.getIdentifier() + "Flowable";
 			} else if (expression instanceof ArrayAccess) {
 				ArrayAccess arrayAccess = (ArrayAccess)expression;
 				
 				SimpleName simpleName = (SimpleName)arrayAccess.getArray();
-				newName = simpleName.getIdentifier() + "Observables";
+				newName = simpleName.getIdentifier() + "Flowables";
 			}
 			
 			if(!newName.isEmpty())
-				JavaFutureASTUtils.replaceMethodInvocation(unit, newName, "toBlocking", "single", methodInvocation);
+				JavaFutureASTUtils.replaceWithBlockingGet(unit, methodInvocation, newName);
 			
 			break;
 

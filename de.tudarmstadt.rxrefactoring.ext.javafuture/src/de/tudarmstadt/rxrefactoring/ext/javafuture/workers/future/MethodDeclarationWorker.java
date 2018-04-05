@@ -48,7 +48,7 @@ public class MethodDeclarationWorker extends AbstractFutureWorker<MethodDeclarat
 			Type type = ((ParameterizedType)returnType).getType();
 			
 			
-			JavaFutureASTUtils.replaceType(unit, type, "Observable");
+			JavaFutureASTUtils.replaceType(unit, type, "Flowable");
 		}
 	}
 	
@@ -64,7 +64,7 @@ public class MethodDeclarationWorker extends AbstractFutureWorker<MethodDeclarat
 				if(returnExpression instanceof MethodInvocation
 						|| returnExpression instanceof NullLiteral) {
 					
-					JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Observable", "from", returnExpression);
+					JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Flowable", "fromFuture", returnExpression);
 					summary.addCorrect("futureCreation");
 				}
 

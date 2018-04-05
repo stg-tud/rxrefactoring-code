@@ -63,7 +63,7 @@ public class JavaFutureASTUtils {
 		MethodInvocation toBlockingMethod = ast.newMethodInvocation();
 		toBlockingMethod.setName(ast.newSimpleName(method1));
 		
-		Expression old = oldNode.getExpression();
+Expression old = oldNode.getExpression();
 		
 		if(old instanceof ArrayAccess) {	
 					
@@ -79,6 +79,29 @@ public class JavaFutureASTUtils {
 		singleMethod.setExpression(toBlockingMethod);
 		
 		unit.replace(oldNode, singleMethod);
+	}
+	
+	public static void replaceWithBlockingGet(IRewriteCompilationUnit unit, MethodInvocation oldNode, String callerName) {
+		AST ast = unit.getAST();
+		
+		MethodInvocation blockingSingle = ast.newMethodInvocation();
+		blockingSingle.setName(ast.newSimpleName("blockingSingle"));
+		
+		
+		Expression old = oldNode.getExpression();		
+		if(old instanceof ArrayAccess) {	
+					
+			ArrayAccess clone = ast.newArrayAccess();
+			clone.setArray(ast.newSimpleName(callerName));
+			clone.setIndex(unit.copyNode(((ArrayAccess) old).getIndex()));
+			
+			blockingSingle.setExpression(clone);
+		} else {
+			blockingSingle.setExpression(ast.newSimpleName(callerName));
+		}
+		
+		unit.replace(oldNode, blockingSingle);	
+		
 	}
 	
 	
