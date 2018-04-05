@@ -7,6 +7,8 @@ import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.strategy.IDataFlowStrategy;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use.Kind;
+import de.tudarmstadt.rxrefactoring.core.utils.Expressions;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -111,7 +113,7 @@ public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 		}
 
 		private Collection<Expression> lookupDefinitions(final ASTNode astNode, final Name name) {
-			return reachingDefinitions.get(astNode).get(name);
+			return reachingDefinitions.get(astNode).get(Expressions.resolveVariableBinding(name));
 		}
 	}
 

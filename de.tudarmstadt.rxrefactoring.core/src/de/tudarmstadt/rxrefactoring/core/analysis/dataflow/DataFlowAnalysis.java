@@ -152,6 +152,8 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 	 * @param <Output>
 	 */
 	static abstract class AbstractDataFlowExecution<Vertex, Result, Output> implements IDataFlowExecutionFactory<Vertex, Result, Output> {
+		
+		private static final int MAX_ITERATIONS = 10000;
 
 		abstract AnalysisExecution abstractCreate(IControlFlowGraph<Vertex> cfg, IDataFlowStrategy<Vertex, Result> strategy, IDataFlowTraversal<Vertex> traversal);
 
@@ -200,6 +202,7 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 				Set<Vertex> entries = traversal.entryNodes(cfg);
 				queue.addAll(entries);
 
+				int iterations = 0;				
 				while (!queue.isEmpty()) {
 					Vertex currentVertex = queue.poll();
 
@@ -227,6 +230,11 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 					if (resultHasChanged(currentVertex, outgoingResult)) {
 						setResult(currentVertex, outgoingResult);
 						queue.addAll(traversal.successorsOf(cfg, currentVertex));
+					}
+					
+					iterations++;
+					if (iterations > MAX_ITERATIONS) {
+						throw new RuntimeException("The data flow analysis did not converge to a result in " + MAX_ITERATIONS + " iterations.");
 					}
 				}
 			}

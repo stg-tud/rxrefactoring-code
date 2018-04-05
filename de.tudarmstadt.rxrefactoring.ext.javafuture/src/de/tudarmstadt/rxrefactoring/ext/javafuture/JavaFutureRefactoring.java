@@ -17,7 +17,6 @@ import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.Reach
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.UseDefWorker;
-import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.PreconditionWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.FutureCollector;
 
 /**
@@ -55,8 +54,7 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 	@Override
 	public void addWorkersTo(@NonNull IWorkerTree workerTree) {
 		IWorkerRef<Void, Map<ASTNode, UseDef>> analysisRef = workerTree.addWorker(new UseDefWorker());
-		IWorkerRef<Map<ASTNode, UseDef>, Void> precondRef = workerTree.addWorker(analysisRef, new PreconditionWorker());
-		IWorkerRef<Void, FutureCollector> collector = workerTree.addWorker(precondRef, new FutureCollector(options));
+		IWorkerRef<Void, FutureCollector> collector = workerTree.addWorker(new FutureCollector(options));
 		
 		if(options.contains(RefactoringOptions.FUTURE)) {
 			workerTree.addWorker(collector, new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.SimpleNameWorker());

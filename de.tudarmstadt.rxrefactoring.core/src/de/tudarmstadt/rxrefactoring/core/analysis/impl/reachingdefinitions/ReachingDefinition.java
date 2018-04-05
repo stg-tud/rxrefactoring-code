@@ -1,19 +1,19 @@
 package de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions;
 
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.IBinding;
-import org.eclipse.jdt.core.dom.Name;
+import org.eclipse.jdt.core.dom.IVariableBinding;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Sets;
 
-public class ReachingDefinition {
-	private ImmutableMultimap<String, Expression> definitions;
+import de.tudarmstadt.rxrefactoring.core.utils.Expressions;
 
-	ReachingDefinition(ImmutableMultimap<String, Expression> defintions) {
+public class ReachingDefinition {
+	private ImmutableMultimap<IVariableBinding, Expression> definitions;
+
+	ReachingDefinition(ImmutableMultimap<IVariableBinding, Expression> defintions) {
 		this.definitions = defintions;
 	}
 
@@ -23,7 +23,7 @@ public class ReachingDefinition {
 	}
 
 	static ReachingDefinition merge(Iterable<ReachingDefinition> iterable) {
-		ImmutableMultimap.Builder<String, Expression> builder = ImmutableMultimap.builder();
+		ImmutableMultimap.Builder<IVariableBinding, Expression> builder = ImmutableMultimap.builder();
 		iterable.forEach(m -> builder.putAll(m.definitions));
 
 		return new ReachingDefinition(builder.build());
@@ -31,57 +31,55 @@ public class ReachingDefinition {
 
 
 
-	ReachingDefinition replace(Name key, Expression value) {
-		String id = nameAsString(key);
+	ReachingDefinition replace(IVariableBinding key, Expression value) {
+		
 
-		ImmutableMultimap.Builder<String, Expression> builder = ImmutableMultimap.builder();
+		ImmutableMultimap.Builder<IVariableBinding, Expression> builder = ImmutableMultimap.builder();
 		definitions.entries().stream()
-				.filter(entry -> !entry.getKey().equals(id))
+				.filter(entry -> !entry.getKey().equals(key))
 				.forEach(e -> builder.put(e.getKey(), e.getValue()));
 
 		Collection<Expression> val;
-		String valId;
-
-		if (value instanceof Name && definitions.containsKey(valId = nameAsString((Name) value))) {
-			val = definitions.get(valId);
+		
+		//Resolve the binding if the expression is a field/variable identifier.
+		IVariableBinding variableBinding = Expressions.resolveVariableBinding(value);
+						
+		//Solve reference of expression if it references a variable
+		if (variableBinding != null && definitions.containsKey(variableBinding)) {
+			val = definitions.get(variableBinding);
 		} else {
 			val = Sets.newHashSet(value);
 		}
 
-		builder.putAll(id, val);
+		builder.putAll(key, val);
 
 		return new ReachingDefinition(builder.build());
 	}
 
-	public Collection<Expression> get(Name key) {
-		return definitions.get(nameAsString(key));
+	public Collection<Expression> get(IVariableBinding key) {
+		return definitions.get(key);
 	}
 
 	public Collection<Expression> getDefinitionOf(Expression expr) {
 		Collection<Expression> val;
-		String valId;
-		if (expr instanceof Name && definitions.containsKey(valId = nameAsString((Name) expr))) {
-			val = definitions.get(valId);
+		
+		//Resolve the binding if the expression is a field/variable identifier.
+		IVariableBinding variableBinding = Expressions.resolveVariableBinding(expr);
+						
+		//Solve reference of expression if it references a variable
+		if (variableBinding != null && definitions.containsKey(variableBinding)) {
+			val = definitions.get(variableBinding);
 		} else {
 			val = Sets.newHashSet(expr);
 		}
-
+		
 		return val;
 	}
 
 	@Override
 	public String toString() {
 		return definitions.toString();
-	}
-
-	private String nameAsString(Name name) {
-		IBinding binding = name.resolveBinding();
-
-		if (binding == null)
-			return name.getFullyQualifiedName();
-		else
-			return binding.getName();
-	}
+	}	
 
 
 }

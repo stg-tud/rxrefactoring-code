@@ -14,6 +14,8 @@ import de.tudarmstadt.rxrefactoring.core.analysis.cfg.expression.ExpressionGraph
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement.ProgramGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.VariableNameAnalysis;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.ReachingDefinition;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.ReachingDefinitionsAnalysis;
 
 public final class Main {
 
@@ -123,6 +125,7 @@ public final class Main {
 		parser.setSource(program.toCharArray());
 		parser.setBindingsRecovery(true);
 		parser.setStatementsRecovery(true);
+		parser.setResolveBindings(true);
 		
 		ASTNode node = parser.createAST(null);
 		
@@ -130,8 +133,8 @@ public final class Main {
 		
 		
 		//Apply an analysis		
-		DataFlowAnalysis<ASTNode, Set<String>> analysis = VariableNameAnalysis.create();
-		Void result = analysis.apply(g, analysis.astExecutor());
+		DataFlowAnalysis analysis = ReachingDefinitionsAnalysis.create();
+		Object result = analysis.apply(g, analysis.mapExecutor());
 		
 		System.out.println(g);
 		System.out.println(result);

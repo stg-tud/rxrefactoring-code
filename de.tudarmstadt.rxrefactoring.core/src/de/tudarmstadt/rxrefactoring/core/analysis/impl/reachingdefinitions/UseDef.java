@@ -61,6 +61,9 @@ public class UseDef {
 		}
 
 		public Builder addUse(Expression def, Use use) {
+			if (use == null || def == null)
+				System.out.println("test");
+			
 			mapBuilder.put(def, use);
 			return this;
 		}
