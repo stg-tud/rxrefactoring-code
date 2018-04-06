@@ -287,8 +287,10 @@ class ProgramGraphBuilder {
 			StatementExits result = StatementExits.create(); 
 			Statement statement = block;
 			
-			//Iterate through all statements in the block and establish links between them.
-			for (Object element : block.statements()) {
+			if (block.statements().isEmpty()) {
+				graph.addVertex(block);
+			} else for (Object element : block.statements()) {
+				 //Iterate through all statements in the block and establish links between them.
 				statement = (Statement) element;					
 				addEdges(previousNodes, statement);
 				

@@ -18,8 +18,10 @@ public class ForwardTraversal<Vertex> implements IDataFlowTraversal<Vertex> {
 	}
 
 	@Override
-	public Set<Vertex> predecessorsOf(IControlFlowGraph<Vertex> cfg, Vertex vertex) {
-		return cfg.incomingEdgesOf(vertex).stream().map(edge -> edge.getHead()).collect(Collectors.toSet());
+	public Set<Vertex> predecessorsOf(IControlFlowGraph<Vertex> cfg, Vertex vertex) {		
+		return cfg.incomingEdgesOf(vertex).stream()
+				.map(edge -> edge.getHead())
+				.collect(Collectors.toSet());
 	}
 
 }
