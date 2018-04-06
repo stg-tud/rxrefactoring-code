@@ -14,7 +14,7 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureTaskWorker;
 
 public class VariableDeclStatementWorker extends AbstractFutureTaskWorker<VariableDeclarationStatement> {
-	
+
 	public VariableDeclStatementWorker() {
 		super("VariableDeclarationStatement");
 	}
@@ -26,7 +26,7 @@ public class VariableDeclStatementWorker extends AbstractFutureTaskWorker<Variab
 
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, VariableDeclarationStatement varDeclStatement) {
-		VariableDeclarationFragment fragment = (VariableDeclarationFragment)varDeclStatement.fragments().get(0);
+		VariableDeclarationFragment fragment = (VariableDeclarationFragment) varDeclStatement.fragments().get(0);
 
 		// Replace type Future with Observable
 		replaceType(unit, fragment, varDeclStatement.getType());
@@ -37,6 +37,7 @@ public class VariableDeclStatementWorker extends AbstractFutureTaskWorker<Variab
 
 	/**
 	 * Replaces a Future<> x with an Observable<> xObservable
+	 * 
 	 * @param unit
 	 * @param fragment
 	 * @param type
@@ -50,27 +51,33 @@ public class VariableDeclStatementWorker extends AbstractFutureTaskWorker<Variab
 	}
 
 	/**
-	 * Replaces x = someMethod with x = SimpleFutureTaskObservable.create(someMethod)
-	 * But only if we didn't refactor the method ourselves before.
+	 * Replaces x = someMethod with x =
+	 * SimpleFutureTaskObservable.create(someMethod) But only if we didn't refactor
+	 * the method ourselves before.
+	 * 
 	 * @param unit
 	 * @param fragment
 	 */
 	private void replaceMethodInvocation(IRewriteCompilationUnit unit, VariableDeclarationFragment fragment) {
 		// Replace the method invocation only if we didn't refactor the method yet.
 		Expression initializer = fragment.getInitializer();
-		
-		if(initializer == null)
+
+		if (initializer == null)
 			return;
 
 		// look for a methodinvocation here
-	/*	MethodInvocationVisitor visitor = new MethodInvocationVisitor(collector, "futuretask");
+		/*
+		 * MethodInvocationVisitor visitor = new MethodInvocationVisitor(collector,
+		 * "futuretask");
+		 * 
+		 * initializer.accept(visitor);
+		 * 
+		 * if(visitor.isExternalMethod().orElse(false)) {
+		 */
+		// move the initializer expression inside an
+		// "SimpleFutureTaskObservable.create(initializer)"
 
-		initializer.accept(visitor);
-
-		if(visitor.isExternalMethod().orElse(false)) { */
-			// move the initializer expression inside an "SimpleFutureTaskObservable.create(initializer)"
-			
-			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "SimpleFutureTaskObservable", "create", initializer);
-	//	}
+		JavaFutureASTUtils.moveInsideMethodInvocation(unit, "SimpleFutureTaskObservable", "create", initializer);
+		// }
 	}
 }

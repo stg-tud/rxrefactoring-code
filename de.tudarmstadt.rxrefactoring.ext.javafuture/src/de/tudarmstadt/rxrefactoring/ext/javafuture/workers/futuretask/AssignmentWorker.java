@@ -24,30 +24,30 @@ public class AssignmentWorker extends AbstractFutureTaskWorker<Assignment> {
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, Assignment assignment) {
 		Expression rightHand = assignment.getRightHandSide();
-		
+
 		refactorRightHand(unit, rightHand);
-		
+
 	}
-	
+
 	/**
-	 * Replaces x = someMethod with x = Observable.from(someMethod)
-	 * But only if we didn't refactor the method ourselves before.
+	 * Replaces x = someMethod with x = Observable.from(someMethod) But only if we
+	 * didn't refactor the method ourselves before.
+	 * 
 	 * @param unit
 	 * @param fragment
 	 */
 	private void refactorRightHand(IRewriteCompilationUnit unit, Expression rightHand) {
-		
+
 		// look for a methodinvocation here
 		MethodInvocationVisitor visitor = new MethodInvocationVisitor(collector, "future");
 
 		rightHand.accept(visitor);
 
-		if(visitor.isExternalMethod().orElse(false)) {
+		if (visitor.isExternalMethod().orElse(false)) {
 			// move the initializer expression inside an "Observable.from(rightHand)"
-			
+
 			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "SimpleFutureTaskObservable", "create", rightHand);
 			summary.addCorrect("futureTaskCreation");
 		}
 	}
 }
-

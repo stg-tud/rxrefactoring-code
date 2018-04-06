@@ -20,12 +20,12 @@ public class MethodInvocationWorker extends AbstractFutureWorker<MethodInvocatio
 	protected Map<IRewriteCompilationUnit, List<MethodInvocation>> getNodesMap() {
 		return collector.getMethodInvocationsMap("collection");
 	}
-	
+
 	@Override
 	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
 		addFutureObservableImport(unit);
-		
+
 		super.endRefactorNode(unit);
 	}
 
@@ -34,10 +34,10 @@ public class MethodInvocationWorker extends AbstractFutureWorker<MethodInvocatio
 		String methodName = methodInvocation.getName().getIdentifier();
 
 		// list.add(future) -> listObservables.add(Observable.from(future))
-		if(methodName.equals("add")) {
-			Expression expression = (Expression)methodInvocation.arguments().get(0);
+		if (methodName.equals("add")) {
+			Expression expression = (Expression) methodInvocation.arguments().get(0);
 
-			if(collector.isPure(unit, methodInvocation)) {
+			if (collector.isPure(unit, methodInvocation)) {
 				JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Observable", "from", expression);
 			} else {
 				JavaFutureASTUtils.moveInsideMethodInvocation(unit, "FutureObservable", "create", expression);

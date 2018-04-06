@@ -9,13 +9,13 @@ import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
 
 /**
- * Renames SimpleNames
- * Changes methods
+ * Renames SimpleNames Changes methods
+ * 
  * @author Steve
  *
  */
 public class SimpleNameWorker extends AbstractFutureWorker<SimpleName> {
-	
+
 	public SimpleNameWorker() {
 		super("SimpleName");
 	}
@@ -28,10 +28,10 @@ public class SimpleNameWorker extends AbstractFutureWorker<SimpleName> {
 	@Override
 	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
-		
+
 		super.endRefactorNode(unit);
 	}
-	
+
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, SimpleName simpleName) {
 		unit.replace(simpleName, unit.getAST().newSimpleName(simpleName.getIdentifier() + "Flowable"));

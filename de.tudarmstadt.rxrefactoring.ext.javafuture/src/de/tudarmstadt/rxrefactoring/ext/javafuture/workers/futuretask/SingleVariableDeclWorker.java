@@ -12,13 +12,11 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.helper.SimpleNameVisitor;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureTaskWorker;
 
-
-public class SingleVariableDeclWorker extends AbstractFutureTaskWorker<SingleVariableDeclaration>
-{
+public class SingleVariableDeclWorker extends AbstractFutureTaskWorker<SingleVariableDeclaration> {
 	public SingleVariableDeclWorker() {
 		super("SingleVariableDeclaration");
 	}
-	
+
 	@Override
 	protected Map<IRewriteCompilationUnit, List<SingleVariableDeclaration>> getNodesMap() {
 		return collector.getSingleVarDeclMap("futuretask");
@@ -29,7 +27,7 @@ public class SingleVariableDeclWorker extends AbstractFutureTaskWorker<SingleVar
 		SimpleNameVisitor visitor = new SimpleNameVisitor(ClassInfos.Future.getBinaryName());
 		singleVarDecl.accept(visitor);
 
-		if(!JavaFutureASTUtils.isMethodParameter(singleVarDecl)) {
+		if (!JavaFutureASTUtils.isMethodParameter(singleVarDecl)) {
 			for (SimpleName simpleName : visitor.getSimpleNames()) {
 				if (simpleName.getIdentifier().equals("Future")) {
 					JavaFutureASTUtils.replaceSimpleName(unit, simpleName, "SimpleFutureTaskObservable");

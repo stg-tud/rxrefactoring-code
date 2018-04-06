@@ -10,13 +10,13 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureTaskWorker;
 
 /**
- * Renames SimpleNames
- * Changes methods
+ * Renames SimpleNames Changes methods
+ * 
  * @author Steve
  *
  */
 public class SimpleNameWorker extends AbstractFutureTaskWorker<SimpleName> {
-	
+
 	public SimpleNameWorker() {
 		super("SimpleName");
 	}

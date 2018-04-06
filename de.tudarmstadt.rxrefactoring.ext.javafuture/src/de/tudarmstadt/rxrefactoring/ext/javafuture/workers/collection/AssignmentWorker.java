@@ -24,21 +24,20 @@ public class AssignmentWorker extends AbstractFutureWorker<Assignment> {
 	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
 		addFutureObservableImport(unit);
-		
+
 		super.endRefactorNode(unit);
 	}
-	
+
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, Assignment assignment) {
 		Expression rightHand = assignment.getRightHandSide();
-		
-		if(collector.isPure(unit, assignment)) {
+
+		if (collector.isPure(unit, assignment)) {
 			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Observable", "from", rightHand);
 		} else {
 			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "FutureObservable", "create", rightHand);
 		}
-		
+
 		summary.addCorrect("futureCreation");
 	}
 }
-

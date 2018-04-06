@@ -37,76 +37,77 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureVisitor2
  * Created: 01/18/2017
  */
 public class FutureCollector implements IWorker<Void, FutureCollector> {
-	
-	
+
 	private final Map<String, CollectorGroup> groups;
-	
+
 	private final Map<IRewriteCompilationUnit, Map<ASTNode, MethodDeclaration>> parentMethod;
 	private final Map<IRewriteCompilationUnit, Map<MethodDeclaration, Boolean>> isMethodPure;
 
 	private final EnumSet<RefactoringOptions> options;
-	
+
 	public FutureCollector(EnumSet<RefactoringOptions> options) {
 		this.options = options;
-		
+
 		groups = new HashMap<>();
-		
+
 		parentMethod = new HashMap<>();
 		isMethodPure = new HashMap<>();
 	}
-	
+
 	@Override
 	public FutureCollector refactor(IProjectUnits units, Void input, WorkerSummary summary) throws Exception {
-		
+
 		for (IRewriteCompilationUnit unit : units) {
-			// Collect the data		
-			if(options.contains(RefactoringOptions.FUTURE)) {
+			// Collect the data
+			if (options.contains(RefactoringOptions.FUTURE)) {
 				FutureVisitor2 discoveringVisitor = new FutureVisitor2(ClassInfos.Future);
-				//FutureCollectionVisitor collectionDiscoveringVisitor = new FutureCollectionVisitor(ClassInfos.Future.getBinaryName());
-				
+				// FutureCollectionVisitor collectionDiscoveringVisitor = new
+				// FutureCollectionVisitor(ClassInfos.Future.getBinaryName());
+
 				unit.accept(discoveringVisitor);
-				//cu.accept(collectionDiscoveringVisitor);
-				
+				// cu.accept(collectionDiscoveringVisitor);
+
 				add("future", unit, discoveringVisitor);
-				//add("collection", unit, collectionDiscoveringVisitor);			
+				// add("collection", unit, collectionDiscoveringVisitor);
 			}
-			
-			if(options.contains(RefactoringOptions.FUTURETASK)) {
+
+			if (options.contains(RefactoringOptions.FUTURETASK)) {
 				FutureVisitor futureTaskDiscoveringVisitor = new FutureVisitor(ClassInfos.FutureTask);
 				unit.accept(futureTaskDiscoveringVisitor);
-				add("futuretask", unit, futureTaskDiscoveringVisitor);			
+				add("futuretask", unit, futureTaskDiscoveringVisitor);
 			}
-		}	
-		
+		}
+
 		summary.setCorrect("numberOfCompilationUnits", units.size());
 
 		return this;
 	}
 
 	public void add(String group, IRewriteCompilationUnit cu, VisitorNodes subclasses) {
-		
+
 		// Create group if it doesn't exist yet
-		if(!groups.containsKey(group))
+		if (!groups.containsKey(group))
 			groups.put(group, new CollectorGroup());
 
 		CollectorGroup collectorGroup = groups.get(group);
-		
+
 		collectorGroup.add(cu, subclasses);
-		
+
 		addPureInformation(cu, subclasses.getParentMethods(), subclasses.getIsMethodPures());
 	}
-	
-	private void addPureInformation(IRewriteCompilationUnit cu, Map<ASTNode, MethodDeclaration> parentMethods, Map<MethodDeclaration, Boolean> isMethodPures) {
-		
+
+	private void addPureInformation(IRewriteCompilationUnit cu, Map<ASTNode, MethodDeclaration> parentMethods,
+			Map<MethodDeclaration, Boolean> isMethodPures) {
+
 		addParentMethods(cu, parentMethods);
 		addIsPureInfo(cu, isMethodPures);
 	}
-	
+
 	private void addParentMethods(IRewriteCompilationUnit cu, Map<ASTNode, MethodDeclaration> parentMethods) {
 		if (parentMethods == null || parentMethods.isEmpty()) {
 			return;
 		}
-		
+
 		Map<ASTNode, MethodDeclaration> currentMap = parentMethod.get(cu);
 		if (currentMap == null) {
 			parentMethod.put(cu, parentMethods);
@@ -114,135 +115,124 @@ public class FutureCollector implements IWorker<Void, FutureCollector> {
 			currentMap.putAll(parentMethods);
 		}
 	}
-	
+
 	private void addIsPureInfo(IRewriteCompilationUnit cu, Map<MethodDeclaration, Boolean> isMethodPures) {
 		if (isMethodPures == null || isMethodPures.isEmpty()) {
 			return;
 		}
-		
+
 		Map<MethodDeclaration, Boolean> currentMap = isMethodPure.get(cu);
 		if (currentMap == null) {
 			isMethodPure.put(cu, isMethodPures);
 		} else {
-			
-			for(Map.Entry<MethodDeclaration, Boolean> entry : isMethodPures.entrySet()) {
+
+			for (Map.Entry<MethodDeclaration, Boolean> entry : isMethodPures.entrySet()) {
 				// If value already exists, only change it if the current value is true.
-				if(currentMap.containsKey(entry.getKey())) {
-					
-					if(currentMap.get(entry.getKey())) {
+				if (currentMap.containsKey(entry.getKey())) {
+
+					if (currentMap.get(entry.getKey())) {
 						currentMap.put(entry.getKey(), entry.getValue());
 					}
 				} else {
 					currentMap.put(entry.getKey(), entry.getValue());
 				}
-			}			
+			}
 		}
 	}
-	
-	
+
 	public boolean isPure(IRewriteCompilationUnit cu, ASTNode node) {
 		return isMethodPure.get(cu).getOrDefault(getParentMethod(cu, node), false);
 	}
-	
-	
+
 	public MethodDeclaration getParentMethod(IRewriteCompilationUnit cu, ASTNode node) {
 		return parentMethod.get(cu).getOrDefault(node, null);
 	}
 
 	public boolean containsMethodDeclaration(String group, IMethodBinding methodBinding) {
 
-		if(methodBinding == null)
+		if (methodBinding == null)
 			return false;
-		
-		for (Map.Entry<IRewriteCompilationUnit, List<MethodDeclaration>> methodDeclEntry : getMethodDeclarationsMap(group).entrySet())
-		{
-			for (MethodDeclaration methodDeclaration : methodDeclEntry.getValue())
-			{
-				if(methodBinding.equals(methodDeclaration.resolveBinding()))
+
+		for (Map.Entry<IRewriteCompilationUnit, List<MethodDeclaration>> methodDeclEntry : getMethodDeclarationsMap(
+				group).entrySet()) {
+			for (MethodDeclaration methodDeclaration : methodDeclEntry.getValue()) {
+				if (methodBinding.equals(methodDeclaration.resolveBinding()))
 					return true;
 			}
 		}
 
 		return false;
 	}
-	
-	public Map<IRewriteCompilationUnit, List<TypeDeclaration>> getTypeDeclMap(String group1, String group2)
-	{	
+
+	public Map<IRewriteCompilationUnit, List<TypeDeclaration>> getTypeDeclMap(String group1, String group2) {
 		return merge(groups.get(group1).getTypeDeclMap(), groups.get(group2).getTypeDeclMap());
 	}
 
-	public Map<IRewriteCompilationUnit, List<TypeDeclaration>> getTypeDeclMap(String group)
-	{
+	public Map<IRewriteCompilationUnit, List<TypeDeclaration>> getTypeDeclMap(String group) {
 		return groups.get(group).getTypeDeclMap();
 	}
 
-	public Map<IRewriteCompilationUnit, List<FieldDeclaration>> getFieldDeclMap(String group)
-	{
+	public Map<IRewriteCompilationUnit, List<FieldDeclaration>> getFieldDeclMap(String group) {
 		return groups.get(group).getFieldDeclMap();
 	}
 
-	public Map<IRewriteCompilationUnit, List<Assignment>> getAssigmentsMap(String group)
-	{
+	public Map<IRewriteCompilationUnit, List<Assignment>> getAssigmentsMap(String group) {
 		return groups.get(group).getAssigmentsMap();
 	}
 
-	public Map<IRewriteCompilationUnit, List<VariableDeclarationStatement>> getVarDeclMap(String group)
-	{
+	public Map<IRewriteCompilationUnit, List<VariableDeclarationStatement>> getVarDeclMap(String group) {
 		return groups.get(group).getVarDeclMap();
 	}
 
-	public Map<IRewriteCompilationUnit, List<SimpleName>> getSimpleNamesMap(String group)
-	{
+	public Map<IRewriteCompilationUnit, List<SimpleName>> getSimpleNamesMap(String group) {
 		return groups.get(group).getSimpleNamesMap();
 	}
 
-	public Map<IRewriteCompilationUnit, List<ClassInstanceCreation>> getClassInstanceMap(String group)
-	{
+	public Map<IRewriteCompilationUnit, List<ClassInstanceCreation>> getClassInstanceMap(String group) {
 		return groups.get(group).getClassInstanceMap();
 	}
 
-	public Map<IRewriteCompilationUnit, List<SingleVariableDeclaration>> getSingleVarDeclMap(String group)
-	{
+	public Map<IRewriteCompilationUnit, List<SingleVariableDeclaration>> getSingleVarDeclMap(String group) {
 		return groups.get(group).getSingleVarDeclMap();
 	}
 
-	public Map<IRewriteCompilationUnit, List<MethodInvocation>> getMethodInvocationsMap(String group)
-	{
+	public Map<IRewriteCompilationUnit, List<MethodInvocation>> getMethodInvocationsMap(String group) {
 		return groups.get(group).getMethodInvocationsMap();
 	}
 
-	public Map<IRewriteCompilationUnit, List<MethodDeclaration>> getMethodDeclarationsMap(String group)
-	{
+	public Map<IRewriteCompilationUnit, List<MethodDeclaration>> getMethodDeclarationsMap(String group) {
 		return groups.get(group).getMethodDeclarationsMap();
 	}
-	
+
 	public Map<IRewriteCompilationUnit, List<ArrayCreation>> getArrayCreationsMap(String group) {
 		return groups.get(group).getArrayCreationsMap();
 	}
-	
+
 	public Map<IRewriteCompilationUnit, List<ReturnStatement>> getReturnStatementsMap(String group) {
 		return groups.get(group).getReturnStatementsMap();
 	}
-		
+
 	/**
-	 * If it is necessary to loop over multiple groups, this method can combine the wanted maps.
-	 * E. g. collector.merge(collector.getVarDeclMap("future"), collector.getVarDeclMap("collection"));
+	 * If it is necessary to loop over multiple groups, this method can combine the
+	 * wanted maps. E. g. collector.merge(collector.getVarDeclMap("future"),
+	 * collector.getVarDeclMap("collection"));
 	 * 
 	 * Note: More like a workaround.
+	 * 
 	 * @param maps
 	 * @return
 	 */
 	@SafeVarargs
 	public final <T> Map<IRewriteCompilationUnit, List<T>> merge(Map<IRewriteCompilationUnit, List<T>>... maps) {
-		if(maps.length == 0)
+		if (maps.length == 0)
 			return null;
-		if(maps.length == 1)
+		if (maps.length == 1)
 			return maps[0];
 
 		Map<IRewriteCompilationUnit, List<T>> result = new HashMap<>(maps[0]);
 
-		for(int i = 1; i < maps.length; i++) {
-			for(Map.Entry<IRewriteCompilationUnit, List<T>> entry : maps[i].entrySet()) {
+		for (int i = 1; i < maps.length; i++) {
+			for (Map.Entry<IRewriteCompilationUnit, List<T>> entry : maps[i].entrySet()) {
 				result.merge(entry.getKey(), entry.getValue(), (a, b) -> {
 					List<T> combined = new ArrayList<T>(a);
 					combined.addAll(b);
@@ -255,37 +245,32 @@ public class FutureCollector implements IWorker<Void, FutureCollector> {
 	}
 
 	public int getNumberOfCompilationUnits() {
-		
+
 		Set<IRewriteCompilationUnit> allCompilationUnits = new HashSet<>();
-		
-		for(CollectorGroup group : groups.values()) {
+
+		for (CollectorGroup group : groups.values()) {
 			allCompilationUnits.addAll(group.getCompilationUnits());
 		}
-		
+
 		return allCompilationUnits.size();
 	}
 
-	
-	
 	public Map<String, Object> getResults() {
 		HashMap<String, Object> map = new HashMap<>();
-		
-		for(CollectorGroup group : groups.values()) {
+
+		for (CollectorGroup group : groups.values()) {
 			Map<String, Integer> results = group.getMapsResults();
-			
-			for(Map.Entry<String, Integer> entry : results.entrySet()) {
+
+			for (Map.Entry<String, Integer> entry : results.entrySet()) {
 				map.merge(entry.getKey(), entry.getValue(), (a, b) -> {
-					return (int)a + (int)b;
+					return (int) a + (int) b;
 				});
 			}
 		}
-		
+
 		map.put("Files", getNumberOfCompilationUnits());
 
 		return map;
 	}
 
-	
-
 }
-

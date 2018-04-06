@@ -9,14 +9,13 @@ public class CollectionInfo {
 
 	public static final List<String> publicMethodsMap = Arrays.asList(
 
-			);
+	);
 
 	/**
 	 *
 	 * @return full name of the class. i.e: android.os.AsyncTask
 	 */
-	public static String[] getBinaryNames()
-	{
+	public static String[] getBinaryNames() {
 		return collectionBinaryNames;
 	}
 

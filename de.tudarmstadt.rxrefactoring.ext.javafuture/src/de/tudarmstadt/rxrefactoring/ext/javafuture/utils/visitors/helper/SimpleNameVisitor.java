@@ -8,8 +8,6 @@ import org.eclipse.jdt.core.dom.SimpleName;
 
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 
-
-
 /**
  * Searches for all simple names that resolve to type 'binaryName'
  *
@@ -28,7 +26,7 @@ public class SimpleNameVisitor extends ASTVisitor {
 		if (Types.isExactTypeOf(node.resolveTypeBinding(), binaryName)) {
 			simpleNames.add(node);
 		}
-		
+
 		return true;
 	}
 

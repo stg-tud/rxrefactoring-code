@@ -12,7 +12,7 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
 
 public class FieldDeclarationWorker extends AbstractFutureWorker<FieldDeclaration> {
-	
+
 	public FieldDeclarationWorker() {
 		super("FieldDeclaration");
 	}
@@ -21,24 +21,22 @@ public class FieldDeclarationWorker extends AbstractFutureWorker<FieldDeclaratio
 	protected Map<IRewriteCompilationUnit, List<FieldDeclaration>> getNodesMap() {
 		return collector.getFieldDeclMap("future");
 	}
-	
+
 	@Override
 	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
-		
+
 		super.endRefactorNode(unit);
 	}
-
-
 
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, FieldDeclaration node) {
 		Type fieldType = node.getType();
-		
+
 		if (fieldType instanceof ParameterizedType) {
-			fieldType = ((ParameterizedType)fieldType).getType();
+			fieldType = ((ParameterizedType) fieldType).getType();
 		}
-		
-		JavaFutureASTUtils.replaceType(unit, fieldType, "Flowable");		
+
+		JavaFutureASTUtils.replaceType(unit, fieldType, "Flowable");
 	}
 }

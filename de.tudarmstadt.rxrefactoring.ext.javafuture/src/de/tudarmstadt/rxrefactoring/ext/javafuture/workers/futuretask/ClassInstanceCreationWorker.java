@@ -20,10 +20,10 @@ public class ClassInstanceCreationWorker extends AbstractFutureTaskWorker<ClassI
 
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, ClassInstanceCreation classInstanceCreation) {
-		/* unit.replaceType(
-				classInstanceCreation.getType(), 
-				"Observable");
-		
-		unit.addImport("rx.Observable"); */
+		/*
+		 * unit.replaceType( classInstanceCreation.getType(), "Observable");
+		 * 
+		 * unit.addImport("rx.Observable");
+		 */
 	}
 }

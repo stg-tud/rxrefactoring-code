@@ -12,21 +12,20 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.helper.SimpleNameVisitor;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
 
-public class SingleVariableDeclWorker extends AbstractFutureWorker<SingleVariableDeclaration>
-{
+public class SingleVariableDeclWorker extends AbstractFutureWorker<SingleVariableDeclaration> {
 	public SingleVariableDeclWorker() {
 		super("SingleVariableDeclaration");
 	}
-	
+
 	@Override
 	protected Map<IRewriteCompilationUnit, List<SingleVariableDeclaration>> getNodesMap() {
 		return collector.getSingleVarDeclMap("future");
 	}
-	
+
 	@Override
 	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
-		
+
 		super.endRefactorNode(unit);
 	}
 

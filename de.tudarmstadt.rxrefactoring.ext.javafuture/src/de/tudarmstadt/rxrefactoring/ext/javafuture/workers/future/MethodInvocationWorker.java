@@ -22,16 +22,17 @@ public class MethodInvocationWorker extends AbstractFutureWorker<MethodInvocatio
 	protected Map<IRewriteCompilationUnit, List<MethodInvocation>> getNodesMap() {
 		return collector.getMethodInvocationsMap("future");
 	}
-	
+
 	@Override
 	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
-		
+
 		super.endRefactorNode(unit);
 	}
 
 	/**
 	 * Replaces a future.get with an observable.toBlocking().single()
+	 * 
 	 * @param unit
 	 * @param methodInvocation
 	 */
@@ -41,23 +42,23 @@ public class MethodInvocationWorker extends AbstractFutureWorker<MethodInvocatio
 
 		switch (methodName) {
 		case "get":
-			
+
 			Expression expression = methodInvocation.getExpression();
 			String newName = "";
-			
+
 			if (expression instanceof SimpleName) {
-				SimpleName simpleName = (SimpleName)expression;
+				SimpleName simpleName = (SimpleName) expression;
 				newName = simpleName.getIdentifier() + "Flowable";
 			} else if (expression instanceof ArrayAccess) {
-				ArrayAccess arrayAccess = (ArrayAccess)expression;
-				
-				SimpleName simpleName = (SimpleName)arrayAccess.getArray();
+				ArrayAccess arrayAccess = (ArrayAccess) expression;
+
+				SimpleName simpleName = (SimpleName) arrayAccess.getArray();
 				newName = simpleName.getIdentifier() + "Flowables";
 			}
-			
-			if(!newName.isEmpty())
+
+			if (!newName.isEmpty())
 				JavaFutureASTUtils.replaceWithBlockingGet(unit, methodInvocation, newName);
-			
+
 			break;
 
 		default:

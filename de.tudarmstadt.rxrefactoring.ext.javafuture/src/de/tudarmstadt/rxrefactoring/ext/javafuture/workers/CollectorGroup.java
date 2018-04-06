@@ -20,7 +20,6 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 
-
 public class CollectorGroup {
 	private final Map<IRewriteCompilationUnit, List<TypeDeclaration>> typeDeclMap;
 	private final Map<IRewriteCompilationUnit, List<FieldDeclaration>> fieldDeclMap;
@@ -32,8 +31,8 @@ public class CollectorGroup {
 	private final Map<IRewriteCompilationUnit, List<MethodInvocation>> methodInvocationsMap;
 	private final Map<IRewriteCompilationUnit, List<MethodDeclaration>> methodDeclarationsMap;
 	private final Map<IRewriteCompilationUnit, List<ArrayCreation>> arrayCreationsMap;
-	private final Map<IRewriteCompilationUnit, List<ReturnStatement>> returnStatementsMap; 
-	
+	private final Map<IRewriteCompilationUnit, List<ReturnStatement>> returnStatementsMap;
+
 	public CollectorGroup() {
 
 		typeDeclMap = new HashMap<>();
@@ -48,7 +47,7 @@ public class CollectorGroup {
 		arrayCreationsMap = new HashMap<>();
 		returnStatementsMap = new HashMap<>();
 	}
-	
+
 	public void add(IRewriteCompilationUnit cu, VisitorNodes subclasses) {
 		addToMap(cu, subclasses.getTypeDeclarations(), typeDeclMap);
 		addToMap(cu, subclasses.getFieldDeclarations(), fieldDeclMap);
@@ -62,12 +61,12 @@ public class CollectorGroup {
 		addToMap(cu, subclasses.getArrayCreations(), arrayCreationsMap);
 		addToMap(cu, subclasses.getReturnStatements(), returnStatementsMap);
 	}
-	
+
 	private <T> void addToMap(IRewriteCompilationUnit cu, List<T> newList, Map<IRewriteCompilationUnit, List<T>> map) {
 		if (newList.isEmpty() || map == null) {
 			return;
 		}
-		
+
 		List<T> currentList = map.get(cu);
 		if (currentList == null) {
 			map.put(cu, newList);
@@ -75,7 +74,7 @@ public class CollectorGroup {
 			currentList.addAll(newList);
 		}
 	}
-	
+
 	public Map<IRewriteCompilationUnit, List<TypeDeclaration>> getTypeDeclMap() {
 		return typeDeclMap;
 	}
@@ -111,15 +110,15 @@ public class CollectorGroup {
 	public Map<IRewriteCompilationUnit, List<MethodDeclaration>> getMethodDeclarationsMap() {
 		return methodDeclarationsMap;
 	}
-	
+
 	public Map<IRewriteCompilationUnit, List<ArrayCreation>> getArrayCreationsMap() {
 		return arrayCreationsMap;
 	}
-	
+
 	public Map<IRewriteCompilationUnit, List<ReturnStatement>> getReturnStatementsMap() {
 		return returnStatementsMap;
 	}
-	
+
 	public Set<IRewriteCompilationUnit> getCompilationUnits() {
 		Set<IRewriteCompilationUnit> allCompilationUnits = new HashSet<>();
 
@@ -141,7 +140,7 @@ public class CollectorGroup {
 	public int getNumberOfCompilationUnits() {
 		return getCompilationUnits().size();
 	}
-	
+
 	public Map<String, Integer> getMapsResults() {
 		HashMap<String, Integer> map = new HashMap<>();
 

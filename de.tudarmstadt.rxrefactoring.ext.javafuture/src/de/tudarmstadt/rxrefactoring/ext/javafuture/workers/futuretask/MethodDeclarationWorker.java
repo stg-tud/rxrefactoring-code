@@ -22,7 +22,7 @@ public class MethodDeclarationWorker extends AbstractFutureTaskWorker<MethodDecl
 	public MethodDeclarationWorker() {
 		super("MethodDeclaration");
 	}
-	
+
 	@Override
 	protected Map<IRewriteCompilationUnit, List<MethodDeclaration>> getNodesMap() {
 		return collector.getMethodDeclarationsMap("futuretask");
@@ -31,22 +31,22 @@ public class MethodDeclarationWorker extends AbstractFutureTaskWorker<MethodDecl
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, MethodDeclaration methodDeclaration) {
 		replaceReturnType(unit, methodDeclaration);
-		
+
 		replaceReturnStatements(unit, methodDeclaration);
 	}
 
 	private void replaceReturnType(IRewriteCompilationUnit unit, MethodDeclaration methodDeclaration) {
-		Type returnType =  methodDeclaration.getReturnType2();				
-		if(returnType instanceof ParameterizedType) {
-			Type type = ((ParameterizedType)returnType).getType();
-			
+		Type returnType = methodDeclaration.getReturnType2();
+		if (returnType instanceof ParameterizedType) {
+			Type type = ((ParameterizedType) returnType).getType();
+
 			// Don't refactor return values for now
-			//unit.replaceType(type, "SimpleFutureTaskObservable");
+			// unit.replaceType(type, "SimpleFutureTaskObservable");
 		}
 	}
-	
+
 	private void replaceReturnStatements(IRewriteCompilationUnit unit, MethodDeclaration methodDeclaration) {
-		
+
 		// Replace return statements
 		ASTVisitor visitor = new ASTVisitor() {
 			@Override
@@ -54,22 +54,22 @@ public class MethodDeclarationWorker extends AbstractFutureTaskWorker<MethodDecl
 
 				Expression returnExpression = returnStatement.getExpression();
 
-				if(returnExpression instanceof MethodInvocation
-						|| returnExpression instanceof NullLiteral) {
-					
-					JavaFutureASTUtils.moveInsideMethodInvocation(unit, "SimpleFutureTaskObservable", "create", returnExpression);
+				if (returnExpression instanceof MethodInvocation || returnExpression instanceof NullLiteral) {
+
+					JavaFutureASTUtils.moveInsideMethodInvocation(unit, "SimpleFutureTaskObservable", "create",
+							returnExpression);
 					summary.addCorrect("futureTaskCreation");
 				}
 
 				return true;
 			}
-			
+
 			@Override
 			public boolean visit(LambdaExpression lambdaExpression) {
 				return false;
 			}
 		};
-		
+
 		methodDeclaration.accept(visitor);
 	}
 }

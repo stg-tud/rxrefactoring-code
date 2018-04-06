@@ -22,36 +22,35 @@ public class MethodDeclarationWorker extends AbstractFutureWorker<MethodDeclarat
 	public MethodDeclarationWorker() {
 		super("MethodDeclaration");
 	}
-	
+
 	@Override
 	protected Map<IRewriteCompilationUnit, List<MethodDeclaration>> getNodesMap() {
 		return collector.getMethodDeclarationsMap("future");
 	}
-	
+
 	@Override
 	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
-		
+
 		super.endRefactorNode(unit);
 	}
 
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, MethodDeclaration methodDeclaration) {
 		replaceReturnType(unit, methodDeclaration);
-		
+
 		replaceReturnStatements(unit, methodDeclaration);
 	}
 
 	private void replaceReturnType(IRewriteCompilationUnit unit, MethodDeclaration methodDeclaration) {
-		Type returnType =  methodDeclaration.getReturnType2();				
-		if(returnType instanceof ParameterizedType) {
-			Type type = ((ParameterizedType)returnType).getType();
-			
-			
+		Type returnType = methodDeclaration.getReturnType2();
+		if (returnType instanceof ParameterizedType) {
+			Type type = ((ParameterizedType) returnType).getType();
+
 			JavaFutureASTUtils.replaceType(unit, type, "Flowable");
 		}
 	}
-	
+
 	private void replaceReturnStatements(IRewriteCompilationUnit unit, MethodDeclaration methodDeclaration) {
 		
 		// Replace return statements
@@ -61,24 +60,22 @@ public class MethodDeclarationWorker extends AbstractFutureWorker<MethodDeclarat
 
 				Expression returnExpression = returnStatement.getExpression();
 
-				if(returnExpression instanceof MethodInvocation
-						|| returnExpression instanceof NullLiteral) {
-					
+				if (returnExpression instanceof MethodInvocation || returnExpression instanceof NullLiteral) {
+
 					JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Flowable", "fromFuture", returnExpression);
 					summary.addCorrect("futureCreation");
 				}
 
 				return true;
 			}
-			
+
 			@Override
 			public boolean visit(LambdaExpression lambdaExpression) {
 				return false;
 			}
 		};
-		
+
 		methodDeclaration.accept(visitor);
 	}
 
-	
 }

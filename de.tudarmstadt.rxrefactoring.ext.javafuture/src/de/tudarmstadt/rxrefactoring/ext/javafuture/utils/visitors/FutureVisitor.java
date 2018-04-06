@@ -26,14 +26,14 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfo;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.VisitorNodes;
-
 
 public class FutureVisitor extends ASTVisitor implements VisitorNodes {
 	private final ClassInfo classInfo;
 	private final String classBinaryName;
-	
+
 	private final List<TypeDeclaration> typeDeclarations;
 	private final List<FieldDeclaration> fieldDeclarations;
 	private final List<Assignment> assignments;
@@ -43,20 +43,20 @@ public class FutureVisitor extends ASTVisitor implements VisitorNodes {
 	private final List<SingleVariableDeclaration> singleVarDeclarations;
 	private final List<MethodDeclaration> methodDeclarations;
 	private final List<MethodInvocation> methodInvocations;
-	
+
 	private MethodDeclaration currentMethod;
 	private Map<ASTNode, MethodDeclaration> parentMethod;
 	private Map<MethodDeclaration, Boolean> isMethodPure;
-	
+
 	private boolean insideAnonymousClass;
-	
+
 	private boolean methodRelevant;
 	private boolean currentMethodPure;
 
 	public FutureVisitor(ClassInfo classInfo) {
 		this.classInfo = classInfo;
 		this.classBinaryName = classInfo.getBinaryName();
-		
+
 		typeDeclarations = new ArrayList<>();
 		assignments = new ArrayList<>();
 		fieldDeclarations = new ArrayList<>();
@@ -66,7 +66,7 @@ public class FutureVisitor extends ASTVisitor implements VisitorNodes {
 		classInstanceCreations = new ArrayList<>();
 		singleVarDeclarations = new ArrayList<>();
 		methodDeclarations = new ArrayList<>();
-		
+
 		parentMethod = new HashMap<>();
 		isMethodPure = new HashMap<>();
 	}
@@ -74,22 +74,22 @@ public class FutureVisitor extends ASTVisitor implements VisitorNodes {
 	private void setPurity(boolean isPure) {
 		currentMethodPure = isPure;
 	}
-	
+
 	private void addParent(ASTNode node) {
-		if(currentMethod == null)
+		if (currentMethod == null)
 			return;
-		
+
 		methodRelevant = true;
-		
+
 		parentMethod.put(node, currentMethod);
 	}
-	
+
 	@Override
 	public boolean visit(FieldDeclaration node) {
 		if (ASTUtils.isClassOf(node, classBinaryName)) {
 			fieldDeclarations.add(node);
 		}
-		
+
 		return true;
 	}
 
@@ -98,10 +98,10 @@ public class FutureVisitor extends ASTVisitor implements VisitorNodes {
 		ITypeBinding type = node.getType().resolveBinding();
 		if (ASTUtils.isClassOf(type, classBinaryName)) {
 			varDeclStatements.add(node);
-			
+
 			addParent(node);
 		}
-		
+
 		return true;
 	}
 
@@ -109,17 +109,17 @@ public class FutureVisitor extends ASTVisitor implements VisitorNodes {
 	public boolean visit(Assignment node) {
 		Expression leftHandSide = node.getLeftHandSide();
 
-		if(leftHandSide.getNodeType() != Expression.ARRAY_ACCESS) {
+		if (leftHandSide.getNodeType() != Expression.ARRAY_ACCESS) {
 
 			ITypeBinding type = leftHandSide.resolveTypeBinding();
 
-			if(ASTUtils.isClassOf(type, classBinaryName)) {
+			if (ASTUtils.isClassOf(type, classBinaryName)) {
 				assignments.add(node);
-				
+
 				addParent(node);
 			}
 		}
-		
+
 		return true;
 	}
 
@@ -127,23 +127,23 @@ public class FutureVisitor extends ASTVisitor implements VisitorNodes {
 	public boolean visit(SimpleName simpleName) {
 		ITypeBinding typeBinding = simpleName.resolveTypeBinding();
 		IBinding iBinding = simpleName.resolveBinding();
-		
+
 		if (iBinding != null) {
 			int kind = iBinding.getKind();
-			
+
 			if (ASTUtils.isClassOf(typeBinding, classBinaryName) && kind == IBinding.VARIABLE) {
 				if (!simpleNames.contains(simpleName)) {
 					simpleNames.add(simpleName);
-					
+
 					addParent(simpleName);
-					
-					if(ASTUtils.isField(simpleName)) {
+
+					if (ASTUtils.isField(simpleName)) {
 						setPurity(false);
 					}
 				}
 			}
 		}
-		
+
 		return true;
 	}
 
@@ -152,72 +152,72 @@ public class FutureVisitor extends ASTVisitor implements VisitorNodes {
 		ITypeBinding type = node.getType().resolveBinding();
 		if (ASTUtils.isClassOf(type, classBinaryName)) {
 			classInstanceCreations.add(node);
-			
+
 			addParent(node);
 		}
-		
+
 		return true;
 	}
-	
+
 	@Override
 	public boolean visit(MethodDeclaration node) {
-		
-		if(!insideAnonymousClass) {
+
+		if (!insideAnonymousClass) {
 			currentMethod = node;
 			setPurity(true);
 		}
-		
+
 		IMethodBinding binding = node.resolveBinding();
-		
+
 		// Check return type
-		if (binding != null)  {
+		if (binding != null) {
 			ITypeBinding returnType = binding.getReturnType();
 
-			if (ASTUtils.isClassOf(returnType, classBinaryName )) {
+			if (Types.isExactTypeOf(returnType.getErasure(), classBinaryName)) {
 				methodDeclarations.add(node);
 				methodRelevant = true;
-				
+
 				setPurity(false);
 			}
 		}
-		
+
 		// go through the parameters to check them for 'purity'
-		for(Object parameter : node.parameters()) {
-			if(parameter instanceof SingleVariableDeclaration) {
-				
-				SingleVariableDeclaration singleVarDecl = (SingleVariableDeclaration)parameter;
-				
+		for (Object parameter : node.parameters()) {
+			if (parameter instanceof SingleVariableDeclaration) {
+
+				SingleVariableDeclaration singleVarDecl = (SingleVariableDeclaration) parameter;
+
 				ITypeBinding type = singleVarDecl.getType().resolveBinding();
-				if (ASTUtils.isClassOf(type, classBinaryName)) {
+				if (Types.isExactTypeOf(type.getErasure(), classBinaryName)) {
 					setPurity(false);
 					methodRelevant = true;
 					break;
 				}
 			}
 		}
-		
+
 		return true;
 	}
-		
+
 	@Override
 	public void endVisit(MethodDeclaration node) {
-		
-		if(insideAnonymousClass)
+
+		if (insideAnonymousClass)
 			return;
-		
-		if(currentMethod != null && methodRelevant)
+
+		if (currentMethod != null && methodRelevant)
 			isMethodPure.put(currentMethod, currentMethodPure);
-		
+
 		currentMethod = null;
 	}
-	
+
 	@Override
 	public boolean visit(AnonymousClassDeclaration node) {
 		insideAnonymousClass = true;
-		
+
 		return true;
 	}
-	
+
 	@Override
 	public void endVisit(AnonymousClassDeclaration node) {
 		insideAnonymousClass = false;
@@ -226,42 +226,37 @@ public class FutureVisitor extends ASTVisitor implements VisitorNodes {
 	@Override
 	public boolean visit(MethodInvocation node) {
 		ITypeBinding typeBinding = null;
-		
-		if(node.getExpression() != null) {
+
+		if (node.getExpression() != null) {
 			typeBinding = node.getExpression().resolveTypeBinding();
 		}
 
 		if (typeBinding != null) {
-			//ITypeBinding type = binding.getDeclaringClass();
-			if (ASTUtils.isClassOf(typeBinding, classBinaryName))
-			{
-				if(classInfo.getUnsupportedMethods().contains(node.getName().getIdentifier())) {
+			// ITypeBinding type = binding.getDeclaringClass();
+			if (ASTUtils.isClassOf(typeBinding, classBinaryName)) {
+				if (classInfo.getUnsupportedMethods().contains(node.getName().getIdentifier())) {
 					Log.info(getClass(), node.getName().getIdentifier() + " is not supported!");
 					setPurity(false);
 					methodRelevant = true;
 				} else {
 					methodInvocations.add(node);
 					addParent(node);
-					
-					if(ASTUtils.isInsideTryCatchBlock(node)) {
+
+					if (ASTUtils.isInsideTryCatchBlock(node)) {
 						setPurity(false);
 					}
 				}
 			}
 		}
 
-		for (Object arg : node.arguments())
-		{
-			if (arg instanceof SimpleName)
-			{
+		for (Object arg : node.arguments()) {
+			if (arg instanceof SimpleName) {
 				SimpleName simpleName = (SimpleName) arg;
 				ITypeBinding argType = simpleName.resolveTypeBinding();
-				if (ASTUtils.isClassOf(argType, classBinaryName))
-				{
+				if (ASTUtils.isClassOf(argType, classBinaryName)) {
 					setPurity(false);
 					methodRelevant = true;
-					if (!simpleNames.contains(simpleName))
-					{
+					if (!simpleNames.contains(simpleName)) {
 						simpleNames.add(simpleName);
 						addParent(simpleName);
 					}
@@ -272,11 +267,9 @@ public class FutureVisitor extends ASTVisitor implements VisitorNodes {
 	}
 
 	@Override
-	public boolean visit(SingleVariableDeclaration node)
-	{
+	public boolean visit(SingleVariableDeclaration node) {
 		ITypeBinding type = node.getType().resolveBinding();
-		if (ASTUtils.isClassOf(type, classBinaryName))
-		{
+		if (ASTUtils.isClassOf(type, classBinaryName)) {
 			addParent(node);
 			singleVarDeclarations.add(node);
 		}
@@ -284,20 +277,17 @@ public class FutureVisitor extends ASTVisitor implements VisitorNodes {
 	}
 
 	@Override
-	public List<TypeDeclaration> getTypeDeclarations()
-	{
+	public List<TypeDeclaration> getTypeDeclarations() {
 		return typeDeclarations;
 	}
 
 	@Override
-	public List<FieldDeclaration> getFieldDeclarations()
-	{
+	public List<FieldDeclaration> getFieldDeclarations() {
 		return fieldDeclarations;
 	}
 
 	@Override
-	public List<Assignment> getAssignments()
-	{
+	public List<Assignment> getAssignments() {
 		return assignments;
 	}
 
@@ -307,14 +297,12 @@ public class FutureVisitor extends ASTVisitor implements VisitorNodes {
 	}
 
 	@Override
-	public List<SimpleName> getSimpleNames()
-	{
+	public List<SimpleName> getSimpleNames() {
 		return simpleNames;
 	}
 
 	@Override
-	public List<ClassInstanceCreation> getClassInstanceCreations()
-	{
+	public List<ClassInstanceCreation> getClassInstanceCreations() {
 		return classInstanceCreations;
 	}
 
@@ -324,32 +312,30 @@ public class FutureVisitor extends ASTVisitor implements VisitorNodes {
 	}
 
 	@Override
-	public List<MethodInvocation> getMethodInvocations()
-	{
+	public List<MethodInvocation> getMethodInvocations() {
 		return methodInvocations;
 	}
 
 	@Override
-	public List<MethodDeclaration> getMethodDeclarations()
-	{
+	public List<MethodDeclaration> getMethodDeclarations() {
 		return methodDeclarations;
 	}
-	
+
 	@Override
 	public List<ArrayCreation> getArrayCreations() {
 		return new ArrayList<>();
 	}
-	
+
 	@Override
 	public List<ReturnStatement> getReturnStatements() {
 		return new ArrayList<>();
 	}
-	
+
 	@Override
 	public Map<ASTNode, MethodDeclaration> getParentMethods() {
 		return parentMethod;
 	}
-	
+
 	@Override
 	public Map<MethodDeclaration, Boolean> getIsMethodPures() {
 		return isMethodPure;

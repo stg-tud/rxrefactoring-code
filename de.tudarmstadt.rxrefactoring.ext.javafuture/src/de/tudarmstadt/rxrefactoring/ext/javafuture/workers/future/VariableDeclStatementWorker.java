@@ -15,7 +15,7 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.helper.MethodI
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
 
 public class VariableDeclStatementWorker extends AbstractFutureWorker<VariableDeclarationStatement> {
-	
+
 	public VariableDeclStatementWorker() {
 		super("VariableDeclarationStatement");
 	}
@@ -24,17 +24,17 @@ public class VariableDeclStatementWorker extends AbstractFutureWorker<VariableDe
 	protected Map<IRewriteCompilationUnit, List<VariableDeclarationStatement>> getNodesMap() {
 		return collector.getVarDeclMap("future");
 	}
-	
+
 	@Override
 	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
-		
+
 		super.endRefactorNode(unit);
 	}
 
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, VariableDeclarationStatement varDeclStatement) {
-		VariableDeclarationFragment fragment = (VariableDeclarationFragment)varDeclStatement.fragments().get(0);
+		VariableDeclarationFragment fragment = (VariableDeclarationFragment) varDeclStatement.fragments().get(0);
 
 		// Replace type Future with Observable
 		replaceType(unit, fragment, varDeclStatement.getType());
@@ -45,6 +45,7 @@ public class VariableDeclStatementWorker extends AbstractFutureWorker<VariableDe
 
 	/**
 	 * Replaces a Future<> x with an Observable<> xObservable
+	 * 
 	 * @param unit
 	 * @param fragment
 	 * @param type
@@ -54,21 +55,22 @@ public class VariableDeclStatementWorker extends AbstractFutureWorker<VariableDe
 		if (type instanceof ParameterizedType) {
 			type = ((ParameterizedType) type).getType();
 		}
-						
+
 		JavaFutureASTUtils.replaceType(unit, type, "Flowable");
 	}
 
 	/**
-	 * Replaces x = someMethod with x = Observable.from(someMethod)
-	 * But only if we didn't refactor the method ourselves before.
+	 * Replaces x = someMethod with x = Observable.from(someMethod) But only if we
+	 * didn't refactor the method ourselves before.
+	 * 
 	 * @param unit
 	 * @param fragment
 	 */
 	private void replaceMethodInvocation(IRewriteCompilationUnit unit, VariableDeclarationFragment fragment) {
 		// Replace the method invocation only if we didn't refactor the method yet.
 		Expression initializer = fragment.getInitializer();
-		
-		if(initializer == null)
+
+		if (initializer == null)
 			return;
 
 		// look for a methodinvocation here
@@ -76,9 +78,9 @@ public class VariableDeclStatementWorker extends AbstractFutureWorker<VariableDe
 
 		initializer.accept(visitor);
 
-		if(visitor.isExternalMethod().orElse(false)) {
+		if (visitor.isExternalMethod().orElse(false)) {
 			// move the initializer expression inside an "Observable.from(initializer)"
-			
+
 			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Flowable", "from", initializer);
 			summary.addCorrect("futureCreation");
 		}

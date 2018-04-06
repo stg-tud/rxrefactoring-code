@@ -26,22 +26,24 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.SubclassInstant
  * Author: Camila Gonzalez<br>
  * Created: 23/03/2018
  */
-public class InstantiationUseWorker implements IWorker<SubclassInstantiationCollector, InstantiationUseWorker>{
-	
-	// Maps MethodInvocations and ClassInstanceCreations that return Future or Future subclass 
+public class InstantiationUseWorker implements IWorker<SubclassInstantiationCollector, InstantiationUseWorker> {
+
+	// Maps MethodInvocations and ClassInstanceCreations that return Future or
+	// Future subclass
 	// instantiations to the latter instance uses.
-	Multimap<ASTNode, ASTNode> classInstantiationsToUses = HashMultimap.create();
-	// Maps MethodInvocations that return Future or Future subclass collections to the latter instance uses.
-	Multimap<MethodInvocation, ASTNode> collectionCreationsToUses = HashMultimap.create();
-	
+	Multimap<ASTNode, Use> classInstantiationsToUses = HashMultimap.create();
+	// Maps MethodInvocations that return Future or Future subclass collections to
+	// the latter instance uses.
+	Multimap<MethodInvocation, Use> collectionCreationsToUses = HashMultimap.create();
+
 	Map<ASTNode, UseDef> analysis;
-	
+
 	@Override
-	public @Nullable InstantiationUseWorker refactor(@NonNull IProjectUnits units, @Nullable SubclassInstantiationCollector input, @NonNull WorkerSummary summary)
-			throws Exception {
-		
+	public @Nullable InstantiationUseWorker refactor(@NonNull IProjectUnits units,
+			@Nullable SubclassInstantiationCollector input, @NonNull WorkerSummary summary) throws Exception {
+
 		analysis = input.analysis;
-		
+
 		HashSet<ASTNode> instantiations = new HashSet<ASTNode>();
 		instantiations.addAll(input.methodInvReturnClass.values());
 		instantiations.addAll(input.subclassInstanceCreations.values());
@@ -49,34 +51,27 @@ public class InstantiationUseWorker implements IWorker<SubclassInstantiationColl
 		HashSet<MethodInvocation> collectionCreations = new HashSet<MethodInvocation>();
 		collectionCreations.addAll(input.methodInvReturnCollection.values());
 		collectionCreations.addAll(input.methodInvReturnSubclassCollection.values());
-		
-		analysis.forEach((node, useDef) -> 
-		{
+
+		analysis.forEach((node, useDef) -> {
 			Set<Expression> defs = useDef.asMap().keySet();
-			
+
 			// Stores Uses of kinds METHOD_INVOCATION, METHOD_PARAMETER and RETURN
-			if (node instanceof MethodInvocation || node instanceof ReturnStatement) 
-			{
-				defs.forEach(expr -> 
-				{
+			if (node instanceof MethodInvocation || node instanceof ReturnStatement) {
+				defs.forEach(expr -> {
 					Set<Use> exprUses = useDef.getUses(expr);
-					if (instantiations.contains(expr)) 
-					{
-						if (exprUses.stream().anyMatch(o -> o.getOp().equals(node)))
-							classInstantiationsToUses.put(expr, node);
+					if (instantiations.contains(expr)) {
+						exprUses.stream().filter(use -> use.getOp().equals(node))
+								.forEach(use -> classInstantiationsToUses.put(expr, use));
 					}
-					if (collectionCreations.contains(expr)) 
-					{
-						if (exprUses.stream().anyMatch(o -> o.getOp().equals(node)))
-							collectionCreationsToUses.put((MethodInvocation) expr, node);
+					if (collectionCreations.contains(expr)) {
+						exprUses.stream().filter(use -> use.getOp().equals(node))
+								.forEach(use -> collectionCreationsToUses.put((MethodInvocation) expr, use));
 					}
-				
+
 				});
 			}
 		});
 		return this;
 	}
-	
-	
 
 }

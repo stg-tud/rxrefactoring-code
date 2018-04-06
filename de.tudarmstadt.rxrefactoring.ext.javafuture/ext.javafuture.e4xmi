@@ -3,7 +3,7 @@
   <imports xsi:type="menu:Menu" xmi:id="_c5N_EKKhEeeB0b7SGvWCTg" elementId="de.tudarmstadt.rxrefactoring.core.menu"/>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_ggxUkKKhEeeB0b7SGvWCTg" featurename="menuContributions" parentElementId="org.eclipse.e4.legacy.ide.application">
     <elements xsi:type="menu:MenuContribution" xmi:id="_jGgnwKKhEeeB0b7SGvWCTg" elementId="de.tudarmstadt.rxrefactoring.ext.javafuture.menucontribution.execute" positionInParent="before=de.tudarmstadt.rxrefactoring.core.menuseparator.0" parentId="de.tudarmstadt.rxrefactoring.core.menu">
-      <children xsi:type="menu:HandledMenuItem" xmi:id="_ppa7IKKhEeeB0b7SGvWCTg" elementId="de.tudarmstadt.rxrefactoring.ext.javafuture.handledmenuitem.execute" label="Refactor java.util.concurrent.Future to io.reactivex.Observable" command="_wTat8KKhEeeB0b7SGvWCTg"/>
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_ppa7IKKhEeeB0b7SGvWCTg" elementId="de.tudarmstadt.rxrefactoring.ext.javafuture.handledmenuitem.execute" label="Java Future to Flowable" command="_wTat8KKhEeeB0b7SGvWCTg"/>
     </elements>
   </fragments>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_tnrgcKKhEeeB0b7SGvWCTg" featurename="commands" parentElementId="org.eclipse.e4.legacy.ide.application">

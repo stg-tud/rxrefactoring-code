@@ -10,13 +10,13 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
 
 /**
- * Renames SimpleNames
- * Changes methods
+ * Renames SimpleNames Changes methods
+ * 
  * @author Steve
  *
  */
 public class SimpleNameWorker extends AbstractFutureWorker<SimpleName> {
-	
+
 	public SimpleNameWorker() {
 		super("SimpleName");
 	}
@@ -25,12 +25,12 @@ public class SimpleNameWorker extends AbstractFutureWorker<SimpleName> {
 	protected Map<IRewriteCompilationUnit, List<SimpleName>> getNodesMap() {
 		return collector.getSimpleNamesMap("collection");
 	}
-	
+
 	@Override
 	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
 		addFutureObservableImport(unit);
-		
+
 		super.endRefactorNode(unit);
 	}
 

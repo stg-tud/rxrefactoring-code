@@ -27,27 +27,25 @@ import de.tudarmstadt.rxrefactoring.core.utils.Log;
  */
 public class UseDefWorker implements IWorker<Void, Map<ASTNode, UseDef>> {
 
-	
-	private static DataFlowAnalysis<ASTNode, UseDef> analysis = 
-			UseDefAnalysis.create();
-			//DataFlowAnalysis.create(null, null);
-		
+	private static DataFlowAnalysis<ASTNode, UseDef> analysis = UseDefAnalysis.create();
+	// DataFlowAnalysis.create(null, null);
+
 	@Override
-	public @Nullable Map<ASTNode, UseDef> refactor(@NonNull IProjectUnits units, @Nullable Void input, @NonNull WorkerSummary summary)
-			throws Exception {
-			
+	public @Nullable Map<ASTNode, UseDef> refactor(@NonNull IProjectUnits units, @Nullable Void input,
+			@NonNull WorkerSummary summary) throws Exception {
+
 		final Map<ASTNode, UseDef> result = Maps.newHashMap();
-		
+
 		units.accept(new UnitASTVisitor() {
 			public boolean visit(MethodDeclaration node) {
 				Log.info(getClass(), "method: " + node.getName());
 				result.putAll(analysis.apply(ProgramGraph.createFrom(node.getBody()), analysis.mapExecutor()));
 				return false;
 			}
-		});		
-		
+		});
+
 		result.forEach((node, use) -> Log.info(getClass(), "Node: " + node + "\n" + "Use: " + use));
-		
+
 		return result;
 	}
 
