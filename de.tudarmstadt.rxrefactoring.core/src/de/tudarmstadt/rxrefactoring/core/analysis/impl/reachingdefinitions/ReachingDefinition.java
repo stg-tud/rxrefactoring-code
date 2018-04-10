@@ -6,24 +6,25 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.utils.Expressions;
 
 public class ReachingDefinition {
-	private ImmutableMultimap<IVariableBinding, Expression> definitions;
+	private ImmutableSetMultimap<IVariableBinding, Expression> definitions;
 
-	ReachingDefinition(ImmutableMultimap<IVariableBinding, Expression> defintions) {
+	ReachingDefinition(ImmutableSetMultimap<IVariableBinding, Expression> defintions) {
 		this.definitions = defintions;
 	}
 
 	static ReachingDefinition empty() {
-		ReachingDefinition result = new ReachingDefinition(ImmutableMultimap.of());
+		ReachingDefinition result = new ReachingDefinition(ImmutableSetMultimap.of());
 		return result;
 	}
 
 	static ReachingDefinition merge(Iterable<ReachingDefinition> iterable) {
-		ImmutableMultimap.Builder<IVariableBinding, Expression> builder = ImmutableMultimap.builder();
+		ImmutableSetMultimap.Builder<IVariableBinding, Expression> builder = ImmutableSetMultimap.builder();
 		iterable.forEach(m -> builder.putAll(m.definitions));
 
 		return new ReachingDefinition(builder.build());
@@ -34,7 +35,7 @@ public class ReachingDefinition {
 	ReachingDefinition replace(IVariableBinding key, Expression value) {
 		
 
-		ImmutableMultimap.Builder<IVariableBinding, Expression> builder = ImmutableMultimap.builder();
+		ImmutableSetMultimap.Builder<IVariableBinding, Expression> builder = ImmutableSetMultimap.builder();
 		
 		definitions.entries().stream()
 				.filter(entry -> !entry.getKey().isEqualTo(key))
