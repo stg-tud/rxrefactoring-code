@@ -16,10 +16,13 @@ import java.util.HashSet;
 import java.util.Map;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.ReturnStatement;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 
@@ -88,10 +91,25 @@ public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 				}
 			} else if (astNode instanceof ReturnStatement) {
 				ReturnStatement returnStatement = (ReturnStatement) astNode;
-
 				Expression result = returnStatement.getExpression();
 				Name name = tryCast(result);
 				usesByExpression.put(result, new Use(Kind.RETURN, name, returnStatement));
+			} else if (astNode instanceof Assignment){
+				//TODO only assignments to field variables or all assignments?
+				Assignment assignment = (Assignment) astNode;
+				Expression rightHandSide = assignment.getRightHandSide();
+				// The old name, until the assignment 
+				usesByExpression.put(rightHandSide, new Use(Kind.FIELD_ASSIGN, tryCast(rightHandSide), assignment));
+				//TODO include VariableDeclarationStatements?
+			} else if (astNode instanceof VariableDeclarationStatement){
+				VariableDeclarationStatement declarationStatement = (VariableDeclarationStatement) astNode;
+				VariableDeclarationFragment fragment = (VariableDeclarationFragment) declarationStatement.fragments().get(0);
+				Expression expression = fragment.getInitializer();
+				if (expression != null) {
+					// The old name, until the declaration statement
+					Name name = tryCast(expression); 
+					usesByExpression.put(expression, new Use(Kind.FIELD_ASSIGN, name, declarationStatement));
+				}
 			} else {
 				return input;
 			}
