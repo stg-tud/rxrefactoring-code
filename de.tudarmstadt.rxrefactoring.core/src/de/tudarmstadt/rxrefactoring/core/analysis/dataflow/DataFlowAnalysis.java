@@ -200,6 +200,10 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 
 			@Override
 			public void run() {
+				if (cfg.isEmpty()) {
+					return;
+				}
+				
 				//Queue of nodes that have to be processed
 				Queue<Vertex> queue = Lists.newLinkedList();
 				//Add the entry nodes to the queue.
@@ -208,12 +212,12 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 
 				int iterations = 0;				
 				while (!queue.isEmpty()) {
-					if (iterations == MAX_ITERATIONS) {
-						Log.info(getClass(), "last iteration");
-					}
+					Log.info(getClass(), "============");
 					
 					Vertex currentVertex = queue.poll();
 					
+					Log.info(getClass(), cfg);
+					Log.info(getClass(), currentVertex);
 					Collection<Vertex> predecessors = traversal.predecessorsOf(cfg, currentVertex);
 
 					//Compute the incoming result as merge of all outgoing results from

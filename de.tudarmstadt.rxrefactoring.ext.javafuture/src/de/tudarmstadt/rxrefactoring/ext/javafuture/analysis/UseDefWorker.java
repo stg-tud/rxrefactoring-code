@@ -38,7 +38,7 @@ public class UseDefWorker implements IWorker<Void, Map<ASTNode, UseDef>> {
 
 		units.accept(new UnitASTVisitor() {
 			public boolean visit(MethodDeclaration node) {
-				Log.info(getClass(), "method: " + node.getName());
+				Log.info(getClass(), "method: " + node.resolveBinding().getName() + " --- " + node.resolveBinding().getDeclaringClass());
 				result.putAll(analysis.apply(ProgramGraph.createFrom(node.getBody()), analysis.mapExecutor()));
 				return false;
 			}

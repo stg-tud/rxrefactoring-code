@@ -52,7 +52,9 @@ public class ProgramGraph extends AbstractBaseGraph<ASTNode, IEdge<ASTNode>>
 	 */
 	public static ProgramGraph createFrom(Statement statement) {
 		ProgramGraph graph = new ProgramGraph();
-		graph.addEntryNode(statement);
+		
+		if (statement != null)
+			graph.addEntryNode(statement);
 		
 		ProgramGraphBuilder builder = new ProgramGraphBuilder(graph);
 		builder.process(statement);
