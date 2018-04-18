@@ -2,7 +2,11 @@ package de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions;
 
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.SetMultimap;
+
+import de.tudarmstadt.rxrefactoring.core.utils.Log;
+
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.eclipse.jdt.annotation.Nullable;
@@ -61,8 +65,11 @@ public class UseDef {
 		}
 
 		public Builder addUse(Expression def, Use use) {
-			if (use == null || def == null)
-				System.out.println("test");
+			if (use == null || def == null) {
+				Log.error(getClass(), "Could not add def-use.");
+				return this;
+			}
+				
 			
 			mapBuilder.put(def, use);
 			return this;
@@ -119,5 +126,33 @@ public class UseDef {
 			return getKind().name() + "(" + op.toString().replaceAll("\n", "") + ")"
 					+ (name == null ? "" : " as '" + name.getFullyQualifiedName() + "'");
 		}
+		
+		@Override
+		public int hashCode() {
+			int hashedName = name == null ? 0 : name.hashCode();
+			return kind.hashCode() << 24 + hashedName << 16 + op.hashCode();
+		}
+		
+		@Override
+		public boolean equals(Object other) {
+			if (other instanceof Use) {
+				Use otherUse = (Use) other;
+				return Objects.equals(otherUse.kind, kind) && Objects.equals(otherUse.name, name) && Objects.equals(otherUse.op, op);
+			}
+			return false;
+		}		
+	}
+	
+	@Override
+	public int hashCode() {
+		return map.hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof UseDef) {
+			return Objects.equals(((UseDef) other).map, map);
+		}
+		return false;
 	}
 }

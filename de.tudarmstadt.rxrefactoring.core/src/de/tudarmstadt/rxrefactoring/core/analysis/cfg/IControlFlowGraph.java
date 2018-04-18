@@ -13,8 +13,7 @@ public interface IControlFlowGraph<Vertex> extends DirectedGraph<Vertex, IEdge<V
 	
 	default Set<Vertex> exitNodes() {
 		return vertexSet().stream().filter(stmt -> outDegreeOf(stmt) == 0).collect(Collectors.toSet());		
-	}
-	
+	}	
 	
 	default String listEdges() {
 		String result = "";

@@ -1,6 +1,7 @@
 package de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions;
 
 import java.util.Collection;
+import java.util.Objects;
 
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IVariableBinding;
@@ -12,7 +13,7 @@ import com.google.common.collect.Sets;
 import de.tudarmstadt.rxrefactoring.core.utils.Expressions;
 
 public class ReachingDefinition {
-	private ImmutableSetMultimap<IVariableBinding, Expression> definitions;
+	private final ImmutableSetMultimap<IVariableBinding, Expression> definitions;
 
 	ReachingDefinition(ImmutableSetMultimap<IVariableBinding, Expression> defintions) {
 		this.definitions = defintions;
@@ -82,6 +83,19 @@ public class ReachingDefinition {
 	public String toString() {
 		return definitions.toString();
 	}	
+	
+	@Override
+	public int hashCode() {
+		return definitions.hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof ReachingDefinition) {
+			return Objects.equals(((ReachingDefinition) other).definitions, definitions);
+		}
+		return false;
+	}
 
 
 }

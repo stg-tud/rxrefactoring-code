@@ -23,6 +23,7 @@ class RewriteCompilationUnitFactory {
 
 	private void initializeParser() {
 		parser.setResolveBindings(true);
+		parser.setBindingsRecovery(true);
 	}
 
 }

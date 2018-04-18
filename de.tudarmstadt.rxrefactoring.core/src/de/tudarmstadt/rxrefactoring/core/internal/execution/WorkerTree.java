@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -19,6 +20,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
+import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectStatus;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerStatus;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
@@ -177,6 +179,15 @@ public class WorkerTree implements IWorkerTree {
 		}
 	}
 	
+	private void traverseChildren(WorkerNode parent, Consumer<WorkerNode> f) {
+		for (WorkerNode<?, ?> node : workers) {
+			if (node.parent == parent) {
+				f.accept(node);
+				traverseChildren(node, f);
+			}				
+		}
+	}
+	
 	/**
 	 * Defines the environment in which a refactoring can be executed.
 	 * @author mirko
@@ -213,27 +224,33 @@ public class WorkerTree implements IWorkerTree {
 						@Override
 						public void onFailure(Throwable arg0) {
 							workerSummary.setStatus(WorkerStatus.ERROR);
+							summary.reportStatus(ProjectStatus.ERROR);							
 							
-							latch.countDown();
-							Log.error(WorkerTree.class, "An error occured while executing worker: " + workerNode.workerName, arg0);		
+							Log.error(WorkerTree.class, "An error occured while executing worker: " + workerNode.workerName, arg0);	
+							
+							traverseChildren(workerNode, node -> {
+								Log.error(WorkerTree.class, "Skipped " + node.workerName);								
 								
+								WorkerSummary ws = summary.reportWorker(node.worker);
+								ws.setStatus(WorkerStatus.SKIPPED);
+								
+								latch.countDown();								
+							});									
+							latch.countDown();
 						}
 						@Override
 						public void onSuccess(Object arg0) {
 							workerSummary.setStatus(WorkerStatus.COMPLETED);
 							
-							latch.countDown();				
-							Log.info(WorkerTree.class, "Finished execution: " + workerNode + " (remaining: " + latch.getCount() + ")");
-							
+							Log.info(WorkerTree.class, "Finished execution: " + workerNode + " (remaining: " + latch.getCount() + ")");							
 							for (WorkerNode<?, ?> node : workers) {
 								if (node.parent == workerNode)
 									execute(node, summary.reportWorker(node.worker));
-							}
-							
-							
-									
+							}		
+							latch.countDown();				
 						}
-					});
+					},
+					executor);
 		}
 		
 		/**
@@ -246,7 +263,7 @@ public class WorkerTree implements IWorkerTree {
 		public void waitFinished() throws InterruptedException {			
 			latch.await();
 			executor.shutdown();
-			executor.awaitTermination(15, TimeUnit.DAYS);			
+			executor.awaitTermination(300, TimeUnit.SECONDS);			
 		}
 			
 	}

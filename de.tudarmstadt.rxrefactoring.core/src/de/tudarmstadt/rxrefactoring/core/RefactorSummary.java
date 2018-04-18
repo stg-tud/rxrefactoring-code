@@ -173,7 +173,7 @@ public class RefactorSummary {
 	}
 
 	public enum WorkerStatus {
-		UNDEFINED, ERROR, COMPLETED
+		UNDEFINED, ERROR, COMPLETED, SKIPPED
 	}
 
 	public static class WorkerSummary {

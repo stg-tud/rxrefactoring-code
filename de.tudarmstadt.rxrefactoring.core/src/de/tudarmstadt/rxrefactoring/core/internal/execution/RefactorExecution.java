@@ -21,6 +21,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.annotation.NonNull;
@@ -43,6 +44,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.osgi.framework.Bundle;
+
+import org.eclipse.core.runtime.Status;
 
 import com.google.common.collect.Sets;
 
@@ -126,6 +129,10 @@ public final class RefactorExecution implements Runnable {
 						
 						// Check whether the project is open and if it is a Java project
 						if (project.isOpen() && project.hasNature(JavaCore.NATURE_ID)) {
+							// Reports the project as completed. In case of an error this status can get changed during execution.
+							projectSummary.reportStatus(ProjectStatus.COMPLETED);
+							
+							
 							Log.info(RefactorExecution.class, ">>> Refactor project: " + project.getName());
 							// Reports the project as being refactored
 
@@ -145,8 +152,7 @@ public final class RefactorExecution implements Runnable {
 							Log.info(RefactorExecution.class, "Refactor units...");
 							doRefactorProject(units, changes, projectSummary);
 
-							// Reports a successful refactoring
-							projectSummary.reportStatus(ProjectStatus.COMPLETED);
+							
 							Log.info(RefactorExecution.class, "<<< Refactor project");
 
 						} else {
@@ -154,10 +160,14 @@ public final class RefactorExecution implements Runnable {
 							Log.info(RefactorExecution.class, "Skipping project: " + project.getName());
 						}
 					} catch (InterruptedException e) {
-						throw new OperationCanceledException();
+						throw new CoreException(new Status(IStatus.CANCEL, extension.getPlugInId(), IStatus.CANCEL, 
+								"The execution has been interrupted.", e));						
+						
 					} catch (Exception e) {
 						projectSummary.reportStatus(ProjectStatus.ERROR);
 						Log.error(RefactorExecution.class, "Error during refactoring of " +project.getName() , e);
+						throw new CoreException(new Status(IStatus.ERROR, extension.getPlugInId(), IStatus.ERROR, 
+								"Error during refactoring of " + project.getName(), e));
 					}
 
 					monitor.worked(1);
@@ -320,7 +330,7 @@ public final class RefactorExecution implements Runnable {
 		// Wait for asynchronous operations to finish.
 		try {
 			executor.shutdown();
-			executor.awaitTermination(15, TimeUnit.MINUTES);
+			executor.awaitTermination(300, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 			// It should not be possible that the execution is interrupted.
 			throw new IllegalStateException(e);

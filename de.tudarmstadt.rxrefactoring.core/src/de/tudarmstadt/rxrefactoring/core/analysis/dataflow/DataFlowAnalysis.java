@@ -4,11 +4,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -18,6 +22,8 @@ import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.strategy.IDataFlowStr
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.traversal.BackwardTraversal;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.traversal.ForwardTraversal;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.traversal.IDataFlowTraversal;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 /**
  * This class implements generic dataflow analyses on control flow graphs.
@@ -180,11 +186,9 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 
 
 			public AnalysisExecution(IControlFlowGraph<Vertex> cfg, IDataFlowStrategy<Vertex, Result> strategy, IDataFlowTraversal<Vertex> traversal) {
-
 				this.cfg = Objects.requireNonNull(cfg);
 				this.traversal = Objects.requireNonNull(traversal);
 				this.strategy =  Objects.requireNonNull(strategy);
-;
 			}
 
 			@Override
@@ -204,8 +208,12 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 
 				int iterations = 0;				
 				while (!queue.isEmpty()) {
+					if (iterations == MAX_ITERATIONS) {
+						Log.info(getClass(), "last iteration");
+					}
+					
 					Vertex currentVertex = queue.poll();
-
+					
 					Collection<Vertex> predecessors = traversal.predecessorsOf(cfg, currentVertex);
 
 					//Compute the incoming result as merge of all outgoing results from
@@ -234,7 +242,16 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 					
 					iterations++;
 					if (iterations > MAX_ITERATIONS) {
-						throw new RuntimeException("The data flow analysis did not converge to a result in " + MAX_ITERATIONS + " iterations.");
+						Optional<MethodDeclaration> declaringMethod = ASTNodes.findParent((ASTNode) currentVertex, MethodDeclaration.class);
+						
+						throw declaringMethod
+							.map(m -> {
+								Optional<IMethodBinding> binding = Optional.ofNullable(m.resolveBinding());								
+								Optional<String> className = binding.flatMap(b -> Optional.ofNullable(b.getDeclaringClass())).map(c -> c.getQualifiedName());									
+								return new RuntimeException("The data flow analysis did not converge to a result in " + MAX_ITERATIONS + " iterations. Method " + binding + " in " + className);
+							})
+							.orElse(new RuntimeException("The data flow analysis did not converge to a result in " + MAX_ITERATIONS + " iterations. Unknown method."));						
+						
 					}
 				}
 			}
@@ -321,8 +338,10 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 
 				@Override
 				protected
-				boolean resultHasChanged(Vertex vertex, Result newResult) {
-					return !Objects.equals(output.get(vertex), newResult);
+				boolean resultHasChanged(Vertex vertex, Result newResult) {					
+					Result oldResult = output.get(vertex);
+					boolean hasChanged = !Objects.equals(oldResult, newResult);
+					return hasChanged;
 				}
 
 				@Override
