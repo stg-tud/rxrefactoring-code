@@ -1,5 +1,7 @@
 package de.tudarmstadt.rxrefactoring.core;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -181,6 +183,7 @@ public class RefactorSummary {
 		private final String workerName;
 
 		private WorkerStatus status;
+		private Throwable throwable = null;
 		private final Map<String, CountEntry> entries;
 
 		WorkerSummary(IWorker<?, ?> worker) {
@@ -218,6 +221,10 @@ public class RefactorSummary {
 			Objects.requireNonNull(status);
 			this.status = status;
 		}
+		
+		public synchronized void setThrowable(Throwable throwable) {
+			this.throwable = throwable;
+		}
 
 		private CountEntry getEntryFor(String key) {
 			Objects.requireNonNull(key, "The key can not be null.");
@@ -243,6 +250,13 @@ public class RefactorSummary {
 			String result = pad + ">>> Worker[" + status + "]: " + workerName;
 
 			result += mapToString(entries, padding + 1);
+			
+			if (throwable != null) {				
+				ByteArrayOutputStream out = new ByteArrayOutputStream();
+				PrintStream ps = new PrintStream(out);
+				throwable.printStackTrace(ps);
+				result += "\n" + withPadding(out.toString(), padding + 1);
+			}
 
 			// result += pad + "<<<";
 			return result;
@@ -314,6 +328,11 @@ public class RefactorSummary {
 
 	private static String fromPadding(int padding) {
 		return Strings.repeat("\t", padding);
+	}
+	
+	private static String withPadding(String s, int padding) {
+		String pad = fromPadding(padding);
+		return pad + s.replace("\n", "\n" + pad);		
 	}
 
 }

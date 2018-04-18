@@ -224,6 +224,7 @@ public class WorkerTree implements IWorkerTree {
 						@Override
 						public void onFailure(Throwable arg0) {
 							workerSummary.setStatus(WorkerStatus.ERROR);
+							workerSummary.setThrowable(arg0);
 							summary.reportStatus(ProjectStatus.ERROR);							
 							
 							Log.error(WorkerTree.class, "An error occured while executing worker: " + workerNode.workerName, arg0);	

@@ -34,6 +34,7 @@ import de.tudarmstadt.rxrefactoring.core.utils.Log;
  * @param <Vertex> The vertices of the control flow graph.
  * @param <Result> The result of the analysis per node.
  */
+@SuppressWarnings("unused")
 public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 
 	private final IDataFlowStrategy<Vertex, Result> strategy;
