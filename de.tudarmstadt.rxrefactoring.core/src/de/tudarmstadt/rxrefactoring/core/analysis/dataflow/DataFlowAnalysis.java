@@ -211,13 +211,9 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 				queue.addAll(entries);
 
 				int iterations = 0;				
-				while (!queue.isEmpty()) {
-					Log.info(getClass(), "============");
-					
+				while (!queue.isEmpty()) {					
 					Vertex currentVertex = queue.poll();
 					
-					Log.info(getClass(), cfg);
-					Log.info(getClass(), currentVertex);
 					Collection<Vertex> predecessors = traversal.predecessorsOf(cfg, currentVertex);
 
 					//Compute the incoming result as merge of all outgoing results from
