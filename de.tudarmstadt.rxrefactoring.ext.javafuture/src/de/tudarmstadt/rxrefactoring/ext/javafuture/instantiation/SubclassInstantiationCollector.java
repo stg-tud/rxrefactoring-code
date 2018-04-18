@@ -33,26 +33,24 @@ import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 public class SubclassInstantiationCollector implements IWorker<InstantiationCollector, SubclassInstantiationCollector> {
 
 	// TypeDeclarations of classes and interfaces that inherit directly or
-	// indirectly from java.util.concurrent.Future
-	// and implement only allowed methods. If excludeExternal is set, only classes
-	// for which the entire
-	// inheritance chain is in the package (except for java.util.concurrent.Future
-	// and java.lang.Object) are included.
+	// indirectly from java.util.concurrent.Future and implement only 
+	// allowed methods. If excludeExternal is set, only classes for which 
+	// the entire inheritance chain is in the package (except for 
+	// java.util.concurrent.Future and java.lang.Object) are included.
 	public final Multimap<IRewriteCompilationUnit, TypeDeclaration> subclassDeclarations;
 
 	// Map MethodDeclarations to ClassInstanceCreations of classes in
-	// subclassDeclarations if the result
-	// is not discarded.
+	// subclassDeclarations if the result is not discarded.
 	public final Multimap<MethodDeclaration, ClassInstanceCreation> subclassInstanceCreations;
 
 	// Map MethodDeclarations to MethodInvocations in declaration that return
-	// instances of classes in
-	// subclassDeclarations and do not discard the result.
+	// instances of classes in subclassDeclarations and do not discard the 
+	// result.
 	public final Multimap<MethodDeclaration, MethodInvocation> methodInvReturnSubclass;
 
-	// Map MethodDeclarations to MethodInvocations that return a
-	// java.util.Collection of a class in
-	// subclassDeclarations and do not discard the result.
+	// Map MethodDeclarations to MethodInvocations that return a 
+	// java.util.Collection of a class in subclassDeclarations and do not 
+	// discard the result.
 	public final Multimap<MethodDeclaration, MethodInvocation> methodInvReturnSubclassCollection;
 
 	public Multimap<IRewriteCompilationUnit, TypeDeclaration> directSubclassDeclarations;
@@ -61,8 +59,8 @@ public class SubclassInstantiationCollector implements IWorker<InstantiationColl
 	public Multimap<MethodDeclaration, MethodInvocation> methodInvReturnCollection;
 
 	// Is set to true, only classes are included in subclassDeclarations that do not
-	// inherit from any class
-	// outside the package except for the target class and java.lang.Object.
+	// inherit from any class outside the package except for the target class and 
+	// java.lang.Object.
 	private boolean excludeExternal = true;
 	private Multimap<String, String> declaredClassBindingNames;
 	private String binaryName;
@@ -100,9 +98,10 @@ public class SubclassInstantiationCollector implements IWorker<InstantiationColl
 			addToSubset(e);
 		for (Entry<IRewriteCompilationUnit, TypeDeclaration> e : input.indirectSubclassDeclarations.entries())
 			addToSubset(e);
-
-		FutureInstantiationVisitor visitor = new FutureInstantiationVisitor();
-		units.accept(visitor);
+		if (!subclassDeclarations.isEmpty()) {
+			FutureInstantiationVisitor visitor = new FutureInstantiationVisitor();
+			units.accept(visitor);
+		}
 
 		summary.setCorrect("numberOfCompilationUnits", units.size());
 
@@ -111,7 +110,7 @@ public class SubclassInstantiationCollector implements IWorker<InstantiationColl
 
 	/**
 	 * Adds type declarations of subclasses to
-	 * {@link SubclassInstantiationCollector#futureSubclassDeclarationsInternal}.
+	 * {@link SubclassInstantiationCollector#subclassDeclarations}.
 	 */
 	private void addToSubset(Entry<IRewriteCompilationUnit, TypeDeclaration> e) {
 		String name = e.getValue().resolveBinding().getBinaryName();
