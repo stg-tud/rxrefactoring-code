@@ -18,6 +18,7 @@ import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDe
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.InstantiationUseWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.UseDefWorker;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfos;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.InstantiationCollector;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.SubclassInstantiationCollector;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.FutureCollector;
@@ -58,13 +59,13 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 		IWorkerRef<Void, Map<ASTNode, UseDef>> analysisRef = workerTree.addWorker(new UseDefWorker());
 
 		IWorkerRef<Map<ASTNode, UseDef>, InstantiationCollector> instRef = workerTree.addWorker(analysisRef,
-				new InstantiationCollector());
+				new InstantiationCollector(ClassInfos.Future));
 		IWorkerRef<InstantiationCollector, SubclassInstantiationCollector> subclassInstRef = workerTree
 				.addWorker(instRef, new SubclassInstantiationCollector());
 		IWorkerRef<SubclassInstantiationCollector, InstantiationUseWorker> instUseRef = workerTree
 				.addWorker(subclassInstRef, new InstantiationUseWorker());
 
-		IWorkerRef<Void, FutureCollector> collector = workerTree.addWorker(new FutureCollector(options));
+		IWorkerRef<InstantiationUseWorker, FutureCollector> collector = workerTree.addWorker(instUseRef, new FutureCollector(options));
 
 		if (options.contains(RefactoringOptions.FUTURE)) {
 			workerTree.addWorker(collector,

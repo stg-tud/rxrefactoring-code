@@ -60,7 +60,10 @@ public class InstantiationUseWorker implements IWorker<SubclassInstantiationColl
 	
 	Map<ASTNode, UseDef> analysis;
 	
+	//TODO change to classInfo
 	List<String> notSupported = Arrays.asList("cancel", "isCancelled", "isDone");
+
+	public IRewriteCompilationUnit unit;
 
 	@Override
 	public @Nullable InstantiationUseWorker refactor(@NonNull IProjectUnits units,

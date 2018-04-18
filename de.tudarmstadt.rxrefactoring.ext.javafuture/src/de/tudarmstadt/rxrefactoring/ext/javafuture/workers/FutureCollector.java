@@ -27,16 +27,18 @@ import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.RefactoringOptions;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.InstantiationUseWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfos;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureVisitor;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureVisitor2;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureVisitor3;
 
 /**
  * Description: Collects relevant information for refactoring<br>
  * Author: Template<br>
  * Created: 01/18/2017
  */
-public class FutureCollector implements IWorker<Void, FutureCollector> {
+public class FutureCollector implements IWorker<InstantiationUseWorker, FutureCollector> {
 
 	private final Map<String, CollectorGroup> groups;
 
@@ -55,12 +57,12 @@ public class FutureCollector implements IWorker<Void, FutureCollector> {
 	}
 
 	@Override
-	public FutureCollector refactor(IProjectUnits units, Void input, WorkerSummary summary) throws Exception {
+	public FutureCollector refactor(IProjectUnits units, InstantiationUseWorker input, WorkerSummary summary) throws Exception {
 
 		for (IRewriteCompilationUnit unit : units) {
 			// Collect the data
 			if (options.contains(RefactoringOptions.FUTURE)) {
-				FutureVisitor2 discoveringVisitor = new FutureVisitor2(ClassInfos.Future);
+				FutureVisitor3 discoveringVisitor = new FutureVisitor3(ClassInfos.Future, input);
 				// FutureCollectionVisitor collectionDiscoveringVisitor = new
 				// FutureCollectionVisitor(ClassInfos.Future.getBinaryName());
 
