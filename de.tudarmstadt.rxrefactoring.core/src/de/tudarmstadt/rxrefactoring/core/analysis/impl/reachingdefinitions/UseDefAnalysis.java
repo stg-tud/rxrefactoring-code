@@ -4,6 +4,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IControlFlowGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
+import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.NotConvergingException;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.strategy.IDataFlowStrategy;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use.Kind;
@@ -119,9 +120,16 @@ public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 
 	@Override
 	public <Output> Output apply(final IControlFlowGraph<ASTNode> cfg,
-			final IDataFlowExecutionFactory<ASTNode, UseDef, Output> executionFactory) {
-		ReachingDefinitionsAnalysis analysis = ReachingDefinitionsAnalysis.create();
-		Map<ASTNode, ReachingDefinition> reaching = analysis.apply(cfg, analysis.mapExecutor());
+			final IDataFlowExecutionFactory<ASTNode, UseDef, Output> executionFactory) throws NotConvergingException {
+		
+		Map<ASTNode, ReachingDefinition> reaching;
+		try {
+			ReachingDefinitionsAnalysis analysis = ReachingDefinitionsAnalysis.create();
+			reaching = analysis.apply(cfg, analysis.mapExecutor());
+		} catch (NotConvergingException e) {
+			reaching = (Map<ASTNode, ReachingDefinition>) e.getUnfinishedOutput();
+		}
+		
 		strategy.setReachingDefinitions(reaching);
 		
 		reaching.entrySet().forEach(System.out::println);

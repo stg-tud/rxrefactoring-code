@@ -118,13 +118,41 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 	 *
 	 * @param cfg The control flow graph where the analysis is executed on.
 	 * @param executionFactory The execution specification that is used to run the analysis.
+	 * @param maxIterations the maximum number of iterations that the analysis performs. When
+	 * the maximum number is reached, the method throws an exception containing the analysis
+	 * result up to that point.
 	 *
 	 * @return The result output as defined by the execution specification.
+	 * 
+	 * @throws NotConvergingException if the analysis does not convert in maxIterations iterations.
+	 * The (unfinished) result of the analysis execution is stored in the exception.  
 	 */
-	public <Output> Output apply(IControlFlowGraph<Vertex> cfg, IDataFlowExecutionFactory<Vertex, Result, Output> executionFactory) {
+	public <Output> Output apply(IControlFlowGraph<Vertex> cfg, IDataFlowExecutionFactory<Vertex, Result, Output> executionFactory, int maxIterations) throws NotConvergingException {
 		IDataFlowExecution<Output> exec = executionFactory.create(cfg, strategy, traversal);
-
-		return exec.execute();
+		return exec.execute(maxIterations);
+	}
+	
+	/**
+	 * Executes the dataflow analysis for the provided control flow graph. The execution is carried
+	 * out by the provided execution factory. The framework provides two execution factories:
+	 * {@link DataFlowAnalysis#astExecutor()} and {@link DataFlowAnalysis#mapExecutor()}.
+	 *
+	 * @param cfg The control flow graph where the analysis is executed on.
+	 * @param executionFactory The execution specification that is used to run the analysis.
+	 *
+	 * @return The result output as defined by the execution specification.
+	 * 
+	 * @throws NotConvergingException if the analysis does not convert in a number iterations.
+	 * The (unfinished) result of the analysis execution is stored in the exception. 
+	 */
+	public <Output> Output apply(IControlFlowGraph<Vertex> cfg, IDataFlowExecutionFactory<Vertex, Result, Output> executionFactory) throws NotConvergingException {
+		IDataFlowExecution<Output> exec = executionFactory.create(cfg, strategy, traversal);
+		return exec.execute(maximumIterations(cfg));
+	}
+	
+	private static final int MIN_ITERATIONS = 500000;
+	protected int maximumIterations(IControlFlowGraph<Vertex> cfg) {
+		return Math.max(MIN_ITERATIONS, cfg.vertexSet().size() * 10000);
 	}
 
 	/**
@@ -134,7 +162,7 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 	 * @param <Output>
 	 */
 	static interface IDataFlowExecution<Output> {
-		Output execute();
+		Output execute(int maxIterations) throws NotConvergingException;
 	}
 
 	/**
@@ -148,6 +176,7 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 	protected static interface IDataFlowExecutionFactory<Vertex, Result, Output> {
 		IDataFlowExecution<Output> create(IControlFlowGraph<Vertex> cfg, IDataFlowStrategy<Vertex, Result> strategy, IDataFlowTraversal<Vertex> traversal);
 	}
+	
 
 
 	/**
@@ -159,8 +188,7 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 	 * @param <Output>
 	 */
 	static abstract class AbstractDataFlowExecution<Vertex, Result, Output> implements IDataFlowExecutionFactory<Vertex, Result, Output> {
-		
-		private static final int MAX_ITERATIONS = 10000;
+		 
 
 		abstract AnalysisExecution abstractCreate(IControlFlowGraph<Vertex> cfg, IDataFlowStrategy<Vertex, Result> strategy, IDataFlowTraversal<Vertex> traversal);
 
@@ -170,7 +198,7 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 			return abstractCreate(cfg, strategy, traversal);
 		}
 
-		protected abstract class AnalysisExecution implements Runnable, IDataFlowExecution<Output> {
+		protected abstract class AnalysisExecution implements IDataFlowExecution<Output> {
 
 			private final IControlFlowGraph<Vertex> cfg;
 			private final IDataFlowStrategy<Vertex, Result> strategy;
@@ -193,18 +221,17 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 			}
 
 			@Override
-			public Output execute() {
-				run();
+			public Output execute(int maxIterations) throws NotConvergingException {
+				run(maxIterations);
 				return getOutput();
 			}
-
-
-			@Override
-			public void run() {
+			
+			public void run(int maxIterations) throws NotConvergingException {
 				if (cfg.isEmpty()) {
 					return;
 				}
 				
+								
 				//Queue of nodes that have to be processed
 				Queue<Vertex> queue = Lists.newLinkedList();
 				//Add the entry nodes to the queue.
@@ -242,17 +269,17 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 					}
 					
 					iterations++;
-					if (iterations > MAX_ITERATIONS) {
+					if (iterations > maxIterations) {
 						Optional<MethodDeclaration> declaringMethod = ASTNodes.findParent((ASTNode) currentVertex, MethodDeclaration.class);
 						
-						throw declaringMethod
-							.map(m -> {
+						declaringMethod
+							.ifPresent(m -> {
 								Optional<IMethodBinding> binding = Optional.ofNullable(m.resolveBinding());								
 								Optional<String> className = binding.flatMap(b -> Optional.ofNullable(b.getDeclaringClass())).map(c -> c.getQualifiedName());									
-								return new RuntimeException("The data flow analysis did not converge to a result in " + MAX_ITERATIONS + " iterations. Method " + binding + " in " + className);
-							})
-							.orElse(new RuntimeException("The data flow analysis did not converge to a result in " + MAX_ITERATIONS + " iterations. Unknown method."));						
+								Log.error(DataFlowAnalysis.class, "The data flow analysis did not converge to a result in " + maxIterations + " iterations. Method " + binding + " in " + className);
+							});
 						
+						throw new NotConvergingException(cfg, maxIterations, getOutput());						
 					}
 				}
 			}

@@ -13,6 +13,7 @@ import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IEdge;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.expression.ExpressionGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement.ProgramGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
+import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.NotConvergingException;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.VariableNameAnalysis;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.ReachingDefinition;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.ReachingDefinitionsAnalysis;
@@ -41,7 +42,7 @@ public final class Main {
 		return g;
 	}
 	
-	static IControlFlowGraph<? extends ASTNode> programExample() {
+	static IControlFlowGraph<? extends ASTNode> programExample() throws NotConvergingException {
 		String program =
 				  "{"
 				+ 	"Future<Integer> f1 = ask(\"Hello\");"
@@ -146,7 +147,7 @@ public final class Main {
 	
 
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws NotConvergingException {
 		
 //		CallHierarchy callHierarchy = CallHierarchy.getDefault();
 //	    IMember[] members = { method };

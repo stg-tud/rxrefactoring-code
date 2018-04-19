@@ -33,14 +33,37 @@ public class ReachingDefinition {
 
 
 
-	ReachingDefinition replace(IVariableBinding key, Expression value) {
-		
+	ReachingDefinition replace(IVariableBinding key, Expression value) {		
 
 		ImmutableSetMultimap.Builder<IVariableBinding, Expression> builder = ImmutableSetMultimap.builder();
 		
 		definitions.entries().stream()
 				.filter(entry -> !entry.getKey().isEqualTo(key))
 				.forEach(e -> builder.put(e.getKey(), e.getValue()));
+
+		Collection<Expression> val;
+		
+		//Resolve the binding if the expression is a field/variable identifier.
+		IVariableBinding variableBinding = Expressions.resolveVariableBinding(value);
+						
+		//Solve reference of expression if it references a variable
+		if (variableBinding != null && definitions.containsKey(variableBinding)) {
+			val = definitions.get(variableBinding);
+		} else {
+			val = Sets.newHashSet(value);
+		}
+
+		builder.putAll(key, val);
+
+		return new ReachingDefinition(builder.build());
+	}
+	
+	ReachingDefinition add(IVariableBinding key, Expression value) {		
+
+		ImmutableSetMultimap.Builder<IVariableBinding, Expression> builder = ImmutableSetMultimap.builder();
+		
+		
+		builder.putAll(definitions);
 
 		Collection<Expression> val;
 		

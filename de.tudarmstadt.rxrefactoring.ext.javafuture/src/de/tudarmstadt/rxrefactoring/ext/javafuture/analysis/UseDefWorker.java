@@ -15,6 +15,7 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement.ProgramGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
+import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.NotConvergingException;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDefAnalysis;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
@@ -38,14 +39,24 @@ public class UseDefWorker implements IWorker<Void, Map<ASTNode, UseDef>> {
 
 		units.accept(new UnitASTVisitor() {
 			public boolean visit(MethodDeclaration node) {
-				Log.info(getClass(), "method: " + node.resolveBinding().getName() + " --- " + node.resolveBinding().getDeclaringClass());
-				result.putAll(analysis.apply(ProgramGraph.createFrom(node.getBody()), analysis.mapExecutor()));
+			//	Log.info(getClass(), "method: " + node.resolveBinding().getName() + " --- " + node.resolveBinding().getDeclaringClass());
+				
+				try {
+					result.putAll(analysis.apply(ProgramGraph.createFrom(node.getBody()), analysis.mapExecutor()));
+				} catch (NotConvergingException e) {
+					// TODO Handle case when the dataflow analysis does not yield a correct result.
+					result.putAll((Map<ASTNode, UseDef>) e.getUnfinishedOutput());
+					Log.error(getClass(), "The dataflow analysis did not converge");
+					e.printStackTrace();
+				}
+				
 				return false;
 			}
 		});
 
-		result.forEach((node, use) -> Log.info(getClass(), "Node: " + node + "\n" + "Use: " + use));
+		//result.forEach((node, use) -> Log.info(getClass(), "Node: " + node + "\n" + "Use: " + use));
 
+		
 		return result;
 	}
 

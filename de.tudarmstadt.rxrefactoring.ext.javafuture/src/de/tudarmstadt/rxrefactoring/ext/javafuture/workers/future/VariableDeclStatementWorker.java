@@ -81,7 +81,7 @@ public class VariableDeclStatementWorker extends AbstractFutureWorker<VariableDe
 		if (visitor.isExternalMethod().orElse(false)) {
 			// move the initializer expression inside an "Observable.from(initializer)"
 
-			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Flowable", "from", initializer);
+			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Flowable", "fromFuture", initializer);
 			summary.addCorrect("futureCreation");
 		}
 	}

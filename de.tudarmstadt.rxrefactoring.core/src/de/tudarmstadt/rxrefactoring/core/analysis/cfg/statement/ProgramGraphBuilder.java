@@ -109,9 +109,8 @@ class ProgramGraphBuilder {
 		public Statement enclosingContinueBlock(SimpleName label) {
 							
 			for (Statement statement : callBlocks) {			
-				
-				if (Statements.isLoop(statement) && label == null 
-					|| statement instanceof LabeledStatement 
+				if (label == null && Statements.isLoop(statement)
+					|| label != null && statement instanceof LabeledStatement 
 						&& Statements.isLoop(((LabeledStatement) statement).getBody()) 
 						&& Objects.equals(label.getIdentifier(), ((LabeledStatement) statement).getLabel().getIdentifier())) {
 					return statement;
@@ -123,15 +122,19 @@ class ProgramGraphBuilder {
 		
 		public Statement enclosingBreakBlock(SimpleName label) {
 			
-			for (Statement statement : callBlocks) {				
-								
-				if (label == null && (Statements.isLoop(statement) || statement instanceof SwitchStatement) 
-					|| statement instanceof LabeledStatement && Objects.equals(label.getIdentifier(), ((LabeledStatement) statement).getLabel().getIdentifier())
-				) {
-					return statement;
-				}
+			for (Statement statement : callBlocks) {	
+				if (label == null) { //unlabeled break statement
+					if (Statements.isLoop(statement) || statement instanceof SwitchStatement) {
+						return statement;
+					}					
+				} else { //labeled break statement
+					if (statement instanceof LabeledStatement && Objects.equals(label.getIdentifier(), ((LabeledStatement) statement).getLabel().getIdentifier())) {
+						return statement;
+					}
+				}				
 			}
 			
+			//TODO: When this happens there is an error in program, i.e. there is no statement matching the break. How to handle this?
 			return null;
 		}
 		

@@ -7,6 +7,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement.ProgramGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
+import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.NotConvergingException;
 
 public class ClassAnalysis<Result> {
 	
@@ -16,7 +17,7 @@ public class ClassAnalysis<Result> {
 		this.analysis = analysis;
 	}
 	
-	public void analyze(TypeDeclaration decl) {
+	public void analyze(TypeDeclaration decl) throws NotConvergingException  {
 		
 		for (Object o : decl.bodyDeclarations()) {
 			
