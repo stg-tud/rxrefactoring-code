@@ -17,10 +17,14 @@ import java.util.HashSet;
 import java.util.Map;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.IBinding;
+import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.ReturnStatement;
+import org.eclipse.jdt.core.dom.SimpleName;
 
 public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 
@@ -93,6 +97,15 @@ public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 				Expression result = returnStatement.getExpression();
 				Name name = tryCast(result);
 				usesByExpression.put(result, new Use(Kind.RETURN, name, returnStatement));
+			} else if (astNode instanceof Assignment) {
+				Assignment assignment = (Assignment) astNode;
+				Expression rightSide = assignment.getRightHandSide();
+				SimpleName name = (SimpleName) assignment.getLeftHandSide();
+				IBinding binding = name.resolveBinding();
+				if (binding instanceof IVariableBinding) {
+					if (((IVariableBinding)binding).isField())
+						usesByExpression.put(rightSide, new Use(Kind.FIELD_ASSIGN, name, assignment));
+				}
 			} else {
 				return input;
 			}
