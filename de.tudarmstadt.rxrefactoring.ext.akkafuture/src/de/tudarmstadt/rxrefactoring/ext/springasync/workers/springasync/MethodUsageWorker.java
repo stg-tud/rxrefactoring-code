@@ -1,18 +1,18 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture;
+package de.tudarmstadt.rxrefactoring.ext.springasync.workers.springasync;
 
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
 import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractAkkaFutureWorker;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureMethodWrapper;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureOnFailureWrapper;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FuturesMapWrapper;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FuturesSequenceWrapper;
+import de.tudarmstadt.rxrefactoring.ext.springasync.workers.AbstractSpringAsyncWorker;
+import de.tudarmstadt.rxrefactoring.ext.springasync.workers.SpringAsyncCollector;
+import de.tudarmstadt.rxrefactoring.ext.springasync.wrapper.FutureMethodWrapper;
+import de.tudarmstadt.rxrefactoring.ext.springasync.wrapper.FutureOnFailureWrapper;
+import de.tudarmstadt.rxrefactoring.ext.springasync.wrapper.FuturesMapWrapper;
+import de.tudarmstadt.rxrefactoring.ext.springasync.wrapper.FuturesSequenceWrapper;
 
-public class MethodUsageWorker extends AbstractAkkaFutureWorker<AkkaFutureCollector, FutureMethodWrapper> {
+public class MethodUsageWorker extends AbstractSpringAsyncWorker<SpringAsyncCollector, FutureMethodWrapper> {
 	public MethodUsageWorker() {
 		super("Assignment");
 	}

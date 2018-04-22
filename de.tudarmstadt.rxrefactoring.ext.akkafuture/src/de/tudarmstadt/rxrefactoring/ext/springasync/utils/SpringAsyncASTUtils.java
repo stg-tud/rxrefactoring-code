@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.utils;
+package de.tudarmstadt.rxrefactoring.ext.springasync.utils;
 
 import java.util.List;
 import java.util.Objects;
@@ -45,9 +45,9 @@ import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.legacy.IdManager;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureTypeWrapper;
+import de.tudarmstadt.rxrefactoring.ext.springasync.wrapper.FutureTypeWrapper;
 
-public class AkkaFutureASTUtils {
+public class SpringAsyncASTUtils {
 
 	
 	public static Annotation createOverrideAnnotation(AST ast) {
@@ -74,37 +74,8 @@ public class AkkaFutureASTUtils {
 	public static MethodInvocation buildFromCallable(RewriteCompilationUnit unit, Supplier<Type> returnType, Supplier<Block> block) {
 		
 		AST ast = unit.getAST();
-		
-		
-//		//Define type: Callable
-//		ParameterizedType tCallable = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Callable"))); //Callable<>
-//		tCallable.typeArguments().add(returnType.get()); //Callable<T>
-//		
-//				
-//		//Define method: call()
-//		MethodDeclaration callMethod = ast.newMethodDeclaration();
-//		callMethod.setName(ast.newSimpleName("call"));
-//		callMethod.setReturnType2(returnType.get());
-//		callMethod.thrownExceptionTypes().add(ast.newSimpleType(ast.newSimpleName("Exception")));
-//		//callMethod.modifiers().add(createOverrideAnnotation(ast));
-//		callMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
-//		
-//				
-//		callMethod.setBody(block);
-//		
-//		
-//		//Define anonymous class
-//		AnonymousClassDeclaration classDecl = ast.newAnonymousClassDeclaration();
-//		classDecl.bodyDeclarations().add(callMethod);
-//		
-//		//Define constructor call: new Callable() { ... }
-//		ClassInstanceCreation initCallable = ast.newClassInstanceCreation();
-//		initCallable.setType(tCallable);
-//		initCallable.setAnonymousClassDeclaration(classDecl);
-		
+	
 		ClassInstanceCreation initCallable = buildCallableFromBlock(unit, returnType, block);
-		
-		//Define method invoke: Observable.fromCallable(new Callable ...)
 		MethodInvocation invoke = ast.newMethodInvocation();
 		invoke.setName(ast.newSimpleName("fromCallable"));
 		invoke.setExpression(ast.newSimpleName("Observable"));
@@ -233,13 +204,13 @@ public class AkkaFutureASTUtils {
 		List<Expression> result = Lists.newLinkedList();
 		
 		Expression expr = method.getExpression();		
-		if (expr != null && FutureTypeWrapper.isAkkaFuture(expr.resolveTypeBinding())) {
+		if (expr != null && FutureTypeWrapper.isSpringAsync(expr.resolveTypeBinding())) {
 			result.add(expr);
 		}
 		
 		for (Object element : method.arguments()) {
 			Expression e = (Expression) element;
-			if (FutureTypeWrapper.isAkkaFuture(e.resolveTypeBinding())) {
+			if (FutureTypeWrapper.isSpringAsync(e.resolveTypeBinding())) {
 				result.add(e);
 			}
 		}
@@ -253,7 +224,7 @@ public class AkkaFutureASTUtils {
 		
 		for (Object element : node.arguments()) {
 			Expression e = (Expression) element;
-			if (FutureTypeWrapper.isAkkaFuture(e.resolveTypeBinding())) {
+			if (FutureTypeWrapper.isSpringAsync(e.resolveTypeBinding())) {
 				result.add(e);
 			}
 		}
@@ -268,7 +239,7 @@ public class AkkaFutureASTUtils {
 			return false;
 		
 		String name = type.getBinaryName();		
-		return Objects.equals(name, "akka.dispatch.Await") || Objects.equals(name, "scala.concurrent.Await");
+		return Objects.equals(name, "spring.dispatch.Await") || Objects.equals(name, "scala.concurrent.Await");
 	}
 	
 	public static boolean isPatterns(ITypeBinding type) {
@@ -276,7 +247,7 @@ public class AkkaFutureASTUtils {
 			return false;
 		
 		String name = type.getBinaryName();		
-		return Objects.equals(name, "akka.pattern.Patterns");
+		return Objects.equals(name, "spring.pattern.Patterns");
 	}
 	
 	public static boolean isFutures(ITypeBinding type) {
@@ -284,7 +255,7 @@ public class AkkaFutureASTUtils {
 			return false;
 		
 		String name = type.getBinaryName();		
-		return Objects.equals(name, "akka.dispatch.Futures") || Objects.equals(name, "scala.concurrent.Futures");
+		return Objects.equals(name, "spring.dispatch.Futures") || Objects.equals(name, "scala.concurrent.Futures");
 	}
 	
 	public static MethodInvocation createSchedulersIo(AST ast) {
@@ -296,7 +267,7 @@ public class AkkaFutureASTUtils {
 	}
 	
 	public static boolean isCollectionOfFuture(ITypeBinding binding) {
-		if (binding == null || binding.getTypeArguments().length != 1 || !FutureTypeWrapper.isAkkaFuture(binding.getTypeArguments()[0]))
+		if (binding == null || binding.getTypeArguments().length != 1 || !FutureTypeWrapper.isSpringAsync(binding.getTypeArguments()[0]))
 			return false;
 									
 		//TODO: Check for other collection types
@@ -367,7 +338,7 @@ public class AkkaFutureASTUtils {
 				fragment.setInitializer(ast.newSimpleName(var.getIdentifier()));
 				
 				VariableDeclarationStatement varStatement = ast.newVariableDeclarationStatement(fragment);				
-				if (FutureTypeWrapper.isAkkaFuture(varType)) {
+				if (FutureTypeWrapper.isSpringAsync(varType)) {
 					varStatement.setType(FutureTypeWrapper.create(varType).toObservableType(ast));
 				} else {
 					varStatement.setType(Types.typeFromBinding(ast, varType));

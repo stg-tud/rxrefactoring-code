@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture;
+package de.tudarmstadt.rxrefactoring.ext.springasync.workers.springasync;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ParameterizedType;
@@ -11,17 +11,17 @@ import com.google.common.collect.Multimap;
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractAkkaFutureWorker;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
+import de.tudarmstadt.rxrefactoring.ext.springasync.workers.AbstractSpringAsyncWorker;
+import de.tudarmstadt.rxrefactoring.ext.springasync.workers.SpringAsyncCollector;
 
-public class VariableTypeToSubjectWorker extends AbstractAkkaFutureWorker<AkkaFutureCollector, VariableDeclarationFragment> {
-	public VariableTypeToSubjectWorker() {
+public class VariableTypeToObservableWorker extends AbstractSpringAsyncWorker<SpringAsyncCollector, VariableDeclarationFragment> {
+	public VariableTypeToObservableWorker() {
 		super("VaribaleFragment");
 	}
 
 	@Override
 	protected Multimap<RewriteCompilationUnit, VariableDeclarationFragment> getNodesMap() {
-		return collector.variableDeclarationToSubject;
+		return collector.variableDeclarationToObservable;
 	}
 
 	@Override
@@ -41,23 +41,24 @@ public class VariableTypeToSubjectWorker extends AbstractAkkaFutureWorker<AkkaFu
 		if (type instanceof ParameterizedType) {
 			//Replace Future<T> with Subject<T,T>				
 			typeArgument = (Type) ((ParameterizedType) type).typeArguments().get(0);			
-			unit.replace(type, newSubjectType(ast, unit.copyNode(typeArgument), unit.copyNode(typeArgument)));
+			unit.replace(type, newObservableType(ast, unit.copyNode(typeArgument)));
 		} else if (type instanceof SimpleType) {
 			//Replace Future with Subject
 			typeArgument = ast.newSimpleType(ast.newSimpleName("Object"));
-			unit.replace(type, unit.getAST().newSimpleType(unit.getAST().newSimpleName("Subject")));
+			unit.replace(type, unit.getAST().newSimpleType(unit.getAST().newSimpleName("Observable")));
 		}
 	}
 	
+		
 	@SuppressWarnings("unchecked")
-	protected Type newSubjectType(AST ast, Type typeArgument1, Type typeArgument2) {
-		ParameterizedType newType = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Subject")));
-		newType.typeArguments().add(typeArgument1);
-		newType.typeArguments().add(typeArgument2);
+	protected Type newObservableType(AST ast, Type typeArgument) {
+		ParameterizedType newType = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Observable")));
+		newType.typeArguments().add(typeArgument);		
 		
 		return newType;
 	}
 	
-		
+	
+	
 }
 

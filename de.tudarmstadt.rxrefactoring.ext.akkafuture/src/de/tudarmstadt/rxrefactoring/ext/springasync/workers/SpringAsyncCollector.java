@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers;
+package de.tudarmstadt.rxrefactoring.ext.springasync.workers;
 
 import java.util.List;
 
@@ -19,14 +19,14 @@ import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.AwaitBinding;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureCollectionAccessWrapper;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureCreationWrapper;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureMethodWrapper;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureTypeWrapper;
+import de.tudarmstadt.rxrefactoring.ext.springasync.utils.SpringAsyncASTUtils;
+import de.tudarmstadt.rxrefactoring.ext.springasync.wrapper.AwaitBinding;
+import de.tudarmstadt.rxrefactoring.ext.springasync.wrapper.FutureCollectionAccessWrapper;
+import de.tudarmstadt.rxrefactoring.ext.springasync.wrapper.FutureCreationWrapper;
+import de.tudarmstadt.rxrefactoring.ext.springasync.wrapper.FutureMethodWrapper;
+import de.tudarmstadt.rxrefactoring.ext.springasync.wrapper.FutureTypeWrapper;
 
-public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
+public class SpringAsyncCollector implements IWorker<Void, SpringAsyncCollector> {
 
 	
 	/**
@@ -77,7 +77,7 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 	
 	
 	@Override
-	public AkkaFutureCollector refactor(ProjectUnits units, Void input, WorkerSummary summary) throws Exception {
+	public SpringAsyncCollector refactor(ProjectUnits units, Void input, WorkerSummary summary) throws Exception {
 		
 		for (RewriteCompilationUnit unit : units) {
 			
@@ -122,7 +122,7 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 			
 			ITypeBinding typeBinding = node.getType().resolveBinding();										
 			
-			if (AkkaFutureASTUtils.isCollectionOfFuture(typeBinding)) {
+			if (SpringAsyncASTUtils.isCollectionOfFuture(typeBinding)) {
 				collectionTypes.put(unit, node);
 			}
 						
@@ -140,7 +140,7 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 			Expression expr = node.getExpression();
 			
 			
-			if (expr != null && FutureTypeWrapper.isAkkaFuture(expr.resolveTypeBinding())) {
+			if (expr != null && FutureTypeWrapper.isSpringAsync(expr.resolveTypeBinding())) {
 				unrefactorableFutureReferences.put(unit, expr);
 			}
 				
@@ -156,7 +156,7 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 		}
 		
 		public boolean visit(ClassInstanceCreation node) {
-			unrefactorableFutureReferences.putAll(unit, AkkaFutureASTUtils.futureReferencesInClassInstanceCreation(node));
+			unrefactorableFutureReferences.putAll(unit, SpringAsyncASTUtils.futureReferencesInClassInstanceCreation(node));
 			return true;
 		}
 		
@@ -192,7 +192,7 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 				}
 				
 			} else if (await == null && !FutureCollectionAccessWrapper.isCollectionAccess(node)) {				
-				unrefactorableFutureReferences.putAll(unit, AkkaFutureASTUtils.futureReferencesInMethodInvocation(node));				
+				unrefactorableFutureReferences.putAll(unit, SpringAsyncASTUtils.futureReferencesInMethodInvocation(node));				
 			}	
 			
 			return true;

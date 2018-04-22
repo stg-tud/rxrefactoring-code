@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.domain;
+package de.tudarmstadt.rxrefactoring.ext.springasync.domain;
 
 import java.util.Arrays;
 

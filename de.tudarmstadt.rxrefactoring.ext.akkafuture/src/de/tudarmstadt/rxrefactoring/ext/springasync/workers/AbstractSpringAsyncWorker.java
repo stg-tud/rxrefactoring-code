@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers;
+package de.tudarmstadt.rxrefactoring.ext.springasync.workers;
 
 import com.google.common.collect.Multimap;
 
@@ -8,13 +8,13 @@ import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
 
 
-public abstract class AbstractAkkaFutureWorker<CollectorType, RefactorType> implements IWorker<CollectorType, Void> {
+public abstract class AbstractSpringAsyncWorker<CollectorType, RefactorType> implements IWorker<CollectorType, Void> {
 
 	protected final String nodeName;
 	protected CollectorType collector;
 	protected WorkerSummary summary;
 	
-	public AbstractAkkaFutureWorker(String nodeName) {
+	public AbstractSpringAsyncWorker(String nodeName) {
 		this.nodeName = nodeName;
 	}
 	

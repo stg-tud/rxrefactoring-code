@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture;
+package de.tudarmstadt.rxrefactoring.ext.springasync;
 
 import org.eclipse.jdt.annotation.NonNull;
 
@@ -9,6 +9,6 @@ public class Handler extends RefactoringHandler {
 
 	@Override
 	public @NonNull RefactorExtension createExtension() {		
-		return new AkkaFutureRefactoringExtension();
+		return new SpringAsyncRefactoringExtension();
 	}
 }

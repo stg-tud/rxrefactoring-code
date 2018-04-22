@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture;
+package de.tudarmstadt.rxrefactoring.ext.springasync.workers.springasync;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -21,13 +21,13 @@ import de.tudarmstadt.rxrefactoring.core.legacy.IdManager;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractAkkaFutureWorker;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureCreationWrapper;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureTypeWrapper;
+import de.tudarmstadt.rxrefactoring.ext.springasync.utils.SpringAsyncASTUtils;
+import de.tudarmstadt.rxrefactoring.ext.springasync.workers.AbstractSpringAsyncWorker;
+import de.tudarmstadt.rxrefactoring.ext.springasync.workers.SpringAsyncCollector;
+import de.tudarmstadt.rxrefactoring.ext.springasync.wrapper.FutureCreationWrapper;
+import de.tudarmstadt.rxrefactoring.ext.springasync.wrapper.FutureTypeWrapper;
 
-public class FutureCreationWorker extends AbstractAkkaFutureWorker<AkkaFutureCollector, FutureCreationWrapper> {
+public class FutureCreationWorker extends AbstractSpringAsyncWorker<SpringAsyncCollector, FutureCreationWrapper> {
 	public FutureCreationWorker() {
 		super("Assignment");
 	}
@@ -77,27 +77,6 @@ public class FutureCreationWorker extends AbstractAkkaFutureWorker<AkkaFutureCol
 		Type futureType = Types.typeFromBinding(ast, FutureTypeWrapper.create(binding).getTypeParameter(ast)); //ASTUtils.typeFromBinding(ast, binding.getTypeArguments()[0]);	
 		
 		Statement referenceStatement = wrapper.getReferenceStatement();
-				
-		//If the declaration fragment is Future f = Futures.future... or Patterns.ask...
-				
-		/*
-		 * Refactors
-		 * 
-		 * ... FUTURE ...
-		 * 
-		 * to
-		 * 
-		 * Subject<Integer, Integer> f1 = ReplaySubject.create();
-		 *	Observable.fromCallable(() -> {
-		 *		return Await.result(FUTURE, Duration.Inf());
-		 *	})
-		 *	.subscribeOn(Schedulers.io())
-		 *	.subscribe(f1);
-		 * 
-		 * ... f1 ...
-		 * 
-		 */			
-				
 		//New observable variable name
 		String observableName = "observable" + IdManager.getNextObservableId(unit);
 		
@@ -116,13 +95,8 @@ public class FutureCreationWorker extends AbstractAkkaFutureWorker<AkkaFutureCol
 		
 		Statements.addStatementBefore(unit, ast.newExpressionStatement(varExpr), referenceStatement);
 		
-		/*
-		 * Build
-		 * {
-		 *     return Await.result(rhs, Duration.Inf());
-		 * }
-		 */
-		AkkaFutureASTUtils.replaceThisWithFullyQualifiedThisIn(expr, unit);
+		
+		SpringAsyncASTUtils.replaceThisWithFullyQualifiedThisIn(expr, unit);
 		
 		MethodInvocation durationInf = ast.newMethodInvocation();
 		durationInf.setExpression(ast.newSimpleName("Duration"));
@@ -145,11 +119,11 @@ public class FutureCreationWorker extends AbstractAkkaFutureWorker<AkkaFutureCol
 		 * 
 		 * Observable.fromCallable(...)
 		 */
-		MethodInvocation fromCallable = AkkaFutureASTUtils.buildFromCallable(
+		MethodInvocation fromCallable = SpringAsyncASTUtils.buildFromCallable(
 				unit, 
 				() -> (Type) ASTNode.copySubtree(ast, futureType), 
 				() -> {
-					AkkaFutureASTUtils.replaceThisWithFullyQualifiedThisIn(block, unit);
+					SpringAsyncASTUtils.replaceThisWithFullyQualifiedThisIn(block, unit);
 					return block;			
 				});
 		
@@ -157,7 +131,7 @@ public class FutureCreationWorker extends AbstractAkkaFutureWorker<AkkaFutureCol
 		MethodInvocation subscribeOn = ast.newMethodInvocation();
 		subscribeOn.setName(ast.newSimpleName("subscribeOn"));
 		subscribeOn.setExpression(fromCallable);
-		subscribeOn.arguments().add(AkkaFutureASTUtils.createSchedulersIo(ast));
+		subscribeOn.arguments().add(SpringAsyncASTUtils.createSchedulersIo(ast));
 		
 		//Add subscribe(future)
 		MethodInvocation subscribe = ast.newMethodInvocation();
@@ -169,53 +143,8 @@ public class FutureCreationWorker extends AbstractAkkaFutureWorker<AkkaFutureCol
 		//Replace argument in add method	
 		if (!(expr.getParent() instanceof Statement))
 			unit.replace(expr, ast.newSimpleName(observableName));
-		
-		
-		/*
-		 * Build
-		 * 
-		 * final var1Final = var;
-		 * ...
-		 */
-//		List<SimpleName> variables = ASTUtils.findVariablesIn(expr);
-//		Set<String> alreadyDeclared = Sets.newHashSet();
-//		
-//		for(SimpleName var : variables) {
-//			
-//			IBinding varBinding = var.resolveBinding();			
-//			//If the variable is already final, do nothing
-//			if (varBinding != null && (varBinding.getModifiers() & Modifier.FINAL) != 0) {
-//				continue;
-//			}
-//			
-//			ITypeBinding varType = var.resolveTypeBinding();
-//			if (varType == null) {
-//				continue;
-//			}
-//			
-//			String newVarName = var.getIdentifier() + "Final" + IdManager.getNextObserverId(unit);
-//			
-//			//If variable has not been declared already, then add a declaration.
-//			if (!alreadyDeclared.contains(newVarName)) {					
-//				
-//				//Add the variable declaration.
-//				VariableDeclarationFragment fragment = ast.newVariableDeclarationFragment();
-//				fragment.setName(ast.newSimpleName(newVarName));
-//				fragment.setInitializer(ast.newSimpleName(var.getIdentifier()));
-//				
-//				VariableDeclarationStatement varStatement = ast.newVariableDeclarationStatement(fragment);
-//				varStatement.setType(ASTUtils.typeFromBinding(ast, varType));
-//				varStatement.modifiers().add(ast.newModifier(ModifierKeyword.FINAL_KEYWORD));
-//				
-//				ASTUtils.addStatementBefore(unit, varStatement, referenceStatement);
-//				
-//				alreadyDeclared.add(newVarName);
-//			}
-//			
-//			//Replace variable reference with new variable name
-//			unit.replace(var, ast.newSimpleName(newVarName));			
-//		}
-		AkkaFutureASTUtils.transformVariablesInExpressionToFinal(unit, expr, stmt -> Statements.addStatementBefore(unit, stmt, referenceStatement));
+	
+		SpringAsyncASTUtils.transformVariablesInExpressionToFinal(unit, expr, stmt -> Statements.addStatementBefore(unit, stmt, referenceStatement));
 
 		
 		//Add Observable.fromCallable statement 
@@ -275,7 +204,7 @@ public class FutureCreationWorker extends AbstractAkkaFutureWorker<AkkaFutureCol
 		 *     return Await.result(rhs, Duration.Inf());
 		 * }
 		 */
-		AkkaFutureASTUtils.replaceThisWithFullyQualifiedThisIn(expr, unit);
+		SpringAsyncASTUtils.replaceThisWithFullyQualifiedThisIn(expr, unit);
 		
 		MethodInvocation durationInf = ast.newMethodInvocation();
 		durationInf.setExpression(ast.newSimpleName("Duration"));
@@ -299,11 +228,11 @@ public class FutureCreationWorker extends AbstractAkkaFutureWorker<AkkaFutureCol
 		 * Observable.fromCallable(...)
 		 */
 		final Type typeArgumentFinal = typeArgument;
-		MethodInvocation fromCallable = AkkaFutureASTUtils.buildFromCallable(
+		MethodInvocation fromCallable = SpringAsyncASTUtils.buildFromCallable(
 				unit, 
 				() -> unit.copyNode(typeArgumentFinal), 
 				() -> {
-					AkkaFutureASTUtils.replaceThisWithFullyQualifiedThisIn(block, unit);
+					SpringAsyncASTUtils.replaceThisWithFullyQualifiedThisIn(block, unit);
 					return block;			
 				});
 		
@@ -311,7 +240,7 @@ public class FutureCreationWorker extends AbstractAkkaFutureWorker<AkkaFutureCol
 		MethodInvocation subscribeOn = ast.newMethodInvocation();
 		subscribeOn.setName(ast.newSimpleName("subscribeOn"));
 		subscribeOn.setExpression(fromCallable);
-		subscribeOn.arguments().add(AkkaFutureASTUtils.createSchedulersIo(ast));
+		subscribeOn.arguments().add(SpringAsyncASTUtils.createSchedulersIo(ast));
 		
 		//Add subscribe(future)
 		MethodInvocation subscribe = ast.newMethodInvocation();
@@ -322,53 +251,8 @@ public class FutureCreationWorker extends AbstractAkkaFutureWorker<AkkaFutureCol
 		
 		Statements.addStatementAfter(unit, ast.newExpressionStatement(subscribe), referenceStatement);
 		
-		
-		/*
-		 * Build
-		 * 
-		 * final var1Final = var;
-		 * ...
-		 */
-//		List<SimpleName> variables = ASTUtils.findVariablesIn(expr);
-//		Set<String> alreadyDeclared = Sets.newHashSet();
-//		
-//		for(SimpleName var : variables) {
-//			
-//			IBinding binding = var.resolveBinding();			
-//			//If the variable is already final, do nothing
-//			if (binding != null && (binding.getModifiers() & Modifier.FINAL) != 0) {
-//				continue;
-//			}
-//			
-//			ITypeBinding varType = var.resolveTypeBinding();
-//			if (varType == null) {
-//				continue;
-//			}
-//			
-//			String newVarName = var.getIdentifier() + "Final";
-//			
-//			//If variable has not been declared already, then add a declaration.
-//			if (!alreadyDeclared.contains(newVarName)) {					
-//				
-//				//Add the variable declaration.
-//				VariableDeclarationFragment fragment = ast.newVariableDeclarationFragment();
-//				fragment.setName(ast.newSimpleName(newVarName));
-//				fragment.setInitializer(ast.newSimpleName(var.getIdentifier()));
-//				
-//				VariableDeclarationStatement varStatement = ast.newVariableDeclarationStatement(fragment);
-//				varStatement.setType(ASTUtils.typeFromBinding(ast, varType));
-//				varStatement.modifiers().add(ast.newModifier(ModifierKeyword.FINAL_KEYWORD));
-//				
-//				ASTUtils.addStatementAfter(unit, varStatement, referenceStatement);
-//				
-//				alreadyDeclared.add(newVarName);
-//			}
-//			
-//			//Replace variable reference with new variable name
-//			unit.replace(var, ast.newSimpleName(newVarName));			
-//		}
-		
-		AkkaFutureASTUtils.transformVariablesInExpressionToFinal(unit, expr, stmt -> Statements.addStatementAfter(unit, stmt, referenceStatement));
+	
+		SpringAsyncASTUtils.transformVariablesInExpressionToFinal(unit, expr, stmt -> Statements.addStatementAfter(unit, stmt, referenceStatement));
 		
 		summary.addCorrect("futureCreation");
 	}

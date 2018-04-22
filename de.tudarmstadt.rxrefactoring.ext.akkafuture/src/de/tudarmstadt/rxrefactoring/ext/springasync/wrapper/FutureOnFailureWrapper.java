@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper;
+package de.tudarmstadt.rxrefactoring.ext.springasync.wrapper;
 
 import java.util.Objects;
 
@@ -134,7 +134,7 @@ public class FutureOnFailureWrapper implements FutureMethodWrapper {
 		
 		return Objects.equals(method.getName().getIdentifier(), "onFailure") && 
 				method.getExpression() != null &&
-				FutureTypeWrapper.isAkkaFuture(method.getExpression().resolveTypeBinding());
+				FutureTypeWrapper.isSpringAsync(method.getExpression().resolveTypeBinding());
 	}
 
 }

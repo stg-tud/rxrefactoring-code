@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper;
+package de.tudarmstadt.rxrefactoring.ext.springasync.wrapper;
 
 import java.util.Objects;
 
@@ -28,7 +28,7 @@ public class AwaitBinding {
 				return null;
 			
 			String name = type.getBinaryName();		
-			if (Objects.equals(name, "akka.dispatch.Await") || Objects.equals(name, "scala.concurrent.Await"))
+			if (Objects.equals(name, "springasync.dispatch.Await") || Objects.equals(name, "scala.concurrent.Await"))
 				return new AwaitBinding(method);
 			else
 				return null;

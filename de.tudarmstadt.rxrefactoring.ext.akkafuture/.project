@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>de.tudarmstadt.rxrefactoring.ext.akkafuture</name>
+	<name>de.tudarmstadt.rxrefactoring.ext.springAsync</name>
 	<comment></comment>
 	<projects>
 	</projects>

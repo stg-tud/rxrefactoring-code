@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper;
+package de.tudarmstadt.rxrefactoring.ext.springasync.wrapper;
 
 import org.eclipse.jdt.core.dom.Expression;
 

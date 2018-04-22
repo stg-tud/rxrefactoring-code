@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture;
+package de.tudarmstadt.rxrefactoring.ext.springasync.workers.springasync;
 
 import java.util.List;
 import java.util.Set;
@@ -27,12 +27,12 @@ import de.tudarmstadt.rxrefactoring.core.legacy.IdManager;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractAkkaFutureWorker;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureTypeWrapper;
+import de.tudarmstadt.rxrefactoring.ext.springasync.utils.SpringAsyncASTUtils;
+import de.tudarmstadt.rxrefactoring.ext.springasync.workers.AbstractSpringAsyncWorker;
+import de.tudarmstadt.rxrefactoring.ext.springasync.workers.SpringAsyncCollector;
+import de.tudarmstadt.rxrefactoring.ext.springasync.wrapper.FutureTypeWrapper;
 
-public class UnrefactorableReferencesWorker extends AbstractAkkaFutureWorker<AkkaFutureCollector, Expression> {
+public class UnrefactorableReferencesWorker extends AbstractSpringAsyncWorker<SpringAsyncCollector, Expression> {
 	public UnrefactorableReferencesWorker() {
 		super("UnrefactorableReferences");
 	}
@@ -50,7 +50,7 @@ public class UnrefactorableReferencesWorker extends AbstractAkkaFutureWorker<Akk
 		AST ast = unit.getAST();
 		
 		ITypeBinding typeBinding = expr.resolveTypeBinding();
-		if (!FutureTypeWrapper.isAkkaFuture(typeBinding))
+		if (!FutureTypeWrapper.isSpringAsync(typeBinding))
 			return;
 		
 		Supplier<Type> typeSupplier = () -> Types.typeFromBinding(ast, FutureTypeWrapper.create(typeBinding).getTypeParameter(ast));
@@ -112,7 +112,7 @@ public class UnrefactorableReferencesWorker extends AbstractAkkaFutureWorker<Akk
 				fragment.setInitializer(ast.newSimpleName(var.getIdentifier()));
 				
 				VariableDeclarationStatement varStatement = ast.newVariableDeclarationStatement(fragment);				
-				if (FutureTypeWrapper.isAkkaFuture(varType)) {
+				if (FutureTypeWrapper.isSpringAsync(varType)) {
 					varStatement.setType(FutureTypeWrapper.create(varType).toObservableType(ast));
 				} else {
 					varStatement.setType(Types.typeFromBinding(ast, varType));
@@ -152,7 +152,7 @@ public class UnrefactorableReferencesWorker extends AbstractAkkaFutureWorker<Akk
 		single.setExpression(toBlocking);
 		
 		//new Callable...
-		ClassInstanceCreation newCallable = AkkaFutureASTUtils.buildCallableFromExpr(unit, typeSupplier, () -> single); 
+		ClassInstanceCreation newCallable = SpringAsyncASTUtils.buildCallableFromExpr(unit, typeSupplier, () -> single); 
 			
 		//first argument		
 		futuresFuture.arguments().add(newCallable);
