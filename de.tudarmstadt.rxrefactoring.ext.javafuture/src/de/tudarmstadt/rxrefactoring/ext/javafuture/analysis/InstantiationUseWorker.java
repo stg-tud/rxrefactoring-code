@@ -152,7 +152,7 @@ public class InstantiationUseWorker implements IWorker<SubclassInstantiationColl
 		});
 		
 		//TODO dont refactor colllections because workers are disabled
-		//unsupportedCollections.addAll(collectionCreationsToUses.keySet());
+		unsupportedCollections.addAll(collectionCreationsToUses.keySet());
 		unsupportedCollections.forEach(c -> {
 			collectionCreationsToUses.removeAll(c);
 			collectionGetters.get(c).forEach(g -> instantiationUses.removeAll(g));
