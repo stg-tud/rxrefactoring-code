@@ -100,11 +100,13 @@ public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 			} else if (astNode instanceof Assignment) {
 				Assignment assignment = (Assignment) astNode;
 				Expression rightSide = assignment.getRightHandSide();
-				SimpleName name = (SimpleName) assignment.getLeftHandSide();
-				IBinding binding = name.resolveBinding();
-				if (binding instanceof IVariableBinding) {
-					if (((IVariableBinding)binding).isField())
-						usesByExpression.put(rightSide, new Use(Kind.FIELD_ASSIGN, name, assignment));
+				if (assignment.getLeftHandSide() instanceof SimpleName) {
+					SimpleName name = (SimpleName) assignment.getLeftHandSide();
+					IBinding binding = name.resolveBinding();
+					if (binding instanceof IVariableBinding) {
+						if (((IVariableBinding)binding).isField())
+							usesByExpression.put(rightSide, new Use(Kind.FIELD_ASSIGN, name, assignment));
+					}
 				}
 			} else {
 				return input;
