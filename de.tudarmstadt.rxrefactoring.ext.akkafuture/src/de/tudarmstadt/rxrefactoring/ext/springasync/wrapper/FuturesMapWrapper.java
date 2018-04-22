@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper;
+package de.tudarmstadt.rxrefactoring.ext.springasync.wrapper;
 
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -148,7 +148,7 @@ public class FuturesMapWrapper implements FutureMethodWrapper {
 		
 		return Objects.equals(method.getName().getIdentifier(), "map") && 
 				method.getExpression() != null &&
-				FutureTypeWrapper.isAkkaFuture(method.getExpression().resolveTypeBinding());
+				FutureTypeWrapper.isSpringAsync(method.getExpression().resolveTypeBinding());
 	}
 
 }

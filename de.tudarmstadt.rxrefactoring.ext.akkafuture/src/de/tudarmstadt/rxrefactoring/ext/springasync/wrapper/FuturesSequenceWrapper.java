@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper;
+package de.tudarmstadt.rxrefactoring.ext.springasync.wrapper;
 
 import java.util.Objects;
 
@@ -11,7 +11,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
+import de.tudarmstadt.rxrefactoring.ext.springasync.utils.SpringAsyncASTUtils;
 
 /**
  * Wrapper for Futures.sequence(...) invocations
@@ -129,7 +129,7 @@ public class FuturesSequenceWrapper implements FutureMethodWrapper {
 		
 		return Objects.equals(method.getName().getIdentifier(), "sequence") && 
 				method.getExpression() != null &&
-				AkkaFutureASTUtils.isFutures(method.getExpression().resolveTypeBinding());
+				SpringAsyncASTUtils.isFutures(method.getExpression().resolveTypeBinding());
 	}
 
 }

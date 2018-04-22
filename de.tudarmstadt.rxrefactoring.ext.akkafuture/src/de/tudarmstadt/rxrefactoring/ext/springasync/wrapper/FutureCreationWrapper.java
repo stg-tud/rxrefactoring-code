@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper;
+package de.tudarmstadt.rxrefactoring.ext.springasync.wrapper;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Expression;
@@ -90,14 +90,14 @@ public class FutureCreationWrapper {
 		
 		ITypeBinding returnType = expression.resolveTypeBinding();
 		
-		if (returnType != null && FutureTypeWrapper.isAkkaFuture(returnType) && expression instanceof MethodInvocation) {
+		if (returnType != null && FutureTypeWrapper.isSpringAsync(returnType) && expression instanceof MethodInvocation) {
 //			MethodInvocation method = (MethodInvocation) expression;
 //			IMethodBinding binding = method.resolveMethodBinding();
 //			
-//			if (binding != null && Objects.equals(method.getName().getIdentifier(), "ask") && AkkaFutureASTUtils.isPatterns(binding.getDeclaringClass()))
+//			if (binding != null && Objects.equals(method.getName().getIdentifier(), "ask") && SpringAsyncASTUtils.isPatterns(binding.getDeclaringClass()))
 //				return true;
 //			
-//			if (binding != null && Objects.equals(method.getName().getIdentifier(), "future") && AkkaFutureASTUtils.isFutures(binding.getDeclaringClass()))
+//			if (binding != null && Objects.equals(method.getName().getIdentifier(), "future") && SpringAsyncASTUtils.isFutures(binding.getDeclaringClass()))
 //				return true;
 			return true;
 		}		

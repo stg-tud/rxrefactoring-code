@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture;
+package de.tudarmstadt.rxrefactoring.ext.springasync.workers.springasync;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -10,10 +10,10 @@ import org.eclipse.jdt.core.dom.Type;
 import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractAkkaFutureWorker;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
+import de.tudarmstadt.rxrefactoring.ext.springasync.workers.AbstractSpringAsyncWorker;
+import de.tudarmstadt.rxrefactoring.ext.springasync.workers.SpringAsyncCollector;
 
-public class ListTypeWorker extends AbstractAkkaFutureWorker<AkkaFutureCollector, ParameterizedType> {
+public class ListTypeWorker extends AbstractSpringAsyncWorker<SpringAsyncCollector, ParameterizedType> {
 	public ListTypeWorker() {
 		super("Await.result");
 	}

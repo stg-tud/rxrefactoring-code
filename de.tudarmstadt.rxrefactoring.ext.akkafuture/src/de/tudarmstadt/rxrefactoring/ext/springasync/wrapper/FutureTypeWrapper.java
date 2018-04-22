@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper;
+package de.tudarmstadt.rxrefactoring.ext.springasync.wrapper;
 
 import java.util.Objects;
 
@@ -18,14 +18,14 @@ public class FutureTypeWrapper {
 	}
 	
 	public static FutureTypeWrapper create(ITypeBinding type) {
-		if (isAkkaFuture(type)) {
+		if (isSpringAsync(type)) {
 			return new FutureTypeWrapper(type);
 		}
 		
 		return null;
 	}
 	
-	public static boolean isAkkaFuture(ITypeBinding type) {
+	public static boolean isSpringAsync(ITypeBinding type) {
 		if (type == null)
 			return false;
 		

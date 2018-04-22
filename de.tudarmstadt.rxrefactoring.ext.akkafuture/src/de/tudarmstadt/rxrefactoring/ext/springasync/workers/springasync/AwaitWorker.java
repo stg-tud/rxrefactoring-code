@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.akkafuture;
+package de.tudarmstadt.rxrefactoring.ext.springasync.workers.springasync;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.Expression;
@@ -7,11 +7,11 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractAkkaFutureWorker;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.AwaitBinding;
+import de.tudarmstadt.rxrefactoring.ext.springasync.workers.AbstractSpringAsyncWorker;
+import de.tudarmstadt.rxrefactoring.ext.springasync.workers.SpringAsyncCollector;
+import de.tudarmstadt.rxrefactoring.ext.springasync.wrapper.AwaitBinding;
 
-public class AwaitWorker extends AbstractAkkaFutureWorker<AkkaFutureCollector, AwaitBinding> {
+public class AwaitWorker extends AbstractSpringAsyncWorker<SpringAsyncCollector, AwaitBinding> {
 	public AwaitWorker() {
 		super("Await.result");
 	}

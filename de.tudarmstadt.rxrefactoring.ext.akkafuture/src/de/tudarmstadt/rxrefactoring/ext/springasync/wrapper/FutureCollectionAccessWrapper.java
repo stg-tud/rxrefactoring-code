@@ -1,11 +1,11 @@
-package de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper;
+package de.tudarmstadt.rxrefactoring.ext.springasync.wrapper;
 
 import java.util.Objects;
 
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
-import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
+import de.tudarmstadt.rxrefactoring.ext.springasync.utils.SpringAsyncASTUtils;
 
 public class FutureCollectionAccessWrapper implements FutureMethodWrapper {
 	
@@ -42,7 +42,7 @@ public class FutureCollectionAccessWrapper implements FutureMethodWrapper {
 		
 		MethodInvocation method = (MethodInvocation) expression;
 		
-		if (method.getExpression() != null && AkkaFutureASTUtils.isCollectionOfFuture(method.getExpression().resolveTypeBinding()) && Objects.equals(method.getName().getIdentifier(), "add")) {
+		if (method.getExpression() != null && SpringAsyncASTUtils.isCollectionOfFuture(method.getExpression().resolveTypeBinding()) && Objects.equals(method.getName().getIdentifier(), "add")) {
 			return true;
 		}
 		
