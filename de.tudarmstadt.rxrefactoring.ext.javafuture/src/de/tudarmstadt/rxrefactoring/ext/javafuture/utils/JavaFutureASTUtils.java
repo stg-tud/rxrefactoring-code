@@ -102,6 +102,16 @@ public class JavaFutureASTUtils {
 		unit.replace(oldNode, blockingSingle);
 
 	}
+	
+	public static void replaceWithBlockingGet(IRewriteCompilationUnit unit, MethodInvocation oldNode) {
+		AST ast = unit.getAST();
+		MethodInvocation blockingSingle = ast.newMethodInvocation();
+		blockingSingle.setName(ast.newSimpleName("blockingSingle"));
+		Expression old = oldNode.getExpression();
+		Expression clone = unit.copyNode((MethodInvocation)old);
+		blockingSingle.setExpression(clone);
+		unit.replace(oldNode, blockingSingle);
+	}
 
 	public static void replaceSimpleName(IRewriteCompilationUnit unit, SimpleName name, String replacement) {
 		AST ast = unit.getAST();

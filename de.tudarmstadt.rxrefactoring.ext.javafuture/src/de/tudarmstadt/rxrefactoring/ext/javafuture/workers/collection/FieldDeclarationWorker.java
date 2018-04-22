@@ -37,15 +37,12 @@ public class FieldDeclarationWorker extends AbstractFutureWorker<FieldDeclaratio
 	protected void refactorNode(IRewriteCompilationUnit unit, FieldDeclaration fieldDeclaration) {
 		Type fieldType = fieldDeclaration.getType();
 
-		if (Types.isTypeOf(fieldType.resolveBinding(), CollectionInfo.getBinaryNames())) {
-			if (fieldType instanceof ParameterizedType) {
+		if (fieldType instanceof ParameterizedType) {
+			ParameterizedType pType = (ParameterizedType) fieldType;
+			Type typeArg = (Type) pType.typeArguments().get(0);
+			typeArg = ((ParameterizedType) typeArg).getType();
 
-				ParameterizedType pType = (ParameterizedType) fieldType;
-				Type typeArg = (Type) pType.typeArguments().get(0);
-				typeArg = ((ParameterizedType) typeArg).getType();
-
-				JavaFutureASTUtils.replaceType(unit, typeArg, "FutureObservable");
-			}
+			JavaFutureASTUtils.replaceType(unit, typeArg, "FutureObservable");
 		}
 	}
 }
