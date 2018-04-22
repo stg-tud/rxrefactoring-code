@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ArrayCreation;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.IMethodBinding;
@@ -32,27 +33,26 @@ import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDe
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 
 /**
- * Description: Collects method invocations that return Futures and Future
- * collections and declarations of Future subclasses<br>
+ * Description: Collects method invocations that return instances and collections
+ * of the class of interest and declarations of its subclasses<br>
  * Author: Camila Gonzalez<br>
  * Created: 22/02/2018
  */
 public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, InstantiationCollector> {
 	
-	// Method invocations that return java.util.concurrent.Future, and for which the
+	// Method invocations that return binaryName, and for which the
 	// returned value is not discarded.
 	public final Multimap<MethodDeclaration, MethodInvocation> methodInvReturnClass;
 
-	// Method invocations that return collections of java.util.concurrent.Future,
-	// and for which the returned
-	// value is not discarded.
-	public final Multimap<MethodDeclaration, MethodInvocation> methodInvReturnCollection;
+	// MethodInvocations, ClassInstanceCreations or ArrayCreations that return collections of 
+	// binaryName, and for which the returned value is not discarded.
+	public final Multimap<MethodDeclaration, ASTNode> collectionCreations;
 
-	// Type declarations that implement java.util.concurrent.Future directly and
+	// Type declarations that implement binaryName directly and
 	// only implement allowed methods, if these are provided.
 	public final Multimap<IRewriteCompilationUnit, TypeDeclaration> directSubclassDeclarations;
 
-	// Type declarations that implement java.util.concurrent.Future indirectly and
+	// Type declarations that implement binaryName indirectly and
 	// only implement allowed methods, if provided.
 	public final Multimap<IRewriteCompilationUnit, TypeDeclaration> indirectSubclassDeclarations;
 
@@ -62,9 +62,9 @@ public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, Ins
 	
 	// If the subclass declares any unsupported methods or additional methods or 
 	// fields, or the parameter types are not valid, it is not stored.
-	private final ClassInfo classInfo;
+	public final ClassInfo classInfo;
 
-	public String binaryName = "java.util.concurrent.Future";
+	public String binaryName;
 
 	final Multimap<String, String> declaredClassBindingNames;
 
@@ -77,7 +77,8 @@ public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, Ins
 		indirectSubclassDeclarations = HashMultimap.create();
 		methodInvReturnClass = HashMultimap.create();
 		declaredClassBindingNames = HashMultimap.create();
-		methodInvReturnCollection = HashMultimap.create();
+		collectionCreations = HashMultimap.create();
+		binaryName = classInfo.getBinaryName();
 	}
 
 	public InstantiationCollector(ClassInfo classInfo) {
@@ -86,13 +87,14 @@ public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, Ins
 		indirectSubclassDeclarations = HashMultimap.create();
 		methodInvReturnClass = HashMultimap.create();
 		declaredClassBindingNames = HashMultimap.create();
-		methodInvReturnCollection = HashMultimap.create();
+		collectionCreations = HashMultimap.create();
+		binaryName = classInfo.getBinaryName();
 	}
 
 	@Override
 	public InstantiationCollector refactor(IProjectUnits units, Map<ASTNode, UseDef> input, WorkerSummary summary)
 			throws Exception {
-		FutureInstantiationVisitor visitor = new FutureInstantiationVisitor();
+		InstantiationVisitor visitor = new InstantiationVisitor();
 		analysis = input;
 
 		units.accept(visitor);
@@ -102,11 +104,11 @@ public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, Ins
 		return this;
 	}
 
-	public class FutureInstantiationVisitor extends UnitASTVisitor {
+	public class InstantiationVisitor extends UnitASTVisitor {
 
 		/**
 		 * Collects class definitions in package that implement the
-		 * {@link java.util.concurrent.Future} interface directly in
+		 * {@link InstantiationCollector#binaryName} interface directly in
 		 * {@link InstantiationCollector#directSubclassDeclarations} and indirectly in
 		 * {@link InstantiationCollector#indirectSubclassDeclarations}. The maps are
 		 * disjoint.
@@ -171,7 +173,7 @@ public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, Ins
 		}
 
 		/**
-		 * Collects method invocations that return {@link java.util.concurrent.Future}s
+		 * Collects method invocations that return {@link InstantiationCollector#binaryName}s
 		 * (which are later used) in
 		 * {@link InstantiationCollector#methodInvReturnClass} and invocations
 		 * that return collections of them (implement {@link java.util.Collection}) in
@@ -188,20 +190,51 @@ public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, Ins
 			if (binaryName.equals(returnType.getBinaryName()) && returnedValueUsed(node))
 				methodInvReturnClass.put(parent.get(), node);
 			else {
-				if (isCollectionOfClass(returnType) && returnedValueUsed(node)
+				if (isCollection(returnType) && returnedValueUsed(node)
 						&& returnType.getTypeArguments().length > 0
 						&& binaryName.equals(returnType.getTypeArguments()[0].getBinaryName())) {
-					methodInvReturnCollection.put(parent.get(), node);
+					collectionCreations.put(parent.get(), node);
 				}
 			}
 			return true;
 		}
+		
+		/**
+		 * Collects creations of {@link InstantiationCollector#binaryName} arrays.
+		 */
+		@Override
+		public boolean visit(ArrayCreation node) {
+			Optional<MethodDeclaration> parent = ASTNodes.findParent(node, MethodDeclaration.class);
+			if (parent.isPresent() && returnedValueUsed(node) &&
+					binaryName.equals(node.resolveTypeBinding().getElementType().getBinaryName())) {
+				collectionCreations.put(parent.get(), node);
+			}
+			return true;
+		}
+		
+		/**
+		 * Collects class instance creations of {@link InstantiationCollector#binaryName}
+		 * collections.
+		 */
+		@Override
+		public boolean visit(ClassInstanceCreation node) {
+			if (node.resolveTypeBinding() == null)
+				return false;
+			ITypeBinding type = node.resolveTypeBinding();
+			Optional<MethodDeclaration> parent = ASTNodes.findParent(node, MethodDeclaration.class);
+			if (isCollection(type) && returnedValueUsed(node)
+					&& type.getTypeArguments().length > 0
+					&& binaryName.equals(type.getTypeArguments()[0].getBinaryName())) 
+				collectionCreations.put(parent.get(), node);
+			return true;
+		}
+		
 	}
 
 	/**
 	 * @return true if the type is a collection.
 	 */
-	public boolean isCollectionOfClass(ITypeBinding type) {
+	public boolean isCollection(ITypeBinding type) {
 		LinkedList<ITypeBinding> interfaces = new LinkedList<ITypeBinding>();
 		Collections.addAll(interfaces, type.getInterfaces());
 		while (!interfaces.isEmpty()) {
@@ -246,7 +279,7 @@ public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, Ins
 		IMethodBinding[] superMethodDecl = superclass.getDeclaredMethods();
 		IMethodBinding[] methodDecl = subclass.getDeclaredMethods();
 		for (IMethodBinding md : methodDecl) {
-			// Every method declaration name must be a supported Future public method
+			// Every method declaration name must be a supported public method
 			if (classInfo.getPublicMethods().contains(md.getName()) &&
 					!classInfo.getUnsupportedMethods().contains(md.getName())) {
 				// There must be at least one method in the superclass with the same name and

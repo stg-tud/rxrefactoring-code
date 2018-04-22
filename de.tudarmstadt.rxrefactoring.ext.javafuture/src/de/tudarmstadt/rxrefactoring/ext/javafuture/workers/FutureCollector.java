@@ -29,6 +29,7 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.RefactoringOptions;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.InstantiationUseWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfos;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureCollectionVisitor2;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureVisitor;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureVisitor2;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureVisitor3;
@@ -63,14 +64,15 @@ public class FutureCollector implements IWorker<InstantiationUseWorker, FutureCo
 			// Collect the data
 			if (options.contains(RefactoringOptions.FUTURE)) {
 				FutureVisitor3 discoveringVisitor = new FutureVisitor3(ClassInfos.Future, input);
-				// FutureCollectionVisitor collectionDiscoveringVisitor = new
-				// FutureCollectionVisitor(ClassInfos.Future.getBinaryName());
+				FutureCollectionVisitor2 collectionDiscoveringVisitor = new FutureCollectionVisitor2(ClassInfos.Future.getBinaryName(), input);
 
 				unit.accept(discoveringVisitor);
-				// cu.accept(collectionDiscoveringVisitor);
 
 				add("future", unit, discoveringVisitor);
-				// add("collection", unit, collectionDiscoveringVisitor);
+				
+				//TODO remove for now
+				unit.accept(collectionDiscoveringVisitor);
+				add("collection", unit, collectionDiscoveringVisitor);
 			}
 
 			if (options.contains(RefactoringOptions.FUTURETASK)) {
