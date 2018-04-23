@@ -66,27 +66,42 @@ public final class Statements {
 	}
 	
 	
-	public static void addStatementBefore(@NonNull IRewriteCompilationUnit unit, @NonNull Statement newStatement, @NonNull Statement referenceStatement) {				
-		Optional<Block> parentBlock = ASTNodes.findParent(referenceStatement, Block.class);
 		
-		if (!parentBlock.isPresent()) {
-			throw new IllegalArgumentException("referenceStatement not in a block");
+	
+	public static void addStatementAfter(@NonNull IRewriteCompilationUnit unit,
+			@NonNull Statement newStatement, @NonNull Statement referenceStatement) {
+		synchronized (unit) {
+			
+			ASTNode parent = referenceStatement.getParent();
+			
+			if (parent == null || !(parent instanceof Block)) {
+				throw new IllegalArgumentException("the reference statement is not inside a block");
+			}
+			
+			Block block = (Block) parent;
+			
+			ListRewrite rewrite = unit.getListRewrite(block, Block.STATEMENTS_PROPERTY);
+			rewrite.insertAfter(newStatement, referenceStatement, null);			
+			
 		}
-				
-		ListRewrite statementsBlock = unit.getListRewrite(parentBlock.get(), Block.STATEMENTS_PROPERTY);
-		statementsBlock.insertBefore(newStatement, referenceStatement, null);					
 	}
 	
-	
-	public static void addStatementAfter(@NonNull IRewriteCompilationUnit unit, @NonNull Statement newStatement, @NonNull Statement referenceStatement) {		
-		Optional<Block> parentBlock = ASTNodes.findParent(referenceStatement, Block.class);
-		
-		if (!parentBlock.isPresent()) {
-			throw new IllegalArgumentException("referenceStatement not in a block");
+	public static void addStatementBefore(@NonNull IRewriteCompilationUnit unit,
+			@NonNull Statement newStatement, @NonNull Statement referenceStatement) {
+		synchronized (unit) {
+			
+			ASTNode parent = referenceStatement.getParent();
+			
+			if (parent == null || !(parent instanceof Block)) {
+				throw new IllegalArgumentException("the reference statement is not inside a block");
+			}
+			
+			Block block = (Block) parent;
+			
+			ListRewrite rewrite = unit.getListRewrite(block, Block.STATEMENTS_PROPERTY);
+			rewrite.insertBefore(newStatement, referenceStatement, null);			
+			
 		}
-				
-		ListRewrite statementsBlock = unit.getListRewrite(parentBlock.get(), Block.STATEMENTS_PROPERTY);
-		statementsBlock.insertAfter(newStatement, referenceStatement, null);
 	}
 	
 	

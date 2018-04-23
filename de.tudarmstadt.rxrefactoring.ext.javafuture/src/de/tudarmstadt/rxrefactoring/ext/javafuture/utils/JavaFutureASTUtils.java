@@ -5,7 +5,9 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ArrayAccess;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 
@@ -116,5 +118,9 @@ public class JavaFutureASTUtils {
 	public static boolean isMethodParameter(SingleVariableDeclaration singleVarDecl) {
 		return singleVarDecl.getParent().getNodeType() == ASTNode.METHOD_DECLARATION;
 	}
+	
+	
+	
+
 
 }

@@ -100,7 +100,7 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 	//TODO
 	@Override
 	public boolean visit(FieldDeclaration node) {
-		if (Types.isExactTypeOf(node.getType().resolveBinding(), classBinaryName)) {
+		if (Types.isExactTypeOf(node.getType().resolveBinding().getErasure(), classBinaryName)) {
 			fieldDeclarations.add(node);
 		}
 
@@ -109,6 +109,10 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 
 	@Override
 	public boolean visit(VariableDeclarationStatement node) {
+		if (Types.isExactTypeOf(node.getType().resolveBinding().getErasure(), classBinaryName)) {
+			System.out.println("test");
+		}
+		
 		VariableDeclarationFragment fragment = (VariableDeclarationFragment) node.fragments().get(0);
 		if (refactorName(fragment.getName())) {
 			Expression expr = fragment.getInitializer();

@@ -31,11 +31,26 @@ public final class Types {
 	 * or if any argument is {@code null}.
 	 */
 	public static boolean isExactTypeOf(ITypeBinding type, String... typeBinaryNames) {
+		return isExactTypeOf(type, true, typeBinaryNames);
+	}
+	
+	/**
+	 * Checks whether the given type binding adheres to any of the given
+	 * binary names, e.g., {@code java.lang.String}.
+	 * 
+	 * @param type the type to check.
+	 * @param considerErasure true, if the erased type should be checked (i.e. type without parameters).
+	 * @param typeBinaryNames the binary names to check against.
+	 * 
+	 * @return false, if the type does not adhere to any of the given binary names
+	 * or if any argument is {@code null}.
+	 */
+	public static boolean isExactTypeOf(ITypeBinding type, boolean considerErasure, String... typeBinaryNames) {
 		if (type == null || typeBinaryNames == null) {
 			return false;
 		}
 				
-		String binaryName = type.getQualifiedName();		
+		String binaryName = considerErasure ? type.getErasure().getQualifiedName() : type.getQualifiedName();		
 		return Arrays.stream(typeBinaryNames).anyMatch(s -> Objects.equals(binaryName, s));		
 	}
 	

@@ -29,24 +29,24 @@ public interface NodeSupplier<NodeType extends ASTNode> {
 	 * Supplies a node for the given AST.
 	 */
 	@NonNull
-	NodeType apply(@NonNull IRewriteCompilationUnit unit);
+	NodeType apply(@NonNull AST unit);
 
 	@SuppressWarnings("null")
 	default <Y extends ASTNode> de.tudarmstadt.rxrefactoring.core.NodeSupplier<Y> map(
-			@NonNull BiFunction<IRewriteCompilationUnit, NodeType, Y> f) {
+			@NonNull BiFunction<AST, NodeType, Y> f) {
 		return ast -> f.apply(ast, apply(ast));
 	}
 
 	@SuppressWarnings("null")
-	static @NonNull NodeSupplier<Type> OBJECT_TYPE = unit -> unit.getAST()
-			.newSimpleType(unit.getAST().newSimpleName("Object"));
+	static @NonNull NodeSupplier<Type> OBJECT_TYPE = ast -> ast
+			.newSimpleType(ast.newSimpleName("Object"));
 
 	@SuppressWarnings("null")
-	static @NonNull NodeSupplier<Type> VOID_TYPE = unit -> unit.getAST()
-			.newSimpleType(unit.getAST().newSimpleName("Void"));
+	static @NonNull NodeSupplier<Type> VOID_TYPE = ast -> ast
+			.newSimpleType(ast.newSimpleName("Void"));
 
 	@SuppressWarnings("null")
-	static @NonNull NodeSupplier<Type> PRIMITIVE_VOID_TYPE = unit -> unit.getAST().newPrimitiveType(PrimitiveType.VOID);
+	static @NonNull NodeSupplier<Type> PRIMITIVE_VOID_TYPE = ast -> ast.newPrimitiveType(PrimitiveType.VOID);
 
 	/**
 	 * Creates a supplier that generates types {@code name<supplier>}.
@@ -61,14 +61,14 @@ public interface NodeSupplier<NodeType extends ASTNode> {
 	@SuppressWarnings({ "null", "unchecked" })
 	static @NonNull NodeSupplier<ParameterizedType> parameterizedType(@NonNull NodeSupplier<? extends Type> base,
 			@NonNull NodeSupplier<? extends Type>... parameters) {
-		return unit -> {
-			AST ast = unit.getAST();
+		return ast -> {
+			
 
-			ParameterizedType parameterizedType = ast.newParameterizedType(base.apply(unit));
+			ParameterizedType parameterizedType = ast.newParameterizedType(base.apply(ast));
 
 			for (@NonNull
 			NodeSupplier<?> parameter : parameters) {
-				parameterizedType.typeArguments().add(parameter.apply(unit));
+				parameterizedType.typeArguments().add(parameter.apply(ast));
 			}
 
 			return parameterizedType;
@@ -84,12 +84,12 @@ public interface NodeSupplier<NodeType extends ASTNode> {
 	 */
 	@SuppressWarnings("null")
 	static @NonNull NodeSupplier<SimpleName> simpleName(@NonNull String identifier) {
-		return unit -> unit.getAST().newSimpleName(identifier);
+		return ast -> ast.newSimpleName(identifier);
 	}
 
 	@SuppressWarnings("null")
 	static @NonNull NodeSupplier<SimpleType> simpleType(@NonNull String identifier) {
-		return unit -> unit.getAST().newSimpleType(unit.getAST().newSimpleName(identifier));
+		return ast -> ast.newSimpleType(ast.newSimpleName(identifier));
 	}
 
 }
