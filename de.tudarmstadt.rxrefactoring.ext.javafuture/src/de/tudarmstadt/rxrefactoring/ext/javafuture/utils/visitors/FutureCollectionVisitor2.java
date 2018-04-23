@@ -20,6 +20,7 @@ import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ReturnStatement;
@@ -55,7 +56,7 @@ public class FutureCollectionVisitor2 extends ASTVisitor implements VisitorNodes
 	Multimap<ASTNode, ASTNode> collectionInstantiations;
 	Multimap<ASTNode, MethodInvocation> collectionGetters;
 	Multiset<ASTNode> toRefactorCollections;
-	public Multimap<String, MethodDeclaration> collectionNames;
+	Multiset<IVariableBinding> collectionBindings;
 	
 	private final List<TypeDeclaration> typeDeclarations;
 	private final List<FieldDeclaration> fieldDeclarations;
@@ -97,7 +98,7 @@ public class FutureCollectionVisitor2 extends ASTVisitor implements VisitorNodes
 		isMethodPure = new HashMap<>();
 		
 		instantiationUses = input.instantiationUses;
-		collectionNames = input.collectionNames;
+		collectionBindings = input.collectionBindings;
 		collectionInstantiations = input.collectionInstantiations;
 		collectionGetters = input.collectionGetters;
 		
@@ -125,7 +126,7 @@ public class FutureCollectionVisitor2 extends ASTVisitor implements VisitorNodes
 		Object fragment = node.fragments().get(0);
 		if (fragment instanceof VariableDeclarationFragment) {
 			VariableDeclarationFragment variableDecl = (VariableDeclarationFragment)fragment;
-			if (refactorName(variableDecl.getName())) {
+			if (refactorVariable(variableDecl.getName())) {
 				fieldDeclarations.add(node);
 			}
 		}
@@ -191,7 +192,7 @@ public class FutureCollectionVisitor2 extends ASTVisitor implements VisitorNodes
 	@Override
 	public boolean visit(SimpleName simpleName) {
 		
-		if (refactorName(simpleName)) {
+		if (refactorVariable(simpleName)) {
 			addSimpleName(simpleName);
 		}
 		return true;
@@ -314,23 +315,16 @@ public class FutureCollectionVisitor2 extends ASTVisitor implements VisitorNodes
 		return true;
 	}
 	
-	private boolean refactorName(SimpleName simpleName) {
-		if (collectionNames.keySet().contains(simpleName.toString())) {
-			Optional<MethodDeclaration> methodDecl= ASTNodes.findParent(simpleName, MethodDeclaration.class); 
-			if (methodDecl.isPresent()) {
-				if (collectionNames.get(simpleName.toString()).contains(methodDecl.get()))
-					return true;
-			} else {
-				// TODO error if the supported instance is a local variable 
-				// with the same identifier, see if it can be changed
-				Optional<FieldDeclaration> fieldDecl= ASTNodes.findParent(simpleName, FieldDeclaration.class);
-				if (fieldDecl.isPresent()) {
-					for (MethodDeclaration md : collectionNames.get(simpleName.toString())) {
-						if (ASTNodes.findParent(simpleName, TypeDeclaration.class).get() ==
-							ASTNodes.findParent(fieldDecl.get(), TypeDeclaration.class).get())
-							return true;
-					}
-				}
+	/**
+	 * Determines whether a SimpleName should be refactored based on the whether it
+	 * is binded to a Collection that should be refactored.
+	 */
+	private boolean refactorVariable(SimpleName simpleName){
+		if (simpleName!=null) {
+			IBinding binding = simpleName.resolveBinding();
+			if (binding instanceof IVariableBinding) {
+				if (collectionBindings.contains((IVariableBinding) binding))
+					return true;	
 			}
 		}
 		return false;

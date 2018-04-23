@@ -10,7 +10,9 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
@@ -40,9 +42,9 @@ public class InstantiationUseWorker implements IWorker<SubclassInstantiationColl
 	// Future subclass instantiations to the latter instance uses.
 	public Multimap<ASTNode, Use> instantiationUses = HashMultimap.create();
 	
-	// Maps the names attributed to instance creations for which the refactoring
-	// is supported to the MethodDeclaration where they are declared.
-	public Multimap<String, MethodDeclaration> instantiationNames = HashMultimap.create();
+	public Multiset<IVariableBinding> bindings = HashMultiset.create();
+	
+	public Multiset<IVariableBinding> collectionBindings = HashMultiset.create();
 	
 	// Maps the names attributed to collection creations for which the refactoring
 	// is supported to the MethodDeclaration where they are declared.
@@ -166,17 +168,19 @@ public class InstantiationUseWorker implements IWorker<SubclassInstantiationColl
 		// Collect identifiers of supported instances
 		instantiationUses.forEach((expr, use) -> {
 			if (use.getName()!=null) {
-				Optional<MethodDeclaration> methodDecl= ASTNodes.findParent(expr, MethodDeclaration.class);
-				if (methodDecl.isPresent())
-					instantiationNames.put(use.getName().toString(), methodDecl.get());
+				IBinding binding = use.getName().resolveBinding();
+				if (binding instanceof IVariableBinding) {
+					bindings.add((IVariableBinding) binding);
+				}
 			}
 		});
 		
 		collectionCreationsToUses.forEach((expr, use) -> {
 			if (use.getName()!=null) {
-				Optional<MethodDeclaration> methodDecl= ASTNodes.findParent(expr, MethodDeclaration.class);
-				if (methodDecl.isPresent())
-					collectionNames.put(use.getName().toString(), methodDecl.get());
+				IBinding binding = use.getName().resolveBinding();
+				if (binding instanceof IVariableBinding) {
+					collectionBindings.add((IVariableBinding) binding);
+				}
 			}
 		});
 				
