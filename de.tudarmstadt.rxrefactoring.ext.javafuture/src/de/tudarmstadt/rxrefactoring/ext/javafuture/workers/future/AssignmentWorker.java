@@ -53,7 +53,7 @@ public class AssignmentWorker extends AbstractFutureWorker<Assignment> {
 		if (visitor.isExternalMethod().orElse(false)) {
 			// move the initializer expression inside an "Observable.from(rightHand)"
 
-			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Flowable", "fromFuture", rightHand);
+			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Observable", "fromFuture", rightHand);
 			summary.addCorrect("futureCreation");
 		}
 	}

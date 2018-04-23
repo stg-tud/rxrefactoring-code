@@ -11,7 +11,7 @@ public abstract class AbstractFutureWorker<NodeType extends ASTNode> extends Abs
 	}
 
 	protected void addObservableImport(IRewriteCompilationUnit unit) {
-		unit.addImport("io.reactivex.Flowable");
+		unit.addImport("io.reactivex.Observable");
 	}
 
 	protected void addFutureObservableImport(IRewriteCompilationUnit unit) {

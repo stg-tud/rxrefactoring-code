@@ -37,6 +37,6 @@ public class FieldDeclarationWorker extends AbstractFutureWorker<FieldDeclaratio
 			fieldType = ((ParameterizedType) fieldType).getType();
 		}
 
-		JavaFutureASTUtils.replaceType(unit, fieldType, "Flowable");
+		JavaFutureASTUtils.replaceType(unit, fieldType, "Observable");
 	}
 }

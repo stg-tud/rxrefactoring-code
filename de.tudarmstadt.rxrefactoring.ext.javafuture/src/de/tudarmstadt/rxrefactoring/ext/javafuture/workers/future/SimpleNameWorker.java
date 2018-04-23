@@ -34,6 +34,6 @@ public class SimpleNameWorker extends AbstractFutureWorker<SimpleName> {
 
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, SimpleName simpleName) {
-		unit.replace(simpleName, unit.getAST().newSimpleName(simpleName.getIdentifier() + "Flowable"));
+		unit.replace(simpleName, unit.getAST().newSimpleName(simpleName.getIdentifier() + "Observable"));
 	}
 }

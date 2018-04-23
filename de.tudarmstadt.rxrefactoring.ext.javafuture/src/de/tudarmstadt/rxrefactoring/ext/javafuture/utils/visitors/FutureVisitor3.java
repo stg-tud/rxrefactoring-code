@@ -94,7 +94,10 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 
 	@Override
 	public boolean visit(VariableDeclarationStatement node) {
+		
 		VariableDeclarationFragment fragment = (VariableDeclarationFragment) node.fragments().get(0);
+	
+		
 		Expression expr = fragment.getInitializer();
 		if (refactorName(fragment.getName())) {
 			if (expr==null)
@@ -120,6 +123,7 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 
 	@Override
 	public boolean visit(SimpleName simpleName) {
+		
 		if (refactorName(simpleName)) 
 				simpleNames.add(simpleName);
 		return true;
