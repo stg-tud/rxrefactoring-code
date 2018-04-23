@@ -53,6 +53,7 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 	private final List<SingleVariableDeclaration> singleVarDeclarations;
 	private final List<MethodDeclaration> methodDeclarations;
 	private final List<MethodInvocation> methodInvocations;
+	private final List<ReturnStatement> returnStatements;
 
 	public FutureVisitor3(ClassInfo classInfo, InstantiationUseWorker input) {
 		this.classInfo = classInfo;
@@ -67,6 +68,7 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 		classInstanceCreations = new ArrayList<>();
 		singleVarDeclarations = new ArrayList<>();
 		methodDeclarations = new ArrayList<>();
+		returnStatements = new ArrayList<>();
 		
 		instantiationUses = input.instantiationUses;
 		bindings = input.bindings;
@@ -163,6 +165,15 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 		}
 		return true;
 	}
+	
+	@Override
+	public boolean visit(ReturnStatement node) {
+		Expression expr = node.getExpression();
+		if (instantiations.contains(expr)){
+			returnStatements.add(node);
+		}
+		return true;
+	}
 
 	//TODO have not found any case where this takes place
 	@Override
@@ -242,7 +253,7 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 
 	@Override
 	public List<ReturnStatement> getReturnStatements() {
-		return new ArrayList<>();
+		return returnStatements;
 	}
 
 	@Override
