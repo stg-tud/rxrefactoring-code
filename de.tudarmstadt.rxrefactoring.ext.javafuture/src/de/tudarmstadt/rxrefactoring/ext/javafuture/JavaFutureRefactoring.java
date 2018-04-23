@@ -22,9 +22,6 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfos;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.InstantiationCollector;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.SubclassInstantiationCollector;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.FutureCollector;
-import de.tudarmstadt.rxrefactoring.ext.javafuture.workers2.FindCreationsWorker;
-import de.tudarmstadt.rxrefactoring.ext.javafuture.workers2.phase1.RefactorInfo;
-import de.tudarmstadt.rxrefactoring.ext.javafuture.workers2.phase1.RefactorableWorker;
 
 /**
  * Future extension
