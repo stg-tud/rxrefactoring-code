@@ -25,6 +25,8 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 
@@ -101,13 +103,27 @@ public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 				Assignment assignment = (Assignment) astNode;
 				Expression rightSide = assignment.getRightHandSide();
 				if (assignment.getLeftHandSide() instanceof SimpleName) {
+					// The new name is added to the name field
 					SimpleName name = (SimpleName) assignment.getLeftHandSide();
 					IBinding binding = name.resolveBinding();
 					if (binding instanceof IVariableBinding) {
 						if (((IVariableBinding)binding).isField())
 							usesByExpression.put(rightSide, new Use(Kind.FIELD_ASSIGN, name, assignment));
+						else
+							usesByExpression.put(rightSide, new Use(Kind.ASSIGN, name, assignment));
 					}
 				}
+			} else if (astNode instanceof VariableDeclarationStatement){
+					VariableDeclarationStatement declarationStatement = (VariableDeclarationStatement) astNode;
+					if (declarationStatement.fragments().get(0) instanceof VariableDeclarationFragment) {
+						VariableDeclarationFragment fragment = (VariableDeclarationFragment) declarationStatement.fragments().get(0);
+						Expression expression = fragment.getInitializer();
+						if (expression != null) {
+							// The new name is added to the name field
+							Name name = fragment.getName();
+							usesByExpression.put(expression, new Use(Kind.VARIABLE_DECL, name, declarationStatement));
+						}
+					}
 			} else {
 				return input;
 			}
