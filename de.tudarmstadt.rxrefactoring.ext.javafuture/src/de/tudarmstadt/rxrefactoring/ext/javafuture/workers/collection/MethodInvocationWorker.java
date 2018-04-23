@@ -31,18 +31,15 @@ public class MethodInvocationWorker extends AbstractFutureWorker<MethodInvocatio
 
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, MethodInvocation methodInvocation) {
-		String methodName = methodInvocation.getName().getIdentifier();
 
-		// list.add(future) -> listObservables.add(Observable.from(future))
-		if (methodName.equals("add")) {
-			Expression expression = (Expression) methodInvocation.arguments().get(0);
+		Expression expression = methodInvocation.getExpression();
 
-			if (collector.isPure(unit, methodInvocation)) {
-				JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Observable", "from", expression);
-			} else {
-				JavaFutureASTUtils.moveInsideMethodInvocation(unit, "FutureObservable", "create", expression);
-			}
-			summary.addCorrect("futureCreation");
+		if (collector.isPure(unit, methodInvocation)) {
+			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Observable", "from", expression);
+		} else {
+			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "FutureObservable", "create", expression);
 		}
+		summary.addCorrect("futureCreation");
 	}
+	
 }

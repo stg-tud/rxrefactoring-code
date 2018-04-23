@@ -42,10 +42,9 @@ public class MethodInvocationWorker extends AbstractFutureWorker<MethodInvocatio
 
 		switch (methodName) {
 		case "get":
-
 			Expression expression = methodInvocation.getExpression();
 			String newName = "";
-
+			
 			if (expression instanceof SimpleName) {
 				SimpleName simpleName = (SimpleName) expression;
 				newName = simpleName.getIdentifier() + "Flowable";
@@ -55,10 +54,12 @@ public class MethodInvocationWorker extends AbstractFutureWorker<MethodInvocatio
 				SimpleName simpleName = (SimpleName) arrayAccess.getArray();
 				newName = simpleName.getIdentifier() + "Flowables";
 			}
-
+	
 			if (!newName.isEmpty())
 				JavaFutureASTUtils.replaceWithBlockingGet(unit, methodInvocation, newName);
-
+			else if (expression instanceof MethodInvocation) {
+				JavaFutureASTUtils.replaceWithBlockingGet(unit, methodInvocation);
+			}
 			break;
 
 		default:

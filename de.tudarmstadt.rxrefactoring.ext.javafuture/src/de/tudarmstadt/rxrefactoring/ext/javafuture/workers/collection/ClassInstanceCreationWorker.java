@@ -36,20 +36,20 @@ public class ClassInstanceCreationWorker extends AbstractFutureWorker<ClassInsta
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, ClassInstanceCreation classInstanceCreation) {
 		Type type = classInstanceCreation.getType();
-		if (Types.isTypeOf(type.resolveBinding(), CollectionInfo.getBinaryNames())) {
-			if (type instanceof ParameterizedType) {
-				ParameterizedType pType = (ParameterizedType) type;
+			
+		if (type instanceof ParameterizedType) {
+				
+			ParameterizedType pType = (ParameterizedType) type;
 
-				if (pType.typeArguments().size() > 0) {
+			if (pType.typeArguments().size() > 0) {
 
-					Type typeArg = (Type) pType.typeArguments().get(0);
-					typeArg = ((ParameterizedType) typeArg).getType();
-
-					if (collector.isPure(unit, classInstanceCreation)) {
-						JavaFutureASTUtils.replaceType(unit, typeArg, "Observable");
-					} else {
-						JavaFutureASTUtils.replaceType(unit, typeArg, "FutureObservable");
-					}
+				Type typeArg = (Type) pType.typeArguments().get(0);
+				typeArg = ((ParameterizedType) typeArg).getType();
+				
+				if (collector.isPure(unit, classInstanceCreation)) {
+					JavaFutureASTUtils.replaceType(unit, typeArg, "Observable");
+				} else {
+					JavaFutureASTUtils.replaceType(unit, typeArg, "FutureObservable");
 				}
 			}
 		}

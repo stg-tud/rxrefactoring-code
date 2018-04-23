@@ -16,7 +16,6 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
@@ -24,12 +23,13 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
-import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.InstantiationUseWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfo;
@@ -39,8 +39,11 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 	private final ClassInfo classInfo;
 	private final String classBinaryName;
 	
-	Multiset<ASTNode> toRefactorInstantiations;
+	Multimap<ASTNode, Use> instantiationUses;
 	Multimap<String, MethodDeclaration> instantiationNames;
+	Multimap<ASTNode, ASTNode> collectionInstantiations;
+	Multimap<ASTNode, MethodInvocation> collectionGetters;
+	Multiset<ASTNode> instantiations;
 
 	private final List<TypeDeclaration> typeDeclarations;
 	private final List<FieldDeclaration> fieldDeclarations;
@@ -66,8 +69,104 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 		singleVarDeclarations = new ArrayList<>();
 		methodDeclarations = new ArrayList<>();
 		
-		toRefactorInstantiations = input.toRefactorInstantiations;
+		instantiationUses = input.instantiationUses;
 		instantiationNames = input.instantiationNames;
+		collectionInstantiations = input.collectionInstantiations;
+		collectionGetters = input.collectionGetters;
+		
+		instantiations = HashMultiset.create();
+		instantiations.addAll(instantiationUses.keySet());
+		instantiations.addAll(collectionInstantiations.keySet());
+		instantiations.addAll(collectionGetters.keySet());		
+	}
+
+	@Override
+	public boolean visit(FieldDeclaration node) {
+		Object fragment = node.fragments().get(0);
+		if (fragment instanceof VariableDeclarationFragment) {
+			VariableDeclarationFragment variableDecl = (VariableDeclarationFragment)fragment;
+			if (refactorName(variableDecl.getName())) {
+				fieldDeclarations.add(node);
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public boolean visit(VariableDeclarationStatement node) {
+		VariableDeclarationFragment fragment = (VariableDeclarationFragment) node.fragments().get(0);
+		Expression expr = fragment.getInitializer();
+		if (refactorName(fragment.getName())) {
+			if (expr==null)
+				varDeclStatements.add(node);
+			else if (instantiationUses.containsKey(expr) && 
+					!collectionGetters.containsValue(expr))
+				varDeclStatements.add(node);
+		}
+		return true;
+	}
+
+	@Override
+	public boolean visit(Assignment node) {
+		Expression leftHandSide = node.getLeftHandSide();
+		Expression rightHandSide = node.getRightHandSide();
+		if (leftHandSide instanceof SimpleName && refactorName((SimpleName)leftHandSide)){
+			if (instantiationUses.containsKey(rightHandSide) && 
+					!collectionGetters.containsValue(rightHandSide))
+				assignments.add(node);
+		}
+		return true;
+	}
+
+	@Override
+	public boolean visit(SimpleName simpleName) {
+		if (refactorName(simpleName)) 
+				simpleNames.add(simpleName);
+		return true;
+	}
+
+	@Override
+	public boolean visit(ClassInstanceCreation node) {
+		if (instantiations.contains(node))
+			classInstanceCreations.add(node);
+		return true;
+	}
+
+	//TODO what happens if an instance created through this method receives a 
+	// method call of an unsupported method
+	@Override
+	public boolean visit(MethodDeclaration node) {
+		IMethodBinding binding = node.resolveBinding();
+
+		if (binding != null) {
+			ITypeBinding returnType = binding.getReturnType();
+
+			if (ASTUtils.isClassOf(returnType, classBinaryName)) {
+				methodDeclarations.add(node);
+			}
+		}
+		return true;
+	}
+	
+	@Override
+	public boolean visit(MethodInvocation node) {
+		Expression expr = node.getExpression();
+		if (instantiations.contains(expr) ||
+			(expr instanceof SimpleName && refactorName((SimpleName) expr))){
+			methodInvocations.add(node);
+		}
+		return true;
+	}
+
+	//TODO have not found any case where this takes place
+	@Override
+	public boolean visit(SingleVariableDeclaration node) {
+		ITypeBinding type = node.getType().resolveBinding();
+		if (ASTUtils.isClassOf(type, classBinaryName)) {
+			
+			singleVarDeclarations.add(node);
+		}
+		return true;
 	}
 	
 	/**
@@ -96,102 +195,7 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 		}
 		return false;
 	}
-
-	//TODO
-	@Override
-	public boolean visit(FieldDeclaration node) {
-		if (Types.isExactTypeOf(node.getType().resolveBinding().getErasure(), classBinaryName)) {
-			fieldDeclarations.add(node);
-		}
-
-		return true;
-	}
-
-	@Override
-	public boolean visit(VariableDeclarationStatement node) {
-		if (Types.isExactTypeOf(node.getType().resolveBinding().getErasure(), classBinaryName)) {
-			System.out.println("test");
-		}
-		
-		VariableDeclarationFragment fragment = (VariableDeclarationFragment) node.fragments().get(0);
-		if (refactorName(fragment.getName())) {
-			Expression expr = fragment.getInitializer();
-			if (toRefactorInstantiations.contains(expr) ||
-					(expr instanceof SimpleName && refactorName((SimpleName) expr))) {
-				varDeclStatements.add(node);
-			}
-		}
-		return true;
-	}
-
-	@Override
-	public boolean visit(Assignment node) {
-		Expression leftHandSide = node.getLeftHandSide();
-		Expression rightHandSide = node.getRightHandSide();
-		if (leftHandSide instanceof SimpleName && refactorName((SimpleName)leftHandSide)){
-			if (toRefactorInstantiations.contains(rightHandSide) ||
-					rightHandSide instanceof SimpleName && refactorName((SimpleName)leftHandSide)) {
-				assignments.add(node);
-			}
-		}
-		return true;
-	}
-
-	@Override
-	public boolean visit(SimpleName simpleName) {
-		if (refactorName(simpleName)) 
-				simpleNames.add(simpleName);
-		return true;
-	}
-
-	@Override
-	public boolean visit(ClassInstanceCreation node) {
-		if (toRefactorInstantiations.contains(node)){
-			classInstanceCreations.add(node);
-		}
-
-		return true;
-	}
-
-	//TODO what happens if an instance created through this method receives a 
-	// method call of an unsupported method
-	@Override
-	public boolean visit(MethodDeclaration node) {
-		IMethodBinding binding = node.resolveBinding();
-
-		if (binding != null) {
-			ITypeBinding returnType = binding.getReturnType();
-
-			if (ASTUtils.isClassOf(returnType, classBinaryName)) {
-				System.out.println("MethodDeclaration: "+node);
-				methodDeclarations.add(node);
-			}
-		}
-
-		return true;
-	}
-
-	@Override
-	public boolean visit(MethodInvocation node) {
-		Expression expr = node.getExpression();
-		if (toRefactorInstantiations.contains(expr) || 
-				expr instanceof SimpleName && refactorName((SimpleName)expr)){
-			methodInvocations.add(node);
-		}
-		return true;
-	}
-
-	//TODO have not found any case where this takes place
-	@Override
-	public boolean visit(SingleVariableDeclaration node) {
-		ITypeBinding type = node.getType().resolveBinding();
-		if (ASTUtils.isClassOf(type, classBinaryName)) {
-			
-			singleVarDeclarations.add(node);
-		}
-		return true;
-	}
-
+	
 	@Override
 	public List<TypeDeclaration> getTypeDeclarations() {
 		return typeDeclarations;
