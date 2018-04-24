@@ -3,6 +3,7 @@ package de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -12,7 +13,6 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.IBinding;
-import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -24,9 +24,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
-import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multiset;
 
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
@@ -35,14 +33,13 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfo;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.VisitorNodes;
 
 public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
-	private final ClassInfo classInfo;
 	private final String classBinaryName;
 	
 	Multimap<ASTNode, Use> instantiationUses;
-	Multiset<IVariableBinding> bindings;
+	Set<IVariableBinding> bindings;
 	Multimap<ASTNode, ASTNode> collectionInstantiations;
 	Multimap<ASTNode, MethodInvocation> collectionGetters;
-	Multiset<ASTNode> instantiations;
+	Multimap<MethodDeclaration, ASTNode> methodDecl;
 
 	private final List<TypeDeclaration> typeDeclarations;
 	private final List<FieldDeclaration> fieldDeclarations;
@@ -56,7 +53,6 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 	private final List<ReturnStatement> returnStatements;
 
 	public FutureVisitor3(ClassInfo classInfo, InstantiationUseWorker input) {
-		this.classInfo = classInfo;
 		this.classBinaryName = classInfo.getBinaryName();
 
 		typeDeclarations = new ArrayList<>();
@@ -74,11 +70,7 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 		bindings = input.bindings;
 		collectionInstantiations = input.collectionInstantiations;
 		collectionGetters = input.collectionGetters;
-		
-		instantiations = HashMultiset.create();
-		instantiations.addAll(instantiationUses.keySet());
-		instantiations.addAll(collectionInstantiations.keySet());
-		instantiations.addAll(collectionGetters.keySet());		
+		methodDecl = input.methodDeclarations;
 	}
 
 	@Override
@@ -135,31 +127,22 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 
 	@Override
 	public boolean visit(ClassInstanceCreation node) {
-		if (instantiations.contains(node))
+		if (instantiationUses.containsKey(node))
 			classInstanceCreations.add(node);
 		return true;
 	}
 
-	//TODO what happens if an instance created through this method receives a 
-	// method call of an unsupported method
 	@Override
 	public boolean visit(MethodDeclaration node) {
-		IMethodBinding binding = node.resolveBinding();
-
-		if (binding != null) {
-			ITypeBinding returnType = binding.getReturnType();
-
-			if (ASTUtils.isClassOf(returnType, classBinaryName)) {
-				methodDeclarations.add(node);
-			}
-		}
+		if (methodDecl.containsKey(node))
+			methodDeclarations.add(node);
 		return true;
 	}
 	
 	@Override
 	public boolean visit(MethodInvocation node) {
 		Expression expr = node.getExpression();
-		if (instantiations.contains(expr) ||
+		if (instantiationUses.containsKey(expr) ||
 			(expr instanceof SimpleName && refactorVariable((SimpleName) expr))){
 			methodInvocations.add(node);
 		}
@@ -169,7 +152,7 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 	@Override
 	public boolean visit(ReturnStatement node) {
 		Expression expr = node.getExpression();
-		if (instantiations.contains(expr)){
+		if (instantiationUses.containsKey(expr)){
 			returnStatements.add(node);
 		}
 		return true;

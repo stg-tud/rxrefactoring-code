@@ -160,7 +160,12 @@ public class FutureCollector implements IWorker<InstantiationUseWorker, FutureCo
 		for (Map.Entry<IRewriteCompilationUnit, List<MethodDeclaration>> methodDeclEntry : getMethodDeclarationsMap(
 				group).entrySet()) {
 			for (MethodDeclaration methodDeclaration : methodDeclEntry.getValue()) {
-				if (methodBinding.equals(methodDeclaration.resolveBinding()))
+				
+				IMethodBinding decBinding = methodDeclaration.resolveBinding();
+				
+				if (methodBinding.toString().equals(decBinding.toString()) &&
+						methodBinding.getDeclaringClass().getBinaryName().equals(decBinding.getDeclaringClass().getBinaryName())
+						)
 					return true;
 			}
 		}

@@ -1,11 +1,11 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -30,13 +30,10 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
-import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multiset;
 
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
-import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.InstantiationUseWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.CollectionInfo;
@@ -55,8 +52,8 @@ public class FutureCollectionVisitor2 extends ASTVisitor implements VisitorNodes
 	Multimap<ASTNode, Use> instantiationUses;
 	Multimap<ASTNode, ASTNode> collectionInstantiations;
 	Multimap<ASTNode, MethodInvocation> collectionGetters;
-	Multiset<ASTNode> toRefactorCollections;
-	Multiset<IVariableBinding> collectionBindings;
+	Set<ASTNode> toRefactorCollections;
+	Set<IVariableBinding> collectionBindings;
 	
 	private final List<TypeDeclaration> typeDeclarations;
 	private final List<FieldDeclaration> fieldDeclarations;
@@ -102,8 +99,7 @@ public class FutureCollectionVisitor2 extends ASTVisitor implements VisitorNodes
 		collectionInstantiations = input.collectionInstantiations;
 		collectionGetters = input.collectionGetters;
 		
-		
-		toRefactorCollections = HashMultiset.create();
+		toRefactorCollections = new HashSet<ASTNode>();
 		toRefactorCollections.addAll(collectionInstantiations.keySet());
 		toRefactorCollections.addAll(collectionGetters.keySet());
 	}

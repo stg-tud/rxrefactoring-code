@@ -102,9 +102,10 @@ public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 			} else if (astNode instanceof Assignment) {
 				Assignment assignment = (Assignment) astNode;
 				Expression rightSide = assignment.getRightHandSide();
-				if (assignment.getLeftHandSide() instanceof SimpleName) {
+				Expression leftSide = assignment.getLeftHandSide();
+				if (leftSide instanceof SimpleName) {
 					// The new name is added to the name field
-					SimpleName name = (SimpleName) assignment.getLeftHandSide();
+					SimpleName name = (SimpleName) leftSide;
 					IBinding binding = name.resolveBinding();
 					if (binding instanceof IVariableBinding) {
 						if (((IVariableBinding)binding).isField())
