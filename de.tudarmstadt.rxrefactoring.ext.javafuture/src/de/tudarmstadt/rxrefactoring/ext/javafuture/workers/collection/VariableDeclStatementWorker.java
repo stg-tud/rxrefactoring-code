@@ -3,6 +3,7 @@ package de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
@@ -34,17 +35,18 @@ public class VariableDeclStatementWorker extends AbstractFutureWorker<VariableDe
 
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, VariableDeclarationStatement varDeclStatement) {
-		Type type = varDeclStatement.getType();
-
+		Type type = varDeclStatement.getType();	
+		
 		SimpleNameVisitor v = new SimpleNameVisitor(ClassInfos.Future.getBinaryName());
 		type.accept(v);
 
-		for (SimpleName simpleName : v.getSimpleNames()) {
-			if (collector.isPure(unit, varDeclStatement)) {
-				JavaFutureASTUtils.replaceSimpleName(unit, simpleName, "Observable");
-			} else {
-				JavaFutureASTUtils.replaceSimpleName(unit, simpleName, "FutureObservable");
+		if (type instanceof ParameterizedType) {
+			ParameterizedType pType = (ParameterizedType) type;
+			Type typeArg = (Type) pType.typeArguments().get(0);
+			typeArg = ((ParameterizedType) typeArg).getType();
+			JavaFutureASTUtils.replaceType(unit, typeArg, "Observable");
+			for (SimpleName simpleName : v.getSimpleNames())
+					JavaFutureASTUtils.replaceSimpleName(unit, simpleName, "Observable");
 			}
 		}
-	}
 }

@@ -50,7 +50,7 @@ public class ReturnStatementWorker extends AbstractFutureWorker<ReturnStatement>
 
 		expression.accept(visitor);
 
-		if (visitor.isExternalMethod().orElse(false)) {
+		if (visitor.shouldRefactor().orElse(false)) {
 			// move the initializer expression inside an "Observable.from(expression)"
 
 			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Observable", "fromFuture", expression);

@@ -42,7 +42,7 @@ public class FieldDeclarationWorker extends AbstractFutureWorker<FieldDeclaratio
 			Type typeArg = (Type) pType.typeArguments().get(0);
 			typeArg = ((ParameterizedType) typeArg).getType();
 
-			JavaFutureASTUtils.replaceType(unit, typeArg, "FutureObservable");
+			JavaFutureASTUtils.replaceType(unit, typeArg, "Observable");
 		}
 	}
 }

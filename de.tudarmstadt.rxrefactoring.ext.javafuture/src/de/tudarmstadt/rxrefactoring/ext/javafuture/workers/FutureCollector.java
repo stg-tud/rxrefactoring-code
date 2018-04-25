@@ -1,6 +1,7 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.workers;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,6 +15,7 @@ import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ReturnStatement;
@@ -22,16 +24,18 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.RefactoringOptions;
-import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.InstantiationUseWorker;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.PreconditionWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfos;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureCollectionVisitor2;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureVisitor;
-import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureVisitor2;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureVisitor3;
 
 /**
@@ -39,12 +43,13 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureVisitor3
  * Author: Template<br>
  * Created: 01/18/2017
  */
-public class FutureCollector implements IWorker<InstantiationUseWorker, FutureCollector> {
+public class FutureCollector implements IWorker<PreconditionWorker, FutureCollector> {
 
 	private final Map<String, CollectorGroup> groups;
 
 	private final Map<IRewriteCompilationUnit, Map<ASTNode, MethodDeclaration>> parentMethod;
-	private final Map<IRewriteCompilationUnit, Map<MethodDeclaration, Boolean>> isMethodPure;
+	//private final Map<IRewriteCompilationUnit, Map<MethodDeclaration, Boolean>> isMethodPure;
+	public Multimap<ASTNode, MethodInvocation> collectionGetters = HashMultimap.create();
 
 	private final EnumSet<RefactoringOptions> options;
 
@@ -54,12 +59,12 @@ public class FutureCollector implements IWorker<InstantiationUseWorker, FutureCo
 		groups = new HashMap<>();
 
 		parentMethod = new HashMap<>();
-		isMethodPure = new HashMap<>();
+		//isMethodPure = new HashMap<>();
 	}
 
 	@Override
-	public FutureCollector refactor(IProjectUnits units, InstantiationUseWorker input, WorkerSummary summary) throws Exception {
-
+	public FutureCollector refactor(IProjectUnits units, PreconditionWorker input, WorkerSummary summary) throws Exception {
+		this.collectionGetters = input.collectionGetters;
 		for (IRewriteCompilationUnit unit : units) {
 			// Collect the data
 			if (options.contains(RefactoringOptions.FUTURE)) {
@@ -97,9 +102,10 @@ public class FutureCollector implements IWorker<InstantiationUseWorker, FutureCo
 
 		collectorGroup.add(cu, subclasses);
 
-		addPureInformation(cu, subclasses.getParentMethods(), subclasses.getIsMethodPures());
+		//addPureInformation(cu, subclasses.getParentMethods(), subclasses.getIsMethodPures());
 	}
 
+	/*
 	private void addPureInformation(IRewriteCompilationUnit cu, Map<ASTNode, MethodDeclaration> parentMethods,
 			Map<MethodDeclaration, Boolean> isMethodPures) {
 
@@ -119,7 +125,6 @@ public class FutureCollector implements IWorker<InstantiationUseWorker, FutureCo
 			currentMap.putAll(parentMethods);
 		}
 	}
-
 	private void addIsPureInfo(IRewriteCompilationUnit cu, Map<MethodDeclaration, Boolean> isMethodPures) {
 		if (isMethodPures == null || isMethodPures.isEmpty()) {
 			return;
@@ -143,9 +148,12 @@ public class FutureCollector implements IWorker<InstantiationUseWorker, FutureCo
 			}
 		}
 	}
+	*/
 
+	// TODO helper class is not used
 	public boolean isPure(IRewriteCompilationUnit cu, ASTNode node) {
-		return isMethodPure.get(cu).getOrDefault(getParentMethod(cu, node), false);
+		//return isMethodPure.get(cu).getOrDefault(getParentMethod(cu, node), false);
+		return true;
 	}
 
 	public MethodDeclaration getParentMethod(IRewriteCompilationUnit cu, ASTNode node) {
@@ -280,6 +288,10 @@ public class FutureCollector implements IWorker<InstantiationUseWorker, FutureCo
 		map.put("Files", getNumberOfCompilationUnits());
 
 		return map;
+	}
+
+	public boolean isGetter(MethodInvocation methodInvocation) {
+		return (collectionGetters.containsValue(methodInvocation));
 	}
 
 }
