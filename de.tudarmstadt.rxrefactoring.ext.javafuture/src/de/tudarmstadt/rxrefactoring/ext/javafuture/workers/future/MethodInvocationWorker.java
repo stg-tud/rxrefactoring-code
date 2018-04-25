@@ -9,6 +9,7 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
 
@@ -63,7 +64,7 @@ public class MethodInvocationWorker extends AbstractFutureWorker<MethodInvocatio
 			break;
 
 		default:
-			System.err.println("Method " + methodName + " not supported!");
+			Log.error(getClass(), "Method " + methodName + " not supported!");
 			break;
 		}
 	}

@@ -338,7 +338,6 @@ public class DataFlowAnalysis<Vertex extends ASTNode, Result> {
 				protected
 				void setResult(Vertex vertex, Result newResult) {
 					vertex.setProperty(propertyName, newResult);
-					System.out.println("set property in " + vertex);
 				}
 
 				@Override

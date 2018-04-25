@@ -163,9 +163,7 @@ public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 		}
 		
 		strategy.setReachingDefinitions(reaching);
-		
-		reaching.entrySet().forEach(System.out::println);
-		
+	
 		return super.apply(cfg, executionFactory);
 	}
 }

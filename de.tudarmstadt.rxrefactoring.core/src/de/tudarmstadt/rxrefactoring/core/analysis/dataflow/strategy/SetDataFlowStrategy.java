@@ -30,7 +30,6 @@ public interface SetDataFlowStrategy<Vertex, Result> extends IDataFlowStrategy<V
 	@Override
 	default @NonNull Set<Result> mergeAll(@NonNull Iterable<Set<Result>> results) {
 		Set<Result> result = Sets.newHashSet();
-		System.out.println(results);
 		results.forEach(result::addAll);		
 		return result;
 	}
