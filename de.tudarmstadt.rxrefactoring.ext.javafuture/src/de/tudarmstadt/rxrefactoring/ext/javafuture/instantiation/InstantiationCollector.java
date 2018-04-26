@@ -2,18 +2,19 @@ package de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ArrayCreation;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
@@ -42,11 +43,11 @@ public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, Ins
 	
 	// Method invocations that return binaryName, and for which the
 	// returned value is not discarded.
-	public final Multimap<MethodDeclaration, MethodInvocation> methodInvReturnClass;
+	public final Set<MethodInvocation> methodInvReturnClass;
 
 	// MethodInvocations, ClassInstanceCreations or ArrayCreations that return collections of 
 	// binaryName, and for which the returned value is not discarded.
-	public final Multimap<MethodDeclaration, ASTNode> collectionCreations;
+	public final Set<ASTNode> collectionCreations;
 
 	// Type declarations that implement binaryName directly and
 	// only implement allowed methods, if these are provided.
@@ -75,9 +76,9 @@ public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, Ins
 		this.collectSubclasses = collectSubclasses;
 		directSubclassDeclarations = HashMultimap.create();
 		indirectSubclassDeclarations = HashMultimap.create();
-		methodInvReturnClass = HashMultimap.create();
+		methodInvReturnClass = new HashSet<MethodInvocation>();
 		declaredClassBindingNames = HashMultimap.create();
-		collectionCreations = HashMultimap.create();
+		collectionCreations = new HashSet<ASTNode>();
 		binaryName = classInfo.getBinaryName();
 	}
 
@@ -85,9 +86,9 @@ public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, Ins
 		this.classInfo = classInfo;
 		directSubclassDeclarations = HashMultimap.create();
 		indirectSubclassDeclarations = HashMultimap.create();
-		methodInvReturnClass = HashMultimap.create();
+		methodInvReturnClass = new HashSet<MethodInvocation>();
 		declaredClassBindingNames = HashMultimap.create();
-		collectionCreations = HashMultimap.create();
+		collectionCreations = new HashSet<ASTNode>();
 		binaryName = classInfo.getBinaryName();
 	}
 
@@ -184,16 +185,17 @@ public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, Ins
 			if (node.resolveMethodBinding() == null)
 				return false;
 			ITypeBinding returnType = node.resolveMethodBinding().getReturnType();
-			Optional<MethodDeclaration> parent = ASTNodes.findParent(node, MethodDeclaration.class);
-			if (!parent.isPresent() || returnType == null)
+			//Optional<MethodDeclaration> parent = ASTNodes.findParent(node, MethodDeclaration.class);
+			//if (!parent.isPresent() || returnType == null)
+			if (returnType == null)
 				return true;
 			if (binaryName.equals(returnType.getBinaryName()) && returnedValueUsed(node))
-				methodInvReturnClass.put(parent.get(), node);
+				methodInvReturnClass.add(node);
 			else {
 				if (isCollection(returnType) && returnedValueUsed(node)
 						&& returnType.getTypeArguments().length > 0
 						&& binaryName.equals(returnType.getTypeArguments()[0].getBinaryName())) {
-					collectionCreations.put(parent.get(), node);
+					collectionCreations.add(node);
 				}
 			}
 			return true;
@@ -204,10 +206,10 @@ public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, Ins
 		 */
 		@Override
 		public boolean visit(ArrayCreation node) {
-			Optional<MethodDeclaration> parent = ASTNodes.findParent(node, MethodDeclaration.class);
-			if (parent.isPresent() && returnedValueUsed(node) &&
+			//Optional<MethodDeclaration> parent = ASTNodes.findParent(node, MethodDeclaration.class);
+			if (returnedValueUsed(node) &&
 					binaryName.equals(node.resolveTypeBinding().getElementType().getBinaryName())) {
-				collectionCreations.put(parent.get(), node);
+				collectionCreations.add(node);
 			}
 			return true;
 		}
@@ -221,11 +223,11 @@ public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, Ins
 			if (node.resolveTypeBinding() == null)
 				return false;
 			ITypeBinding type = node.resolveTypeBinding();
-			Optional<MethodDeclaration> parent = ASTNodes.findParent(node, MethodDeclaration.class);
+			//Optional<MethodDeclaration> parent = ASTNodes.findParent(node, MethodDeclaration.class);
 			if (isCollection(type) && returnedValueUsed(node)
 					&& type.getTypeArguments().length > 0
 					&& binaryName.equals(type.getTypeArguments()[0].getBinaryName())) 
-				collectionCreations.put(parent.get(), node);
+				collectionCreations.add(node);
 			return true;
 		}
 		
@@ -260,6 +262,8 @@ public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, Ins
 		if (ASTNodes.findParent(node.getParent(), ClassInstanceCreation.class).isPresent())
 			return true;
 		if (ASTNodes.findParent(node, Assignment.class).isPresent())
+			return true;
+		if (ASTNodes.findParent(node, FieldDeclaration.class).isPresent())
 			return true;
 		if (ASTNodes.findParent(node, VariableDeclarationStatement.class).isPresent())
 			return true;

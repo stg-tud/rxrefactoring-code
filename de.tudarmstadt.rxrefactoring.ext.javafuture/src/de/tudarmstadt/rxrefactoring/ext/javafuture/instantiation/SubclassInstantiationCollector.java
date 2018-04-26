@@ -1,8 +1,9 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation;
 
 import java.util.Map.Entry;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -10,7 +11,6 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ArrayCreation;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.ITypeBinding;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
@@ -23,7 +23,6 @@ import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
-import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 
 /**
  * Description: Collects class instantiations, method invocations and class
@@ -40,19 +39,17 @@ public class SubclassInstantiationCollector implements IWorker<InstantiationColl
 	// binaryName and java.lang.Object) are included.
 	public final Multimap<IRewriteCompilationUnit, TypeDeclaration> subclassDeclarations;
 
-	// Map MethodDeclarations to ClassInstanceCreations of classes in
-	// subclassDeclarations if the result is not discarded.
-	public final Multimap<MethodDeclaration, ClassInstanceCreation> subclassInstanceCreations;
+	// ClassInstanceCreations of classes in subclassDeclarations if the result is not discarded.
+	public final Set<ClassInstanceCreation> subclassInstanceCreations;
 
-	// Map MethodDeclarations to MethodInvocations in declaration that return
-	// instances of classes in subclassDeclarations and do not discard the 
-	// result.
-	public final Multimap<MethodDeclaration, MethodInvocation> methodInvReturnSubclass;
+	// MethodInvocations in declaration that return instances of classes 
+	// in subclassDeclarations and do not discard the result.
+	public final Set<MethodInvocation> methodInvReturnSubclass;
 
-	// Map MethodDeclarations to MethodInvocations or ClassInstanceCreations 
+	// MethodInvocations or ClassInstanceCreations 
 	// that return a java.util.Collection or ArrayCreations of a class in subclassDeclarations 
 	// and do not discard the result.
-	public final Multimap<MethodDeclaration, ASTNode> subclassCollectionCreations;
+	public final Set<ASTNode> subclassCollectionCreations;
 
 	// Is set to true, only classes are included in subclassDeclarations that do not
 	// inherit from any class outside the package except for the target class and 
@@ -65,16 +62,16 @@ public class SubclassInstantiationCollector implements IWorker<InstantiationColl
 
 	public SubclassInstantiationCollector() {
 		subclassDeclarations = HashMultimap.create();
-		subclassInstanceCreations = HashMultimap.create();
-		methodInvReturnSubclass = HashMultimap.create();
-		subclassCollectionCreations = HashMultimap.create();
+		subclassInstanceCreations = new HashSet<ClassInstanceCreation>();
+		methodInvReturnSubclass = new HashSet<MethodInvocation>();
+		subclassCollectionCreations = new HashSet<ASTNode>();
 	}
 
 	public SubclassInstantiationCollector(boolean excludeExternal) {
 		subclassDeclarations = HashMultimap.create();
-		subclassInstanceCreations = HashMultimap.create();
-		methodInvReturnSubclass = HashMultimap.create();
-		subclassCollectionCreations = HashMultimap.create();
+		subclassInstanceCreations = new HashSet<ClassInstanceCreation>();
+		methodInvReturnSubclass = new HashSet<MethodInvocation>();
+		subclassCollectionCreations = new HashSet<ASTNode>();
 		this.excludeExternal = excludeExternal;
 	}
 
@@ -130,18 +127,18 @@ public class SubclassInstantiationCollector implements IWorker<InstantiationColl
 		@Override
 		public boolean visit(ClassInstanceCreation node) {
 			ITypeBinding type = node.resolveTypeBinding();
-			Optional<MethodDeclaration> parent = ASTNodes.findParent(node, MethodDeclaration.class);
-			if (!parent.isPresent() || type == null)
+			//Optional<MethodDeclaration> parent = ASTNodes.findParent(node, MethodDeclaration.class);
+			if (type == null)
 				return true;
 			if (collector.returnedValueUsed(node) && subclassDeclarations.values().stream()
 					.anyMatch(c -> c.resolveBinding().getBinaryName().equals(type.getBinaryName()))) {
-				subclassInstanceCreations.put(parent.get(), node);
+				subclassInstanceCreations.add(node);
 			}
 			if (collector.isCollection(type) && collector.returnedValueUsed(node)
 					&& type.getTypeArguments().length > 0
 					&& subclassDeclarations.values().stream().anyMatch(d -> d.resolveBinding().getBinaryName()
 							.equals(type.getTypeArguments()[0].getBinaryName()))) {
-				subclassCollectionCreations.put(parent.get(), node);
+				subclassCollectionCreations.add(node);
 			}
 			return true;
 		}
@@ -151,11 +148,11 @@ public class SubclassInstantiationCollector implements IWorker<InstantiationColl
 		 */
 		@Override
 		public boolean visit(ArrayCreation node) {
-			Optional<MethodDeclaration> parent = ASTNodes.findParent(node, MethodDeclaration.class);
-			if (parent.isPresent() && collector.returnedValueUsed(node) &&
+			//Optional<MethodDeclaration> parent = ASTNodes.findParent(node, MethodDeclaration.class);
+			if (collector.returnedValueUsed(node) &&
 					subclassDeclarations.values().stream().anyMatch(d -> d.resolveBinding().getBinaryName()
 							.equals(node.resolveTypeBinding().getElementType().getBinaryName())))
-				subclassCollectionCreations.put(parent.get(), node);
+				subclassCollectionCreations.add(node);
 			return true;
 		}
 
@@ -169,18 +166,18 @@ public class SubclassInstantiationCollector implements IWorker<InstantiationColl
 			if (node.resolveMethodBinding() == null)
 				return false;
 			ITypeBinding returnType = node.resolveMethodBinding().getReturnType();
-			Optional<MethodDeclaration> parent = ASTNodes.findParent(node, MethodDeclaration.class);
-			if (!parent.isPresent() || returnType == null)
+			//Optional<MethodDeclaration> parent = ASTNodes.findParent(node, MethodDeclaration.class);
+			if (returnType == null)
 				return true;
 			if (collector.returnedValueUsed(node) && subclassDeclarations.values().stream()
 					.anyMatch(c -> c.resolveBinding().getBinaryName().equals(returnType.getBinaryName()))) {
-				methodInvReturnSubclass.put(parent.get(), node);
+				methodInvReturnSubclass.add(node);
 			} else {
 				if (collector.isCollection(returnType) && collector.returnedValueUsed(node)
 						&& returnType.getTypeArguments().length > 0
 						&& subclassDeclarations.values().stream().anyMatch(d -> d.resolveBinding().getBinaryName()
 								.equals(returnType.getTypeArguments()[0].getBinaryName()))) {
-					subclassCollectionCreations.put(parent.get(), node);
+					subclassCollectionCreations.add(node);
 				}
 			}
 			return true;

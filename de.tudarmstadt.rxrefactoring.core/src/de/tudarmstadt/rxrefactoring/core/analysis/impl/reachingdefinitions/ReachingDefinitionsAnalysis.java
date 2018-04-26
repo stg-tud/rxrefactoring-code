@@ -13,6 +13,7 @@ import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
@@ -104,7 +105,9 @@ public class ReachingDefinitionsAnalysis extends DataFlowAnalysis<ASTNode, Reach
 
 				} else if (vertex instanceof VariableDeclarationStatement
 						|| vertex instanceof VariableDeclarationExpression) {
-
+					
+					
+					
 					List fragments = null;
 					if (vertex instanceof VariableDeclarationStatement) {
 						fragments = ((VariableDeclarationStatement) vertex).fragments();
@@ -125,6 +128,13 @@ public class ReachingDefinitionsAnalysis extends DataFlowAnalysis<ASTNode, Reach
 					}
 
 					return input;
+				} else if (vertex instanceof SingleVariableDeclaration) {
+					SingleVariableDeclaration decl = (SingleVariableDeclaration) vertex;
+					
+					if (decl.getInitializer() != null) {
+						IVariableBinding variable = decl.resolveBinding();
+						input = input.replace(variable, decl.getInitializer());
+					}
 				}
 			}
 

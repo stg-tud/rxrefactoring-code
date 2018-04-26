@@ -51,15 +51,12 @@ public class MethodDeclarationWorker extends AbstractFutureWorker<MethodDeclarat
 			return;
 		}
 
-		if (Types.isTypeOf(returnType.resolveBinding(), CollectionInfo.getBinaryNames())) {
-			if (returnType instanceof ParameterizedType) {
+		if (returnType instanceof ParameterizedType) {
+			ParameterizedType pType = (ParameterizedType) returnType;
+			Type typeArg = (Type) pType.typeArguments().get(0);
+			typeArg = ((ParameterizedType) typeArg).getType();
 
-				ParameterizedType pType = (ParameterizedType) returnType;
-				Type typeArg = (Type) pType.typeArguments().get(0);
-				typeArg = ((ParameterizedType) typeArg).getType();
-
-				JavaFutureASTUtils.replaceType(unit, typeArg, "FutureObservable");
-			}
+			JavaFutureASTUtils.replaceType(unit, typeArg, "Observable");
 		}
 	}
 }

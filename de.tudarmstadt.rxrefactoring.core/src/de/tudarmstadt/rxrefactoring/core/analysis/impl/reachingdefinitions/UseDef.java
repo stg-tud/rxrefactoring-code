@@ -66,7 +66,7 @@ public class UseDef {
 
 		public Builder addUse(Expression def, Use use) {
 			if (use == null || def == null) {
-				Log.error(getClass(), "Could not add def-use.");
+				//Log.error(getClass(), "Could not add def-use.");
 				return this;
 			}
 				

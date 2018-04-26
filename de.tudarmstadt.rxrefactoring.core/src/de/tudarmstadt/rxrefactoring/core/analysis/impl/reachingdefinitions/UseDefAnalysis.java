@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -25,6 +26,8 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
@@ -114,17 +117,42 @@ public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 							usesByExpression.put(rightSide, new Use(Kind.ASSIGN, name, assignment));
 					}
 				}
-			} else if (astNode instanceof VariableDeclarationStatement){
-					VariableDeclarationStatement declarationStatement = (VariableDeclarationStatement) astNode;
-					if (declarationStatement.fragments().get(0) instanceof VariableDeclarationFragment) {
-						VariableDeclarationFragment fragment = (VariableDeclarationFragment) declarationStatement.fragments().get(0);
-						Expression expression = fragment.getInitializer();
-						if (expression != null) {
-							// The new name is added to the name field
-							Name name = fragment.getName();
-							usesByExpression.put(expression, new Use(Kind.VARIABLE_DECL, name, declarationStatement));
-						}
+			} else if (astNode instanceof VariableDeclarationStatement
+					|| astNode instanceof VariableDeclarationExpression) {				
+				
+				List fragments = null;
+				if (astNode instanceof VariableDeclarationStatement) {
+					fragments = ((VariableDeclarationStatement) astNode).fragments();
+				} else if (astNode instanceof VariableDeclarationExpression) {
+					fragments = ((VariableDeclarationExpression) astNode).fragments();
+				} else {
+					fragments = Collections.emptyList();
+				}
+
+				for (Object o : fragments) {
+					VariableDeclarationFragment fragment = (VariableDeclarationFragment) o;
+
+					Expression expression = fragment.getInitializer();
+					if (expression != null) {
+						// The new name is added to the name field
+						Name name = fragment.getName();
+						usesByExpression.put(expression, new Use(Kind.VARIABLE_DECL, name, astNode));
 					}
+				}
+
+				return input;
+			} else if (astNode instanceof SingleVariableDeclaration) {
+				SingleVariableDeclaration decl = (SingleVariableDeclaration) astNode;				
+				
+				Expression expression = decl.getInitializer();
+				if (expression != null) {
+					// The new name is added to the name field
+					Name name = decl.getName();
+					usesByExpression.put(expression, new Use(Kind.VARIABLE_DECL, name, astNode));
+				}
+			
+					
+					
 			} else {
 				return input;
 			}

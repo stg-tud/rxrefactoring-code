@@ -28,7 +28,7 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
-import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.InstantiationUseWorker;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.PreconditionWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfo;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.VisitorNodes;
 
@@ -52,7 +52,7 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 	private final List<MethodInvocation> methodInvocations;
 	private final List<ReturnStatement> returnStatements;
 
-	public FutureVisitor3(ClassInfo classInfo, InstantiationUseWorker input) {
+	public FutureVisitor3(ClassInfo classInfo, PreconditionWorker input) {
 		this.classBinaryName = classInfo.getBinaryName();
 
 		typeDeclarations = new ArrayList<>();
@@ -90,13 +90,11 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 		
 		VariableDeclarationFragment fragment = (VariableDeclarationFragment) node.fragments().get(0);
 	
-		
 		Expression expr = fragment.getInitializer();
 		if (refactorVariable(fragment.getName())) {
 			if (expr==null)
 				varDeclStatements.add(node);
-			else if (instantiationUses.containsKey(expr) && 
-					!collectionGetters.containsValue(expr))
+			else if (instantiationUses.containsKey(expr))
 				varDeclStatements.add(node);
 		}
 		return true;

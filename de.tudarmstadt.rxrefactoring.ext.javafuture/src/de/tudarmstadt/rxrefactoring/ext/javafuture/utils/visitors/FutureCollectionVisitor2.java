@@ -10,9 +10,7 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
-import org.eclipse.jdt.core.dom.ArrayAccess;
 import org.eclipse.jdt.core.dom.ArrayCreation;
-import org.eclipse.jdt.core.dom.ArrayType;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
@@ -35,7 +33,7 @@ import com.google.common.collect.Multimap;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
-import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.InstantiationUseWorker;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.PreconditionWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.CollectionInfo;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.VisitorNodes;
 
@@ -48,12 +46,14 @@ public class FutureCollectionVisitor2 extends ASTVisitor implements VisitorNodes
 	private final String classBinaryName;
 	private final String[] collectionBinaryNames = CollectionInfo.getBinaryNames();
 
-	
 	Multimap<ASTNode, Use> instantiationUses;
 	Multimap<ASTNode, ASTNode> collectionInstantiations;
 	Multimap<ASTNode, MethodInvocation> collectionGetters;
 	Set<ASTNode> toRefactorCollections;
 	Set<IVariableBinding> collectionBindings;
+	Set<IVariableBinding> iteratorBindings;
+	Multimap<MethodDeclaration, ASTNode> collectionMethodDeclarations;
+	Multimap<ASTNode, ASTNode> collectionIterators;
 	
 	private final List<TypeDeclaration> typeDeclarations;
 	private final List<FieldDeclaration> fieldDeclarations;
@@ -76,7 +76,7 @@ public class FutureCollectionVisitor2 extends ASTVisitor implements VisitorNodes
 	private boolean methodRelevant;
 	private boolean currentMethodPure;
 
-	public FutureCollectionVisitor2(String classBinaryName, InstantiationUseWorker input) {
+	public FutureCollectionVisitor2(String classBinaryName, PreconditionWorker input) {
 		this.classBinaryName = classBinaryName;
 
 		typeDeclarations = new ArrayList<>();
@@ -98,10 +98,10 @@ public class FutureCollectionVisitor2 extends ASTVisitor implements VisitorNodes
 		collectionBindings = input.collectionBindings;
 		collectionInstantiations = input.collectionInstantiations;
 		collectionGetters = input.collectionGetters;
-		
-		toRefactorCollections = new HashSet<ASTNode>();
-		toRefactorCollections.addAll(collectionInstantiations.keySet());
-		toRefactorCollections.addAll(collectionGetters.keySet());
+		collectionMethodDeclarations = input.collectionMethodDeclarations;
+		iteratorBindings = input.iteratorBindings;
+		collectionIterators = input.collectionIterators;
+		toRefactorCollections = input.collectionCreationsToUses.keySet();
 	}
 
 	private void setPurity(boolean isPure) {
@@ -122,57 +122,27 @@ public class FutureCollectionVisitor2 extends ASTVisitor implements VisitorNodes
 		Object fragment = node.fragments().get(0);
 		if (fragment instanceof VariableDeclarationFragment) {
 			VariableDeclarationFragment variableDecl = (VariableDeclarationFragment)fragment;
-			if (refactorVariable(variableDecl.getName())) {
+			if (refactorVariable(variableDecl.getName()) || refactorIterator(variableDecl.getName())) {
 				fieldDeclarations.add(node);
 			}
 		}
 		return true;
 	}
-	
-	/**
-	 * Collects Assignments to a collection
-	 */
-	//TODO Worker refactors assignments to items, but this is handled by FutureVisitor
+
 	@Override
-	public boolean visit(Assignment node) {
-		Expression leftHandSide = node.getLeftHandSide();
+	public boolean visit(VariableDeclarationStatement node) {		
+		VariableDeclarationFragment fragment = (VariableDeclarationFragment) node.fragments().get(0);
+		Expression expr = fragment.getInitializer();
 		
-		if (leftHandSide.getNodeType() == Expression.ARRAY_ACCESS) {
-			
-			ITypeBinding type = leftHandSide.resolveTypeBinding();
-
-			if (Types.isExactTypeOf(type, classBinaryName)) {
-				addParent(node);
-				assignments.add(node);
-			}
-		}
-
-		return true;
-	}
-
-	//TODO
-	@Override
-	public boolean visit(VariableDeclarationStatement node) {
-		ITypeBinding type = node.getType().resolveBinding();
-
-		if (type == null)
-			return true;
-
-		// Check for collections
-		if (Types.isTypeOf(type, collectionBinaryNames) || Types.isTypeOf(type, "java.util.Iterator")) {
-
-			if (ASTUtils.getTypeArgumentBinding(type, classBinaryName) != null) {
+		if (refactorVariable(fragment.getName()) || refactorIterator(fragment.getName())){
+			if (expr==null) {
 				varDeclStatements.add(node);
 				addParent(node);
-			}
-		} else if (type != null && type.isArray()) {
-			// Array
-			if (Types.isExactTypeOf(type.getElementType(), classBinaryName)) {
+			} else if (toRefactorCollections.contains(expr) || collectionIterators.containsValue(expr)) {
 				varDeclStatements.add(node);
 				addParent(node);
 			}
 		}
-
 		return true;
 	}
 
@@ -206,57 +176,13 @@ public class FutureCollectionVisitor2 extends ASTVisitor implements VisitorNodes
 		}
 	}
 
-	//TODO
 	@Override
 	public boolean visit(MethodDeclaration node) {
-
-		if (!insideAnonymousClass) {
-			currentMethod = node;
-			setPurity(true);
+		if (collectionMethodDeclarations.containsKey(node)){
+			methodDeclarations.add(node);
+			methodRelevant = true;
 		}
-
-		IMethodBinding binding = node.resolveBinding();
-
-		if (binding != null) {
-			ITypeBinding returnType = binding.getReturnType();
-
-			if (Types.isTypeOf(returnType, collectionBinaryNames)
-					&& ASTUtils.getTypeArgumentBinding(returnType, classBinaryName) != null) {
-				methodDeclarations.add(node);
-
-				methodRelevant = true;
-				setPurity(false);
-			}
-		}
-
-		// go through the parameters to check them for 'purity'
-		for (Object parameter : node.parameters()) {
-			if (parameter instanceof SingleVariableDeclaration) {
-
-				SingleVariableDeclaration singleVarDecl = (SingleVariableDeclaration) parameter;
-
-				ITypeBinding type = singleVarDecl.getType().resolveBinding();
-				if (Types.isExactTypeOf(type, classBinaryName)) {
-					methodRelevant = true;
-					setPurity(false);
-					break;
-				}
-			}
-		}
-
 		return true;
-	}
-
-	@Override
-	public void endVisit(MethodDeclaration node) {
-
-		if (insideAnonymousClass)
-			return;
-
-		if (currentMethod != null && methodRelevant)
-			isMethodPure.put(currentMethod, currentMethodPure);
-
-		currentMethod = null;
 	}
 
 	/**
@@ -264,9 +190,12 @@ public class FutureCollectionVisitor2 extends ASTVisitor implements VisitorNodes
 	 */
 	@Override
 	public boolean visit(MethodInvocation node) {
-		if(collectionInstantiations.containsValue(node)) {
-			methodInvocations.add(node);
-			addParent(node);
+		if (node.arguments().size()==1) {
+			if (collectionInstantiations.containsValue(node.arguments().get(0))){
+				methodInvocations.add(node);
+				addParent(node);
+			}
+					
 		}
 		for (Object arg : node.arguments()) {
 			if (arg instanceof SimpleName) {
@@ -283,22 +212,7 @@ public class FutureCollectionVisitor2 extends ASTVisitor implements VisitorNodes
 		}
 		return true;
 	}
-
-	//TODO change, include in InstantiationWorker
-	@Override
-	public boolean visit(ArrayCreation node) {
-
-		ITypeBinding type = node.getType().getElementType().resolveBinding();
-
-		if (Types.isExactTypeOf(type, classBinaryName)) {
-			addParent(node);
-			arrayCreations.add(node);
-		}
-
-		return true;
-	}
-
-	//TODO part of methodDeclarations
+	/*
 	@Override
 	public boolean visit(ReturnStatement node) {
 
@@ -310,6 +224,22 @@ public class FutureCollectionVisitor2 extends ASTVisitor implements VisitorNodes
 
 		return true;
 	}
+	*/
+
+	//TODO currently not found by UseDef
+	/*
+	@Override
+	public boolean visit(ArrayCreation node) {
+
+		ITypeBinding type = node.getType().getElementType().resolveBinding();
+
+		if (Types.isExactTypeOf(type, classBinaryName)) {
+			addParent(node);
+			arrayCreations.add(node);
+		}
+
+		return true;
+	}*/
 	
 	/**
 	 * Determines whether a SimpleName should be refactored based on the whether it
@@ -320,6 +250,17 @@ public class FutureCollectionVisitor2 extends ASTVisitor implements VisitorNodes
 			IBinding binding = simpleName.resolveBinding();
 			if (binding instanceof IVariableBinding) {
 				if (collectionBindings.contains((IVariableBinding) binding))
+					return true;	
+			}
+		}
+		return false;
+	}
+	
+	private boolean refactorIterator(SimpleName simpleName) {
+		if (simpleName!=null) {
+			IBinding binding = simpleName.resolveBinding();
+			if (binding instanceof IVariableBinding) {
+				if (iteratorBindings.contains((IVariableBinding) binding))
 					return true;	
 			}
 		}
