@@ -1,6 +1,7 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -10,6 +11,7 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ArrayCreation;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.IBinding;
@@ -42,6 +44,7 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 	Multimap<ASTNode, ASTNode> collectionInstantiations;
 	Multimap<ASTNode, MethodInvocation> collectionGetters;
 	Multimap<MethodDeclaration, ASTNode> methodDecl;
+	Set<SingleVariableDeclaration> collectionForStatements;
 
 	private final List<TypeDeclaration> typeDeclarations;
 	private final List<FieldDeclaration> fieldDeclarations;
@@ -73,7 +76,8 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 		collectionInstantiations = input.collectionInstantiations;
 		collectionGetters = input.collectionGetters;
 		methodDecl = input.methodDeclarations;
-		
+		collectionForStatements = new HashSet<SingleVariableDeclaration>();
+		input.collectionForStatements.values().forEach(x -> collectionForStatements.add(x.getParameter()));
 		
 	}
 
@@ -162,13 +166,11 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 		}
 		return true;
 	}
-
-	//TODO have not found any case where this takes place
+	
+	
 	@Override
 	public boolean visit(SingleVariableDeclaration node) {
-		ITypeBinding type = node.getType().resolveBinding();
-		if (ASTUtils.isClassOf(type, classBinaryName)) {
-			
+		if (collectionForStatements.contains(node)) {
 			singleVarDeclarations.add(node);
 		}
 		return true;
