@@ -22,6 +22,7 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -34,6 +35,7 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfo;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.SubclassInstantiationCollector;
 
@@ -123,10 +125,20 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 						if (unsupportedMethodCall(use)) {
 							unsupportedInstantiations.add(expr);
 						} else if (use.getOp() instanceof ReturnStatement) {
-							Optional<MethodDeclaration> parent = ASTNodes.findParent(use.getOp(), MethodDeclaration.class);
-							if (parent.isPresent() && 
-									expr.resolveTypeBinding().isAssignmentCompatible(parent.get().getReturnType2().resolveBinding())) {
-								methodDeclarations.put(parent.get(), expr);
+							Optional<MethodDeclaration> maybeParent = ASTNodes.findParent(use.getOp(), MethodDeclaration.class);
+							if (maybeParent.isPresent() && 
+									expr.resolveTypeBinding().isAssignmentCompatible(maybeParent.get().getReturnType2().resolveBinding())) {
+								
+								MethodDeclaration parent = maybeParent.get();
+								
+								methodDeclarations.put(parent, expr);
+								
+//								for (SingleVariableDeclaration variable : (List<SingleVariableDeclaration>) parent.parameters()) {
+//									IVariableBinding binding = variable.resolveBinding();
+//									if (binding != null) {
+//										bindings.add(binding);
+//									}
+//								}								
 							}
 						} else if (use.getOp() instanceof Assignment) {
 							
@@ -142,6 +154,10 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 				else if (collectionCreations.contains(expr))
 					exprUses.forEach(use -> {
 						collectionCreationsToUses.put(expr, use);
+						
+						
+						instantiationUses.put(expr, use); //TODO: This is very ugly. A foreach statement is viewed as assigning a collection to a future. This is why we refactor it here.
+						
 						if (use.getOp() instanceof ReturnStatement) {
 							Optional<MethodDeclaration> parent = ASTNodes.findParent(use.getOp(), MethodDeclaration.class);
 							if (parent.isPresent() && 
@@ -150,7 +166,7 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 							}
 						}
 					});
-				else if(implementsInterface(expr.resolveTypeBinding(),"java.util.Iterator"))
+				else if(Types.isTypeOf(expr.resolveTypeBinding(),"java.util.Iterator"))
 					exprUses.forEach(use -> {
 						iteratorUses.put(expr, use);
 					});

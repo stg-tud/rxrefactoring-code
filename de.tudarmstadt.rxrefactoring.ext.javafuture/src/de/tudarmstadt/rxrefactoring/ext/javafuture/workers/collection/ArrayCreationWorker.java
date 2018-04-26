@@ -6,7 +6,6 @@ import java.util.Map;
 import org.eclipse.jdt.core.dom.ArrayCreation;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ObservableInfo;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
 
@@ -32,7 +31,7 @@ public class ArrayCreationWorker extends AbstractFutureWorker<ArrayCreation> {
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, ArrayCreation arrayCreation) {
 		if (collector.isPure(unit, arrayCreation)) {
-			JavaFutureASTUtils.replaceType(unit, arrayCreation.getType().getElementType(), ObservableInfo.name);
+			JavaFutureASTUtils.replaceType(unit, arrayCreation.getType().getElementType(), "Observable");
 		} else {
 			JavaFutureASTUtils.replaceType(unit, arrayCreation.getType().getElementType(), "FutureObservable");
 		}

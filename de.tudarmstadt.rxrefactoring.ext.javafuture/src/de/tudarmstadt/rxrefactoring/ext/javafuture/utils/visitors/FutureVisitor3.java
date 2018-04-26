@@ -28,6 +28,8 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.Expressions;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.PreconditionWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfo;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.VisitorNodes;
@@ -80,7 +82,7 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 		Object fragment = node.fragments().get(0);
 		if (fragment instanceof VariableDeclarationFragment) {
 			VariableDeclarationFragment variableDecl = (VariableDeclarationFragment)fragment;
-			if (refactorVariable(variableDecl.getName())) {
+			if (refactorVariable(Expressions.resolveVariableBinding(variableDecl.getName()))) {
 				fieldDeclarations.add(node);
 			}
 		}
@@ -92,8 +94,10 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 		
 		VariableDeclarationFragment fragment = (VariableDeclarationFragment) node.fragments().get(0);
 	
+		
+		
 		Expression expr = fragment.getInitializer();
-		if (refactorVariable(fragment.getName())) {
+		if (refactorVariable(Expressions.resolveVariableBinding(fragment.getName()))) {
 			if (expr==null)
 				varDeclStatements.add(node);
 			else if (instantiationUses.containsKey(expr))
@@ -106,7 +110,7 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 	public boolean visit(Assignment node) {
 		Expression leftHandSide = node.getLeftHandSide();
 		Expression rightHandSide = node.getRightHandSide();
-		if (leftHandSide instanceof SimpleName && refactorVariable((SimpleName)leftHandSide)){
+		if (refactorVariable(Expressions.resolveVariableBinding(leftHandSide))){
 			if (instantiationUses.containsKey(rightHandSide) && 
 					!collectionGetters.containsValue(rightHandSide))
 				assignments.add(node);
@@ -116,11 +120,7 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 
 	@Override
 	public boolean visit(SimpleName simpleName) {
-		IBinding binding = simpleName.resolveBinding();
-		if (binding instanceof IVariableBinding) {
-		}
-		
-		if (refactorVariable(simpleName)) 
+		if (refactorVariable(Expressions.resolveVariableBinding(simpleName))) 
 				simpleNames.add(simpleName);
 		return true;
 	}
@@ -142,8 +142,13 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 	@Override
 	public boolean visit(MethodInvocation node) {
 		Expression expr = node.getExpression();
-		if (instantiationUses.containsKey(expr) ||
-			(expr instanceof SimpleName && refactorVariable((SimpleName) expr))){
+		
+		if (expr == null) {
+			return true;
+		}
+ 				
+		if (instantiationUses.containsKey(expr) 
+				|| refactorVariable(Expressions.resolveVariableBinding(expr))) {
 			methodInvocations.add(node);
 		}
 		return true;
@@ -173,14 +178,13 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 	 * Determines whether a SimpleName should be refactored based on the whether it
 	 * is binded to a node that should be refactored.
 	 */
-	private boolean refactorVariable(SimpleName simpleName){
-		if (simpleName!=null) {
-			IBinding binding = simpleName.resolveBinding();
-			if (binding instanceof IVariableBinding) {
-				if (bindings.contains((IVariableBinding) binding))
-					return true;	
+	private boolean refactorVariable(IVariableBinding variable){
+		if (variable != null) {
+			if (bindings.contains(variable)) {
+				return true;
 			}
 		}
+				
 		return false;
 	}
 	

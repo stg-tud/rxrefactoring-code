@@ -189,11 +189,9 @@ public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, Ins
 			//Optional<MethodDeclaration> parent = ASTNodes.findParent(node, MethodDeclaration.class);
 			//if (!parent.isPresent() || returnType == null)
 			if (returnType == null)
-				return true;
+				return true;	
 			
-			
-			
-			if (binaryName.equals(returnType.getBinaryName()) && returnedValueUsed(node))
+			if (Types.isExactTypeOf(returnType, binaryName) && returnedValueUsed(node))
 				methodInvReturnClass.add(node);
 			else {
 				if (isCollection(returnType) && returnedValueUsed(node)

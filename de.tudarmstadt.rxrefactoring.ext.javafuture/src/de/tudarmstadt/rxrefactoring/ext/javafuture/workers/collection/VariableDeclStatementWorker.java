@@ -55,9 +55,9 @@ public class VariableDeclStatementWorker extends AbstractFutureWorker<VariableDe
 			}
 		}
 		
-		for (SimpleName simpleName : v.getSimpleNames()) {
-			JavaFutureASTUtils.replaceSimpleName(unit, simpleName, "Observable");
-		}
+//		for (SimpleName simpleName : v.getSimpleNames()) {
+//			JavaFutureASTUtils.replaceSimpleName(unit, simpleName, "Observable");
+//		}
 	}
 		
 }

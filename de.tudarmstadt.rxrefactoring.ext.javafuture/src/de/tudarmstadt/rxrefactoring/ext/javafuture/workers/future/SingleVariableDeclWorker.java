@@ -37,8 +37,6 @@ public class SingleVariableDeclWorker extends AbstractFutureWorker<SingleVariabl
 		for (SimpleName simpleName : visitor.getSimpleNames()) {
 			if (simpleName.getIdentifier().equals("Future")) {
 				JavaFutureASTUtils.replaceSimpleName(unit, simpleName, "Observable");
-			} else {
-				JavaFutureASTUtils.appendSimpleName(unit, simpleName, "Observable");
 			}
 		}
 	}

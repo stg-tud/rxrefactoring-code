@@ -8,6 +8,7 @@ import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.Type;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
 
@@ -31,12 +32,16 @@ public class FieldDeclarationWorker extends AbstractFutureWorker<FieldDeclaratio
 
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, FieldDeclaration node) {
-		Type fieldType = node.getType();
-
-		if (fieldType instanceof ParameterizedType) {
-			fieldType = ((ParameterizedType) fieldType).getType();
+		Type type = node.getType();
+		
+		if (!Types.isExactTypeOf(type.resolveBinding(), "java.util.concurrent.Future")) {
+			return;
+		}
+		
+		if (type instanceof ParameterizedType) {
+			type = ((ParameterizedType) type).getType();
 		}
 
-		JavaFutureASTUtils.replaceType(unit, fieldType, "Observable");
+		JavaFutureASTUtils.replaceType(unit, type, "Observable");	
 	}
 }

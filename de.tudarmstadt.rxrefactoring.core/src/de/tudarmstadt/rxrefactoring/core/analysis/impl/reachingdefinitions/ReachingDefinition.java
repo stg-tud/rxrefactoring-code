@@ -13,6 +13,8 @@ import com.google.common.collect.Sets;
 import de.tudarmstadt.rxrefactoring.core.utils.Expressions;
 
 public class ReachingDefinition {
+	
+	
 	private final ImmutableSetMultimap<IVariableBinding, Expression> definitions;
 
 	ReachingDefinition(ImmutableSetMultimap<IVariableBinding, Expression> defintions) {

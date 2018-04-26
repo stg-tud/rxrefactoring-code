@@ -36,6 +36,6 @@ public class SimpleNameWorker extends AbstractFutureWorker<SimpleName> {
 
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, SimpleName simpleName) {
-		JavaFutureASTUtils.appendSimpleName(unit, simpleName, "Observables");
+		//JavaFutureASTUtils.appendSimpleName(unit, simpleName, "Observables");
 	}
 }
