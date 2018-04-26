@@ -40,13 +40,24 @@ public class VariableDeclStatementWorker extends AbstractFutureWorker<VariableDe
 		SimpleNameVisitor v = new SimpleNameVisitor(ClassInfos.Future.getBinaryName());
 		type.accept(v);
 
-		if (type instanceof ParameterizedType) {
-			ParameterizedType pType = (ParameterizedType) type;
-			Type typeArg = (Type) pType.typeArguments().get(0);
-			typeArg = ((ParameterizedType) typeArg).getType();
-			JavaFutureASTUtils.replaceType(unit, typeArg, "Observable");
-			for (SimpleName simpleName : v.getSimpleNames())
-					JavaFutureASTUtils.replaceSimpleName(unit, simpleName, "Observable");
+		
+		if (type instanceof ParameterizedType) {			
+			ParameterizedType collectionT = (ParameterizedType) type;
+			
+			if (collectionT.typeArguments().size() == 1) {
+				Type futureT = (Type) collectionT.typeArguments().get(0);				
+				
+				if (futureT instanceof ParameterizedType) {					
+					JavaFutureASTUtils.replaceType(unit, ((ParameterizedType) futureT).getType(), "Observable");
+				} else {
+					JavaFutureASTUtils.replaceType(unit, futureT, "Observable");
+				}					
 			}
 		}
+		
+		for (SimpleName simpleName : v.getSimpleNames()) {
+			JavaFutureASTUtils.replaceSimpleName(unit, simpleName, "Observable");
+		}
+	}
+		
 }

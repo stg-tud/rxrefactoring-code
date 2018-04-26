@@ -330,6 +330,10 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 	}
 	
 	private boolean implementsInterface(ITypeBinding binding, String interfaceBinaryName) {
+		if (binding == null) {
+			return false;
+		}
+		
 		List<ITypeBinding> bindings = new ArrayList<ITypeBinding>(Arrays.asList(binding.getInterfaces()));
 		bindings.add(binding);
 		for (ITypeBinding b : bindings) {

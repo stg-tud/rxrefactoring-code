@@ -64,7 +64,7 @@ public class ReachingDefinitionsAnalysis extends DataFlowAnalysis<ASTNode, Reach
 					IVariableBinding variable = Expressions.resolveVariableBinding(lhs);
 
 					if (variable == null) {
-						Log.error(getClass(), "assignment to non-variable.");
+						Log.error(getClass(), "assignment to non-variable: " + lhs);
 						break caseDistinction;
 					}
 

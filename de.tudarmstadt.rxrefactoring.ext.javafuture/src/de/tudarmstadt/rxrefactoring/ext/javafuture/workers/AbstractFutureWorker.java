@@ -15,6 +15,6 @@ public abstract class AbstractFutureWorker<NodeType extends ASTNode> extends Abs
 	}
 
 	protected void addFutureObservableImport(IRewriteCompilationUnit unit) {
-		unit.addImport("rx.extensions.FutureObservable");
+		//unit.addImport("rx.extensions.FutureObservable");
 	}
 }

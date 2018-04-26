@@ -39,18 +39,23 @@ public class ClassInstanceCreationWorker extends AbstractFutureWorker<ClassInsta
 			
 		if (type instanceof ParameterizedType) {
 				
-			ParameterizedType pType = (ParameterizedType) type;
+			ParameterizedType collectionT = (ParameterizedType) type;
 
-			if (pType.typeArguments().size() > 0) {
+			if (collectionT.typeArguments().size() == 1) {
 
-				Type typeArg = (Type) pType.typeArguments().get(0);
-				typeArg = ((ParameterizedType) typeArg).getType();
+				Type futureT = (Type) collectionT.typeArguments().get(0);
 				
-				if (collector.isPure(unit, classInstanceCreation)) {
-					JavaFutureASTUtils.replaceType(unit, typeArg, "Observable");
+				
+				
+				if (futureT instanceof ParameterizedType) {					
+					JavaFutureASTUtils.replaceType(unit, ((ParameterizedType) futureT).getType(), "Observable");
 				} else {
-					JavaFutureASTUtils.replaceType(unit, typeArg, "FutureObservable");
-				}
+					JavaFutureASTUtils.replaceType(unit, futureT, "Observable");
+				}	
+				
+				
+				
+				
 			}
 		}
 	}

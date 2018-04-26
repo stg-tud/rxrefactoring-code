@@ -1,6 +1,7 @@
 package de.tudarmstadt.rxrefactoring.core.utils;
 
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.dom.ArrayAccess;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.IAnnotationBinding;
@@ -30,6 +31,8 @@ public class Expressions {
 			} 
 		} else if (expr instanceof FieldAccess) {
 			return ((FieldAccess) expr).resolveFieldBinding();
+		} else if (expr instanceof ArrayAccess) {
+			return resolveVariableBinding(((ArrayAccess) expr).getArray());
 		}
 		
 		return null;
