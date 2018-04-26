@@ -13,6 +13,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
@@ -59,6 +60,9 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 	
 	// Maps Collections to its Iterators
 	public Multimap<ASTNode, ASTNode> collectionIterators =  HashMultimap.create();
+	
+	// Maps Collections to its EnhancedForStatements
+	public Multimap<ASTNode, EnhancedForStatement> collectionForStatements =  HashMultimap.create();
 	
 	// Maps a Collection creation to invocation of getter methods (these are 
 	// initially considered future instantiations)
@@ -112,6 +116,8 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 		Set<MethodDeclaration> unsupportedCollectionMethodDecl = new HashSet<MethodDeclaration>();
 		
 		Multimap<ASTNode, Use> iteratorUses = HashMultimap.create();
+		// Collection to Uses within an EnhancedForStatement
+		Multimap<ASTNode, Use> usesforStatement = HashMultimap.create();
 		
 		// Collect instantiationUses and unsupportedInstantiations
 		useDefs.forEach(useDef -> {
@@ -164,6 +170,20 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 									expr.resolveTypeBinding().isAssignmentCompatible(parent.get().getReturnType2().resolveBinding())) {
 								collectionMethodDeclarations.put(parent.get(), expr);
 							}
+						} else if (use.getOp() instanceof EnhancedForStatement) {
+							EnhancedForStatement forStatement = (EnhancedForStatement) use.getOp();
+							collectionForStatements.put(expr, forStatement);
+							collectionCreationsToUses.remove(expr, use);
+						} else if (use.getOp() instanceof MethodInvocation) {
+							MethodInvocation mi = (MethodInvocation) use.getOp();
+							// The Use is a method call within an EnhancedForStatement
+							if(expr.resolveTypeBinding()!=mi.getExpression().resolveTypeBinding()){
+								usesforStatement.put(expr, use);
+								collectionCreationsToUses.remove(expr, use);
+								if (unsupportedMethodCall(use)) 
+									unsupportedCollections.add(expr);
+							}
+									
 						}
 					});
 				else if(Types.isTypeOf(expr.resolveTypeBinding(),"java.util.Iterator"))
@@ -289,15 +309,17 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 			collectionGetters.removeAll(c);
 			collectionInstantiations.removeAll(c);
 			collectionIterators.removeAll(c);
+			collectionForStatements.removeAll(c);
+			usesforStatement.removeAll(c);
 		});		
 		
 		// Remove unsupported instantiations from instantiationUses
 		unsupportedInstantiations.forEach(i -> 	instantiationUses.removeAll(i));
 		
 		// Collect identifiers of supported instances and collections
-		bindings = getBindings(instantiationUses).keySet();
+		bindings = new HashSet<IVariableBinding>(getBindings(instantiationUses).keySet());
 		collectionBindings = getBindings(collectionCreationsToUses).keySet();
-		
+		bindings.addAll(getBindings(usesforStatement).keySet());
 		iteratorBindings = getBindings(Multimaps.filterKeys(iteratorUses, k -> collectionIterators.containsValue(k))).keySet();
 		
 		return this;
