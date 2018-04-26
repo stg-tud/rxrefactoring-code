@@ -19,6 +19,7 @@ import java.util.Map;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
@@ -149,10 +150,14 @@ public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 					// The new name is added to the name field
 					Name name = decl.getName();
 					usesByExpression.put(expression, new Use(Kind.VARIABLE_DECL, name, astNode));
-				}
-			
+				}	
 					
 					
+			}  else if (astNode instanceof EnhancedForStatement) {
+				EnhancedForStatement forStatement = (EnhancedForStatement) astNode;
+				
+				//TODO: variable is not assigned to the expression. To what is the variable assigned instead?
+				usesByExpression.put(forStatement.getExpression(), new Use(Kind.VARIABLE_DECL, forStatement.getParameter().getName(), astNode));
 			} else {
 				return input;
 			}

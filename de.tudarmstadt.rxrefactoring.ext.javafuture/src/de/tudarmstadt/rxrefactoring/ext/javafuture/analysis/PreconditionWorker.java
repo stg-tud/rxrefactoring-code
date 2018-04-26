@@ -301,8 +301,8 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 		for(MethodDeclaration md : methodDecls.keySet()) {
 			IMethodBinding decBinding = md.resolveBinding();
 			if (binding.toString().equals(decBinding.toString()) &&
-					binding.getDeclaringClass().getBinaryName().equals(decBinding.getDeclaringClass().getBinaryName())
-					) return Optional.of(md);
+					binding.getDeclaringClass().getBinaryName().equals(decBinding.getDeclaringClass().getBinaryName())) 
+				return Optional.of(md);
 		}
 		return Optional.empty();
 	}

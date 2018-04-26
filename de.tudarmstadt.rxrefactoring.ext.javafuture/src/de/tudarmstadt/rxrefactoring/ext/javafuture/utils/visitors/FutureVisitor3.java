@@ -71,6 +71,8 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 		collectionInstantiations = input.collectionInstantiations;
 		collectionGetters = input.collectionGetters;
 		methodDecl = input.methodDeclarations;
+		
+		
 	}
 
 	@Override

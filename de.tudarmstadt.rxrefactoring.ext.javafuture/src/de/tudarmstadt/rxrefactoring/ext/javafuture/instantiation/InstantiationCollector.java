@@ -21,6 +21,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.Type;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfo;
 
 import com.google.common.collect.HashMultimap;
@@ -189,6 +190,9 @@ public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, Ins
 			//if (!parent.isPresent() || returnType == null)
 			if (returnType == null)
 				return true;
+			
+			
+			
 			if (binaryName.equals(returnType.getBinaryName()) && returnedValueUsed(node))
 				methodInvReturnClass.add(node);
 			else {

@@ -6,6 +6,7 @@ import java.util.List;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.IBinding;
@@ -135,6 +136,13 @@ public class ReachingDefinitionsAnalysis extends DataFlowAnalysis<ASTNode, Reach
 						IVariableBinding variable = decl.resolveBinding();
 						input = input.replace(variable, decl.getInitializer());
 					}
+				} else if (vertex instanceof EnhancedForStatement) {
+					EnhancedForStatement forStatement = (EnhancedForStatement) vertex;
+					
+					IVariableBinding variable = forStatement.getParameter().resolveBinding();
+
+					//TODO: variable is not assigned to the expression. To what is the variable assigned instead?										
+					input = input.replace(variable, forStatement.getExpression());
 				}
 			}
 
