@@ -19,6 +19,7 @@ import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
+import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ReturnStatement;
@@ -60,6 +61,9 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 	
 	// Maps Collections to its Iterators
 	public Multimap<ASTNode, ASTNode> collectionIterators =  HashMultimap.create();
+	
+	// Maps Collections to Lambda expressions
+	public Multimap<ASTNode, LambdaExpression> collectionLambdas =  HashMultimap.create();
 	
 	// Maps Collections to its EnhancedForStatements
 	public Multimap<ASTNode, EnhancedForStatement> collectionForStatements =  HashMultimap.create();
@@ -161,8 +165,8 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 					exprUses.forEach(use -> {
 						collectionCreationsToUses.put(expr, use);
 						
-						
-						instantiationUses.put(expr, use); //TODO: This is very ugly. A foreach statement is viewed as assigning a collection to a future. This is why we refactor it here.
+						//Puts collection creations as instantiationUses keys. foreachs are added above
+						//instantiationUses.put(expr, use); //TODO: This is very ugly. A foreach statement is viewed as assigning a collection to a future. This is why we refactor it here.
 						
 						if (use.getOp() instanceof ReturnStatement) {
 							Optional<MethodDeclaration> parent = ASTNodes.findParent(use.getOp(), MethodDeclaration.class);
@@ -183,6 +187,14 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 								if (unsupportedMethodCall(use)) 
 									unsupportedCollections.add(expr);
 							}
+							// Lambda expressions on a collection
+							if(!mi.arguments().isEmpty()) {
+								if (mi.arguments().get(0) instanceof LambdaExpression) {
+									collectionLambdas.put(expr, (LambdaExpression) mi.arguments().get(0));
+								}
+							};
+							
+							
 									
 						}
 					});
