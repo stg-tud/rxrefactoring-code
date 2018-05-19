@@ -13,6 +13,7 @@ import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.Initializer;
+import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
@@ -115,6 +116,12 @@ public class UseDefWorker implements IWorker<Void, Map<ASTNode, UseDef>> {
 			analyzeBlock(i.getBody());
 		}
 		
+		private void analyzeLambdaExpression(LambdaExpression l) {
+			ASTNode body = l.getBody();
+			if (body instanceof Block)
+				analyzeBlock((Block) body);
+		}
+		
 		private void analyzeVariableFragments(List<VariableDeclarationFragment> fragments) {
 			//Do something with variable declarations
 		}		
@@ -146,6 +153,12 @@ public class UseDefWorker implements IWorker<Void, Map<ASTNode, UseDef>> {
 				@Override
 				public boolean visit(AnonymousClassDeclaration decl) {
 					analyzeBodyDeclarations(decl.bodyDeclarations());
+					return false;
+				}
+				
+				@Override
+				public boolean visit(LambdaExpression l) {
+					analyzeLambdaExpression(l);
 					return false;
 				}
 			});
