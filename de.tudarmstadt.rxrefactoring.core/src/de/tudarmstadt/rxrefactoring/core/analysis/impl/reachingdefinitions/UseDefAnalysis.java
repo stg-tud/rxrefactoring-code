@@ -8,14 +8,19 @@ import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.NotConvergingExceptio
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.strategy.IDataFlowStrategy;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use.Kind;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Expressions;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
@@ -23,6 +28,7 @@ import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
+import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.ReturnStatement;
@@ -54,7 +60,20 @@ public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 		private Map<ASTNode, ReachingDefinition> reachingDefinitions;
 
 		public void setReachingDefinitions(Map<ASTNode, ReachingDefinition> reaching) {
-			this.reachingDefinitions = reaching;
+			//this.reachingDefinitions.putAll(reaching);
+			if (this.reachingDefinitions == null) {
+				this.reachingDefinitions = reaching;
+			} else {
+				this.reachingDefinitions.putAll(reaching);
+				for (Entry<ASTNode, ReachingDefinition> e :reaching.entrySet()) {
+					Optional<LambdaExpression> l = ASTNodes.findParent(e.getKey(), LambdaExpression.class);
+					if (l.isPresent()) {
+						Optional<MethodInvocation> mi = ASTNodes.findParent(l.get(), MethodInvocation.class);
+						if (mi.isPresent() && this.reachingDefinitions.containsKey(l.get()))
+							this.reachingDefinitions.put(e.getKey(), ReachingDefinition.merge(Arrays.asList(this.reachingDefinitions.get(mi.get()), e.getValue())));
+					}
+				}
+			}
 		}
 
 		@Override
@@ -84,18 +103,31 @@ public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 			Multimap<Expression, Use> usesByExpression = Multimaps.newMultimap(new HashMap<>(), HashSet::new);
 
 			if (astNode instanceof MethodInvocation) {
+				
 				MethodInvocation invocation = (MethodInvocation) astNode;
-
+				
+				List<Object> args = invocation.arguments();
+				
 				Expression callee = invocation.getExpression();
 				Name calleeName = tryCast(callee);
-				// The method is invoked on the object
-				usesByExpression.put(callee, new Use(Kind.METHOD_INVOCATION, calleeName, invocation));
-
-				// The objects are passed as parameters
-				for (Object parameterObj : invocation.arguments()) {
-					Expression parameter = (Expression) parameterObj;
-					Name name = tryCast(parameter);
-					usesByExpression.put(parameter, new Use(Kind.METHOD_PARAMETER, name, invocation));
+				
+				// Lambda expression
+				if (args.size()==1 && args.get(0) instanceof LambdaExpression) {
+					LambdaExpression lambda = (LambdaExpression) args.get(0);
+					List<Object> lambdaArgs = lambda.parameters();
+					if  (args.size()==1 && lambdaArgs.get(0) instanceof VariableDeclarationFragment) {
+						Name name = ((VariableDeclarationFragment) lambdaArgs.get(0)).getName();
+						usesByExpression.put(callee, new Use(Kind.VARIABLE_DECL, name, invocation));
+					}
+				} else {
+					// The method is invoked on the object
+					usesByExpression.put(callee, new Use(Kind.METHOD_INVOCATION, calleeName, invocation));
+					// The objects are passed as parameters
+					for (Object parameterObj : invocation.arguments()) {
+						Expression parameter = (Expression) parameterObj;
+						Name name = tryCast(parameter);
+						usesByExpression.put(parameter, new Use(Kind.METHOD_PARAMETER, name, invocation));
+				}
 				}
 			} else if (astNode instanceof ReturnStatement) {
 				ReturnStatement returnStatement = (ReturnStatement) astNode;
@@ -141,7 +173,7 @@ public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 					}
 				}
 
-				return input;
+				//return input;
 			} else if (astNode instanceof SingleVariableDeclaration) {
 				SingleVariableDeclaration decl = (SingleVariableDeclaration) astNode;				
 				
@@ -172,7 +204,6 @@ public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 				} else {
 					definitions = lookupDefinitions(astNode, name);
 				}
-
 				definitions.forEach(definition -> builder.addUse(definition, entry.getValue()));
 			}
 			return builder.build();
@@ -186,7 +217,6 @@ public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 	@Override
 	public <Output> Output apply(final IControlFlowGraph<ASTNode> cfg,
 			final IDataFlowExecutionFactory<ASTNode, UseDef, Output> executionFactory) throws NotConvergingException {
-		
 		Map<ASTNode, ReachingDefinition> reaching;
 		try {
 			ReachingDefinitionsAnalysis analysis = ReachingDefinitionsAnalysis.create();

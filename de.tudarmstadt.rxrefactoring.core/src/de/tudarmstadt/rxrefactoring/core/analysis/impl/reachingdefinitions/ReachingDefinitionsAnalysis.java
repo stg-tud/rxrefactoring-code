@@ -8,10 +8,9 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.FieldAccess;
-import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
-import org.eclipse.jdt.core.dom.Name;
+import org.eclipse.jdt.core.dom.LambdaExpression;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
@@ -143,6 +142,18 @@ public class ReachingDefinitionsAnalysis extends DataFlowAnalysis<ASTNode, Reach
 
 					//TODO: variable is not assigned to the expression. To what is the variable assigned instead?										
 					input = input.replace(variable, forStatement.getExpression());
+				} else if (vertex instanceof MethodInvocation) {
+					MethodInvocation methodInvocation = (MethodInvocation) vertex;
+					Expression callee = methodInvocation.getExpression();
+					List<Object> args = methodInvocation.arguments();
+					if (args.size()==1 && args.get(0) instanceof LambdaExpression) {
+						LambdaExpression lambda = (LambdaExpression) args.get(0);
+						List<Object> lambdaParams = lambda.parameters();
+						if  (lambdaParams.size()==1 && lambdaParams.get(0) instanceof VariableDeclarationFragment) {
+							IVariableBinding variable = ((VariableDeclarationFragment) lambdaParams.get(0)).resolveBinding();									
+							input = input.replace(variable, callee);
+						}
+					}
 				}
 			}
 
