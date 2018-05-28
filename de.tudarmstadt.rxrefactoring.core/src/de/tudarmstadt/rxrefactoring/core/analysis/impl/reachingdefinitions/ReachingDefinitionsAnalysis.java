@@ -14,6 +14,7 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
@@ -149,8 +150,8 @@ public class ReachingDefinitionsAnalysis extends DataFlowAnalysis<ASTNode, Reach
 					if (args.size()==1 && args.get(0) instanceof LambdaExpression) {
 						LambdaExpression lambda = (LambdaExpression) args.get(0);
 						List<Object> lambdaParams = lambda.parameters();
-						if  (lambdaParams.size()==1 && lambdaParams.get(0) instanceof VariableDeclarationFragment) {
-							IVariableBinding variable = ((VariableDeclarationFragment) lambdaParams.get(0)).resolveBinding();									
+						if  (lambdaParams.size()==1 && lambdaParams.get(0) instanceof VariableDeclaration) {
+							IVariableBinding variable = ((VariableDeclaration) lambdaParams.get(0)).resolveBinding();									
 							input = input.replace(variable, callee);
 						}
 					}

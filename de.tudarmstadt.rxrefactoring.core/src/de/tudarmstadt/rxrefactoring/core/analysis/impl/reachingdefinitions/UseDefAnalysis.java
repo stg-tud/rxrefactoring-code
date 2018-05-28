@@ -34,8 +34,8 @@ import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
@@ -59,6 +59,7 @@ public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 
 		private Map<ASTNode, ReachingDefinition> reachingDefinitions;
 
+		//TODO will be done intrinsically by the AST analysis
 		public void setReachingDefinitions(Map<ASTNode, ReachingDefinition> reaching) {
 			//this.reachingDefinitions.putAll(reaching);
 			if (this.reachingDefinitions == null) {
@@ -114,9 +115,10 @@ public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 				// Lambda expression
 				if (args.size()==1 && args.get(0) instanceof LambdaExpression) {
 					LambdaExpression lambda = (LambdaExpression) args.get(0);
+					
 					List<Object> lambdaArgs = lambda.parameters();
-					if  (args.size()==1 && lambdaArgs.get(0) instanceof VariableDeclarationFragment) {
-						Name name = ((VariableDeclarationFragment) lambdaArgs.get(0)).getName();
+					if  (args.size()==1 && lambdaArgs.get(0) instanceof VariableDeclaration) {
+						Name name = ((VariableDeclaration) lambdaArgs.get(0)).getName();
 						usesByExpression.put(callee, new Use(Kind.VARIABLE_DECL, name, invocation));
 					}
 				} else {
@@ -163,7 +165,7 @@ public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 				}
 
 				for (Object o : fragments) {
-					VariableDeclarationFragment fragment = (VariableDeclarationFragment) o;
+					VariableDeclaration fragment = (VariableDeclaration) o;
 
 					Expression expression = fragment.getInitializer();
 					if (expression != null) {

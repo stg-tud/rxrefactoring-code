@@ -120,14 +120,16 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 		Set<MethodDeclaration> unsupportedCollectionMethodDecl = new HashSet<MethodDeclaration>();
 		
 		Multimap<ASTNode, Use> iteratorUses = HashMultimap.create();
-		// Collection to Uses within an EnhancedForStatement
-		Multimap<ASTNode, Use> usesforStatement = HashMultimap.create();
+		// Collection to Uses of collection items within an EnhancedForStatement
+		// or a LambdaExpression
+		Multimap<ASTNode, Use> collectionItemUses = HashMultimap.create();
 		
 		// Collect instantiationUses and unsupportedInstantiations
 		useDefs.forEach(useDef -> {
 			Set<Expression> definitions = useDef.asMap().keySet();
 			definitions.forEach(expr -> {
 				Set<Use> exprUses = useDef.getUses(expr);
+				// Case 1: The expression is an instantiation that should maybe be refactored
 				if (instantiations.contains(expr))
 					exprUses.forEach(use -> {
 						instantiationUses.put(expr, use);
@@ -160,7 +162,7 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 							}
 						};
 					});
-				// Collect collectionCreationsToUses
+				// Case 2: The expression is a collection that should maybe be refactored
 				else if (collectionCreations.contains(expr))
 					exprUses.forEach(use -> {
 						collectionCreationsToUses.put(expr, use);
@@ -180,22 +182,21 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 							collectionCreationsToUses.remove(expr, use);
 						} else if (use.getOp() instanceof MethodInvocation) {
 							MethodInvocation mi = (MethodInvocation) use.getOp();
-							// The Use is a method call within an EnhancedForStatement
+							// The Use is a method call within an EnhancedForStatement or LambdaExpression
+							// The method receiver is a collection item, not the collection itself
 							if(expr.resolveTypeBinding()!=mi.getExpression().resolveTypeBinding()){
-								usesforStatement.put(expr, use);
+								collectionItemUses.put(expr, use);
 								collectionCreationsToUses.remove(expr, use);
 								if (unsupportedMethodCall(use)) 
 									unsupportedCollections.add(expr);
 							}
-							// Lambda expressions on a collection
+							// The MethodInvocation is a Lambda expressions on a collection
 							if(!mi.arguments().isEmpty()) {
 								if (mi.arguments().get(0) instanceof LambdaExpression) {
+									collectionCreationsToUses.remove(expr, use);
 									collectionLambdas.put(expr, (LambdaExpression) mi.arguments().get(0));
 								}
-							};
-							
-							
-									
+							};		
 						}
 					});
 				else if(Types.isTypeOf(expr.resolveTypeBinding(),"java.util.Iterator"))
@@ -322,7 +323,7 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 			collectionInstantiations.removeAll(c);
 			collectionIterators.removeAll(c);
 			collectionForStatements.removeAll(c);
-			usesforStatement.removeAll(c);
+			collectionItemUses.removeAll(c);
 		});		
 		
 		// Remove unsupported instantiations from instantiationUses
@@ -331,7 +332,7 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 		// Collect identifiers of supported instances and collections
 		bindings = new HashSet<IVariableBinding>(getBindings(instantiationUses).keySet());
 		collectionBindings = getBindings(collectionCreationsToUses).keySet();
-		bindings.addAll(getBindings(usesforStatement).keySet());
+		bindings.addAll(getBindings(collectionItemUses).keySet());
 		iteratorBindings = getBindings(Multimaps.filterKeys(iteratorUses, k -> collectionIterators.containsValue(k))).keySet();
 		
 		return this;
