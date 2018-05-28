@@ -24,7 +24,6 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -61,12 +60,6 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 	
 	// Maps Collections to its Iterators
 	public Multimap<ASTNode, ASTNode> collectionIterators =  HashMultimap.create();
-	
-	// Maps Collections to Lambda expressions
-	public Multimap<ASTNode, LambdaExpression> collectionLambdas =  HashMultimap.create();
-	
-	// Maps Collections to its EnhancedForStatements
-	public Multimap<ASTNode, EnhancedForStatement> collectionForStatements =  HashMultimap.create();
 	
 	// Maps a Collection creation to invocation of getter methods (these are 
 	// initially considered future instantiations)
@@ -177,8 +170,6 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 								collectionMethodDeclarations.put(parent.get(), expr);
 							}
 						} else if (use.getOp() instanceof EnhancedForStatement) {
-							EnhancedForStatement forStatement = (EnhancedForStatement) use.getOp();
-							collectionForStatements.put(expr, forStatement);
 							collectionCreationsToUses.remove(expr, use);
 						} else if (use.getOp() instanceof MethodInvocation) {
 							MethodInvocation mi = (MethodInvocation) use.getOp();
@@ -194,7 +185,6 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 							if(!mi.arguments().isEmpty()) {
 								if (mi.arguments().get(0) instanceof LambdaExpression) {
 									collectionCreationsToUses.remove(expr, use);
-									collectionLambdas.put(expr, (LambdaExpression) mi.arguments().get(0));
 								}
 							};		
 						}
@@ -322,7 +312,6 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 			collectionGetters.removeAll(c);
 			collectionInstantiations.removeAll(c);
 			collectionIterators.removeAll(c);
-			collectionForStatements.removeAll(c);
 			collectionItemUses.removeAll(c);
 		});		
 		
