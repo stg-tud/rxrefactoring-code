@@ -13,7 +13,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.InstantiationUseWorker;
 
 public class RefactorInfo {
 	
@@ -34,15 +33,16 @@ public class RefactorInfo {
 	class MethodInfo {
 		List<IVariableBinding> nonRefactoredVariables = Lists.newLinkedList();
 	}
-	
+	/*
 	public static RefactorInfo parseUnit(IRewriteCompilationUnit unit, InstantiationUseWorker worker) {
 		final RefactorInfo result = new RefactorInfo();
 		
-		worker.
-		
-		unit.accept(new ASTVisitor() {
-			public boolean visit(MethodDeclaration)
+		worker.unit.accept(new ASTVisitor() {
+			public boolean visit(MethodDeclaration md) {
+				
+			}
 		});
 	}
+	*/
 
 }

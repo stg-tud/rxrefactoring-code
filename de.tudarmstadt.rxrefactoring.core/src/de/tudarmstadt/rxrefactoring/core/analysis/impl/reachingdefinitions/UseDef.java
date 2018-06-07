@@ -92,7 +92,7 @@ public class UseDef {
 
 	public static class Use {
 
-		enum Kind {
+		public enum Kind {
 			METHOD_INVOCATION, METHOD_PARAMETER, RETURN, FIELD_ASSIGN, ASSIGN, VARIABLE_DECL
 		}
 

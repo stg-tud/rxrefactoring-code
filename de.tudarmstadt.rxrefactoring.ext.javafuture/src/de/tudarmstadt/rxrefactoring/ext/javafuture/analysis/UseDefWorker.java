@@ -144,7 +144,8 @@ public class UseDefWorker implements IWorker<Void, Map<ASTNode, UseDef>> {
 			result.putAll(tempResult);
 			
 			//Analyze subclasses that are part of a block
-			block.accept(new ASTVisitor() {								
+			block.accept(new ASTVisitor() {			
+				
 				@Override
 				public boolean visit(TypeDeclaration type) {
 					analyzeTypeDeclaration(type);

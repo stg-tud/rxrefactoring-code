@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -24,10 +25,12 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import com.google.common.collect.SetMultimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
@@ -35,6 +38,7 @@ import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use.Kind;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfo;
@@ -51,8 +55,12 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 	// Future subclass instantiations to the latter instance uses.
 	public Multimap<ASTNode, Use> instantiationUses = HashMultimap.create();
 	
-	// Maps MethodDeclarations to their return statements
+	// Maps MethodDeclarations that are to be refactored to their return statements.
 	public Multimap<MethodDeclaration, ASTNode> methodDeclarations = HashMultimap.create();
+	
+	// Maps MethodDeclarations for which parameters should be refactored to these
+	// parameters (within the declaration).
+	public Multimap<MethodDeclaration, ASTNode> methodDeclarationParams = HashMultimap.create();
 	
 	// Maps MethodInvocations and ClassInstanceCreations (new ArrayList<Future<..>>)
 	// that return Future or Future subclass Collections to its uses.
@@ -65,7 +73,7 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 	// initially considered future instantiations)
 	public Multimap<ASTNode, MethodInvocation> collectionGetters = HashMultimap.create();
 	
-	// Maps a Collection creation to initialization of individual futures.
+	// Maps a Collection creation to initialization of individual items.
 	public Multimap<ASTNode, ASTNode> collectionInstantiations = HashMultimap.create();
 	
 	// Maps MethodDeclarations to their return instantiations
@@ -89,9 +97,6 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 		Set<UseDef> useDefs = new HashSet<UseDef>();
 		useDefs.addAll(input.analysis.values());
 		
-		//TODO only to print, remove
-		anal = input.analysis;
-		
 		classInfo = input.collector.classInfo;
 		
 		Set<ASTNode> instantiations = new HashSet<ASTNode>();
@@ -103,82 +108,79 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 		collectionCreations.addAll(input.collector.collectionCreations);
 		collectionCreations.addAll(input.subclassCollectionCreations);
 		
-		// Maps the left side of an Assignment to the expressions it is assigned
-		Multimap<IVariableBinding, ASTNode> assignments = HashMultimap.create();
-		
-		// Determine whether the refactoring is possible
+		// Collect constructs for which the refactoring is not possible
 		Set<ASTNode> unsupportedInstantiations =  new HashSet<ASTNode>();
 		Set<ASTNode> unsupportedCollections = new HashSet<ASTNode>();
-		Set<MethodDeclaration> unsupportedMethodDecl = new HashSet<MethodDeclaration>();
-		Set<MethodDeclaration> unsupportedCollectionMethodDecl = new HashSet<MethodDeclaration>();
 		
+		// Maps the left side of an Assignment to the expressions it is assigned
+		Multimap<IVariableBinding, ASTNode> assignments = HashMultimap.create();
+		// Uses of an Iterator
 		Multimap<ASTNode, Use> iteratorUses = HashMultimap.create();
 		// Collection to Uses of collection items within an EnhancedForStatement
 		// or a LambdaExpression
 		Multimap<ASTNode, Use> collectionItemUses = HashMultimap.create();
 		
-		// Collect instantiationUses and unsupportedInstantiations
+		
+		
+		
+		/*
+		System.out.println("USEDEFS");
+		SetMultimap<Expression, Use> newUseDefs = HashMultimap.create();
+		useDefs.forEach(useDef -> {
+			newUseDefs.putAll(useDef.asMap());
+		});
+		System.out.println(newUseDefs);
+		newUseDefs.forEach((e, u)-> {
+			System.out.println(e);
+			System.out.println(e.getClass());
+			System.out.println(u);
+		});
+		System.out.println("End USEDEFS");
+		*/
+		
 		useDefs.forEach(useDef -> {
 			Set<Expression> definitions = useDef.asMap().keySet();
 			definitions.forEach(expr -> {
 				Set<Use> exprUses = useDef.getUses(expr);
+				
+				// An expression is a parameter within a MethodDeclaration
+				Optional<MethodDeclaration> md = methodParameter(expr);
+				if (md.isPresent()) {
+					methodDeclarationParams.put(md.get(), expr);
+					instantiations.add(expr);
+				}
+				
 				// Case 1: The expression is an instantiation that should maybe be refactored
 				if (instantiations.contains(expr))
 					exprUses.forEach(use -> {
 						instantiationUses.put(expr, use);
-						// Callee of not supported method
-						if (unsupportedMethodCall(use)) {
+						if (unsupportedUse(use)) {
 							unsupportedInstantiations.add(expr);
 						} else if (use.getOp() instanceof ReturnStatement) {
-							Optional<MethodDeclaration> maybeParent = ASTNodes.findParent(use.getOp(), MethodDeclaration.class);
-							if (maybeParent.isPresent() && 
-									expr.resolveTypeBinding().isAssignmentCompatible(maybeParent.get().getReturnType2().resolveBinding())) {
-								
-								MethodDeclaration parent = maybeParent.get();
-								
-								methodDeclarations.put(parent, expr);
-								
-//								for (SingleVariableDeclaration variable : (List<SingleVariableDeclaration>) parent.parameters()) {
-//									IVariableBinding binding = variable.resolveBinding();
-//									if (binding != null) {
-//										bindings.add(binding);
-//									}
-//								}								
-							}
+							collectMethodDeclarations(expr, (ReturnStatement) use.getOp(), methodDeclarations);
 						} else if (use.getOp() instanceof Assignment) {
-							
-							Expression leftSide = ((Assignment)use.getOp()).getLeftHandSide();
-							if (leftSide instanceof SimpleName) {
-								SimpleName name = (SimpleName) leftSide;
-								if (name.resolveBinding() instanceof IVariableBinding)
-									assignments.put((IVariableBinding)name.resolveBinding(), expr);
-							}
+							collectAssignments(expr, ((Assignment)use.getOp()), assignments);
 						};
 					});
+				
 				// Case 2: The expression is a collection that should maybe be refactored
 				else if (collectionCreations.contains(expr))
 					exprUses.forEach(use -> {
 						collectionCreationsToUses.put(expr, use);
-						
-						//Puts collection creations as instantiationUses keys. foreachs are added above
-						//instantiationUses.put(expr, use); //TODO: This is very ugly. A foreach statement is viewed as assigning a collection to a future. This is why we refactor it here.
-						
 						if (use.getOp() instanceof ReturnStatement) {
-							Optional<MethodDeclaration> parent = ASTNodes.findParent(use.getOp(), MethodDeclaration.class);
-							if (parent.isPresent() && 
-									expr.resolveTypeBinding().isAssignmentCompatible(parent.get().getReturnType2().resolveBinding())) {
-								collectionMethodDeclarations.put(parent.get(), expr);
-							}
+							collectMethodDeclarations(expr, (ReturnStatement) use.getOp(), collectionMethodDeclarations);
 						} else if (use.getOp() instanceof EnhancedForStatement) {
+							// EnhancedForStatement should not be treated as collection uses
 							collectionCreationsToUses.remove(expr, use);
 						} else if (use.getOp() instanceof MethodInvocation) {
 							MethodInvocation mi = (MethodInvocation) use.getOp();
 							// The Use is a method call within an EnhancedForStatement or LambdaExpression
 							// The method receiver is a collection item, not the collection itself
-							if(expr.resolveTypeBinding()!=mi.getExpression().resolveTypeBinding()){
+							if(!expr.resolveTypeBinding().isAssignmentCompatible(mi.getExpression().resolveTypeBinding())){
+								
 								collectionItemUses.put(expr, use);
 								collectionCreationsToUses.remove(expr, use);
-								if (unsupportedMethodCall(use)) 
+								if (unsupportedUse(use)) 
 									unsupportedCollections.add(expr);
 							}
 							// The MethodInvocation is a Lambda expressions on a collection
@@ -196,124 +198,108 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 			});
 		});
 		
-		// Mark instantiations which are part of an Assignment with an unsupported
-		// one as unsupported as well
-		Multimap<IVariableBinding, ASTNode> currentBindings = getBindings(instantiationUses);
-		assignments.forEach((leftVarBinding, expr) -> {
-			currentBindings.get(leftVarBinding).forEach(node -> {
-				if (unsupportedInstantiations.contains(node)) {
-					unsupportedInstantiations.add(expr);
-				}
-				else if (unsupportedInstantiations.contains(expr)) {
-					unsupportedInstantiations.add(node);
-				}
-			});
-		});
-	
-		// Link instantiations to MethodDeclarations and collect
-		// unsupportedMethodDeclarations. 
-		// If a MethodDeclaration cannot be refactored, supported 
-		// instances will still be refactored, but the MethodInvocation 
-		// will be treaded as if the MethodDeclaration were external.
-		instantiationUses.keySet().forEach(node -> {
-			if(node instanceof MethodInvocation) {
-				Optional<MethodDeclaration> methodDecl = internalDecl((MethodInvocation) node, methodDeclarations);
-				if (methodDecl.isPresent()) {
-					if (unsupportedInstantiations.contains(node))
-						unsupportedMethodDecl.add(methodDecl.get());
-				}
-			}
-		});
-		
-		// Removes uses of the instantiation which is the return statement
-		// within an unsupported MethodDeclaration
-		unsupportedMethodDecl.forEach(md -> {
-			unsupportedInstantiations.addAll(methodDeclarations.get(md));
-			methodDeclarations.removeAll(md);
-		});
-
 		// A collection should be refactored (or not) as a whole.
-		// Gather MethodInvocations instantiations that are getters of a 
-		// collection or other initializations of collector items.
 		collectionCreationsToUses.forEach((node, use) -> {
-			// An instantiation is added to the collection if it shares a use 
-			// with it (METHOD_INVOCATION for the collection and 
-			// METHOD_PARAMETER for the instantiation).
-			List<ASTNode> items = new ArrayList<ASTNode>();
-			instantiationUses.forEach((item, itemUse) -> {
-				if (use.getOp() == itemUse.getOp())
-					items.add(item);
-			});
-			items.forEach(item -> {				
-				if (unsupportedInstantiations.contains(item)) {
-					unsupportedCollections.add(node);
-				} else collectionInstantiations.put(node, item);
-			});
+		
 			if (use.getOp() instanceof MethodInvocation) {
 				MethodInvocation methodInv = (MethodInvocation) use.getOp();
-				// An instantiation is a getter if a collection Use is the 
-				// MethodInvocation that created it with a collection declaring class.
+				
+				// An instantiation is added to the collection (through e.g. an 'add' method) if they 
+				// share a use (METHOD_INVOCATION for the collection and METHOD_PARAMETER for the inst).
+				instantiationUses.forEach((item, itemUse) -> {
+					if (use.getOp() == itemUse.getOp() && use.getKind() == Kind.METHOD_INVOCATION && 
+							itemUse.getKind() == Kind.METHOD_PARAMETER)
+						collectionInstantiations.put(node, item);
+				});
+					
+				// An instantiation is a getter if a collection Use is the MethodInvocation that created 
+				// it with a collection declaring class.
 				if (instantiations.contains(methodInv)) {
 					ITypeBinding declaringClass = methodInv.resolveMethodBinding().getDeclaringClass();
-					if (input.collector.isCollection(declaringClass)) {
-						if (unsupportedInstantiations.contains(methodInv)) {
-							unsupportedCollections.add(node);
-						} else collectionGetters.put(node, methodInv);
-					}
+					if (input.collector.isCollection(declaringClass))
+						collectionGetters.put(node, methodInv);
 				}
+			
 				// Gather Iterators created from a Collection
 				else if (iteratorUses.keySet().contains(methodInv)){
 					collectionIterators.put(node, methodInv);
+					iteratorUses.get(methodInv).forEach(u -> {
+						if (instantiations.contains(u.getOp()) && u.getOp() instanceof MethodInvocation)
+							collectionGetters.put(node, (MethodInvocation) u.getOp());
+					});
 				}
-			}
-		});
-		
-		
-		collectionIterators.forEach((c, i) -> {
-			iteratorUses.get(i).forEach(use -> {				
-				if (instantiations.contains(use.getOp()) && use.getOp() instanceof MethodInvocation) 
-					if (unsupportedInstantiations.contains(use.getOp())) {
-						unsupportedCollections.add(c);
-					}
-					else
-						collectionGetters.put(c, (MethodInvocation) use.getOp());
+				}
 			});
-		});
 		
-		// Single out unsupported MethodDeclarations that return Collections and remove them
-		collectionCreationsToUses.keySet().forEach(node -> {
-			if(node instanceof MethodInvocation) {
-				Optional<MethodDeclaration> methodDecl = internalDecl((MethodInvocation) node, collectionMethodDeclarations);
-				if (methodDecl.isPresent()) {
-					if (unsupportedCollections.contains(node)) 
-						unsupportedCollectionMethodDecl.add(methodDecl.get());
-				}
-			}
-		});	
-		unsupportedCollectionMethodDecl.forEach(md -> {
-			unsupportedCollections.addAll(collectionMethodDeclarations.get(md));
-			collectionMethodDeclarations.removeAll(md);
-		});
-		
-		// Put MethodInvocations not declared in class into unsupportedCollections
+		// External MethodInvocations that create collections are not supported at the moment,
+		// so if a collection is created in this manner it is not supported.
 		collectionCreationsToUses.keySet().forEach(node -> {
 			if (node instanceof MethodInvocation) {
-				Optional<MethodDeclaration> methodDecl = internalDecl((MethodInvocation) node, collectionMethodDeclarations);
+				Optional<MethodDeclaration> methodDecl = internalDeclaration((MethodInvocation) node, collectionMethodDeclarations);
 				if (!methodDecl.isPresent())
 					unsupportedCollections.add(node);
 			}
 		});
 		
-		// Removes uses of instantiations within an unsupported Collection
+		boolean instantiationChanges = true;
+		boolean collectionChanges = true;
+		while(instantiationChanges) {
+			instantiationChanges = false;
+			// Updates unsupportedInstantiations using unsupportedInstantiations
+			if (handleUnsupportedAssignments(unsupportedInstantiations, assignments, instantiationUses))
+				instantiationChanges = true;
+			
+			// Filter out those method declarations for which at least one return statement is not to be refactored.
+			methodDeclarations = filterMethodDeclarations(methodDeclarations, unsupportedInstantiations);
+			// Updates unsupportedInstantiations (return statements) using methodDeclarations
+			if (handleUnsupportedMethodDecls(unsupportedInstantiations, methodDeclarations, instantiationUses))
+				instantiationChanges = true;
+			
+			// Filter out those method declarations for which at least one parameter is not to be refactored.
+			methodDeclarationParams = filterMethodDeclarations(methodDeclarationParams, unsupportedInstantiations);		
+			// Updates unsupportedInstantiations using methodDeclarationParams
+			// Updates methodDeclarationParams using unsupportedInstantiations
+			// Note that uses as parameter to a method in collectionGetters and collectionInstantiations
+			// are not considered
+			// TODO: case where the parameter variable cannot be refactored
+			if (handleUnsupportedParameters(unsupportedInstantiations, methodDeclarationParams, instantiationUses))
+				instantiationChanges = true;
+			
+			while(collectionChanges) {
+				collectionChanges = false;
+				
+				// Removes uses of instantiations within an unsupported Collection
+				for (ASTNode c : unsupportedCollections) {
+					if (unsupportedInstantiations.addAll(collectionGetters.get(c)))
+						instantiationChanges = true;
+					if (unsupportedInstantiations.addAll(collectionInstantiations.get(c)))
+						instantiationChanges = true;
+				}
+				
+				// Do not refactor collections to which an unsupported instance is added 
+				if (extendKeySet(collectionInstantiations, unsupportedCollections, unsupportedInstantiations))
+					collectionChanges = true;
+				
+				// Do not refactor collections for which an item cannot be refactored
+				if (extendKeySet(collectionGetters, unsupportedCollections, unsupportedInstantiations))
+					collectionChanges = true;
+				
+				collectionMethodDeclarations = filterMethodDeclarations(collectionMethodDeclarations, unsupportedCollections);
+				if (handleUnsupportedMethodDecls(unsupportedCollections, collectionMethodDeclarations, collectionCreationsToUses))
+					collectionChanges = true;
+				//TODO add assignments and method parameters
+			}
+			
+		}
+		
+		// Remove unsupported constructs related to a collection
 		unsupportedCollections.forEach(c -> {
-			unsupportedInstantiations.addAll(collectionGetters.get(c));
-			unsupportedInstantiations.addAll(collectionInstantiations.get(c));
 			collectionCreationsToUses.removeAll(c);
 			collectionGetters.removeAll(c);
 			collectionInstantiations.removeAll(c);
 			collectionIterators.removeAll(c);
 			collectionItemUses.removeAll(c);
-		});		
+		});
 		
 		// Remove unsupported instantiations from instantiationUses
 		unsupportedInstantiations.forEach(i -> 	instantiationUses.removeAll(i));
@@ -326,17 +312,179 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 		
 		return this;
 	}
+
+	/**
+	 * For a Multimap map with K -> V, add to keySet the elements of K
+	 * for which at least one element of V is in valueSet. 
+	 * @param map
+	 * @param keySet
+	 * @param valueSet
+	 * @return true if at least one elements was added to keySet.
+	 */
+	private boolean extendKeySet(Multimap<ASTNode, ? extends ASTNode> map, Set<ASTNode> keySet,
+			Set<ASTNode> valueSet) {
+		boolean changes = false;
+		for(Entry<ASTNode, ? extends ASTNode> e :map.entries()) {
+			if (valueSet.contains(e.getValue())) {
+				if (keySet.add(e.getKey()))
+					changes = true;
+			}
+		}
+		return changes;
+	}
+
+	/**
+	 * Handles cases where an instantiation is not supported because if it used as a
+	 * parameter which cannot be refactored, or a parameter cannot be refactored because
+	 * one of its arguments cannot be refactored.
+	 * @return were there changes in unsupported?
+	 */
+	private boolean handleUnsupportedParameters(Set<ASTNode> unsupported,
+			Multimap<MethodDeclaration, ASTNode> methodDeclParams, Multimap<ASTNode, Use> map) {
+		boolean changesInUnsupported = false;
+		
+		// If an argument passed to a method cannot be refactored, the method which
+		// takes it as parameter should not be refactored
+		for (Entry<ASTNode, Use> e : map.entries()) {
+			if (e.getValue().getKind() == Kind.METHOD_PARAMETER){
+				MethodInvocation mi = (MethodInvocation) e.getValue().getOp();
+				if (!collectionGetters.values().contains(mi) && collectionInstantiations.values().contains(mi)) {
+					Optional<MethodDeclaration> methodDecl = internalDeclaration(mi, methodDeclParams);
+					// MethodDeclaration is external
+					if (!methodDecl.isPresent()) {
+						if (unsupported.add(e.getKey()))
+							changesInUnsupported = true;
+					} else if (unsupported.contains(e.getKey())){
+							// Do not refactor parameters within method
+							// TODO
+							if (unsupported.addAll(methodDeclParams.get(methodDecl.get())))
+								changesInUnsupported = true;
+							methodDeclParams.removeAll(methodDecl.get());
+							}
+				}
+			}
+		}
+		return changesInUnsupported;
+	}
+
+	/**
+	 * Updates set of MethodDeclarations to remove those for which a returned instance 
+	 * cannot be refactored or an unsupported instantiations acts as the method's
+	 * return statement.
+	 * @param unsupported: set of unsupported expressions
+	 * @param methodDeclarations
+	 * @param map: map of uses
+	 * @return were there changes in unsupported?
+	 */
+	private boolean handleUnsupportedMethodDecls(Set<ASTNode> unsupported,
+			Multimap<MethodDeclaration, ASTNode> methodDeclarations,
+			Multimap<ASTNode, Use> map) {
+		boolean changesInUnsupported = false;		
+		// If an instance created through this method cannot be refactored,
+		// the method declaration should not be refactored
+		for (ASTNode node : map.keySet()) {
+			if(node instanceof MethodInvocation) {
+				Optional<MethodDeclaration> methodDecl = internalDeclaration((MethodInvocation) node, methodDeclarations);
+				if (methodDecl.isPresent()) {
+					if (unsupported.contains(node)) {
+						// Do not refactor return statements within method
+						if (unsupported.addAll(methodDeclarations.get(methodDecl.get())))
+							changesInUnsupported = true;
+						// Remove from MethodDeclarations
+						methodDeclarations.removeAll(methodDecl.get());
+					}
+				}
+			}
+		}
+		return changesInUnsupported;
+	}
 	
+	/**
+	 * Filter out entries with keys for which at least one value is unsupported.
+	 */
+	private Multimap<MethodDeclaration, ASTNode> filterMethodDeclarations(
+			Multimap<MethodDeclaration, ASTNode> unfiltered, Set<ASTNode> unsupported) {
+		return Multimaps.filterKeys(unfiltered, k -> unfiltered.get(k).stream().noneMatch(r -> unsupported.contains(r)));
+	}
+
+	/**
+	 * Update the list of unsupported instantiation by adding those which are part of an 
+	 * assignment with an an expression which is already in the list.
+	 * @param unsupported: set of unsupported expressions
+	 * @param assignments: map of assignments
+	 * @param map: map of uses, from which nodes are obtained for each binding
+	 * @return were there changes in unsupported?
+	 */
+	private boolean handleUnsupportedAssignments(Set<ASTNode> unsupported, Multimap<IVariableBinding, 
+			ASTNode> assignments, Multimap<ASTNode, Use> map) {
+		boolean changesInUnsupported = false;
+		Multimap<IVariableBinding, ASTNode> currentBindings = getBindings(map);
+		Set<IVariableBinding> toRemoveBindings = new HashSet<IVariableBinding>();
+		// Variable binding to expression it is associated to in that assignment
+		for (Entry<IVariableBinding, ASTNode> e :assignments.entries()) {
+			// Nodes that are associated with the left side binding
+			for(ASTNode n : currentBindings.get(e.getKey())){
+				// The left side binding is unsupported
+				if (unsupported.contains(n)) {
+					toRemoveBindings.add(e.getKey());
+					if (unsupported.add(e.getValue())) 
+						changesInUnsupported = true;
+				// The right side is unsupported
+				} else if (unsupported.contains(e.getValue())) { 
+					toRemoveBindings.add(e.getKey());
+					if (unsupported.add(n))
+						changesInUnsupported = true;
+				}
+						
+			}
+		}
+		toRemoveBindings.forEach(b -> assignments.removeAll(b));
+		return changesInUnsupported;
+	}
+
+	/**
+	 * Associates bindings to expressions they are binded to.
+	 * @param expr: the expression
+	 * @param assignment: the use
+	 * @param assignments: the map where the nodes should be added
+	 */
+	private void collectAssignments(Expression expr, Assignment assignment,	Multimap<IVariableBinding, 
+			ASTNode> assignments) {
+		Expression leftSide = assignment.getLeftHandSide();
+		if (leftSide instanceof SimpleName) {
+			SimpleName name = (SimpleName) leftSide;
+			if (name.resolveBinding() instanceof IVariableBinding)
+				assignments.put((IVariableBinding)name.resolveBinding(), expr);
+		}
+	}
+
+	/**
+	 * Associates for MethodDeclarations the instantiation of the expression
+	 * that they return.
+	 * @param expr: the expression that is returned by the method declaration
+	 * @param rs: the use
+	 * @param methodDeclMap: the map where the nodes should be added
+	 */
+	private void collectMethodDeclarations(Expression expr, ReturnStatement rs, 
+			Multimap<MethodDeclaration, ASTNode> methodDeclMap) {
+		Optional<MethodDeclaration> parent = ASTNodes.findParent(rs, MethodDeclaration.class);
+		if (parent.isPresent() && 
+		expr.resolveTypeBinding().isAssignmentCompatible(parent.get().getReturnType2().resolveBinding())) 
+			methodDeclMap.put(parent.get(), expr);
+	}
+
+
 	//TODO maybe find better way, the same is done in FutureCollector
 	// If only the bindings are compared there there is an error
 	// if the MethodDeclaration is in a different class
 	/**
-	 * For a MethodInvocation it checks whether the method is in methodDecl.
+	 * For a MethodInvocation it checks whether the method is in methodDecls.
 	 * @param methodInv
 	 * @param methodDecls
 	 * @return The MethodDeclaration or an empty Optional if the method is declared externally.
 	 */
-	private Optional<MethodDeclaration> internalDecl(MethodInvocation methodInv, Multimap<MethodDeclaration, ASTNode> methodDecls) {
+	private Optional<MethodDeclaration> internalDeclaration(MethodInvocation methodInv, 
+			Multimap<MethodDeclaration, ASTNode> methodDecls) {
 		IMethodBinding binding = methodInv.resolveMethodBinding().getMethodDeclaration();
 		for(MethodDeclaration md : methodDecls.keySet()) {
 			IMethodBinding decBinding = md.resolveBinding();
@@ -360,7 +508,37 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 		return bindings;
 	}
 	
-	private boolean unsupportedMethodCall(Use use) {
+	/**
+	 * Determines whether a definition corresponds to a parameter in the MethodDeclaration.
+	 * TODO: some uses are not stored in the UseDef, e.g. some MethodInvocations
+	 * @param expr
+	 * @return The MethodDeclaration it is parameter to, or None if it is to none.
+	 */
+	private Optional<MethodDeclaration> methodParameter(Expression expr) {
+		//TODO: extend InstantiationWorker so the type does not have to be compared
+		if (expr instanceof SimpleName &&
+				expr.resolveTypeBinding().getBinaryName().equals(classInfo.getBinaryName())){
+			Optional<MethodDeclaration> md = ASTNodes.findParent(expr, MethodDeclaration.class);
+			if (md.isPresent()) {
+				List params = md.get().parameters();
+				for (Object p : params) {
+					if (p instanceof SingleVariableDeclaration) {
+						SingleVariableDeclaration v = (SingleVariableDeclaration) p;
+						if (v.getName().resolveBinding().equals(((SimpleName) expr).resolveBinding()))
+							return md;
+					}
+				}
+			}
+		}
+		return Optional.empty();
+	}
+	
+	/**
+	 * Determines whether a Use is not supported.
+	 * @param use
+	 * @return Whether it is a supported use (true) or not (false).
+	 */
+	private boolean unsupportedUse(Use use) {
 		if (use.getOp() instanceof MethodInvocation) {
 			MethodInvocation methodInv = (MethodInvocation) use.getOp();
 			if (classInfo.getUnsupportedMethods().contains(methodInv.getName().toString()))
@@ -368,6 +546,8 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 		}
 		return false;
 	}
+	
+	
 	
 	private boolean implementsInterface(ITypeBinding binding, String interfaceBinaryName) {
 		if (binding == null) {

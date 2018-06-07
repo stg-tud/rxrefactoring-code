@@ -2,6 +2,7 @@ package de.tudarmstadt.rxrefactoring.ext.javafuture.workers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,6 +25,7 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
@@ -50,7 +52,9 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 	private final Map<IRewriteCompilationUnit, Map<ASTNode, MethodDeclaration>> parentMethod;
 	//private final Map<IRewriteCompilationUnit, Map<MethodDeclaration, Boolean>> isMethodPure;
 	public Multimap<ASTNode, MethodInvocation> collectionGetters = HashMultimap.create();
-
+	public Multimap<MethodDeclaration, ASTNode> methodDeclarationReturns = HashMultimap.create();
+	public Multimap<MethodDeclaration, ASTNode> methodDeclarationParams = HashMultimap.create();
+	
 	private final EnumSet<RefactoringOptions> options;
 
 	public FutureCollector(EnumSet<RefactoringOptions> options) {
@@ -65,6 +69,9 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 	@Override
 	public FutureCollector refactor(IProjectUnits units, PreconditionWorker input, WorkerSummary summary) throws Exception {
 		this.collectionGetters = input.collectionGetters;
+		this.methodDeclarationReturns = input.methodDeclarations;
+		this.methodDeclarationParams = input.methodDeclarationParams;
+		
 		for (IRewriteCompilationUnit unit : units) {
 			// Collect the data
 			if (options.contains(RefactoringOptions.FUTURE)) {
@@ -149,6 +156,17 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 		}
 	}
 	*/
+	
+	public Collection<ASTNode> refactorParameter(MethodDeclaration md) {
+		if (methodDeclarationParams.containsKey(md)) {
+			return methodDeclarationParams.get(md);
+		}
+		return null;
+	}
+	
+	public boolean refactorReturnStatement(MethodDeclaration md) {
+		return methodDeclarationReturns.containsKey(md);
+	}
 
 	// TODO helper class is not used
 	public boolean isPure(IRewriteCompilationUnit cu, ASTNode node) {

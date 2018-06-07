@@ -1,16 +1,22 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.ReturnStatement;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
@@ -37,9 +43,32 @@ public class MethodDeclarationWorker extends AbstractFutureWorker<MethodDeclarat
 
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, MethodDeclaration methodDeclaration) {
-		replaceReturnType(unit, methodDeclaration);
+		
+		if (collector.refactorReturnStatement(methodDeclaration)) {
+			replaceReturnType(unit, methodDeclaration);
+			replaceReturnStatements(unit, methodDeclaration);
+		}
+		
+		Collection<ASTNode> parameters = collector.refactorParameter(methodDeclaration);
+		if (parameters != null) {
+			replaceParameters(unit, methodDeclaration, parameters);
+		}
+		
+	}
 
-		replaceReturnStatements(unit, methodDeclaration);
+	private void replaceParameters(IRewriteCompilationUnit unit, MethodDeclaration methodDeclaration, Collection<ASTNode> params) {
+		for(Object o :methodDeclaration.parameters()) {
+			if (o instanceof SingleVariableDeclaration) {
+				SingleVariableDeclaration v = (SingleVariableDeclaration) o;
+				Type type = v.getType();
+				IBinding b = v.getName().resolveBinding();
+				if (params.stream().anyMatch(n -> (n instanceof SimpleName) && b.equals(((SimpleName)n).resolveBinding()))){
+						JavaFutureASTUtils.replaceType(unit, type, "Observable");
+				}
+				
+			}
+		}
+		
 	}
 
 	private void replaceReturnType(IRewriteCompilationUnit unit, MethodDeclaration methodDeclaration) {
