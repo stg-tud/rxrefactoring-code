@@ -1,17 +1,28 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.utils;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ArrayAccess;
+import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.TryStatement;
 import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.Statements;
 
 public class JavaFutureASTUtils {
 
@@ -102,6 +113,7 @@ public class JavaFutureASTUtils {
 		}
 
 		unit.replace(oldNode, blockingSingle);
+		removeTryStatement(unit, oldNode);
 
 	}
 	
@@ -113,8 +125,39 @@ public class JavaFutureASTUtils {
 		Expression clone = unit.copyNode((MethodInvocation)old);
 		blockingSingle.setExpression(clone);
 		unit.replace(oldNode, blockingSingle);
+		removeTryStatement(unit, oldNode);
 	}
 
+	public static void removeTryStatement(IRewriteCompilationUnit unit, MethodInvocation mi) {
+		Optional<TryStatement> tryStatement = ASTNodes.findParent(mi, TryStatement.class);
+		if (tryStatement.isPresent()) {
+			Optional<Block> block = ASTNodes.findParent(tryStatement.get(), Block.class);
+			if (block.isPresent()) {
+				List statementsTry = tryStatement.get().getBody().statements();
+				List statementsParent = block.get().statements();
+				Block newBlock = unit.getAST().newBlock();
+				ListRewrite rewrite = unit.getListRewrite(newBlock, Block.STATEMENTS_PROPERTY);
+				List<Statement> combinedStatements = new ArrayList<Statement>();
+				for (Object o : statementsParent) {
+					if (((Statement)o).equals(tryStatement.get())) {
+						for (Object t : statementsTry)
+							combinedStatements.add((Statement)t);
+					} else
+						combinedStatements.add((Statement)o);
+				}
+				Statement currentStatement = (Statement) combinedStatements.get(0);
+				rewrite.insertFirst(currentStatement, null);
+				for(int i=1; i<combinedStatements.size(); i++) {
+					rewrite.insertAfter(combinedStatements.get(i), currentStatement, null);
+					currentStatement = combinedStatements.get(i);
+				}
+				unit.replace(block.get(), newBlock);
+			}
+		}
+	}
+	
+	
+	
 	public static void replaceSimpleName(IRewriteCompilationUnit unit, SimpleName name, String replacement) {
 		AST ast = unit.getAST();
 		unit.replace(name, ast.newSimpleName(replacement));

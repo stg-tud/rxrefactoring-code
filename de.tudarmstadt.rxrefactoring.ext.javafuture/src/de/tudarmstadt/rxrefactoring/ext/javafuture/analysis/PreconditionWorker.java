@@ -200,6 +200,7 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 		
 		// A collection should be refactored (or not) as a whole.
 		collectionCreationsToUses.forEach((node, use) -> {
+			
 		
 			if (use.getOp() instanceof MethodInvocation) {
 				MethodInvocation methodInv = (MethodInvocation) use.getOp();
@@ -211,6 +212,8 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 							itemUse.getKind() == Kind.METHOD_PARAMETER)
 						collectionInstantiations.put(node, item);
 				});
+				
+		
 					
 				// An instantiation is a getter if a collection Use is the MethodInvocation that created 
 				// it with a collection declaring class.
@@ -223,6 +226,8 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 				// Gather Iterators created from a Collection
 				else if (iteratorUses.keySet().contains(methodInv)){
 					collectionIterators.put(node, methodInv);
+					
+					
 					iteratorUses.get(methodInv).forEach(u -> {
 						if (instantiations.contains(u.getOp()) && u.getOp() instanceof MethodInvocation)
 							collectionGetters.put(node, (MethodInvocation) u.getOp());
@@ -230,16 +235,6 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 				}
 				}
 			});
-		
-		// External MethodInvocations that create collections are not supported at the moment,
-		// so if a collection is created in this manner it is not supported.
-		collectionCreationsToUses.keySet().forEach(node -> {
-			if (node instanceof MethodInvocation) {
-				Optional<MethodDeclaration> methodDecl = internalDeclaration((MethodInvocation) node, collectionMethodDeclarations);
-				if (!methodDecl.isPresent())
-					unsupportedCollections.add(node);
-			}
-		});
 		
 		boolean instantiationChanges = true;
 		boolean collectionChanges = true;
@@ -288,6 +283,19 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 				if (handleUnsupportedMethodDecls(unsupportedCollections, collectionMethodDeclarations, collectionCreationsToUses))
 					collectionChanges = true;
 				//TODO add assignments and method parameters
+				
+				// External MethodInvocations that create collections (or methods that create collections) 
+				// but cannot be refactored because of a later use) are not supported at the moment,
+				// so if a collection is created in this manner it is not supported.
+				for (ASTNode node : collectionCreationsToUses.keySet()) {
+					if (node instanceof MethodInvocation) {
+						Optional<MethodDeclaration> methodDecl = internalDeclaration((MethodInvocation) node, collectionMethodDeclarations);
+						if (!methodDecl.isPresent())
+							if (unsupportedCollections.add(node))
+								collectionChanges = true;
+					}
+				}
+				
 			}
 			
 		}
