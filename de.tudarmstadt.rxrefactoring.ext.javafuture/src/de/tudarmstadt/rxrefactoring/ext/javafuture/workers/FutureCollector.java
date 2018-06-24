@@ -53,7 +53,7 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 	//private final Map<IRewriteCompilationUnit, Map<MethodDeclaration, Boolean>> isMethodPure;
 	public Multimap<ASTNode, MethodInvocation> collectionGetters = HashMultimap.create();
 	public Multimap<MethodDeclaration, ASTNode> methodDeclarationReturns = HashMultimap.create();
-	public Multimap<MethodDeclaration, ASTNode> methodDeclarationParams = HashMultimap.create();
+	//public Multimap<MethodDeclaration, ASTNode> methodDeclarationParams = HashMultimap.create();
 	
 	private final EnumSet<RefactoringOptions> options;
 
@@ -70,7 +70,7 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 	public FutureCollector refactor(IProjectUnits units, PreconditionWorker input, WorkerSummary summary) throws Exception {
 		this.collectionGetters = input.collectionGetters;
 		this.methodDeclarationReturns = input.methodDeclarations;
-		this.methodDeclarationParams = input.methodDeclarationParams;
+		//this.methodDeclarationParams = input.methodDeclarationParams;
 		
 		for (IRewriteCompilationUnit unit : units) {
 			// Collect the data
@@ -157,12 +157,12 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 	}
 	*/
 	
-	public Collection<ASTNode> refactorParameter(MethodDeclaration md) {
-		if (methodDeclarationParams.containsKey(md)) {
-			return methodDeclarationParams.get(md);
-		}
-		return null;
-	}
+	//public Collection<ASTNode> refactorParameter(MethodDeclaration md) {
+	//	if (methodDeclarationParams.containsKey(md)) {
+	//		return methodDeclarationParams.get(md);
+	//	}
+	//	return null;
+	//}
 	
 	public boolean refactorReturnStatement(MethodDeclaration md) {
 		return methodDeclarationReturns.containsKey(md);

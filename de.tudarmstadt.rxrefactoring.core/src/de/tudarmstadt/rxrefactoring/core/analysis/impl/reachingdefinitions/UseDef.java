@@ -101,7 +101,7 @@ public class UseDef {
 		private final Name name;
 		private final ASTNode op;
 
-		Use(Kind kind, @Nullable Name name, ASTNode op) {
+		public Use(Kind kind, @Nullable Name name, ASTNode op) {
 			this.kind = kind;
 			this.name = name;
 			this.op = op;

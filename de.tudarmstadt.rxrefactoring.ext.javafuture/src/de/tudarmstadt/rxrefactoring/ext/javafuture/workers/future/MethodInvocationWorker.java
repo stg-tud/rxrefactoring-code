@@ -49,12 +49,12 @@ public class MethodInvocationWorker extends AbstractFutureWorker<MethodInvocatio
 			
 			if (expression instanceof SimpleName) {
 				SimpleName simpleName = (SimpleName) expression;
-				newName = simpleName.getIdentifier();// + "Observable";
+				newName = simpleName.getIdentifier() + "Observable";
 			} else if (expression instanceof ArrayAccess) {
 				ArrayAccess arrayAccess = (ArrayAccess) expression;
 
 				SimpleName simpleName = (SimpleName) arrayAccess.getArray();
-				newName = simpleName.getIdentifier();// + "Observables";
+				newName = simpleName.getIdentifier() + "Observables";
 			}
 	
 			if (!newName.isEmpty())

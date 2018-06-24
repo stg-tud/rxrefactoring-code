@@ -1,12 +1,8 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.analysis;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -36,7 +32,6 @@ import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
-import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use.Kind;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
@@ -60,7 +55,7 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 	
 	// Maps MethodDeclarations for which parameters should be refactored to these
 	// parameters (within the declaration).
-	public Multimap<MethodDeclaration, ASTNode> methodDeclarationParams = HashMultimap.create();
+	// public Multimap<MethodDeclaration, ASTNode> methodDeclarationParams = HashMultimap.create();
 	
 	// Maps MethodInvocations and ClassInstanceCreations (new ArrayList<Future<..>>)
 	// that return Future or Future subclass Collections to its uses.
@@ -79,14 +74,24 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 	// Maps MethodDeclarations to their return instantiations
 	public Multimap<MethodDeclaration, ASTNode> collectionMethodDeclarations = HashMultimap.create();
 	
+	// Maps the left side of an Assignment to the expressions it is assigned
+	private Multimap<IVariableBinding, ASTNode> assignments = HashMultimap.create();
+	private Multimap<IVariableBinding, ASTNode> collectionAssignments = HashMultimap.create();
+	
+	// Collect constructs for which the refactoring is not possible
+	private Set<ASTNode> unsupportedInstantiations =  new HashSet<ASTNode>();
+	private Set<ASTNode> unsupportedCollections = new HashSet<ASTNode>();
+	
+	// Collection to Uses of collection items within an EnhancedForStatement
+	// or a LambdaExpression
+	private Multimap<ASTNode, Use> collectionItemUses = HashMultimap.create();	
+	
 	// Bindings attributed to instances for which the refactoring is supported	
 	public Set<IVariableBinding> bindings;
 	public Set<IVariableBinding> collectionBindings;	
 	public Set<IVariableBinding> iteratorBindings;
 	
 	ClassInfo classInfo;
-	
-	public Map<ASTNode, UseDef> anal;
 
 	public IRewriteCompilationUnit unit;
 
@@ -94,8 +99,10 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 	public @Nullable PreconditionWorker refactor(@NonNull IProjectUnits units,
 			@Nullable SubclassInstantiationCollector input, @NonNull WorkerSummary summary) throws Exception {
 
-		Set<UseDef> useDefs = new HashSet<UseDef>();
-		useDefs.addAll(input.analysis.values());
+		SetMultimap<Expression, Use> exprUses = HashMultimap.create();
+		input.analysis.values().forEach(useDef -> {
+			exprUses.putAll(useDef.asMap());
+		});
 		
 		classInfo = input.collector.classInfo;
 		
@@ -108,100 +115,69 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 		collectionCreations.addAll(input.collector.collectionCreations);
 		collectionCreations.addAll(input.subclassCollectionCreations);
 		
-		// Collect constructs for which the refactoring is not possible
-		Set<ASTNode> unsupportedInstantiations =  new HashSet<ASTNode>();
-		Set<ASTNode> unsupportedCollections = new HashSet<ASTNode>();
-		
-		// Maps the left side of an Assignment to the expressions it is assigned
-		Multimap<IVariableBinding, ASTNode> assignments = HashMultimap.create();
 		// Uses of an Iterator
 		Multimap<ASTNode, Use> iteratorUses = HashMultimap.create();
-		// Collection to Uses of collection items within an EnhancedForStatement
-		// or a LambdaExpression
-		Multimap<ASTNode, Use> collectionItemUses = HashMultimap.create();
+	
 		
-		
-		
-		
-		/*
-		System.out.println("USEDEFS");
-		SetMultimap<Expression, Use> newUseDefs = HashMultimap.create();
-		useDefs.forEach(useDef -> {
-			newUseDefs.putAll(useDef.asMap());
-		});
-		System.out.println(newUseDefs);
-		newUseDefs.forEach((e, u)-> {
-			System.out.println(e);
-			System.out.println(e.getClass());
-			System.out.println(u);
-		});
-		System.out.println("End USEDEFS");
-		*/
-		
-		useDefs.forEach(useDef -> {
-			Set<Expression> definitions = useDef.asMap().keySet();
-			definitions.forEach(expr -> {
-				Set<Use> exprUses = useDef.getUses(expr);
-				
-				// An expression is a parameter within a MethodDeclaration
-				Optional<MethodDeclaration> md = methodParameter(expr);
-				if (md.isPresent()) {
-					methodDeclarationParams.put(md.get(), expr);
-					instantiations.add(expr);
-				}
+		exprUses.forEach((expr, use)-> {
 				
 				// Case 1: The expression is an instantiation that should maybe be refactored
 				if (instantiations.contains(expr))
-					exprUses.forEach(use -> {
-						instantiationUses.put(expr, use);
-						if (unsupportedUse(use)) {
-							unsupportedInstantiations.add(expr);
-						} else if (use.getOp() instanceof ReturnStatement) {
-							collectMethodDeclarations(expr, (ReturnStatement) use.getOp(), methodDeclarations);
-						} else if (use.getOp() instanceof Assignment) {
-							collectAssignments(expr, ((Assignment)use.getOp()), assignments);
-						};
-					});
-				
+					handleInstantiation(expr, use);
 				// Case 2: The expression is a collection that should maybe be refactored
 				else if (collectionCreations.contains(expr))
-					exprUses.forEach(use -> {
-						collectionCreationsToUses.put(expr, use);
-						if (use.getOp() instanceof ReturnStatement) {
-							collectMethodDeclarations(expr, (ReturnStatement) use.getOp(), collectionMethodDeclarations);
-						} else if (use.getOp() instanceof EnhancedForStatement) {
-							// EnhancedForStatement should not be treated as collection uses
-							collectionCreationsToUses.remove(expr, use);
-						} else if (use.getOp() instanceof MethodInvocation) {
-							MethodInvocation mi = (MethodInvocation) use.getOp();
-							// The Use is a method call within an EnhancedForStatement or LambdaExpression
-							// The method receiver is a collection item, not the collection itself
-							if(!expr.resolveTypeBinding().isAssignmentCompatible(mi.getExpression().resolveTypeBinding())){
-								
-								collectionItemUses.put(expr, use);
-								collectionCreationsToUses.remove(expr, use);
-								if (unsupportedUse(use)) 
-									unsupportedCollections.add(expr);
-							}
-							// The MethodInvocation is a Lambda expressions on a collection
-							if(!mi.arguments().isEmpty()) {
-								if (mi.arguments().get(0) instanceof LambdaExpression) {
-									collectionCreationsToUses.remove(expr, use);
-								}
-							};		
+						handleCollection(expr, use);
+				else if(Types.isTypeOf(expr.resolveTypeBinding(),"java.util.Iterator"))
+					iteratorUses.put(expr, use);
+		});
+		
+		
+		// TODO: Workaround because use def analysis does not store uses of fields
+		Multimap<IVariableBinding, ASTNode> instBindings = getBindings(instantiationUses);
+		Multimap<IVariableBinding, ASTNode> instColBindings = getBindings(collectionCreationsToUses);
+		exprUses.forEach((expr, use)-> {
+			// If the expression is a SimpleName instead of the creation of that instance,
+			// and the name corresponds to a used binding, expr refers to a field within
+			// a method that did not initialize the field
+			// 'expr' could be e.g. a variable within an assignedForStatement
+			if (expr instanceof SimpleName) {
+				IBinding b = ((SimpleName)expr).resolveBinding();
+				if (instColBindings.containsKey(b)){
+					instColBindings.get((IVariableBinding)b).forEach(node -> {
+						if (node instanceof Expression) {
+							Expression fieldExpr = (Expression) node;
+							handleCollection(fieldExpr, use);
 						}
 					});
-				else if(Types.isTypeOf(expr.resolveTypeBinding(),"java.util.Iterator"))
-					exprUses.forEach(use -> {
-						iteratorUses.put(expr, use);
+				}
+			// 'expr' could be e.g. an instance created from a MethodInvocation to a field
+			// which is later used
+			// Note that this does not happen with Future, because only .get() receives method calls,
+			// and it is supported and therefore irrelevant
+			} else if (expr instanceof MethodInvocation) {
+				MethodInvocation mi = (MethodInvocation)expr;
+				if (mi.getExpression() instanceof SimpleName) {
+				IBinding b = ((SimpleName)mi.getExpression()).resolveBinding();
+				if (instBindings.containsKey(b)) {
+					Use newUse = new Use(Kind.METHOD_INVOCATION, (SimpleName)mi.getExpression(), mi);
+					instBindings.get((IVariableBinding)b).forEach(node -> {
+						Expression fieldExpr = (Expression) node;
+						handleInstantiation(fieldExpr, newUse);
 					});
-			});
-		});
+				} else if (instColBindings.containsKey(b)) {
+					Use newUse = new Use(Kind.METHOD_INVOCATION, (SimpleName)mi.getExpression(), mi);
+					instColBindings.get((IVariableBinding)b).forEach(node -> {
+						Expression fieldExpr = (Expression) node;
+						handleCollection(fieldExpr, newUse);
+					});
+				}
+			}
+			}
+		});		
 		
 		// A collection should be refactored (or not) as a whole.
 		collectionCreationsToUses.forEach((node, use) -> {
 			
-		
 			if (use.getOp() instanceof MethodInvocation) {
 				MethodInvocation methodInv = (MethodInvocation) use.getOp();
 				
@@ -213,8 +189,6 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 						collectionInstantiations.put(node, item);
 				});
 				
-		
-					
 				// An instantiation is a getter if a collection Use is the MethodInvocation that created 
 				// it with a collection declaring class.
 				if (instantiations.contains(methodInv)) {
@@ -236,6 +210,24 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 				}
 			});
 		
+		// TODO refactor parameters of method declarations if they are internal
+		// Currently, no parameters or instances acting as parameters are refactored (except
+		// if the method adds the instance to the collection or gets it)
+		
+		instantiationUses.forEach((expr, use) -> {
+			if (use.getKind() == Kind.METHOD_PARAMETER) {
+				MethodInvocation mi = (MethodInvocation) use.getOp();
+				if (!collectionGetters.values().contains(mi) && !collectionInstantiations.values().contains(expr))
+					unsupportedInstantiations.add(expr);
+			}
+		});
+		
+		collectionCreationsToUses.forEach((expr, use) -> {
+			if (use.getKind() == Kind.METHOD_PARAMETER)
+				unsupportedCollections.add(expr);
+		});
+		
+		
 		boolean instantiationChanges = true;
 		boolean collectionChanges = true;
 		while(instantiationChanges) {
@@ -243,22 +235,21 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 			// Updates unsupportedInstantiations using unsupportedInstantiations
 			if (handleUnsupportedAssignments(unsupportedInstantiations, assignments, instantiationUses))
 				instantiationChanges = true;
-			
-			// Filter out those method declarations for which at least one return statement is not to be refactored.
+			// Filter out those method declarations for which at least one return statement is not to be refactored,
+			// and make sure not to refactor other return statements.
 			methodDeclarations = filterMethodDeclarations(methodDeclarations, unsupportedInstantiations);
 			// Updates unsupportedInstantiations (return statements) using methodDeclarations
 			if (handleUnsupportedMethodDecls(unsupportedInstantiations, methodDeclarations, instantiationUses))
 				instantiationChanges = true;
 			
 			// Filter out those method declarations for which at least one parameter is not to be refactored.
-			methodDeclarationParams = filterMethodDeclarations(methodDeclarationParams, unsupportedInstantiations);		
+			// methodDeclarationParams = filterMethodDeclarations(methodDeclarationParams, unsupportedInstantiations);		
+			
 			// Updates unsupportedInstantiations using methodDeclarationParams
 			// Updates methodDeclarationParams using unsupportedInstantiations
-			// Note that uses as parameter to a method in collectionGetters and collectionInstantiations
-			// are not considered
-			// TODO: case where the parameter variable cannot be refactored
-			if (handleUnsupportedParameters(unsupportedInstantiations, methodDeclarationParams, instantiationUses))
-				instantiationChanges = true;
+			// This excludes uses as parameter to a method in collectionGetters and collectionInstantiations
+			//if (handleUnsupportedParameters(unsupportedInstantiations, methodDeclarationParams, instantiationUses))
+			//	instantiationChanges = true;
 			
 			while(collectionChanges) {
 				collectionChanges = false;
@@ -279,11 +270,14 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 				if (extendKeySet(collectionGetters, unsupportedCollections, unsupportedInstantiations))
 					collectionChanges = true;
 				
+				if (handleUnsupportedAssignments(unsupportedCollections, collectionAssignments, collectionCreationsToUses))
+					collectionChanges = true;
+				
 				collectionMethodDeclarations = filterMethodDeclarations(collectionMethodDeclarations, unsupportedCollections);
+
 				if (handleUnsupportedMethodDecls(unsupportedCollections, collectionMethodDeclarations, collectionCreationsToUses))
 					collectionChanges = true;
-				//TODO add assignments and method parameters
-				
+
 				// External MethodInvocations that create collections (or methods that create collections) 
 				// but cannot be refactored because of a later use) are not supported at the moment,
 				// so if a collection is created in this manner it is not supported.
@@ -295,9 +289,7 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 								collectionChanges = true;
 					}
 				}
-				
 			}
-			
 		}
 		
 		// Remove unsupported constructs related to a collection
@@ -356,15 +348,14 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 		for (Entry<ASTNode, Use> e : map.entries()) {
 			if (e.getValue().getKind() == Kind.METHOD_PARAMETER){
 				MethodInvocation mi = (MethodInvocation) e.getValue().getOp();
-				if (!collectionGetters.values().contains(mi) && collectionInstantiations.values().contains(mi)) {
+				if (!collectionGetters.values().contains(mi) && !collectionInstantiations.values().contains(e.getKey())) {
 					Optional<MethodDeclaration> methodDecl = internalDeclaration(mi, methodDeclParams);
 					// MethodDeclaration is external
 					if (!methodDecl.isPresent()) {
 						if (unsupported.add(e.getKey()))
 							changesInUnsupported = true;
 					} else if (unsupported.contains(e.getKey())){
-							// Do not refactor parameters within method
-							// TODO
+							// TODO: Do not refactor parameters within method
 							if (unsupported.addAll(methodDeclParams.get(methodDecl.get())))
 								changesInUnsupported = true;
 							methodDeclParams.removeAll(methodDecl.get());
@@ -408,11 +399,19 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 	}
 	
 	/**
-	 * Filter out entries with keys for which at least one value is unsupported.
+	 * Filter out entries with keys for which at least one value is unsupported, 
+	 * and add the remaining associated values to the list of unsupported.
 	 */
 	private Multimap<MethodDeclaration, ASTNode> filterMethodDeclarations(
 			Multimap<MethodDeclaration, ASTNode> unfiltered, Set<ASTNode> unsupported) {
-		return Multimaps.filterKeys(unfiltered, k -> unfiltered.get(k).stream().noneMatch(r -> unsupported.contains(r)));
+		Set<MethodDeclaration> filterOut = new HashSet<MethodDeclaration>();
+		unfiltered.keySet().forEach(k -> {
+			if(unfiltered.get(k).stream().anyMatch(value -> unsupported.contains(value))) {
+				unsupported.addAll(unfiltered.get(k));
+				filterOut.add(k);
+			}
+		});
+		return Multimaps.filterKeys(unfiltered, k -> !filterOut.contains(k));
 	}
 
 	/**
@@ -465,6 +464,54 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 				assignments.put((IVariableBinding)name.resolveBinding(), expr);
 		}
 	}
+	
+	
+	/**
+	 * Handle an instantiations that may have to be refactored. 
+	 */
+	private void handleInstantiation(Expression expr, Use use) {
+		instantiationUses.put(expr, use);
+		if (unsupportedUse(use)) {
+			unsupportedInstantiations.add(expr);
+		} else if (use.getOp() instanceof ReturnStatement) {
+			collectMethodDeclarations(expr, (ReturnStatement) use.getOp(), methodDeclarations);
+		} else if (use.getOp() instanceof Assignment) {
+			collectAssignments(expr, ((Assignment)use.getOp()), assignments);
+		};
+	}
+	
+	/**
+	 * Handle an instantiations of a collection that may have to be refactored. 
+	 */
+	private void handleCollection(Expression expr, Use use) {
+		collectionCreationsToUses.put(expr, use);
+		if (use.getOp() instanceof ReturnStatement) {
+			collectMethodDeclarations(expr, (ReturnStatement) use.getOp(), collectionMethodDeclarations);
+		} else if (use.getOp() instanceof EnhancedForStatement) {
+			// EnhancedForStatement should not be treated as collection uses
+			collectionCreationsToUses.remove(expr, use);
+		} else if (use.getOp() instanceof MethodInvocation) {
+			MethodInvocation mi = (MethodInvocation) use.getOp();
+			// The Use is a method call within an EnhancedForStatement or LambdaExpression
+			// The method receiver is a collection item, not the collection itself
+			if(mi.getExpression() != null && 
+					!expr.resolveTypeBinding().isAssignmentCompatible(mi.getExpression().resolveTypeBinding())){
+				collectionItemUses.put(expr, use);
+				collectionCreationsToUses.remove(expr, use);
+				if (unsupportedUse(use)) 
+					unsupportedCollections.add(expr);
+			}
+			// The MethodInvocation is a Lambda expressions on a collection
+			if(!mi.arguments().isEmpty()) {
+				if (mi.arguments().get(0) instanceof LambdaExpression) {
+					collectionCreationsToUses.remove(expr, use);
+				}
+			};		
+		} else if (use.getOp() instanceof Assignment) {
+			collectAssignments(expr, ((Assignment)use.getOp()), collectionAssignments);
+		}
+	}
+	
 
 	/**
 	 * Associates for MethodDeclarations the instantiation of the expression
@@ -518,12 +565,10 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 	
 	/**
 	 * Determines whether a definition corresponds to a parameter in the MethodDeclaration.
-	 * TODO: some uses are not stored in the UseDef, e.g. some MethodInvocations
 	 * @param expr
 	 * @return The MethodDeclaration it is parameter to, or None if it is to none.
 	 */
 	private Optional<MethodDeclaration> methodParameter(Expression expr) {
-		//TODO: extend InstantiationWorker so the type does not have to be compared
 		if (expr instanceof SimpleName &&
 				expr.resolveTypeBinding().getBinaryName().equals(classInfo.getBinaryName())){
 			Optional<MethodDeclaration> md = ASTNodes.findParent(expr, MethodDeclaration.class);
@@ -555,20 +600,5 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 		return false;
 	}
 	
-	
-	
-	private boolean implementsInterface(ITypeBinding binding, String interfaceBinaryName) {
-		if (binding == null) {
-			return false;
-		}
-		
-		List<ITypeBinding> bindings = new ArrayList<ITypeBinding>(Arrays.asList(binding.getInterfaces()));
-		bindings.add(binding);
-		for (ITypeBinding b : bindings) {
-			if (b != null && Objects.equals(b.getBinaryName(), interfaceBinaryName))
-				return true;
-		}
-		return false;
-	}
 
 }

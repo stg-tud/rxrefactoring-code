@@ -3,7 +3,6 @@ package de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -49,10 +48,10 @@ public class MethodDeclarationWorker extends AbstractFutureWorker<MethodDeclarat
 			replaceReturnStatements(unit, methodDeclaration);
 		}
 		
-		Collection<ASTNode> parameters = collector.refactorParameter(methodDeclaration);
-		if (parameters != null) {
-			replaceParameters(unit, methodDeclaration, parameters);
-		}
+		//Collection<ASTNode> parameters = collector.refactorParameter(methodDeclaration);
+		//if (parameters != null) {
+		//	replaceParameters(unit, methodDeclaration, parameters);
+		//}
 		
 	}
 
@@ -77,7 +76,7 @@ public class MethodDeclarationWorker extends AbstractFutureWorker<MethodDeclarat
 			Type type = ((ParameterizedType) returnType).getType();
 
 			JavaFutureASTUtils.replaceType(unit, type, "Observable");
-		}
+		}		
 	}
 
 	private void replaceReturnStatements(IRewriteCompilationUnit unit, MethodDeclaration methodDeclaration) {
