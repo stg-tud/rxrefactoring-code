@@ -19,7 +19,7 @@ public class TemplateWorker implements IWorker<TemplateCollector, Void>{
 	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable TemplateCollector input,
 			@NonNull WorkerSummary summary) throws Exception {
 		
-		// TODO 11 - Get the collected nodes that are relevant for this worker.
+		// TODO 14 - Get the collected nodes that are relevant for this worker.
 		Multimap<IRewriteCompilationUnit, ASTNode> collectedNodes = input.getCollectedNodes();
 		
 		for (IRewriteCompilationUnit unit : units) {
@@ -29,21 +29,29 @@ public class TemplateWorker implements IWorker<TemplateCollector, Void>{
 			
 			for (ASTNode node : collectedNodes.get(unit)) {
 				
-				// TODO 12 - Form the new construct with calls to an AST. Consider placing 
-				// methods for the construction of refactored nodes in a .utils subpackage.
-				// Here, a SimpleType node is created as an example.
+				/**
+				 * TODO 15 - If required, adapt imports with "addImport(String qualifiedTypeName)" 
+				 * and "removeImport(String qualifiedTypeName)" calls to the compilation unit.
+				 */
+				
+				/**
+				 * TODO 16 - Form the new construct with calls to the AST. Consider placing 
+				 * methods for the construction of refactored nodes in a ".utils" subpackage. 
+				 * Here, a SimpleType node is created as an example.
+				 */
 				SimpleType newNode = ast.newSimpleType(ast.newSimpleName("name"));
 				
-				// If required, adapt imports with addImport(String qualifiedTypeName) and 
-				// removeImport(String qualifiedTypeName) calls to the compilation unit.
-				
-				// TODO 13 - Replace the original node with the refactored one with a 
-				// replace(ASTNode node, ASTNode replacement) call to the compilation unit, 
-				// or delete nodes with remove(ASTNode node).
+				/**
+				 * TODO 17 - Replace the original node with the refactored one with a 
+				 * "replace(ASTNode node, ASTNode replacement)" call to the compilation unit, 
+				 * or delete nodes with "remove(ASTNode node)".
+				 */
 				unit.replace(node, newNode);
 				
-				// TODO 14 - If a construct cannot be refactored, note this in the summary as 
-				// summary.addSkipped(String key), otherwise note summary.addCorrect(String key)
+				/**
+				 * TODO 18 - If a construct could not be refactored, note this in the summary as 
+				 *  "summary.addSkipped(String key)", "otherwise note summary.addCorrect(String key)"
+				 */
 				summary.addCorrect("templateCreation");
 			}
 			
