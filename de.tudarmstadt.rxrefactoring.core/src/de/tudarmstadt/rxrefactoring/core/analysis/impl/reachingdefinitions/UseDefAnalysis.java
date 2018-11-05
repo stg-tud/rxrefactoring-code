@@ -117,7 +117,7 @@ public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 					LambdaExpression lambda = (LambdaExpression) args.get(0);
 					
 					List<Object> lambdaArgs = lambda.parameters();
-					if  (args.size()==1 && lambdaArgs.get(0) instanceof VariableDeclaration) {
+					if  (lambdaArgs.size() == 1 && lambdaArgs.get(0) instanceof VariableDeclaration) {
 						Name name = ((VariableDeclaration) lambdaArgs.get(0)).getName();
 						usesByExpression.put(callee, new Use(Kind.VARIABLE_DECL, name, invocation));
 					}

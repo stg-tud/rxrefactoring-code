@@ -31,9 +31,7 @@ public class ReturnStatementWorker extends AbstractFutureWorker<ReturnStatement>
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, ReturnStatement returnStatement) {
 		Expression expression = returnStatement.getExpression();
-
 		refactorExpression(unit, expression);
-
 	}
 
 	/**
