@@ -4,11 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
+import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
@@ -17,6 +20,10 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.NodeSupplier;
+import de.tudarmstadt.rxrefactoring.core.ir.util.CallableBuilder;
 
 /*
  * A reactive object has the following information flow
@@ -30,7 +37,7 @@ import com.google.common.collect.Maps;
  * 			---->	B3		---->	C1
  * 
  */
-public class ReactiveObject {
+public class ReactiveObject implements IReactiveObject {
 	
 	
 	//lists for inputs and outputs
@@ -125,6 +132,10 @@ public class ReactiveObject {
 		
 	}
 	
+	/*
+	 * Supplying entries for type declaration
+	 */
+	
 	@SuppressWarnings({ "unchecked", "null" })
 	public @NonNull NodeSupplier<TypeDeclaration> supplyTypeDeclaration() {
 		return unit -> {
@@ -157,14 +168,70 @@ public class ReactiveObject {
 		};
 	}
 	
-	public @NonNull NodeSupplier<ClassInstanceCreation> supplyInstanceCreation() {
+	public @NonNull InstanceCreationBuilder supplyInstanceCreation() {
+		return new InstanceCreationBuilder();
+	}
+	
+	/*
+	 * Supplying entries for expression declaration
+	 */
+	public boolean isMethodCreation() {
+		return computations.size() == 1 && outputs.size() == 1 && inputs.size() == 1 && inputs.values().iterator().next() instanceof EmptyReactiveInput;
+	}
+	
+	public @NonNull NodeSupplier<Expression> supplyMethodCreation() {
+		if (!isMethodCreation()) {
+			throw new IllegalStateException("method creation cannot be supplied");
+		}
+		
+		final IReactiveOutput output = outputs.values().iterator().next();
+		final IReactiveComputation computation = computations.values().iterator().next();
+		
 		return unit -> {
 			AST ast = unit.getAST();
 			
+			MethodInvocation fromCallable = ast.newMethodInvocation();
+			fromCallable.setName(ast.newSimpleName("fromCallable"));
+			fromCallable.setExpression(ast.newSimpleName("Flowable"));
+			
+			//TODO: get body of computation
+			CallableBuilder builder = new CallableBuilder(output.supplyType(), null);
+			
+			
+			return builder.supplyClassInstanceCreation().apply(unit);
+		};
+	}
+	
+	
+	public class InstanceCreationBuilder implements NodeSupplier<Expression> {
+		
+		private @Nullable IReactiveValue accessValue;
+		
+		public void accessOutput(@NonNull Object identifier) {
+			accessValue = outputs.get(identifier);
+		}
+	
+
+		@Override
+		public @NonNull Expression apply(@NonNull IRewriteCompilationUnit unit) {
+			AST ast = unit.getAST();
+			
+			Expression expr;
+			
 			ClassInstanceCreation newReactiveObject = ast.newClassInstanceCreation();
 			newReactiveObject.setType(ast.newSimpleType(supplyClassName().apply(unit)));
-			return newReactiveObject;
-		};
+			expr = newReactiveObject;
+			
+			
+			if (accessValue != null) {
+				FieldAccess field = ast.newFieldAccess();
+				field.setName(accessValue.supplyExternalName().apply(unit));
+				field.setExpression(expr);
+				expr = field;
+			}
+			
+			return expr;
+		}
 	}
 	
 }

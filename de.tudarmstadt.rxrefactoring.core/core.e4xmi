@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ASCII"?>
+<fragment:ModelFragments xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:commands="http://www.eclipse.org/ui/2010/UIModel/application/commands" xmlns:fragment="http://www.eclipse.org/ui/2010/UIModel/fragment" xmlns:menu="http://www.eclipse.org/ui/2010/UIModel/application/ui/menu" xmi:id="_xBSzgKKUEees06EUjNaWOg">
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_9eU78KKUEees06EUjNaWOg" featurename="menuContributions" parentElementId="org.eclipse.e4.legacy.ide.application" positionInList="">
+    <elements xsi:type="menu:MenuContribution" xmi:id="_D_3WUKKVEees06EUjNaWOg" elementId="de.tudarmstadt.rxrefactoring.core.menucontribution.0" positionInParent="after=org.eclipse.ui.run" parentId="org.eclipse.ui.main.menu">
+      <children xsi:type="menu:Menu" xmi:id="_hEtlkKKVEees06EUjNaWOg" elementId="de.tudarmstadt.rxrefactoring.core.menu" label="RxRefactoring Plugin" iconURI="">
+        <children xsi:type="menu:MenuSeparator" xmi:id="_O-zC4KKyEeeB0b7SGvWCTg" elementId="de.tudarmstadt.rxrefactoring.core.menuseparator.0"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_mkzxEKKVEees06EUjNaWOg" elementId="de.tudarmstadt.rxrefactoring.core.handledmenuitem.about" label="About..." iconURI="platform:/plugin/de.tudarmstadt.rxrefactoring.core/icons/rx-refactoring-logo.gif" command="_uTR4oKKVEees06EUjNaWOg"/>
+      </children>
+    </elements>
+  </fragments>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_sEOAEKKVEees06EUjNaWOg" featurename="commands" parentElementId="org.eclipse.e4.legacy.ide.application">
+    <elements xsi:type="commands:Command" xmi:id="_uTR4oKKVEees06EUjNaWOg" elementId="de.tudarmstadt.rxrefactoring.core.command.about" commandName="About Command"/>
+  </fragments>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_OYgIoKKWEees06EUjNaWOg" featurename="handlers" parentElementId="org.eclipse.e4.legacy.ide.application">
+    <elements xsi:type="commands:Handler" xmi:id="_QTt4IKKWEees06EUjNaWOg" elementId="de.tudarmstadt.rxrefactoring.core.handler.about" contributionURI="bundleclass://de.tudarmstadt.rxrefactoring.core/de.tudarmstadt.rxrefactoring.core.internal.e4.AboutHandler" command="_uTR4oKKVEees06EUjNaWOg"/>
+  </fragments>
+</fragment:ModelFragments>

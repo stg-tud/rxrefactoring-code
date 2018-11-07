@@ -2,6 +2,7 @@ package de.tudarmstadt.rxrefactoring.ext.asynctask.builders;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -25,8 +26,9 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import com.google.common.collect.Lists;
 
-import de.tudarmstadt.rxrefactoring.core.codegen.IdManager;
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.legacy.IdManager;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 
 /**
@@ -123,7 +125,7 @@ public class InnerClassBuilder extends AbstractBuilder {
 			
 			//Add field declaration
 			FieldDeclaration field = ast.newFieldDeclaration(newVariableDeclarationFragmentFrom(variable));
-			field.setType(ASTUtils.typeFromBinding(ast, variable.getType()));
+			field.setType(Types.fromBinding(ast, variable.getType()));
 			observableType.bodyDeclarations().add(field);
 			
 			
@@ -174,7 +176,7 @@ public class InnerClassBuilder extends AbstractBuilder {
 	private SingleVariableDeclaration newSingleVariableDeclarationFrom(IVariableBinding binding) {
 		SingleVariableDeclaration var = ast.newSingleVariableDeclaration();
 		var.setName(ast.newSimpleName(binding.getName()));	
-		var.setType(ASTUtils.typeFromBinding(ast, binding.getType()));
+		var.setType(Types.fromBinding(ast, binding.getType()));
 		
 		return var;
 	}
@@ -300,9 +302,13 @@ public class InnerClassBuilder extends AbstractBuilder {
 	//Finds variables that are defined in the enclosing block of the AsyncTask
 	//and adds them to the variables field.
 	private void setEnclosingVariables() {
-		BodyDeclaration enclosingBody = asyncTask.getEnclosingDeclaration();
-		if (enclosingBody instanceof MethodDeclaration) {
-			List<?> statements = ((MethodDeclaration) enclosingBody).getBody().statements();
+		Optional<BodyDeclaration> enclosingBody = asyncTask.getEnclosingDeclaration();
+		
+		if (!enclosingBody.isPresent())
+			return;
+		
+		if (enclosingBody.get() instanceof MethodDeclaration) {
+			List<?> statements = ((MethodDeclaration) enclosingBody.get()).getBody().statements();
 			
 			for (Object element : statements) {
 				Statement statement = (Statement) element;
@@ -324,7 +330,7 @@ public class InnerClassBuilder extends AbstractBuilder {
 							}
 						}
 						
-						if (continueVisit && ASTUtils.containsNode(statement, n -> Objects.equals(n, asyncTask.getDeclaration()))) {
+						if (continueVisit && ASTNodes.containsNode(statement, n -> Objects.equals(n, asyncTask.getDeclaration()))) {
 							continueVisit = false;					
 						}
 						

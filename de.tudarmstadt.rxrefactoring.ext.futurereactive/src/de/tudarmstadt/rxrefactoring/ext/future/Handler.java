@@ -1,12 +1,14 @@
 package de.tudarmstadt.rxrefactoring.ext.future;
 
-import de.tudarmstadt.rxrefactoring.core.RefactorExtension;
-import de.tudarmstadt.rxrefactoring.core.RefactoringHandler;
+import org.eclipse.jdt.annotation.NonNull;
 
-public class Handler extends RefactoringHandler {
+import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
+import de.tudarmstadt.rxrefactoring.core.RefactoringE4Handler;
+
+public class Handler extends RefactoringE4Handler {
 
 	@Override
-	public RefactorExtension createExtension() {		
+	public @NonNull IRefactorExtension createExtension() {		
 		return new FutureRefactoringExtension();
 	}
 }

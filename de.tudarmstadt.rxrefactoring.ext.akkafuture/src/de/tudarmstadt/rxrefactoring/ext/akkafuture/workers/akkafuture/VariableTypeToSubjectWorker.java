@@ -8,7 +8,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import com.google.common.collect.Multimap;
 
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractAkkaFutureWorker;
@@ -20,19 +20,19 @@ public class VariableTypeToSubjectWorker extends AbstractAkkaFutureWorker<AkkaFu
 	}
 
 	@Override
-	protected Multimap<RewriteCompilationUnit, VariableDeclarationFragment> getNodesMap() {
+	protected Multimap<IRewriteCompilationUnit, VariableDeclarationFragment> getNodesMap() {
 		return collector.variableDeclarationToSubject;
 	}
 
 	@Override
-	protected void endRefactorNode(RewriteCompilationUnit unit) {		
+	protected void endRefactorNode(IRewriteCompilationUnit unit) {		
 		addSubjectImport(unit);		
 		
 		super.endRefactorNode(unit);
 	}
 	
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, VariableDeclarationFragment variable) {
+	protected void refactorNode(IRewriteCompilationUnit unit, VariableDeclarationFragment variable) {
 		Type type = Types.declaredTypeOf(variable);
 		
 		AST ast = unit.getAST();	

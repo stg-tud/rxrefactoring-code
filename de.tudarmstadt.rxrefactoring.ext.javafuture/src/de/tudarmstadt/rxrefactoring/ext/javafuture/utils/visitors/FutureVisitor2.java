@@ -22,16 +22,16 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
-import de.tudarmstadt.rxrefactoring.core.Log;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfo;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.VisitorNodes;
-
 
 public class FutureVisitor2 extends ASTVisitor implements VisitorNodes {
 	private final ClassInfo classInfo;
 	private final String classBinaryName;
-	
+
 	private final List<TypeDeclaration> typeDeclarations;
 	private final List<FieldDeclaration> fieldDeclarations;
 	private final List<Assignment> assignments;
@@ -45,7 +45,7 @@ public class FutureVisitor2 extends ASTVisitor implements VisitorNodes {
 	public FutureVisitor2(ClassInfo classInfo) {
 		this.classInfo = classInfo;
 		this.classBinaryName = classInfo.getBinaryName();
-		
+
 		typeDeclarations = new ArrayList<>();
 		assignments = new ArrayList<>();
 		fieldDeclarations = new ArrayList<>();
@@ -59,20 +59,22 @@ public class FutureVisitor2 extends ASTVisitor implements VisitorNodes {
 
 	@Override
 	public boolean visit(FieldDeclaration node) {
-		if (ASTUtils.isClassOf(node, classBinaryName)) {
+		if (Types.isExactTypeOf(node.getType().resolveBinding(), classBinaryName)) {
 			fieldDeclarations.add(node);
 		}
-		
+
 		return true;
 	}
 
 	@Override
 	public boolean visit(VariableDeclarationStatement node) {
+
 		ITypeBinding type = node.getType().resolveBinding();
-		if (ASTUtils.isClassOf(type, classBinaryName)) {
+
+		if (Types.isExactTypeOf(type.getErasure(), classBinaryName)) {
 			varDeclStatements.add(node);
 		}
-		
+
 		return true;
 	}
 
@@ -80,15 +82,15 @@ public class FutureVisitor2 extends ASTVisitor implements VisitorNodes {
 	public boolean visit(Assignment node) {
 		Expression leftHandSide = node.getLeftHandSide();
 
-		if(leftHandSide.getNodeType() != Expression.ARRAY_ACCESS) {
+		if (leftHandSide.getNodeType() != Expression.ARRAY_ACCESS) {
 
 			ITypeBinding type = leftHandSide.resolveTypeBinding();
 
-			if(ASTUtils.isClassOf(type, classBinaryName)) {
+			if (ASTUtils.isClassOf(type, classBinaryName)) {
 				assignments.add(node);
 			}
 		}
-		
+
 		return true;
 	}
 
@@ -98,14 +100,14 @@ public class FutureVisitor2 extends ASTVisitor implements VisitorNodes {
 		IBinding iBinding = simpleName.resolveBinding();
 		if (iBinding != null) {
 			int kind = iBinding.getKind();
-			
+
 			if (ASTUtils.isClassOf(typeBinding, classBinaryName) && kind == IBinding.VARIABLE) {
 				if (!simpleNames.contains(simpleName)) {
 					simpleNames.add(simpleName);
 				}
 			}
 		}
-		
+
 		return true;
 	}
 
@@ -115,38 +117,37 @@ public class FutureVisitor2 extends ASTVisitor implements VisitorNodes {
 		if (ASTUtils.isClassOf(type, classBinaryName)) {
 			classInstanceCreations.add(node);
 		}
-		
+
 		return true;
 	}
-	
+
 	@Override
 	public boolean visit(MethodDeclaration node) {
 		IMethodBinding binding = node.resolveBinding();
-		
-		if (binding != null)  {
+
+		if (binding != null) {
 			ITypeBinding returnType = binding.getReturnType();
 
-			if (ASTUtils.isClassOf(returnType, classBinaryName )) {
+			if (ASTUtils.isClassOf(returnType, classBinaryName)) {
 				methodDeclarations.add(node);
 			}
 		}
-		
+
 		return true;
 	}
 
 	@Override
 	public boolean visit(MethodInvocation node) {
 		ITypeBinding typeBinding = null;
-		
-		if(node.getExpression() != null) {
+
+		if (node.getExpression() != null) {
 			typeBinding = node.getExpression().resolveTypeBinding();
 		}
 
 		if (typeBinding != null) {
-			//ITypeBinding type = binding.getDeclaringClass();
-			if (ASTUtils.isClassOf(typeBinding, classBinaryName))
-			{
-				if(classInfo.getUnsupportedMethods().contains(node.getName().getIdentifier())) {
+			// ITypeBinding type = binding.getDeclaringClass();
+			if (ASTUtils.isClassOf(typeBinding, classBinaryName)) {
+				if (classInfo.getUnsupportedMethods().contains(node.getName().getIdentifier())) {
 					Log.info(getClass(), node.getName().getIdentifier() + " is not supported!");
 				} else {
 					methodInvocations.add(node);
@@ -154,16 +155,12 @@ public class FutureVisitor2 extends ASTVisitor implements VisitorNodes {
 			}
 		}
 
-		for (Object arg : node.arguments())
-		{
-			if (arg instanceof SimpleName)
-			{
+		for (Object arg : node.arguments()) {
+			if (arg instanceof SimpleName) {
 				SimpleName simpleName = (SimpleName) arg;
 				ITypeBinding argType = simpleName.resolveTypeBinding();
-				if (ASTUtils.isClassOf(argType, classBinaryName))
-				{
-					if (!simpleNames.contains(simpleName))
-					{
+				if (ASTUtils.isClassOf(argType, classBinaryName)) {
+					if (!simpleNames.contains(simpleName)) {
 						simpleNames.add(simpleName);
 					}
 				}
@@ -173,75 +170,64 @@ public class FutureVisitor2 extends ASTVisitor implements VisitorNodes {
 	}
 
 	@Override
-	public boolean visit(SingleVariableDeclaration node)
-	{
+	public boolean visit(SingleVariableDeclaration node) {
 		ITypeBinding type = node.getType().resolveBinding();
-		if (ASTUtils.isClassOf(type, classBinaryName))
-		{
+		if (ASTUtils.isClassOf(type, classBinaryName)) {
 			singleVarDeclarations.add(node);
 		}
 		return true;
 	}
 
 	@Override
-	public List<TypeDeclaration> getTypeDeclarations()
-	{
+	public List<TypeDeclaration> getTypeDeclarations() {
 		return typeDeclarations;
 	}
 
 	@Override
-	public List<FieldDeclaration> getFieldDeclarations()
-	{
+	public List<FieldDeclaration> getFieldDeclarations() {
 		return fieldDeclarations;
 	}
 
 	@Override
-	public List<Assignment> getAssignments()
-	{
+	public List<Assignment> getAssignments() {
 		return assignments;
 	}
 
 	@Override
-	public List<VariableDeclarationStatement> getVarDeclStatements()
-	{
+	public List<VariableDeclarationStatement> getVarDeclStatements() {
 		return varDeclStatements;
 	}
 
 	@Override
-	public List<SimpleName> getSimpleNames()
-	{
+	public List<SimpleName> getSimpleNames() {
 		return simpleNames;
 	}
 
 	@Override
-	public List<ClassInstanceCreation> getClassInstanceCreations()
-	{
+	public List<ClassInstanceCreation> getClassInstanceCreations() {
 		return classInstanceCreations;
 	}
 
 	@Override
-	public List<SingleVariableDeclaration> getSingleVarDeclarations()
-	{
+	public List<SingleVariableDeclaration> getSingleVarDeclarations() {
 		return singleVarDeclarations;
 	}
 
 	@Override
-	public List<MethodInvocation> getMethodInvocations()
-	{
+	public List<MethodInvocation> getMethodInvocations() {
 		return methodInvocations;
 	}
 
 	@Override
-	public List<MethodDeclaration> getMethodDeclarations()
-	{
+	public List<MethodDeclaration> getMethodDeclarations() {
 		return methodDeclarations;
 	}
-	
+
 	@Override
 	public List<ArrayCreation> getArrayCreations() {
 		return new ArrayList<>();
 	}
-	
+
 	@Override
 	public List<ReturnStatement> getReturnStatements() {
 		return new ArrayList<>();

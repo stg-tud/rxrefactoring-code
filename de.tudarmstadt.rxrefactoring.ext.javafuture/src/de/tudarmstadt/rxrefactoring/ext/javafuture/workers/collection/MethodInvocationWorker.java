@@ -6,8 +6,9 @@ import java.util.Map;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.helper.MethodInvocationVisitor;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
 
 public class MethodInvocationWorker extends AbstractFutureWorker<MethodInvocation> {
@@ -17,32 +18,34 @@ public class MethodInvocationWorker extends AbstractFutureWorker<MethodInvocatio
 	}
 
 	@Override
-	protected Map<RewriteCompilationUnit, List<MethodInvocation>> getNodesMap() {
+	protected Map<IRewriteCompilationUnit, List<MethodInvocation>> getNodesMap() {
 		return collector.getMethodInvocationsMap("collection");
 	}
-	
+
 	@Override
-	protected void endRefactorNode(RewriteCompilationUnit unit) {
+	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
 		addFutureObservableImport(unit);
-		
+
 		super.endRefactorNode(unit);
 	}
 
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, MethodInvocation methodInvocation) {
-		String methodName = methodInvocation.getName().getIdentifier();
+	protected void refactorNode(IRewriteCompilationUnit unit, MethodInvocation methodInvocation) {
+		
+		// e.g. list.add(future) -> listObservables.add(Observable.from(future))
+		Expression expression = (Expression) methodInvocation.arguments().get(0);
+		
+		// MethodDeclarations in future, not collector, group
+		MethodInvocationVisitor visitor = new MethodInvocationVisitor(collector, "future");
+		
+		expression.accept(visitor);
+		
+		if (visitor.isExternalMethod().orElse(false)) {
 
-		// list.add(future) -> listObservables.add(Observable.from(future))
-		if(methodName.equals("add")) {
-			Expression expression = (Expression)methodInvocation.arguments().get(0);
-
-			if(collector.isPure(unit, methodInvocation)) {
-				JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Observable", "from", expression);
-			} else {
-				JavaFutureASTUtils.moveInsideMethodInvocation(unit, "FutureObservable", "create", expression);
-			}
+			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Observable", "fromFuture", expression);
 			summary.addCorrect("futureCreation");
 		}
 	}
+	
 }

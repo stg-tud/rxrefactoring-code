@@ -1,7 +1,7 @@
 package de.tudarmstadt.rxrefactoring.core.ir.util;
 
-import static de.tudarmstadt.rxrefactoring.core.ir.NodeSupplier.parameterizedType;
-import static de.tudarmstadt.rxrefactoring.core.ir.NodeSupplier.simpleType;
+import static de.tudarmstadt.rxrefactoring.core.NodeSupplier.parameterizedType;
+import static de.tudarmstadt.rxrefactoring.core.NodeSupplier.simpleType;
 
 import java.util.function.Consumer;
 
@@ -13,7 +13,7 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
 
-import de.tudarmstadt.rxrefactoring.core.ir.NodeSupplier;
+import de.tudarmstadt.rxrefactoring.core.NodeSupplier;
 
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.SimpleName;
@@ -56,22 +56,22 @@ public class FunctionBuilder {
 			AST ast = unit.getAST();
 			
 			//Define the call method
-			MethodDeclaration acceptMethod = ast.newMethodDeclaration();
-			acceptMethod.setName(ast.newSimpleName("apply"));
-			acceptMethod.setReturnType2(outputType.apply(unit));
-			acceptMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
+			MethodDeclaration applyMethod = ast.newMethodDeclaration();
+			applyMethod.setName(ast.newSimpleName("apply"));
+			applyMethod.setReturnType2(outputType.apply(unit));
+			applyMethod.modifiers().add(ast.newModifier(ModifierKeyword.PUBLIC_KEYWORD));
 					
 			SingleVariableDeclaration callParameter = ast.newSingleVariableDeclaration();
 			callParameter.setName(variableName.apply(unit));
 			callParameter.setType(inputType.apply(unit));
 			
-			acceptMethod.parameters().add(callParameter);
+			applyMethod.parameters().add(callParameter);
 			
-			acceptMethod.setBody(body.apply(unit));
+			applyMethod.setBody(body.apply(unit));
 					
 			//Action1 class declaration
 			AnonymousClassDeclaration anonClass = ast.newAnonymousClassDeclaration();
-			anonClass.bodyDeclarations().add(acceptMethod);	
+			anonClass.bodyDeclarations().add(applyMethod);	
 			
 			ParameterizedType consumerType = parameterizedType(simpleType("Function"), inputType, outputType).apply(unit);
 					

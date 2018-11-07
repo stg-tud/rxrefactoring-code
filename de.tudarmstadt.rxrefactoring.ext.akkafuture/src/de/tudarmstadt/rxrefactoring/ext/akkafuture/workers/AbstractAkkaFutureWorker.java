@@ -2,10 +2,10 @@ package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers;
 
 import com.google.common.collect.Multimap;
 
+import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
-import de.tudarmstadt.rxrefactoring.core.ProjectUnits;
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
+import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 
 
 public abstract class AbstractAkkaFutureWorker<CollectorType, RefactorType> implements IWorker<CollectorType, Void> {
@@ -22,26 +22,26 @@ public abstract class AbstractAkkaFutureWorker<CollectorType, RefactorType> impl
 		return nodeName;
 	}
 	
-	protected abstract Multimap<RewriteCompilationUnit, RefactorType> getNodesMap();
+	protected abstract Multimap<IRewriteCompilationUnit, RefactorType> getNodesMap();
 	
-	protected abstract void refactorNode(RewriteCompilationUnit unit, RefactorType node);
+	protected abstract void refactorNode(IRewriteCompilationUnit unit, RefactorType node);
 	
-	protected void startRefactorNode(RewriteCompilationUnit unit) {
+	protected void startRefactorNode(IRewriteCompilationUnit unit) {
 		
 	}
 	
-	protected void endRefactorNode(RewriteCompilationUnit unit) {
+	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		
 	}
 	
 	@Override
-	public Void refactor(ProjectUnits units, CollectorType collector, WorkerSummary summary) throws Exception {
+	public Void refactor(IProjectUnits units, CollectorType collector, WorkerSummary summary) throws Exception {
 		this.collector = collector;
 		this.summary = summary;
 		
-		Multimap<RewriteCompilationUnit, RefactorType> nodeMap = getNodesMap();
+		Multimap<IRewriteCompilationUnit, RefactorType> nodeMap = getNodesMap();
 		
-		for (RewriteCompilationUnit unit : nodeMap.keySet()) {		
+		for (IRewriteCompilationUnit unit : nodeMap.keySet()) {		
 				startRefactorNode(unit);				
 				for (RefactorType node : nodeMap.get(unit)) {
 					refactorNode(unit, node);
@@ -52,52 +52,52 @@ public abstract class AbstractAkkaFutureWorker<CollectorType, RefactorType> impl
 		return null;
 	}
 
-	protected void addObservableImport(RewriteCompilationUnit unit) {
+	protected void addObservableImport(IRewriteCompilationUnit unit) {
 		unit.addImport("rx.Observable");
 	}
 
-	protected void addSubjectImport(RewriteCompilationUnit unit) {
+	protected void addSubjectImport(IRewriteCompilationUnit unit) {
 		unit.addImport("rx.subjects.Subject");
 		unit.addImport("rx.subjects.ReplaySubject");
 	}
 
-	protected void addCallableImport(RewriteCompilationUnit unit) {
+	protected void addCallableImport(IRewriteCompilationUnit unit) {
 		unit.addImport("java.util.concurrent.Callable");		
 	}
 
-	protected void addSchedulersImport(RewriteCompilationUnit unit) {
+	protected void addSchedulersImport(IRewriteCompilationUnit unit) {
 		unit.addImport("rx.schedulers.Schedulers");		
 	}
 
-	protected void addAwaitImport(RewriteCompilationUnit unit) {
+	protected void addAwaitImport(IRewriteCompilationUnit unit) {
 		unit.addImport("scala.concurrent.Await");		
 	}
 
-	protected void addDurationImport(RewriteCompilationUnit unit) {
+	protected void addDurationImport(IRewriteCompilationUnit unit) {
 		unit.addImport("scala.concurrent.duration.Duration");		
 	}
 
-	protected void addArraysImport(RewriteCompilationUnit unit) {
+	protected void addArraysImport(IRewriteCompilationUnit unit) {
 		unit.addImport("java.util.Arrays");		
 	}
 
-	protected void addCollectorsImport(RewriteCompilationUnit unit) {
+	protected void addCollectorsImport(IRewriteCompilationUnit unit) {
 		unit.addImport("java.util.stream.Collectors");		
 	}
 
-	protected void addFunc1Import(RewriteCompilationUnit unit) {
+	protected void addFunc1Import(IRewriteCompilationUnit unit) {
 		unit.addImport("rx.functions.Func1");		
 	}
 
-	protected void addAction1Import(RewriteCompilationUnit unit) {
+	protected void addAction1Import(IRewriteCompilationUnit unit) {
 		unit.addImport("rx.functions.Action1");		
 	}
 
-	protected void addExecutionContextsImport(RewriteCompilationUnit unit) {
+	protected void addExecutionContextsImport(IRewriteCompilationUnit unit) {
 		unit.addImport("akka.dispatch.ExecutionContexts");		
 	}
 
-	protected void addFuturesImport(RewriteCompilationUnit unit) {
+	protected void addFuturesImport(IRewriteCompilationUnit unit) {
 		unit.addImport("akka.dispatch.Futures");		
 	}
 

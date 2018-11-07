@@ -18,17 +18,28 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 public interface VisitorNodes {
 	List<TypeDeclaration> getTypeDeclarations();
+
 	List<FieldDeclaration> getFieldDeclarations();
+
 	List<Assignment> getAssignments();
+
 	List<VariableDeclarationStatement> getVarDeclStatements();
+
 	List<SimpleName> getSimpleNames();
+
 	List<ClassInstanceCreation> getClassInstanceCreations();
+
 	List<SingleVariableDeclaration> getSingleVarDeclarations();
+
 	List<MethodInvocation> getMethodInvocations();
+
 	List<MethodDeclaration> getMethodDeclarations();
+
 	List<ArrayCreation> getArrayCreations();
+
 	List<ReturnStatement> getReturnStatements();
-	
+
 	Map<ASTNode, MethodDeclaration> getParentMethods();
+
 	Map<MethodDeclaration, Boolean> getIsMethodPures();
 }

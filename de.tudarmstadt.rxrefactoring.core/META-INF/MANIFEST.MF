@@ -3,6 +3,22 @@ Bundle-ManifestVersion: 2
 Bundle-Name: RxJavaRefactoringCore
 Bundle-SymbolicName: de.tudarmstadt.rxrefactoring.core;singleton:=true
 Bundle-Version: 1.0.0.qualifier
+Bundle-ClassPath: libs/rxjava-1.2.2.jar,
+  libs/commons-io-2.5.jar,
+  libs/jgrapht-core-1.0.1.jar,
+  .
+Export-Package: de.tudarmstadt.rxrefactoring.core,
+ de.tudarmstadt.rxrefactoring.core.analysis,
+ de.tudarmstadt.rxrefactoring.core.analysis.cfg,
+ de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement,
+ de.tudarmstadt.rxrefactoring.core.analysis.dataflow,
+ de.tudarmstadt.rxrefactoring.core.analysis.impl,
+ de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions,
+ de.tudarmstadt.rxrefactoring.core.ir,
+ de.tudarmstadt.rxrefactoring.core.ir.util,
+ de.tudarmstadt.rxrefactoring.core.legacy,
+ de.tudarmstadt.rxrefactoring.core.utils,
+ org.jgrapht.graph
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.e4.core.di,
@@ -15,21 +31,11 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.jface.text;bundle-version="3.8.2",
  org.eclipse.jdt.ui;bundle-version="3.12.1",
  org.eclipse.ui.console;bundle-version="3.6.200",
- com.google.guava;bundle-version="21.0.0",
  org.eclipse.core.filebuffers;bundle-version="3.6.100",
- org.eclipse.jdt.annotation
+ org.eclipse.jdt.annotation,
+ org.eclipse.e4.ui.model.workbench;bundle-version="2.0.0.v20170228-1842",
+ org.apache.commons.lang3;bundle-version="3.1.0",
+ com.google.guava;bundle-version="21.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Bundle-ClassPath: libs/rxjava-1.2.2.jar,
- libs/commons-io-2.5.jar,
- libs/jgrapht-core-1.0.1.jar,
- .
-Export-Package: de.tudarmstadt.rxrefactoring.core,
- de.tudarmstadt.rxrefactoring.core.analysis,
- de.tudarmstadt.rxrefactoring.core.analysis.cfg,
- de.tudarmstadt.rxrefactoring.core.analysis.example,
- de.tudarmstadt.rxrefactoring.core.ir,
- de.tudarmstadt.rxrefactoring.core.ir.util,
- de.tudarmstadt.rxrefactoring.core.legacy,
- de.tudarmstadt.rxrefactoring.core.utils
 Import-Package: com.google.common.base,
- com.google.common.collect
+  com.google.common.collect

@@ -9,7 +9,7 @@ import org.eclipse.jdt.core.dom.Type;
 
 import com.google.common.collect.Multimap;
 
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractAkkaFutureWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
 
@@ -19,12 +19,12 @@ public class ListTypeWorker extends AbstractAkkaFutureWorker<AkkaFutureCollector
 	}
 
 	@Override
-	protected Multimap<RewriteCompilationUnit, ParameterizedType> getNodesMap() {
+	protected Multimap<IRewriteCompilationUnit, ParameterizedType> getNodesMap() {
 		return collector.collectionTypes;
 	}
 
 	@Override
-	protected void endRefactorNode(RewriteCompilationUnit unit) {
+	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
 		addSubjectImport(unit);
 		addCallableImport(unit);
@@ -34,7 +34,7 @@ public class ListTypeWorker extends AbstractAkkaFutureWorker<AkkaFutureCollector
 	}
 	
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, ParameterizedType type) {
+	protected void refactorNode(IRewriteCompilationUnit unit, ParameterizedType type) {
 		
 		AST ast = unit.getAST();
 		

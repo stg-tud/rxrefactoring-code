@@ -21,7 +21,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.legacy.IdManager;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
@@ -38,14 +38,14 @@ public class UnrefactorableReferencesWorker extends AbstractAkkaFutureWorker<Akk
 	}
 
 	@Override
-	protected Multimap<RewriteCompilationUnit, Expression> getNodesMap() {
+	protected Multimap<IRewriteCompilationUnit, Expression> getNodesMap() {
 		return collector.unrefactorableFutureReferences;
 	}
 
 
 	@SuppressWarnings("unchecked")
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, Expression expr) {
+	protected void refactorNode(IRewriteCompilationUnit unit, Expression expr) {
 		
 		AST ast = unit.getAST();
 		
@@ -53,7 +53,7 @@ public class UnrefactorableReferencesWorker extends AbstractAkkaFutureWorker<Akk
 		if (!FutureTypeWrapper.isAkkaFuture(typeBinding))
 			return;
 		
-		Supplier<Type> typeSupplier = () -> Types.typeFromBinding(ast, FutureTypeWrapper.create(typeBinding).getTypeParameter(ast));
+		Supplier<Type> typeSupplier = () -> Types.fromBinding(ast, FutureTypeWrapper.create(typeBinding).getTypeParameter(ast));
 		
 		/*
 		 * builds
@@ -115,7 +115,7 @@ public class UnrefactorableReferencesWorker extends AbstractAkkaFutureWorker<Akk
 				if (FutureTypeWrapper.isAkkaFuture(varType)) {
 					varStatement.setType(FutureTypeWrapper.create(varType).toObservableType(ast));
 				} else {
-					varStatement.setType(Types.typeFromBinding(ast, varType));
+					varStatement.setType(Types.fromBinding(ast, varType));
 				}				
 				varStatement.modifiers().add(ast.newModifier(ModifierKeyword.FINAL_KEYWORD));
 				

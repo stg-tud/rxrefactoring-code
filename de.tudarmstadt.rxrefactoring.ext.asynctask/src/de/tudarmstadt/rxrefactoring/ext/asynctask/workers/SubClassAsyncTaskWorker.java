@@ -15,10 +15,10 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import com.google.common.collect.Multimap;
 
-import de.tudarmstadt.rxrefactoring.core.ProjectUnits;
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
-import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
+import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IWorker;
+import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.InnerClassBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.RefactorNames;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.SubscriberBuilder;
@@ -39,11 +39,11 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 	
 
 	@Override
-	public Void refactor(ProjectUnits units, AsyncTaskCollector collector, WorkerSummary summary) throws Exception {
+	public Void refactor(IProjectUnits units, AsyncTaskCollector collector, WorkerSummary summary) throws Exception {
 				
-		Multimap<RewriteCompilationUnit, TypeDeclaration> anonymousClasses = collector.getSubclasses();
+		Multimap<IRewriteCompilationUnit, TypeDeclaration> anonymousClasses = collector.getSubclasses();
 
-		for (RewriteCompilationUnit unit : anonymousClasses.keySet()) {
+		for (IRewriteCompilationUnit unit : anonymousClasses.keySet()) {
 			Collection<TypeDeclaration> declarations = anonymousClasses.get(unit);
 			for (TypeDeclaration asyncTaskDeclaration : declarations) {
 
@@ -69,11 +69,11 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 		return null;
 	}
 	
-	private void updateUsageFor(AsyncTaskWrapper asyncTask, Multimap<RewriteCompilationUnit, MethodInvocation> usages, InnerClassBuilder builder) {
+	private void updateUsageFor(AsyncTaskWrapper asyncTask, Multimap<IRewriteCompilationUnit, MethodInvocation> usages, InnerClassBuilder builder) {
 		
-		for (Entry<RewriteCompilationUnit, MethodInvocation> entry : usages.entries()) {
+		for (Entry<IRewriteCompilationUnit, MethodInvocation> entry : usages.entries()) {
 			
-			RewriteCompilationUnit unit = entry.getKey();
+			IRewriteCompilationUnit unit = entry.getKey();
 			MethodInvocation method = entry.getValue();
 			
 			ITypeBinding asyncTaskBinding = asyncTask.resolveTypeBinding();
@@ -101,8 +101,8 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 	/**
 	 * Replace asyncTask.cancel() method with Subscription.unsubscribe()
 	 */
-//	void replaceCancel(Multimap<RewriteCompilationUnit, MethodInvocation> relevantUsages, MethodInvocation methodInvoke,
-//			RewriteCompilationUnit unit) {
+//	void replaceCancel(Multimap<IRewriteCompilationUnit, MethodInvocation> relevantUsages, MethodInvocation methodInvoke,
+//			IRewriteCompilationUnit unit) {
 //				
 //		boolean isCancelPresent = false;
 //		AST ast = unit.getAST();
@@ -128,7 +128,7 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 	 * Method to refactor method invocation statements with name execute EX: new
 	 * Task().execute();
 	 */
-	private void replaceExecute(RewriteCompilationUnit unit, MethodInvocation methodInvoke) {
+	private void replaceExecute(IRewriteCompilationUnit unit, MethodInvocation methodInvoke) {
 
 		AST ast = unit.getAST();
 		
@@ -151,7 +151,7 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 	 * Method to refactor method invocation statements with name execute EX: new
 	 * Task().execute();
 	 */
-//	private void replaceExecuteWithSubscription(RewriteCompilationUnit unit, MethodInvocation methodInvoke, AST astInvoke) {
+//	private void replaceExecuteWithSubscription(IRewriteCompilationUnit unit, MethodInvocation methodInvoke, AST astInvoke) {
 //
 //
 //	
@@ -171,7 +171,7 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 //		unit.replace(methodInvoke, initSubscription);
 //	}
 
-//	private void createSubscriptionDeclaration(RewriteCompilationUnit unit, MethodInvocation methodInvoke) {
+//	private void createSubscriptionDeclaration(IRewriteCompilationUnit unit, MethodInvocation methodInvoke) {
 //
 //		
 //		TypeDeclaration tyDec = ASTUtils.findParent(methodInvoke, TypeDeclaration.class);
@@ -199,7 +199,7 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 	/**
 	 * Add cancel method if AsyncTask.cacel() method was invoked
 	 */
-//	private void updateCancelInvocation(RewriteCompilationUnit unit, MethodInvocation methodInvoke, AST astInvoke) {
+//	private void updateCancelInvocation(IRewriteCompilationUnit unit, MethodInvocation methodInvoke, AST astInvoke) {
 //
 //		MethodInvocation unSubscribe = astInvoke.newMethodInvocation();
 //		unSubscribe
@@ -211,7 +211,7 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 
 	private void updateImports(AsyncTaskWrapper asyncTask) {
 		
-		RewriteCompilationUnit unit = asyncTask.getUnit();
+		IRewriteCompilationUnit unit = asyncTask.getUnit();
 		
 		unit.addImport("rx.android.schedulers.AndroidSchedulers");
 		unit.addImport("rx.schedulers.Schedulers");
@@ -288,7 +288,7 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 	
 	}
 	
-//	private void replaceInstanceCreations(RewriteCompilationUnit unit, InnerClassBuilder builder, TypeDeclaration oldClass, ASTNode root) {
+//	private void replaceInstanceCreations(IRewriteCompilationUnit unit, InnerClassBuilder builder, TypeDeclaration oldClass, ASTNode root) {
 //		
 //		
 //		final ITypeBinding oldClassType = oldClass.resolveBinding();

@@ -38,9 +38,9 @@ import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import com.google.common.collect.Lists;
 
-import de.tudarmstadt.rxrefactoring.core.Log;
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 /**
  * Defines utility methods for ASTs.

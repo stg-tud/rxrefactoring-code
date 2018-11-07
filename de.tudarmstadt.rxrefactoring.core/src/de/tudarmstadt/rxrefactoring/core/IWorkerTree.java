@@ -1,5 +1,6 @@
 package de.tudarmstadt.rxrefactoring.core;
 
+import org.eclipse.jdt.annotation.NonNull;
 
 public interface IWorkerTree {
 
@@ -12,7 +13,7 @@ public interface IWorkerTree {
 	 * @return A reference to the location of the worker in the worker tree. This
 	 *         can be used to define workers that use the results of this worker.
 	 */
-	public <Y> IWorkerRef<Void, Y> addWorker(IWorker<Void, Y> worker);
+	public <Y> @NonNull IWorkerRef<Void, Y> addWorker(@NonNull IWorker<Void, Y> worker);
 
 	/**
 	 * Adds a new worker that uses the result of another worker.
@@ -25,5 +26,5 @@ public interface IWorkerTree {
 	 * @return A reference to the location of the worker in the worker tree. This
 	 *         can be used to define workers that use the results of this worker.
 	 */
-	public <X, Y> IWorkerRef<X, Y> addWorker(IWorkerRef<?, X> parent, IWorker<X, Y> worker);
+	public <X, Y> @NonNull IWorkerRef<X, Y> addWorker(@NonNull IWorkerRef<?, X> parent, @NonNull IWorker<X, Y> worker);
 }

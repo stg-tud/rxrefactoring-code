@@ -15,10 +15,10 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
+import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
-import de.tudarmstadt.rxrefactoring.core.ProjectUnits;
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
+import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.AwaitBinding;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureCollectionAccessWrapper;
@@ -32,54 +32,54 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 	/**
 	 * All variable declarations Future<...> futureVaribale = ...
 	 */
-//	public final Multimap<RewriteCompilationUnit, VariableDeclarationFragment> variableDeclarations = HashMultimap.create();
+//	public final Multimap<IRewriteCompilationUnit, VariableDeclarationFragment> variableDeclarations = HashMultimap.create();
 	
 	/**
 	 * All invocations of Await.result(...)
 	 */
-	public final Multimap<RewriteCompilationUnit, AwaitBinding> awaits = HashMultimap.create();
+	public final Multimap<IRewriteCompilationUnit, AwaitBinding> awaits = HashMultimap.create();
 	
 	/**
 	 * All future creations, e.g., Patterns.ask(...)
 	 */
-	public final Multimap<RewriteCompilationUnit, FutureCreationWrapper> futureCreations = HashMultimap.create();
+	public final Multimap<IRewriteCompilationUnit, FutureCreationWrapper> futureCreations = HashMultimap.create();
 	
 	/**
 	 * All future method usages, e.g., future.map
 	 */
-	public final Multimap<RewriteCompilationUnit, FutureMethodWrapper> futureUsages = HashMultimap.create();
+	public final Multimap<IRewriteCompilationUnit, FutureMethodWrapper> futureUsages = HashMultimap.create();
 	
 	/**
 	 * All future references that can not be refactored, e.g., pipe(future, ...)
 	 */
-	public final Multimap<RewriteCompilationUnit, Expression> unrefactorableFutureReferences = HashMultimap.create();
+	public final Multimap<IRewriteCompilationUnit, Expression> unrefactorableFutureReferences = HashMultimap.create();
 	
 	
 	/**
 	 * All types CollectionType<Future<...>>
 	 */
-	public final Multimap<RewriteCompilationUnit, ParameterizedType> collectionTypes = HashMultimap.create();
+	public final Multimap<IRewriteCompilationUnit, ParameterizedType> collectionTypes = HashMultimap.create();
 	
 	/**
 	 * All invocations to collectionOfFutures.add(...)
 	 */
-//	public final Multimap<RewriteCompilationUnit, FutureCollectionAccessWrapper> collectionAccess = HashMultimap.create();
+//	public final Multimap<IRewriteCompilationUnit, FutureCollectionAccessWrapper> collectionAccess = HashMultimap.create();
 	
 	
 	/**
 	 * All variable declarations that should be changed to Observable
 	 */
-	public final Multimap<RewriteCompilationUnit, VariableDeclarationFragment> variableDeclarationToObservable = HashMultimap.create();
+	public final Multimap<IRewriteCompilationUnit, VariableDeclarationFragment> variableDeclarationToObservable = HashMultimap.create();
 	/**
 	 * All variable declarations that should be changed to Subject.
 	 */
-	public final Multimap<RewriteCompilationUnit, VariableDeclarationFragment> variableDeclarationToSubject = HashMultimap.create();
+	public final Multimap<IRewriteCompilationUnit, VariableDeclarationFragment> variableDeclarationToSubject = HashMultimap.create();
 	
 	
 	@Override
-	public AkkaFutureCollector refactor(ProjectUnits units, Void input, WorkerSummary summary) throws Exception {
+	public AkkaFutureCollector refactor(IProjectUnits units, Void input, WorkerSummary summary) throws Exception {
 		
-		for (RewriteCompilationUnit unit : units) {
+		for (IRewriteCompilationUnit unit : units) {
 			
 			List<CollectorVisitor> visitors =
 					Lists.newArrayList(
@@ -100,9 +100,9 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 	}
 	
 	private abstract class CollectorVisitor extends ASTVisitor {
-		final RewriteCompilationUnit unit;
+		final IRewriteCompilationUnit unit;
 		
-		public CollectorVisitor(RewriteCompilationUnit unit) {
+		public CollectorVisitor(IRewriteCompilationUnit unit) {
 			this.unit = unit;
 		}
 		
@@ -113,7 +113,7 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 	
 	private class TypeVisitor extends CollectorVisitor {
 		
-		public TypeVisitor(RewriteCompilationUnit unit) {
+		public TypeVisitor(IRewriteCompilationUnit unit) {
 			super(unit);			
 		}		
 		
@@ -132,7 +132,7 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 	
 	private class ReturnVisitor extends CollectorVisitor {
 
-		public ReturnVisitor(RewriteCompilationUnit unit) {
+		public ReturnVisitor(IRewriteCompilationUnit unit) {
 			super(unit);
 		}
 		
@@ -151,7 +151,7 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 	
 	private class ClassInstanceCreationVisitor extends CollectorVisitor {
 
-		public ClassInstanceCreationVisitor(RewriteCompilationUnit unit) {
+		public ClassInstanceCreationVisitor(IRewriteCompilationUnit unit) {
 			super(unit);
 		}
 		
@@ -164,7 +164,7 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 	
 	private class MethodInvocationVisitor extends CollectorVisitor {
 
-		public MethodInvocationVisitor(RewriteCompilationUnit unit) {
+		public MethodInvocationVisitor(IRewriteCompilationUnit unit) {
 			super(unit);			
 		}
 		

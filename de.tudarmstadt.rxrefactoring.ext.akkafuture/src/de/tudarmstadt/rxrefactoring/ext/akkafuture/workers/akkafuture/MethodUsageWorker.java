@@ -4,7 +4,7 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 
 import com.google.common.collect.Multimap;
 
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AbstractAkkaFutureWorker;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.workers.AkkaFutureCollector;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureMethodWrapper;
@@ -18,12 +18,12 @@ public class MethodUsageWorker extends AbstractAkkaFutureWorker<AkkaFutureCollec
 	}
 
 	@Override
-	protected Multimap<RewriteCompilationUnit, FutureMethodWrapper> getNodesMap() {
+	protected Multimap<IRewriteCompilationUnit, FutureMethodWrapper> getNodesMap() {
 		return collector.futureUsages;
 	}
 
 	@Override
-	protected void endRefactorNode(RewriteCompilationUnit unit) {
+	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
 		addSubjectImport(unit);
 		addCallableImport(unit);
@@ -34,7 +34,7 @@ public class MethodUsageWorker extends AbstractAkkaFutureWorker<AkkaFutureCollec
 	}
 	
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, FutureMethodWrapper wrapper) {
+	protected void refactorNode(IRewriteCompilationUnit unit, FutureMethodWrapper wrapper) {
 		
 		if (wrapper instanceof FuturesSequenceWrapper) {
 			//Update imports

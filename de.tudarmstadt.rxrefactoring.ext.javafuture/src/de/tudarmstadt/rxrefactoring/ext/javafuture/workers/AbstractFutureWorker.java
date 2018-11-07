@@ -2,7 +2,7 @@ package de.tudarmstadt.rxrefactoring.ext.javafuture.workers;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 
 public abstract class AbstractFutureWorker<NodeType extends ASTNode> extends AbstractGeneralWorker<NodeType> {
 
@@ -10,11 +10,11 @@ public abstract class AbstractFutureWorker<NodeType extends ASTNode> extends Abs
 		super(nodeName);
 	}
 
-	protected void addObservableImport(RewriteCompilationUnit unit) {
-		unit.addImport("rx.Observable");
+	protected void addObservableImport(IRewriteCompilationUnit unit) {
+		unit.addImport("io.reactivex.Observable");
 	}
-	
-	protected void addFutureObservableImport(RewriteCompilationUnit unit) {
-		unit.addImport("rx.extensions.FutureObservable");
+
+	protected void addFutureObservableImport(IRewriteCompilationUnit unit) {
+		//unit.addImport("rx.extensions.FutureObservable");
 	}
 }

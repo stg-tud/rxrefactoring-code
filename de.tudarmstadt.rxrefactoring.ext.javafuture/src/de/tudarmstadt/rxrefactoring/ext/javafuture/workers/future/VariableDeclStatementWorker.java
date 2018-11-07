@@ -9,32 +9,33 @@ import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.helper.MethodInvocationVisitor;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
 
 public class VariableDeclStatementWorker extends AbstractFutureWorker<VariableDeclarationStatement> {
-	
+
 	public VariableDeclStatementWorker() {
 		super("VariableDeclarationStatement");
 	}
 
 	@Override
-	protected Map<RewriteCompilationUnit, List<VariableDeclarationStatement>> getNodesMap() {
+	protected Map<IRewriteCompilationUnit, List<VariableDeclarationStatement>> getNodesMap() {
 		return collector.getVarDeclMap("future");
 	}
-	
+
 	@Override
-	protected void endRefactorNode(RewriteCompilationUnit unit) {
+	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
-		
+
 		super.endRefactorNode(unit);
 	}
 
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, VariableDeclarationStatement varDeclStatement) {
-		VariableDeclarationFragment fragment = (VariableDeclarationFragment)varDeclStatement.fragments().get(0);
+	protected void refactorNode(IRewriteCompilationUnit unit, VariableDeclarationStatement varDeclStatement) {
+		VariableDeclarationFragment fragment = (VariableDeclarationFragment) varDeclStatement.fragments().get(0);
 
 		// Replace type Future with Observable
 		replaceType(unit, fragment, varDeclStatement.getType());
@@ -45,29 +46,36 @@ public class VariableDeclStatementWorker extends AbstractFutureWorker<VariableDe
 
 	/**
 	 * Replaces a Future<> x with an Observable<> xObservable
+	 * 
 	 * @param unit
 	 * @param fragment
 	 * @param type
 	 */
-	private void replaceType(RewriteCompilationUnit unit, VariableDeclarationFragment fragment, Type type) {
+	private void replaceType(IRewriteCompilationUnit unit, VariableDeclarationFragment fragment, Type type) {
 
+		if (!Types.isExactTypeOf(type.resolveBinding(), "java.util.concurrent.Future")) {
+			return;
+		}
+		
 		if (type instanceof ParameterizedType) {
 			type = ((ParameterizedType) type).getType();
 		}
+
 		JavaFutureASTUtils.replaceType(unit, type, "Observable");
 	}
 
 	/**
-	 * Replaces x = someMethod with x = Observable.from(someMethod)
-	 * But only if we didn't refactor the method ourselves before.
+	 * Replaces x = someMethod with x = Observable.from(someMethod) But only if we
+	 * didn't refactor the method ourselves before.
+	 * 
 	 * @param unit
 	 * @param fragment
 	 */
-	private void replaceMethodInvocation(RewriteCompilationUnit unit, VariableDeclarationFragment fragment) {
+	private void replaceMethodInvocation(IRewriteCompilationUnit unit, VariableDeclarationFragment fragment) {
 		// Replace the method invocation only if we didn't refactor the method yet.
 		Expression initializer = fragment.getInitializer();
-		
-		if(initializer == null)
+
+		if (initializer == null)
 			return;
 
 		// look for a methodinvocation here
@@ -75,10 +83,10 @@ public class VariableDeclStatementWorker extends AbstractFutureWorker<VariableDe
 
 		initializer.accept(visitor);
 
-		if(visitor.isExternalMethod().orElse(false)) {
+		if (visitor.shouldRefactor().orElse(false)) {
 			// move the initializer expression inside an "Observable.from(initializer)"
-			
-			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Observable", "from", initializer);
+
+			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Observable", "fromFuture", initializer);
 			summary.addCorrect("futureCreation");
 		}
 	}

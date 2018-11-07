@@ -1,6 +1,7 @@
 package de.tudarmstadt.rxrefactoring.ext.asynctask.builders;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -12,8 +13,9 @@ import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 
 import com.google.common.collect.Lists;
 
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.Methods;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 
@@ -21,7 +23,7 @@ abstract class AbstractBuilder {
 
 	
 	final AsyncTaskWrapper asyncTask;
-	final RewriteCompilationUnit unit;
+	final IRewriteCompilationUnit unit;
 	
 	final AST ast;
 	
@@ -81,7 +83,7 @@ abstract class AbstractBuilder {
 		
 		class SuperVisitor extends ASTVisitor {
 			@Override public boolean visit(SuperMethodInvocation node) {
-				if (ASTUtils.matchesTargetMethod(node, methodName, "android.os.AsyncTask")) {
+				if (de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils.matchesTargetMethod(node, methodName, "android.os.AsyncTask")) {
 					methods.add(node);
 				}
 				return true;
@@ -92,8 +94,8 @@ abstract class AbstractBuilder {
 		body.accept(v);
 		
 		for (SuperMethodInvocation methodInvocation : methods) {
-			Statement statement = ASTUtils.findParent(methodInvocation, Statement.class);
-			unit.remove(statement);
+			Optional<Statement> statement = ASTNodes.findParent(methodInvocation, Statement.class);
+			unit.remove(statement.orElse(null));
 		}		
 		
 		/*

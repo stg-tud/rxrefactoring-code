@@ -9,7 +9,6 @@ import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.ReturnStatement;
@@ -18,19 +17,18 @@ import org.eclipse.jdt.core.dom.Type;
 
 import com.google.common.collect.Lists;
 
-import de.tudarmstadt.rxrefactoring.core.ir.NodeSupplier;
+import de.tudarmstadt.rxrefactoring.core.NodeSupplier;
 import de.tudarmstadt.rxrefactoring.core.ir.util.ConsumerBuilder;
 import de.tudarmstadt.rxrefactoring.core.utils.Methods;
 
 public class Utils {
 
-	public static NodeSupplier<Expression> callableToConsumer(Expression expr, NodeSupplier<SimpleName> name, NodeSupplier<? extends Type> type) {
+	public static NodeSupplier<Expression> callableToConsumer(@NonNull Expression expr, @NonNull NodeSupplier<SimpleName> name, @NonNull NodeSupplier<? extends Type> type) {
 		if (expr instanceof LambdaExpression) {
 			return unit -> unit.copyNode(expr);
 		} else if (expr instanceof ClassInstanceCreation && ((ClassInstanceCreation) expr).getAnonymousClassDeclaration() != null) {
 			return unit -> {
 				ClassInstanceCreation newCallable = (ClassInstanceCreation) expr;
-				ITypeBinding callableType = newCallable.resolveTypeBinding();
 				
 				AnonymousClassDeclaration anonClass = newCallable.getAnonymousClassDeclaration();
 				
@@ -59,6 +57,7 @@ public class Utils {
 				
 				final MethodDeclaration callMethodFinal = callMethod;
 		//		SingleVariableDeclaration variable = (SingleVariableDeclaration) callMethod.parameters().get(0);				
+				@SuppressWarnings("null")
 				ConsumerBuilder builder = new ConsumerBuilder(
 						type, 
 						name, 
@@ -74,7 +73,8 @@ public class Utils {
 	
 	
 	public static @NonNull List<ReturnStatement> findReturnStatements(@NonNull Block body) {
-		List<ReturnStatement> returns = Lists.newLinkedList();
+		@SuppressWarnings("null")
+		@NonNull List<ReturnStatement> returns = Lists.newLinkedList();
 		
 		class BlockVisitor extends ASTVisitor {
 			

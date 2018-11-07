@@ -9,7 +9,7 @@ import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
 
@@ -47,7 +47,7 @@ public class FuturesSequenceWrapper implements FutureMethodWrapper {
 		return futureInvocation;
 	}
 	
-	public MethodInvocation createZipExpression(RewriteCompilationUnit unit) {
+	public MethodInvocation createZipExpression(IRewriteCompilationUnit unit) {
 		/*
 		 * Builds:		
 		 * Observable.zip(futures, objects -> Arrays.stream(objects).map(o -> (T) o).collect(Collectors.toList()));
@@ -88,7 +88,7 @@ public class FuturesSequenceWrapper implements FutureMethodWrapper {
 		
 		FutureTypeWrapper ft = getFutureType();
 		
-		cast.setType(Types.typeFromBinding(ast, getFutureType().getTypeParameter(ast)));
+		cast.setType(Types.fromBinding(ast, getFutureType().getTypeParameter(ast)));
 		cast.setExpression(ast.newSimpleName("o"));
 		
 		LambdaExpression mapLambda = ast.newLambdaExpression();

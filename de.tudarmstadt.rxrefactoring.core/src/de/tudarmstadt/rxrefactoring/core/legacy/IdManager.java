@@ -11,6 +11,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 11/23/2016
  */
+@Deprecated
 public final class IdManager {
 	private static final String EMPTY = "";
 	private static final int INITIAL_ID = 0;

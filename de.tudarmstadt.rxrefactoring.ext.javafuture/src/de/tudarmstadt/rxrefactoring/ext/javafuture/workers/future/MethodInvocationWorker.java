@@ -8,7 +8,9 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
 
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import de.tudarmstadt.rxrefactoring.core.utils.Methods;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
 
@@ -19,50 +21,49 @@ public class MethodInvocationWorker extends AbstractFutureWorker<MethodInvocatio
 	}
 
 	@Override
-	protected Map<RewriteCompilationUnit, List<MethodInvocation>> getNodesMap() {
+	protected Map<IRewriteCompilationUnit, List<MethodInvocation>> getNodesMap() {
 		return collector.getMethodInvocationsMap("future");
 	}
-	
+
 	@Override
-	protected void endRefactorNode(RewriteCompilationUnit unit) {
+	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
-		
+
 		super.endRefactorNode(unit);
 	}
 
 	/**
 	 * Replaces a future.get with an observable.toBlocking().single()
+	 * 
 	 * @param unit
 	 * @param methodInvocation
 	 */
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, MethodInvocation methodInvocation) {
+	protected void refactorNode(IRewriteCompilationUnit unit, MethodInvocation methodInvocation) {
 		String methodName = methodInvocation.getName().getIdentifier();
 
-		switch (methodName) {
-		case "get":
-			
+		if (Methods.hasSignature(methodInvocation.resolveMethodBinding(), "java.util.concurrent.Future", "get") || 
+				Methods.hasSignature(methodInvocation.resolveMethodBinding(), "java.util.concurrent.Future", "get", "long", "java.util.concurrent.TimeUnit")) {	
 			Expression expression = methodInvocation.getExpression();
 			String newName = "";
 			
 			if (expression instanceof SimpleName) {
-				SimpleName simpleName = (SimpleName)expression;
+				SimpleName simpleName = (SimpleName) expression;
 				newName = simpleName.getIdentifier() + "Observable";
 			} else if (expression instanceof ArrayAccess) {
-				ArrayAccess arrayAccess = (ArrayAccess)expression;
-				
-				SimpleName simpleName = (SimpleName)arrayAccess.getArray();
+				ArrayAccess arrayAccess = (ArrayAccess) expression;
+
+				SimpleName simpleName = (SimpleName) arrayAccess.getArray();
 				newName = simpleName.getIdentifier() + "Observables";
 			}
-			
-			if(!newName.isEmpty())
-				JavaFutureASTUtils.replaceMethodInvocation(unit, newName, "toBlocking", "single", methodInvocation);
-			
-			break;
-
-		default:
-			System.err.println("Method " + methodName + " not supported!");
-			break;
+	
+			if (!newName.isEmpty())
+				JavaFutureASTUtils.replaceWithBlockingGet(unit, methodInvocation, newName);
+			else if (expression instanceof MethodInvocation) {
+				JavaFutureASTUtils.replaceWithBlockingGet(unit, methodInvocation);
+			}
+		} else {
+			Log.error(getClass(), "Method " + methodName + " not supported!");
 		}
 	}
 }

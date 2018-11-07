@@ -1,7 +1,5 @@
 package de.tudarmstadt.rxrefactoring.core.ir;
 
-import static de.tudarmstadt.rxrefactoring.core.ir.NodeSupplier.*;
-
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -10,16 +8,16 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.LineComment;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
-import org.eclipse.jdt.core.dom.ParameterizedType;
+
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.NodeSupplier;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.Type;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 
 
 public class ComplexReactiveInput implements IReactiveInput {
@@ -69,6 +67,7 @@ public class ComplexReactiveInput implements IReactiveInput {
 		return internalName;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public @NonNull NodeSupplier<FieldDeclaration> supplyExternalField() {
 		return unit -> {
 			AST ast = unit.getAST();
@@ -90,6 +89,7 @@ public class ComplexReactiveInput implements IReactiveInput {
 		};
 	}
 	
+	@SuppressWarnings("unchecked")
 	public @NonNull NodeSupplier<FieldDeclaration> supplyInternalField() {
 		
 		return unit -> {
@@ -136,7 +136,7 @@ public class ComplexReactiveInput implements IReactiveInput {
 	}
 	
 	@Override
-	public void addToTypeDeclaration(@NonNull RewriteCompilationUnit unit, @NonNull List bodyDeclarations) {	
+	public void addToTypeDeclaration(@NonNull IRewriteCompilationUnit unit, @NonNull List bodyDeclarations) {	
 		bodyDeclarations.add(supplyExternalField().apply(unit));
 		bodyDeclarations.add(supplyInternalField().apply(unit));
 	}

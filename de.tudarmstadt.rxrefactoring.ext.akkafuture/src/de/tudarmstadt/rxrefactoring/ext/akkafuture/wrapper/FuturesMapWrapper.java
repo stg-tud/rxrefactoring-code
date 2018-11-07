@@ -16,7 +16,7 @@ import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 
 /**
@@ -62,7 +62,7 @@ public class FuturesMapWrapper implements FutureMethodWrapper {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public MethodInvocation createMapExpression(RewriteCompilationUnit unit) {
+	public MethodInvocation createMapExpression(IRewriteCompilationUnit unit) {
 		/*
 		 * Builds:		
 		 * future.map(new Func1<T0, T>() {
@@ -86,8 +86,8 @@ public class FuturesMapWrapper implements FutureMethodWrapper {
 		
 		AST ast = unit.getAST();
 		
-		Supplier<Type> fromType = () -> unit.copyNode(Types.typeFromBinding(ast, getFromType().getTypeParameter(ast)));
-		Supplier<Type> toType = () -> unit.copyNode(Types.typeFromBinding(ast, getToType().getTypeParameter(ast)));
+		Supplier<Type> fromType = () -> unit.copyNode(Types.fromBinding(ast, getFromType().getTypeParameter(ast)));
+		Supplier<Type> toType = () -> unit.copyNode(Types.fromBinding(ast, getToType().getTypeParameter(ast)));
 		
 		//Func1 Type
 		ParameterizedType func1Type = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Func1")));

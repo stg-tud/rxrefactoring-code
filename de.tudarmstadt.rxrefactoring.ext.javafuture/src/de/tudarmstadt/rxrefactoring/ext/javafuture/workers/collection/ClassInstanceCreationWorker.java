@@ -7,50 +7,55 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.Type;
 
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.CollectionInfo;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
 
-
 public class ClassInstanceCreationWorker extends AbstractFutureWorker<ClassInstanceCreation> {
-	
+
 	public ClassInstanceCreationWorker() {
 		super("ClassInstanceCreation");
 	}
 
 	@Override
-	protected Map<RewriteCompilationUnit, List<ClassInstanceCreation>> getNodesMap() {
+	protected Map<IRewriteCompilationUnit, List<ClassInstanceCreation>> getNodesMap() {
 		return collector.getClassInstanceMap("collection");
 	}
-	
+
 	@Override
-	protected void endRefactorNode(RewriteCompilationUnit unit) {
+	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
 		addFutureObservableImport(unit);
-		
+
 		super.endRefactorNode(unit);
 	}
 
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, ClassInstanceCreation classInstanceCreation) {
+	protected void refactorNode(IRewriteCompilationUnit unit, ClassInstanceCreation classInstanceCreation) {
 		Type type = classInstanceCreation.getType();
-		if (ASTUtils.isTypeOf(type, CollectionInfo.getBinaryNames())) {
-			if(type instanceof ParameterizedType) {
-				ParameterizedType pType = (ParameterizedType)type;
+			
+		if (type instanceof ParameterizedType) {
+				
+			ParameterizedType collectionT = (ParameterizedType) type;
 
-				if(pType.typeArguments().size() > 0) {
+			if (collectionT.typeArguments().size() == 1) {
 
-					Type typeArg = (Type)pType.typeArguments().get(0);
-					typeArg = ((ParameterizedType)typeArg).getType();
-
-					if(collector.isPure(unit, classInstanceCreation)) {
-						JavaFutureASTUtils.replaceType(unit, typeArg, "Observable");
-					} else {
-						JavaFutureASTUtils.replaceType(unit, typeArg, "FutureObservable");
-					}
-				}
+				Type futureT = (Type) collectionT.typeArguments().get(0);
+				
+				
+				
+				if (futureT instanceof ParameterizedType) {					
+					JavaFutureASTUtils.replaceType(unit, ((ParameterizedType) futureT).getType(), "Observable");
+				} else {
+					JavaFutureASTUtils.replaceType(unit, futureT, "Observable");
+				}	
+				
+				
+				
+				
 			}
 		}
 	}

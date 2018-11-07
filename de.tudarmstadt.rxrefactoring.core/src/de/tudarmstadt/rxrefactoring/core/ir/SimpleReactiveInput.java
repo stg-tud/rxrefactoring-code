@@ -7,11 +7,14 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Modifier.ModifierKeyword;
+
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.NodeSupplier;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
 
 public class SimpleReactiveInput implements IReactiveInput {
 
@@ -62,7 +65,7 @@ public class SimpleReactiveInput implements IReactiveInput {
 	} 
 	
 	@Override
-	public void addToTypeDeclaration(@NonNull RewriteCompilationUnit unit, @NonNull List bodyDeclarations) {	
+	public void addToTypeDeclaration(@NonNull IRewriteCompilationUnit unit, @NonNull List bodyDeclarations) {	
 		bodyDeclarations.add(supplyExternalField().apply(unit));
 	}
 	

@@ -6,7 +6,7 @@ import java.util.Map;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Expression;
 
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
 
@@ -16,29 +16,28 @@ public class AssignmentWorker extends AbstractFutureWorker<Assignment> {
 	}
 
 	@Override
-	protected Map<RewriteCompilationUnit, List<Assignment>> getNodesMap() {
+	protected Map<IRewriteCompilationUnit, List<Assignment>> getNodesMap() {
 		return collector.getAssigmentsMap("collection");
 	}
 
 	@Override
-	protected void endRefactorNode(RewriteCompilationUnit unit) {
+	protected void endRefactorNode(IRewriteCompilationUnit unit) {
 		addObservableImport(unit);
 		addFutureObservableImport(unit);
-		
+
 		super.endRefactorNode(unit);
 	}
-	
+
 	@Override
-	protected void refactorNode(RewriteCompilationUnit unit, Assignment assignment) {
+	protected void refactorNode(IRewriteCompilationUnit unit, Assignment assignment) {
 		Expression rightHand = assignment.getRightHandSide();
-		
-		if(collector.isPure(unit, assignment)) {
+
+		if (collector.isPure(unit, assignment)) {
 			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Observable", "from", rightHand);
 		} else {
 			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "FutureObservable", "create", rightHand);
 		}
-		
+
 		summary.addCorrect("futureCreation");
 	}
 }
-

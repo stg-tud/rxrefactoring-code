@@ -1,11 +1,16 @@
 package de.tudarmstadt.rxrefactoring.core;
 
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
+
+import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
 
 public interface IWorker<Input, Output> {
 
-	default public String getName() {
-		return getClass().getSimpleName();
+	@SuppressWarnings("null")
+	default public @NonNull String getName() {
+		return getClass().getName();
 	}
 
 	/**
@@ -25,6 +30,7 @@ public interface IWorker<Input, Output> {
 	 * @throws Exception
 	 *             if there is a problem with the refactoring.
 	 */
-	public Output refactor(ProjectUnits units, Input input, WorkerSummary summary) throws Exception;
+	public @Nullable Output refactor(@NonNull IProjectUnits units, @Nullable Input input,
+			@NonNull WorkerSummary summary) throws Exception;
 
 }

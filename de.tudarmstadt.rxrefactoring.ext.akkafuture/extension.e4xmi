@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ASCII"?>
+<fragment:ModelFragments xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:commands="http://www.eclipse.org/ui/2010/UIModel/application/commands" xmlns:fragment="http://www.eclipse.org/ui/2010/UIModel/fragment" xmlns:menu="http://www.eclipse.org/ui/2010/UIModel/application/ui/menu" xmi:id="_9Qtr0KKWEees06EUjNaWOg">
+  <imports xsi:type="menu:Menu" xmi:id="_-nBXcKKWEees06EUjNaWOg" elementId="de.tudarmstadt.rxrefactoring.core.menu"/>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_DO_BEKKXEees06EUjNaWOg" featurename="menuContributions" parentElementId="org.eclipse.e4.legacy.ide.application" positionInList="">
+    <elements xsi:type="menu:MenuContribution" xmi:id="_GSToIKKXEees06EUjNaWOg" elementId="de.tudarmstadt.rxrefactoring.ext.akkafuture.menucontribution.execute" positionInParent="before=de.tudarmstadt.rxrefactoring.core.menuseparator.0" parentId="de.tudarmstadt.rxrefactoring.core.menu">
+      <children xsi:type="menu:HandledMenuItem" xmi:id="_LogQwKKXEees06EUjNaWOg" elementId="de.tudarmstadt.rxrefactoring.ext.akkafuture.handledmenuitem.execute" label="Refactor scala.concurrent.Future to io.reactivex.Observable" command="_dRGfIKKXEees06EUjNaWOg"/>
+    </elements>
+  </fragments>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_bp5QwKKXEees06EUjNaWOg" featurename="commands" parentElementId="org.eclipse.e4.legacy.ide.application">
+    <elements xsi:type="commands:Command" xmi:id="_dRGfIKKXEees06EUjNaWOg" elementId="de.tudarmstadt.rxrefactoring.ext.akkafuture.command.execute" commandName="Execute"/>
+  </fragments>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_H0hzYKKYEees06EUjNaWOg" featurename="handlers" parentElementId="org.eclipse.e4.legacy.ide.application">
+    <elements xsi:type="commands:Handler" xmi:id="_JaTeYKKYEees06EUjNaWOg" elementId="de.tudarmstadt.rxrefactoring.ext.akkafuture.handler.execute" contributionURI="bundleclass://de.tudarmstadt.rxrefactoring.ext.akkafuture/de.tudarmstadt.rxrefactoring.ext.akkafuture.AkkaFutureRefactoringE4Handler" command="_dRGfIKKXEees06EUjNaWOg"/>
+  </fragments>
+</fragment:ModelFragments>

@@ -21,12 +21,13 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
-import de.tudarmstadt.rxrefactoring.core.ProjectUnits;
-import de.tudarmstadt.rxrefactoring.core.RewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.logging.Log;
-import de.tudarmstadt.rxrefactoring.core.utils.ASTUtils;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorSummary.WorkerSummary;
-import de.tudarmstadt.rxrefactoring.core.workers.IWorker;
+import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.IWorker;
+import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
+import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.ClassDetails;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
 
@@ -37,10 +38,10 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
  */
 public class AsyncTaskCollector implements IWorker<Void,AsyncTaskCollector> {
 
-	private final Multimap<RewriteCompilationUnit, TypeDeclaration> subclassesMap;
-	private final Multimap<RewriteCompilationUnit, AnonymousClassDeclaration> anonymousClassesMap;
-	private final Multimap<RewriteCompilationUnit, AnonymousClassDeclaration> anonymousCachedClassesMap;
-	private final Multimap<RewriteCompilationUnit, MethodInvocation> relevantUsagesMap;
+	private final Multimap<IRewriteCompilationUnit, TypeDeclaration> subclassesMap;
+	private final Multimap<IRewriteCompilationUnit, AnonymousClassDeclaration> anonymousClassesMap;
+	private final Multimap<IRewriteCompilationUnit, AnonymousClassDeclaration> anonymousCachedClassesMap;
+	private final Multimap<IRewriteCompilationUnit, MethodInvocation> relevantUsagesMap;
 	
 	public AsyncTaskCollector() {
 		subclassesMap = HashMultimap.create();
@@ -50,46 +51,46 @@ public class AsyncTaskCollector implements IWorker<Void,AsyncTaskCollector> {
 	}
 	
 	@Override
-	public AsyncTaskCollector refactor(ProjectUnits units, Void input, WorkerSummary summary) throws Exception {	
+	public AsyncTaskCollector refactor(IProjectUnits units, Void input, WorkerSummary summary) throws Exception {	
 		units.forEach(unit -> processUnit(unit));		
 		summary.setCorrect("numberOfCompilationUnits", units.size());
 		return this;
 	}	
 
-	public void addSubclasses(RewriteCompilationUnit cu, Iterable<TypeDeclaration> subclasses) {
+	public void addSubclasses(IRewriteCompilationUnit cu, Iterable<TypeDeclaration> subclasses) {
 		subclassesMap.putAll(cu, subclasses);
 	}
 
-	public void addAnonymClassDecl(RewriteCompilationUnit cu, Iterable<AnonymousClassDeclaration> anonymDeclarations) {
+	public void addAnonymClassDecl(IRewriteCompilationUnit cu, Iterable<AnonymousClassDeclaration> anonymDeclarations) {
 		anonymousClassesMap.putAll(cu, anonymDeclarations);
 	}
 
-	public void addAnonymCachedClassDecl(RewriteCompilationUnit cu, Iterable<AnonymousClassDeclaration> anonymCachedDeclarations) {
+	public void addAnonymCachedClassDecl(IRewriteCompilationUnit cu, Iterable<AnonymousClassDeclaration> anonymCachedDeclarations) {
 		anonymousCachedClassesMap.putAll(cu, anonymCachedDeclarations);
 	}
 
-	public void addRelevantUsages(RewriteCompilationUnit cu, Iterable<MethodInvocation> usages) {
+	public void addRelevantUsages(IRewriteCompilationUnit cu, Iterable<MethodInvocation> usages) {
 		relevantUsagesMap.putAll(cu, usages);
 	}
 
-	public Multimap<RewriteCompilationUnit, TypeDeclaration> getSubclasses() {
+	public Multimap<IRewriteCompilationUnit, TypeDeclaration> getSubclasses() {
 		return subclassesMap;
 	}
 
-	public Multimap<RewriteCompilationUnit, AnonymousClassDeclaration> getAnonymousClasses() {
+	public Multimap<IRewriteCompilationUnit, AnonymousClassDeclaration> getAnonymousClasses() {
 		return anonymousClassesMap;
 	}
 
-	public Multimap<RewriteCompilationUnit, AnonymousClassDeclaration> getAnonymousCachedClasses() {
+	public Multimap<IRewriteCompilationUnit, AnonymousClassDeclaration> getAnonymousCachedClasses() {
 		return anonymousCachedClassesMap;
 	}
 
-	public Multimap<RewriteCompilationUnit, MethodInvocation> getRelevantUsages() {
+	public Multimap<IRewriteCompilationUnit, MethodInvocation> getRelevantUsages() {
 		return relevantUsagesMap;
 	}
 
 	public int getNumberOfCompilationUnits() {
-		Set<RewriteCompilationUnit> allCompilationUnits = new HashSet<>();
+		Set<IRewriteCompilationUnit> allCompilationUnits = new HashSet<>();
 		allCompilationUnits.addAll(subclassesMap.keySet());
 		allCompilationUnits.addAll(anonymousClassesMap.keySet());
 		allCompilationUnits.addAll(anonymousCachedClassesMap.keySet());
@@ -97,7 +98,7 @@ public class AsyncTaskCollector implements IWorker<Void,AsyncTaskCollector> {
 		return allCompilationUnits.size();
 	}
 
-	private void processUnit(RewriteCompilationUnit unit) {
+	private void processUnit(IRewriteCompilationUnit unit) {
 		ASTNode root = unit.getRoot();
 		
 		DeclarationVisitor declarationVisitor = new DeclarationVisitor(ClassDetails.ASYNC_TASK);

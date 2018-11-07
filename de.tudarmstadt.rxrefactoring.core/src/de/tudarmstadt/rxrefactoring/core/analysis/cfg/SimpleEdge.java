@@ -1,6 +1,6 @@
 package de.tudarmstadt.rxrefactoring.core.analysis.cfg;
 
-public class SimpleEdge<V> implements Edge<V> {
+public class SimpleEdge<V> implements IEdge<V> {
 
 	private final V head;
 	private final V tail;
@@ -22,7 +22,9 @@ public class SimpleEdge<V> implements Edge<V> {
 	
 	@Override
 	public String toString() {
-		return "Edge(" + head + ", " + tail + ")";
+		return "Edge"; //(" + head + ", " + tail + ")";
 	}
+	
+	
 
 }
