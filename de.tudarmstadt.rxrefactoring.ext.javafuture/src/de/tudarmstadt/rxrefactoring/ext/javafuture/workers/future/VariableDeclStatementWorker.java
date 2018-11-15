@@ -83,7 +83,7 @@ public class VariableDeclStatementWorker extends AbstractFutureWorker<VariableDe
 
 		initializer.accept(visitor);
 
-		if (visitor.shouldRefactor().orElse(false)) {
+		if (visitor.shouldRefactor()) {
 			// move the initializer expression inside an "Observable.from(initializer)"
 
 			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Observable", "fromFuture", initializer);

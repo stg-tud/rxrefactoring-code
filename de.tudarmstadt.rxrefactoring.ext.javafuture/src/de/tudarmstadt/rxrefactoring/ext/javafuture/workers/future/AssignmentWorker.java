@@ -50,7 +50,7 @@ public class AssignmentWorker extends AbstractFutureWorker<Assignment> {
 
 		rightHand.accept(visitor);
 
-		if (visitor.shouldRefactor().orElse(false)) {
+		if (visitor.shouldRefactor()) {
 			// move the initializer expression inside an "Observable.from(rightHand)"
 
 			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Observable", "fromFuture", rightHand);

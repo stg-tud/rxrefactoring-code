@@ -70,8 +70,8 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 		IWorkerRef<PreconditionWorker, FutureCollector> collector = workerTree.addWorker(instUseRef, new FutureCollector(options));
 
 		if (options.contains(RefactoringOptions.FUTURE)) {
-			workerTree.addWorker(collector,
-					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.SimpleNameWorker());
+//			workerTree.addWorker(collector,
+//					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.SimpleNameWorker());
 			workerTree.addWorker(collector,
 					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.VariableDeclStatementWorker());
 			workerTree.addWorker(collector,
@@ -85,18 +85,18 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 			workerTree.addWorker(collector,
 					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.FieldDeclarationWorker());
 
-			workerTree.addWorker(collector, new 
-					de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.SimpleNameWorker());
-			workerTree.addWorker(collector, new
-					de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.VariableDeclStatementWorker());
-			workerTree.addWorker(collector, new
-					de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.MethodInvocationWorker());
-			workerTree.addWorker(collector, new
-					de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.MethodDeclarationWorker());
-			workerTree.addWorker(collector, new
-					de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.FieldDeclarationWorker());
-			workerTree.addWorker(collector, new
-					de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.ClassInstanceCreationWorker());
+//			workerTree.addWorker(collector, new 
+//					de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.SimpleNameWorker());
+//			workerTree.addWorker(collector, new
+//					de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.VariableDeclStatementWorker());
+//			workerTree.addWorker(collector, new
+//					de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.MethodInvocationWorker());
+//			workerTree.addWorker(collector, new
+//					de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.MethodDeclarationWorker());
+//			workerTree.addWorker(collector, new
+//					de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.FieldDeclarationWorker());
+//			workerTree.addWorker(collector, new
+//					de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.ClassInstanceCreationWorker());
 			//workerTree.addWorker(collector, new
 				//	de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.ArrayCreationWorker());
 			//workerTree.addWorker(collector, new

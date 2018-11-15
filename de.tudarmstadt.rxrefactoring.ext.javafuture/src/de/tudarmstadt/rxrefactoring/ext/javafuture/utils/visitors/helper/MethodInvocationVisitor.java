@@ -47,11 +47,11 @@ public class MethodInvocationVisitor extends ASTVisitor {
 		return Optional.of(isExternalMethod);
 	}
 	
-	public Optional<Boolean> shouldRefactor() {
+	public Boolean shouldRefactor() {
 		if (methodInvocation == null)
-			return Optional.empty();
+			return false;
 
-		return Optional.of(isExternalMethod && !isGetter);
+		return isExternalMethod && !isGetter;
 	}
 
 	public Optional<MethodInvocation> getMethodInvocation() {

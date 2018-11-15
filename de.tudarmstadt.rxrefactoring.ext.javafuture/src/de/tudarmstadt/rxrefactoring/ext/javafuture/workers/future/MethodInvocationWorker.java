@@ -40,30 +40,30 @@ public class MethodInvocationWorker extends AbstractFutureWorker<MethodInvocatio
 	 */
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, MethodInvocation methodInvocation) {
-		String methodName = methodInvocation.getName().getIdentifier();
-
 		if (Methods.hasSignature(methodInvocation.resolveMethodBinding(), "java.util.concurrent.Future", "get") || 
 				Methods.hasSignature(methodInvocation.resolveMethodBinding(), "java.util.concurrent.Future", "get", "long", "java.util.concurrent.TimeUnit")) {	
-			Expression expression = methodInvocation.getExpression();
-			String newName = "";
+//			Expression expression = methodInvocation.getExpression();
+//			String newName = "";
 			
-			if (expression instanceof SimpleName) {
-				SimpleName simpleName = (SimpleName) expression;
-				newName = simpleName.getIdentifier() + "Observable";
-			} else if (expression instanceof ArrayAccess) {
-				ArrayAccess arrayAccess = (ArrayAccess) expression;
-
-				SimpleName simpleName = (SimpleName) arrayAccess.getArray();
-				newName = simpleName.getIdentifier() + "Observables";
-			}
+//			if (expression instanceof SimpleName) {
+//				SimpleName simpleName = (SimpleName) expression;
+//				newName = simpleName.getIdentifier() + "Observable";
+//			} else if (expression instanceof ArrayAccess) {
+//				ArrayAccess arrayAccess = (ArrayAccess) expression;
+//
+//				SimpleName simpleName = (SimpleName) arrayAccess.getArray();
+//				newName = simpleName.getIdentifier() + "Observables";
+//			}
 	
-			if (!newName.isEmpty())
-				JavaFutureASTUtils.replaceWithBlockingGet(unit, methodInvocation, newName);
-			else if (expression instanceof MethodInvocation) {
-				JavaFutureASTUtils.replaceWithBlockingGet(unit, methodInvocation);
-			}
+			JavaFutureASTUtils.replaceWithBlockingGet(unit, methodInvocation);
+			
+//			if (!newName.isEmpty())
+//				JavaFutureASTUtils.replaceWithBlockingGet(unit, methodInvocation, newName);
+//			else if (expression instanceof MethodInvocation) {
+//				
+//			}
 		} else {
-			Log.error(getClass(), "Method " + methodName + " not supported!");
+			Log.error(getClass(), "Method " + methodInvocation.getName().getIdentifier() + " not supported!");
 		}
 	}
 }

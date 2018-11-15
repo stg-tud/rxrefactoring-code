@@ -121,11 +121,13 @@ public class JavaFutureASTUtils {
 		AST ast = unit.getAST();
 		MethodInvocation blockingSingle = ast.newMethodInvocation();
 		blockingSingle.setName(ast.newSimpleName("blockingSingle"));
+		
 		Expression old = oldNode.getExpression();
-		Expression clone = unit.copyNode((MethodInvocation)old);
+		Expression clone = unit.copyNode(old);
+		
 		blockingSingle.setExpression(clone);
 		unit.replace(oldNode, blockingSingle);
-		removeTryStatement(unit, oldNode);
+//		removeTryStatement(unit, oldNode);
 	}
 
 	public static void removeTryStatement(IRewriteCompilationUnit unit, MethodInvocation mi) {
