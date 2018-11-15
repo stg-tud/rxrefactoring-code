@@ -36,12 +36,14 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 
 	@Override
 	public IPath getResourceDir() {
-		return new Path("./resources/");
+		return null;
+		//return new Path("./resources/");
 	}
 
 	@Override
 	public IPath getDestinationDir() {
-		return new Path("./libs/");
+		return null;
+		//return new Path("./libs/");
 	}
 
 	@Override
