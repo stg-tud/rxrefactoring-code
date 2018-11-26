@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.core.resources.IProject;
@@ -24,6 +25,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -33,6 +35,14 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
@@ -45,11 +55,10 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.osgi.framework.Bundle;
 
-import org.eclipse.core.runtime.Status;
-
 import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectStatus;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
@@ -321,7 +330,6 @@ public final class RefactorExecution implements Runnable {
 								}
 							});
 						}
-
 					}
 				}
 			}
@@ -340,6 +348,7 @@ public final class RefactorExecution implements Runnable {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	private void doRefactorProject(@NonNull ProjectUnits units, @NonNull CompositeChange changes, @NonNull ProjectSummary projectSummary)
 			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException, InterruptedException {
 
@@ -350,10 +359,38 @@ public final class RefactorExecution implements Runnable {
 		// The workers add their changes to the bundled compilation units
 		workerTree.run(extension.createExecutorService());
 
+		// IPL: 
+		for(IRewriteCompilationUnit unit : units)
+		{
+			if(unit.hasChanges())
+			{
+				CompilationUnit cu = (CompilationUnit)unit.getRoot();
+				for(Object objType : cu.types())
+				{
+					TypeDeclaration type = (TypeDeclaration)objType;
+
+					for(MethodDeclaration method : type.getMethods())
+					{
+						System.out.println("Before: " + method.toString());
+						System.out.println("After: " + unit.getRewrittenNode(method).toString());
+
+						List<SingleVariableDeclaration> objParams = method.parameters();
+						String params = objParams.stream()
+								.map(SingleVariableDeclaration::getType)
+								.map(t -> t.isParameterizedType() ? ((ParameterizedType) t).getType() : t)
+								.map(t -> t.resolveBinding().getPackage().getName() + "." + t.toString())
+								.collect(Collectors.joining(", "));
+
+						String className = cu.getPackage().getName() + "." + type.getName().getFullyQualifiedName();
+						System.err.println("method : " + className + "." + method.getName().getFullyQualifiedName() + "(" + params + ")" + " : " + className);
+					}
+				}
+			}
+		}
+
 		// The changes of the compilation units are applied
 		Log.info(getClass(), "Write changes...");
 		units.addChangesTo(changes);
 
 	}
-
 }
