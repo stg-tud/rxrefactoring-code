@@ -41,7 +41,7 @@ public class MethodInvocationWorker extends AbstractFutureWorker<MethodInvocatio
 		
 		expression.accept(visitor);
 		
-		if (visitor.isExternalMethod().orElse(false)) {
+		if (visitor.isExternalMethod()) {
 
 			JavaFutureASTUtils.moveInsideMethodInvocation(unit, "Observable", "fromFuture", expression);
 			summary.addCorrect("futureCreation");
