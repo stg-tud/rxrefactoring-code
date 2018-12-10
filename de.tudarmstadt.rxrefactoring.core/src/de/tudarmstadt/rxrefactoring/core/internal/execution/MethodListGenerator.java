@@ -70,9 +70,9 @@ import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 
 @SuppressWarnings("unchecked")
-public class SequenceGenerator
+public class MethodListGenerator
 {
-    public static void printSequences(ProjectUnits units)
+    public static void printMethodLists(ProjectUnits units)
     {
         for(IRewriteCompilationUnit unit : units)
         {
@@ -98,7 +98,7 @@ public class SequenceGenerator
                                 // @formatter:on
 
                                 String className = cu.getPackage().getName() + "." + type.getName().getFullyQualifiedName();
-                                System.err.println("method : " + className + "." + method.getName().getFullyQualifiedName() + "(" + params + ")" + " : " + className);
+                                System.err.println(className + "." + method.getName().getFullyQualifiedName() + "(" + params + ")");
                                 break;
                             }
                         }
@@ -190,9 +190,9 @@ public class SequenceGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
-        ret.addAll(visitAll(decl.modifiers(), SequenceGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(decl.modifiers(), MethodListGenerator::visitExtendedModifier));
         ret.addAll(visitSimpleName(decl.getName()));
-        ret.addAll(visitAll(decl.bodyDeclarations(), SequenceGenerator::visitBodyDeclaration));
+        ret.addAll(visitAll(decl.bodyDeclarations(), MethodListGenerator::visitBodyDeclaration));
         return ret;
     }
 
@@ -200,7 +200,7 @@ public class SequenceGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
-        ret.addAll(visitAll(decl.modifiers(), SequenceGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(decl.modifiers(), MethodListGenerator::visitExtendedModifier));
         ret.addAll(visitType(decl.getType()));
         ret.addAll(visitSimpleName(decl.getName()));
         ret.addAll(visitExpression(decl.getDefault()));
@@ -218,7 +218,7 @@ public class SequenceGenerator
 
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
-        ret.addAll(visitAll(decl.bodyDeclarations(), SequenceGenerator::visitBodyDeclaration));
+        ret.addAll(visitAll(decl.bodyDeclarations(), MethodListGenerator::visitBodyDeclaration));
         return ret;
     }
 
@@ -227,7 +227,7 @@ public class SequenceGenerator
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
         ret.addAll(visitType(type.getElementType()));
-        ret.addAll(visitAll(type.dimensions(), SequenceGenerator::visitDimension));
+        ret.addAll(visitAll(type.dimensions(), MethodListGenerator::visitDimension));
         return ret;
     }
 
@@ -241,7 +241,7 @@ public class SequenceGenerator
 
         List<ASTNode> ret = new ArrayList<>();
         ret.add(block);
-        ret.addAll(visitAll(block.statements(), SequenceGenerator::visitStatement));
+        ret.addAll(visitAll(block.statements(), MethodListGenerator::visitStatement));
         return ret;
     }
 
@@ -292,9 +292,9 @@ public class SequenceGenerator
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
         ret.addAll(visitExpression(expr.getExpression()));
-        ret.addAll(visitAll(expr.typeArguments(), SequenceGenerator::visitType));
+        ret.addAll(visitAll(expr.typeArguments(), MethodListGenerator::visitType));
         ret.addAll(visitType(expr.getType()));
-        ret.addAll(visitAll(expr.arguments(), SequenceGenerator::visitExpression));
+        ret.addAll(visitAll(expr.arguments(), MethodListGenerator::visitExpression));
         ret.addAll(visitAnonymousClassDeclaration(expr.getAnonymousClassDeclaration()));
         return ret;
     }
@@ -303,7 +303,7 @@ public class SequenceGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(dim);
-        ret.addAll(visitAll(dim.annotations(), SequenceGenerator::visitAnnotation));
+        ret.addAll(visitAll(dim.annotations(), MethodListGenerator::visitAnnotation));
         return ret;
     }
 
@@ -311,9 +311,9 @@ public class SequenceGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
-        ret.addAll(visitAll(decl.modifiers(), SequenceGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(decl.modifiers(), MethodListGenerator::visitExtendedModifier));
         ret.addAll(visitSimpleName(decl.getName()));
-        ret.addAll(visitAll(decl.arguments(), SequenceGenerator::visitExpression));
+        ret.addAll(visitAll(decl.arguments(), MethodListGenerator::visitExpression));
         ret.addAll(visitAnonymousClassDeclaration(decl.getAnonymousClassDeclaration()));
         return ret;
     }
@@ -322,11 +322,11 @@ public class SequenceGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
-        ret.addAll(visitAll(decl.modifiers(), SequenceGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(decl.modifiers(), MethodListGenerator::visitExtendedModifier));
         ret.addAll(visitSimpleName(decl.getName()));
-        ret.addAll(visitAll(decl.superInterfaceTypes(), SequenceGenerator::visitType));
-        ret.addAll(visitAll(decl.enumConstants(), SequenceGenerator::visitEnumConstantDeclaration));
-        ret.addAll(visitAll(decl.bodyDeclarations(), SequenceGenerator::visitBodyDeclaration));
+        ret.addAll(visitAll(decl.superInterfaceTypes(), MethodListGenerator::visitType));
+        ret.addAll(visitAll(decl.enumConstants(), MethodListGenerator::visitEnumConstantDeclaration));
+        ret.addAll(visitAll(decl.bodyDeclarations(), MethodListGenerator::visitBodyDeclaration));
         return ret;
     }
 
@@ -397,9 +397,9 @@ public class SequenceGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
-        ret.addAll(visitAll(decl.modifiers(), SequenceGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(decl.modifiers(), MethodListGenerator::visitExtendedModifier));
         ret.addAll(visitType(decl.getType()));
-        ret.addAll(visitAll(decl.fragments(), SequenceGenerator::visitVariableDeclarationFragment));
+        ret.addAll(visitAll(decl.fragments(), MethodListGenerator::visitVariableDeclarationFragment));
         return ret;
     }
 
@@ -415,7 +415,7 @@ public class SequenceGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
-        ret.addAll(visitAll(type.types(), SequenceGenerator::visitType));
+        ret.addAll(visitAll(type.types(), MethodListGenerator::visitType));
         return ret;
     }
 
@@ -439,7 +439,7 @@ public class SequenceGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
-        ret.addAll(visitAll(expr.parameters(), SequenceGenerator::visitVariableDeclaration));
+        ret.addAll(visitAll(expr.parameters(), MethodListGenerator::visitVariableDeclaration));
         ret.addAll(visitLambdaBody(expr.getBody()));
         return ret;
     }
@@ -465,15 +465,15 @@ public class SequenceGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(method);
-        ret.addAll(visitAll(method.modifiers(), SequenceGenerator::visitExtendedModifier));
-        ret.addAll(visitAll(method.typeParameters(), SequenceGenerator::visitTypeParameter));
+        ret.addAll(visitAll(method.modifiers(), MethodListGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(method.typeParameters(), MethodListGenerator::visitTypeParameter));
         ret.addAll(visitType(method.getReturnType2()));
         ret.addAll(visitSimpleName(method.getName()));
         ret.addAll(visitType(method.getReceiverType()));
         ret.addAll(visitSimpleName(method.getReceiverQualifier()));
-        ret.addAll(visitAll(method.parameters(), SequenceGenerator::visitSingleVariableDeclaration));
-        ret.addAll(visitAll(method.extraDimensions(), SequenceGenerator::visitDimension));
-        ret.addAll(visitAll(method.thrownExceptionTypes(), SequenceGenerator::visitType));
+        ret.addAll(visitAll(method.parameters(), MethodListGenerator::visitSingleVariableDeclaration));
+        ret.addAll(visitAll(method.extraDimensions(), MethodListGenerator::visitDimension));
+        ret.addAll(visitAll(method.thrownExceptionTypes(), MethodListGenerator::visitType));
         ret.addAll(visitBlock(method.getBody()));
         return ret;
     }
@@ -483,9 +483,9 @@ public class SequenceGenerator
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
         ret.addAll(visitExpression(expr.getExpression()));
-        ret.addAll(visitAll(expr.typeArguments(), SequenceGenerator::visitType));
+        ret.addAll(visitAll(expr.typeArguments(), MethodListGenerator::visitType));
         ret.addAll(visitSimpleName(expr.getName()));
-        ret.addAll(visitAll(expr.arguments(), SequenceGenerator::visitExpression));
+        ret.addAll(visitAll(expr.arguments(), MethodListGenerator::visitExpression));
         return ret;
     }
 
@@ -521,7 +521,7 @@ public class SequenceGenerator
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
         ret.addAll(visitName(type.getQualifier()));
-        ret.addAll(visitAll(type.annotations(), SequenceGenerator::visitAnnotation));
+        ret.addAll(visitAll(type.annotations(), MethodListGenerator::visitAnnotation));
         ret.addAll(visitSimpleName(type.getName()));
         return ret;
     }
@@ -531,7 +531,7 @@ public class SequenceGenerator
         List<ASTNode> ret = new ArrayList<>();
         ret.add(annotation);
         ret.addAll(visitName(annotation.getTypeName()));
-        ret.addAll(visitAll(annotation.values(), SequenceGenerator::visitMemberValuePair));
+        ret.addAll(visitAll(annotation.values(), MethodListGenerator::visitMemberValuePair));
         return ret;
     }
 
@@ -545,7 +545,7 @@ public class SequenceGenerator
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
         ret.addAll(visitType(type.getType()));
-        ret.addAll(visitAll(type.typeArguments(), SequenceGenerator::visitType));
+        ret.addAll(visitAll(type.typeArguments(), MethodListGenerator::visitType));
         return ret;
     }
 
@@ -553,7 +553,7 @@ public class SequenceGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
-        ret.addAll(visitAll(type.annotations(), SequenceGenerator::visitAnnotation));
+        ret.addAll(visitAll(type.annotations(), MethodListGenerator::visitAnnotation));
         return ret;
     }
 
@@ -577,7 +577,7 @@ public class SequenceGenerator
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
         ret.addAll(visitType(type.getQualifier()));
-        ret.addAll(visitAll(type.annotations(), SequenceGenerator::visitAnnotation));
+        ret.addAll(visitAll(type.annotations(), MethodListGenerator::visitAnnotation));
         ret.addAll(visitSimpleName(type.getName()));
         return ret;
     }
@@ -605,7 +605,7 @@ public class SequenceGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
-        ret.addAll(visitAll(type.annotations(), SequenceGenerator::visitAnnotation));
+        ret.addAll(visitAll(type.annotations(), MethodListGenerator::visitAnnotation));
         ret.addAll(visitName(type.getName()));
         return ret;
     }
@@ -623,11 +623,11 @@ public class SequenceGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
-        ret.addAll(visitAll(decl.modifiers(), SequenceGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(decl.modifiers(), MethodListGenerator::visitExtendedModifier));
         ret.addAll(visitType(decl.getType()));
-        ret.addAll(visitAll(decl.varargsAnnotations(), SequenceGenerator::visitAnnotation));
+        ret.addAll(visitAll(decl.varargsAnnotations(), MethodListGenerator::visitAnnotation));
         ret.addAll(visitSimpleName(decl.getName()));
-        ret.addAll(visitAll(decl.extraDimensions(), SequenceGenerator::visitDimension));
+        ret.addAll(visitAll(decl.extraDimensions(), MethodListGenerator::visitDimension));
         ret.addAll(visitExpression(decl.getInitializer()));
         return ret;
     }
@@ -694,9 +694,9 @@ public class SequenceGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
-        ret.addAll(visitAll(stmt.resources(), SequenceGenerator::visitTryResource));
+        ret.addAll(visitAll(stmt.resources(), MethodListGenerator::visitTryResource));
         ret.addAll(visitBlock(stmt.getBody()));
-        ret.addAll(visitAll(stmt.catchClauses(), SequenceGenerator::visitCatchClause));
+        ret.addAll(visitAll(stmt.catchClauses(), MethodListGenerator::visitCatchClause));
         ret.addAll(visitBlock(stmt.getFinally()));
         return ret;
     }
@@ -739,12 +739,12 @@ public class SequenceGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
-        ret.addAll(visitAll(decl.modifiers(), SequenceGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(decl.modifiers(), MethodListGenerator::visitExtendedModifier));
         ret.addAll(visitSimpleName(decl.getName()));
-        ret.addAll(visitAll(decl.typeParameters(), SequenceGenerator::visitTypeParameter));
+        ret.addAll(visitAll(decl.typeParameters(), MethodListGenerator::visitTypeParameter));
         ret.addAll(visitType(decl.getSuperclassType()));
-        ret.addAll(visitAll(decl.superInterfaceTypes(), SequenceGenerator::visitType));
-        ret.addAll(visitAll(decl.bodyDeclarations(), SequenceGenerator::visitBodyDeclaration));
+        ret.addAll(visitAll(decl.superInterfaceTypes(), MethodListGenerator::visitType));
+        ret.addAll(visitAll(decl.bodyDeclarations(), MethodListGenerator::visitBodyDeclaration));
         return null;
     }
 
@@ -752,9 +752,9 @@ public class SequenceGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(typeParameter);
-        ret.addAll(visitAll(typeParameter.modifiers(), SequenceGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(typeParameter.modifiers(), MethodListGenerator::visitExtendedModifier));
         ret.addAll(visitName(typeParameter.getName()));
-        ret.addAll(visitAll(typeParameter.typeBounds(), SequenceGenerator::visitType));
+        ret.addAll(visitAll(typeParameter.typeBounds(), MethodListGenerator::visitType));
         return ret;
     }
 
@@ -762,7 +762,7 @@ public class SequenceGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
-        ret.addAll(visitAll(type.types(), SequenceGenerator::visitType));
+        ret.addAll(visitAll(type.types(), MethodListGenerator::visitType));
         return ret;
     }
 
@@ -787,7 +787,7 @@ public class SequenceGenerator
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
         ret.addAll(visitSimpleName(decl.getName()));
-        ret.addAll(visitAll(decl.extraDimensions(), SequenceGenerator::visitDimension));
+        ret.addAll(visitAll(decl.extraDimensions(), MethodListGenerator::visitDimension));
         ret.addAll(visitExpression(decl.getInitializer()));
         return ret;
     }
@@ -796,9 +796,9 @@ public class SequenceGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
-        ret.addAll(visitAll(expr.modifiers(), SequenceGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(expr.modifiers(), MethodListGenerator::visitExtendedModifier));
         ret.addAll(visitType(expr.getType()));
-        ret.addAll(visitAll(expr.fragments(), SequenceGenerator::visitVariableDeclarationFragment));
+        ret.addAll(visitAll(expr.fragments(), MethodListGenerator::visitVariableDeclarationFragment));
         return ret;
     }
 
@@ -806,9 +806,9 @@ public class SequenceGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
-        ret.addAll(visitAll(stmt.modifiers(), SequenceGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(stmt.modifiers(), MethodListGenerator::visitExtendedModifier));
         ret.addAll(visitType(stmt.getType()));
-        ret.addAll(visitAll(stmt.fragments(), SequenceGenerator::visitVariableDeclarationFragment));
+        ret.addAll(visitAll(stmt.fragments(), MethodListGenerator::visitVariableDeclarationFragment));
         return ret;
     }
 
@@ -816,7 +816,7 @@ public class SequenceGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
-        ret.addAll(visitAll(type.annotations(), SequenceGenerator::visitAnnotation));
+        ret.addAll(visitAll(type.annotations(), MethodListGenerator::visitAnnotation));
         ret.addAll(visitType(type.getBound()));
         return ret;
     }
