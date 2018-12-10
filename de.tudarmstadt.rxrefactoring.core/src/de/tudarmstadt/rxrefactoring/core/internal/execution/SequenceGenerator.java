@@ -13,6 +13,7 @@ import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.AnnotatableType;
 import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
+import org.eclipse.jdt.core.dom.AnnotationTypeMemberDeclaration;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.ArrayType;
 import org.eclipse.jdt.core.dom.Block;
@@ -26,7 +27,9 @@ import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.IExtendedModifier;
+import org.eclipse.jdt.core.dom.Initializer;
 import org.eclipse.jdt.core.dom.IntersectionType;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MarkerAnnotation;
@@ -81,7 +84,8 @@ public class SequenceGenerator
                     TypeDeclaration type = (TypeDeclaration)objType;
                     for(MethodDeclaration method : type.getMethods())
                     {
-                        for(ASTNode node : visitMethodDeclaration(method))
+                        List<ASTNode> nodes = visitMethodDeclaration(method);
+                        for(ASTNode node : nodes)
                         {
                             if(nodeHasChanges(node, unit))
                             {
@@ -192,6 +196,17 @@ public class SequenceGenerator
         return ret;
     }
 
+    private static List<ASTNode> visitAnnotationTypeMemberDeclaration(AnnotationTypeMemberDeclaration decl)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(decl);
+        ret.addAll(visitAll(decl.modifiers(), SequenceGenerator::visitExtendedModifier));
+        ret.addAll(visitType(decl.getType()));
+        ret.addAll(visitSimpleName(decl.getName()));
+        ret.addAll(visitExpression(decl.getDefault()));
+        return ret;
+    }
+
     private static List<ASTNode> visitAnonymousClassDeclaration(AnonymousClassDeclaration decl)
     {
         // Ignore. Caused by class instantiation that does not use an anonymous
@@ -237,9 +252,25 @@ public class SequenceGenerator
         {
             return visitAbstractTypeDeclaration((AbstractTypeDeclaration)decl);
         }
+        else if(decl instanceof AnnotationTypeMemberDeclaration)
+        {
+            return visitAnnotationTypeMemberDeclaration((AnnotationTypeMemberDeclaration)decl);
+        }
         else if(decl instanceof EnumConstantDeclaration)
         {
             return visitEnumConstantDeclaration((EnumConstantDeclaration)decl);
+        }
+        else if(decl instanceof FieldDeclaration)
+        {
+            return visitFieldDeclaration((FieldDeclaration)decl);
+        }
+        else if(decl instanceof Initializer)
+        {
+            return visitInitializer((Initializer)decl);
+        }
+        else if(decl instanceof MethodDeclaration)
+        {
+            return visitMethodDeclaration((MethodDeclaration)decl);
         }
         else
         {
@@ -270,9 +301,9 @@ public class SequenceGenerator
 
     private static List<ASTNode> visitDimension(Dimension dim)
     {
-        // TODO Finish
         List<ASTNode> ret = new ArrayList<>();
         ret.add(dim);
+        ret.addAll(visitAll(dim.annotations(), SequenceGenerator::visitAnnotation));
         return ret;
     }
 
@@ -360,6 +391,24 @@ public class SequenceGenerator
         {
             return throwIncompatibleJavaException("visitExtendedModifier");
         }
+    }
+
+    private static List<ASTNode> visitFieldDeclaration(FieldDeclaration decl)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(decl);
+        ret.addAll(visitAll(decl.modifiers(), SequenceGenerator::visitExtendedModifier));
+        ret.addAll(visitType(decl.getType()));
+        ret.addAll(visitAll(decl.fragments(), SequenceGenerator::visitVariableDeclarationFragment));
+        return ret;
+    }
+
+    private static List<ASTNode> visitInitializer(Initializer init)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(init);
+        ret.addAll(visitBlock(init.getBody()));
+        return ret;
     }
 
     private static List<ASTNode> visitIntersectionType(IntersectionType type)
@@ -627,23 +676,18 @@ public class SequenceGenerator
 
     private static List<ASTNode> visitTryResource(ASTNode resource)
     {
-        List<ASTNode> ret = new ArrayList<>();
-        ret.add(resource);
-
         if(resource instanceof Name)
         {
-            ret.addAll(visitName((Name)resource));
+            return visitName((Name)resource);
         }
         else if(resource instanceof VariableDeclarationExpression)
         {
-            ret.addAll(visitVariableDeclarationExpression((VariableDeclarationExpression)resource));
+            return visitVariableDeclarationExpression((VariableDeclarationExpression)resource);
         }
         else
         {
             return throwIncompatibleJavaException("visitTryResource");
         }
-
-        return ret;
     }
 
     private static List<ASTNode> visitTryStatement(TryStatement stmt)
