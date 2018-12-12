@@ -39,7 +39,9 @@ import org.eclipse.jdt.core.dom.ExpressionMethodReference;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.ForStatement;
 import org.eclipse.jdt.core.dom.IExtendedModifier;
+import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.Initializer;
 import org.eclipse.jdt.core.dom.InstanceofExpression;
@@ -92,6 +94,7 @@ import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 @SuppressWarnings("unchecked")
 public final class MethodListGenerator
@@ -110,6 +113,12 @@ public final class MethodListGenerator
                     TypeDeclaration type = (TypeDeclaration)objType;
                     for(MethodDeclaration method : type.getMethods())
                     {
+                        String className = cu.getPackage().getName() + "." + type.getName().getFullyQualifiedName();
+                        Log.info(MethodListGenerator.class, "Looking for changes in method " + className + "." + method.getName().getFullyQualifiedName() + "()");
+                        if(method.getName().getFullyQualifiedName().equals("runWithTimeout"))
+                        {
+                            System.out.println("uh-oh");
+                        }
                         List<ASTNode> nodes = visitMethodDeclaration(method);
                         for(ASTNode node : nodes)
                         {
@@ -119,12 +128,11 @@ public final class MethodListGenerator
                                 // @formatter:off
                                 String params = objParams.stream().map(SingleVariableDeclaration::getType)
                                                                   .map(t -> t.isParameterizedType() ? ((ParameterizedType)t).getType() : t)
-                                                                  .map(t -> t.resolveBinding().getPackage().getName() + "." + t.toString())
+                                                                  .map(t -> t.resolveBinding().getPackage() != null ? t.resolveBinding().getPackage().getName() : "" + "." + t.toString())
                                                                   .collect(Collectors.joining(", "));
                                 // @formatter:on
 
-                                String className = cu.getPackage().getName() + "." + type.getName().getFullyQualifiedName();
-                                System.err.println(className + "." + method.getName().getFullyQualifiedName() + "(" + params + ")");
+                                Log.info(MethodListGenerator.class, "Generated method list entry: " + className + "." + method.getName().getFullyQualifiedName() + "(" + params + ")");
                                 break;
                             }
                         }
@@ -608,6 +616,17 @@ public final class MethodListGenerator
         return ret;
     }
 
+    private static List<ASTNode> visitForStatement(ForStatement stmt)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(stmt);
+        ret.addAll(visitAll(stmt.initializers(), MethodListGenerator::visitExpression));
+        ret.addAll(visitExpression(stmt.getExpression()));
+        ret.addAll(visitAll(stmt.updaters(), MethodListGenerator::visitExpression));
+        ret.addAll(visitStatement(stmt.getBody()));
+        return ret;
+    }
+
     private static List<ASTNode> visitInfixExpression(InfixExpression expr)
     {
         List<ASTNode> ret = new ArrayList<>();
@@ -911,10 +930,28 @@ public final class MethodListGenerator
 
     private static List<ASTNode> visitStatement(Statement stmt)
     {
+        // Ignore. Caused by if statements without an else.
+        if(stmt == null)
+        {
+            return Collections.emptyList();
+        }
+
         // TODO Finish
-        if(stmt instanceof ExpressionStatement)
+        if(stmt instanceof Block)
+        {
+            return visitBlock((Block)stmt);
+        }
+        else if(stmt instanceof ExpressionStatement)
         {
             return visitExpressionStatement((ExpressionStatement)stmt);
+        }
+        else if(stmt instanceof IfStatement)
+        {
+            return visitIfStatement((IfStatement)stmt);
+        }
+        else if(stmt instanceof ForStatement)
+        {
+            return visitForStatement((ForStatement)stmt);
         }
         else if(stmt instanceof ReturnStatement)
         {
@@ -936,6 +973,16 @@ public final class MethodListGenerator
         {
             return throwIncompatibleJavaException("visitStatement", stmt.getClass());
         }
+    }
+
+    private static List<ASTNode> visitIfStatement(IfStatement stmt)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(stmt);
+        ret.addAll(visitExpression(stmt.getExpression()));
+        ret.addAll(visitStatement(stmt.getThenStatement()));
+        ret.addAll(visitStatement(stmt.getElseStatement()));
+        return ret;
     }
 
     private static List<ASTNode> visitStringLiteral(StringLiteral literal)
@@ -1192,6 +1239,6 @@ public final class MethodListGenerator
 
     private static List<ASTNode> throwIncompatibleJavaException(String method, Class<? extends ASTNode> clazz)
     {
-        throw new RuntimeException("SequenceGenerator is not compatible with your Java version: " + method + "() has to be updated, " + clazz.getName() + " could not be handled.");
+        throw new RuntimeException(MethodListGenerator.class.getSimpleName() + " is not compatible with your Java version: " + method + "() has to be updated, " + clazz.getName() + " could not be handled.");
     }
 }
