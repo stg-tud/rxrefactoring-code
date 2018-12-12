@@ -35,6 +35,7 @@ import org.eclipse.jdt.core.dom.Dimension;
 import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.ExpressionMethodReference;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
@@ -53,8 +54,12 @@ import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.NameQualifiedType;
 import org.eclipse.jdt.core.dom.NormalAnnotation;
+import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.ParenthesizedExpression;
+import org.eclipse.jdt.core.dom.PostfixExpression;
+import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.QualifiedType;
@@ -66,10 +71,16 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.StringLiteral;
 import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
+import org.eclipse.jdt.core.dom.SuperFieldAccess;
+import org.eclipse.jdt.core.dom.SuperMethodInvocation;
+import org.eclipse.jdt.core.dom.SuperMethodReference;
+import org.eclipse.jdt.core.dom.ThisExpression;
 import org.eclipse.jdt.core.dom.ThrowStatement;
 import org.eclipse.jdt.core.dom.TryStatement;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.TypeLiteral;
+import org.eclipse.jdt.core.dom.TypeMethodReference;
 import org.eclipse.jdt.core.dom.TypeParameter;
 import org.eclipse.jdt.core.dom.UnionType;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
@@ -83,8 +94,10 @@ import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 
 @SuppressWarnings("unchecked")
-public class MethodListGenerator
+public final class MethodListGenerator
 {
+    private MethodListGenerator() {}
+
     public static void printMethodLists(ProjectUnits units)
     {
         for(IRewriteCompilationUnit unit : units)
@@ -376,6 +389,15 @@ public class MethodListGenerator
         return ret;
     }
 
+    private static List<ASTNode> visitCreationReference(CreationReference expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitType(expr.getType()));
+        ret.addAll(visitAll(expr.typeArguments(), MethodListGenerator::visitType));
+        return ret;
+    }
+
     private static List<ASTNode> visitDimension(Dimension dim)
     {
         List<ASTNode> ret = new ArrayList<>();
@@ -415,7 +437,6 @@ public class MethodListGenerator
             return Collections.emptyList();
         }
 
-        // TODO Finish
         if(expr instanceof Annotation)
         {
             return visitAnnotation((Annotation)expr);
@@ -472,30 +493,76 @@ public class MethodListGenerator
         {
             return visitLambdaExpression((LambdaExpression)expr);
         }
-        else if(expr instanceof MethodReference)
-        {
-            return visitMethodReference((MethodReference)expr);
-        }
         else if(expr instanceof MethodInvocation)
         {
             return visitMethodInvocation((MethodInvocation)expr);
+        }
+        else if(expr instanceof MethodReference)
+        {
+            return visitMethodReference((MethodReference)expr);
         }
         else if(expr instanceof Name)
         {
             return visitName((Name)expr);
         }
+        else if(expr instanceof NullLiteral)
+        {
+            return visitNullLiteral((NullLiteral)expr);
+        }
         else if(expr instanceof NumberLiteral)
         {
             return visitNumberLiteral((NumberLiteral)expr);
+        }
+        else if(expr instanceof ParenthesizedExpression)
+        {
+            return visitParenthesizedExpression((ParenthesizedExpression)expr);
+        }
+        else if(expr instanceof PostfixExpression)
+        {
+            return visitPostfixExpression((PostfixExpression)expr);
+        }
+        else if(expr instanceof PrefixExpression)
+        {
+            return visitPrefixExpression((PrefixExpression)expr);
         }
         else if(expr instanceof StringLiteral)
         {
             return visitStringLiteral((StringLiteral)expr);
         }
+        else if(expr instanceof  SuperFieldAccess)
+        {
+            return visitSuperFieldAccess((SuperFieldAccess)expr);
+        }
+        else if(expr instanceof SuperMethodInvocation)
+        {
+            return visitSuperMethodInvocation((SuperMethodInvocation)expr);
+        }
+        else if(expr instanceof ThisExpression)
+        {
+            return visitThisExpression((ThisExpression)expr);
+        }
+        else if(expr instanceof TypeLiteral)
+        {
+            return visitTypeLiteral((TypeLiteral)expr);
+        }
+        else if(expr instanceof VariableDeclarationExpression)
+        {
+            return visitVariableDeclarationExpression((VariableDeclarationExpression)expr);
+        }
         else
         {
             return throwIncompatibleJavaException("visitExpression", expr.getClass());
         }
+    }
+
+    private static List<ASTNode> visitExpressionMethodReference(ExpressionMethodReference expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitExpression(expr.getExpression()));
+        ret.addAll(visitAll(expr.typeArguments(), MethodListGenerator::visitType));
+        ret.addAll(visitSimpleName(expr.getName()));
+        return ret;
     }
 
     private static List<ASTNode> visitExpressionStatement(ExpressionStatement stmt)
@@ -652,19 +719,22 @@ public class MethodListGenerator
         {
             return visitCreationReference((CreationReference)expr);
         }
+        else if(expr instanceof ExpressionMethodReference)
+        {
+            return visitExpressionMethodReference((ExpressionMethodReference)expr);
+        }
+        else if(expr instanceof SuperMethodReference)
+        {
+            return visitSuperMethodReference((SuperMethodReference)expr);
+        }
+        else if(expr instanceof TypeMethodReference)
+        {
+            return visitTypeMethodReference((TypeMethodReference)expr);
+        }
         else
         {
             return throwIncompatibleJavaException("visitMethodReference", expr.getClass());
         }
-    }
-
-    private static List<ASTNode> visitCreationReference(CreationReference expr)
-    {
-        List<ASTNode> ret = new ArrayList<>();
-        ret.add(expr);
-        ret.addAll(visitType(expr.getType()));
-        ret.addAll(visitAll(expr.typeArguments(), MethodListGenerator::visitType));
-        return ret;
     }
 
     private static List<ASTNode> visitModifier(Modifier modifier)
@@ -713,6 +783,11 @@ public class MethodListGenerator
         return ret;
     }
 
+    private static List<ASTNode> visitNullLiteral(NullLiteral literal)
+    {
+        return Arrays.asList(literal);
+    }
+
     private static List<ASTNode> visitNumberLiteral(NumberLiteral literal)
     {
         return Arrays.asList(literal);
@@ -724,6 +799,30 @@ public class MethodListGenerator
         ret.add(type);
         ret.addAll(visitType(type.getType()));
         ret.addAll(visitAll(type.typeArguments(), MethodListGenerator::visitType));
+        return ret;
+    }
+
+    private static List<ASTNode> visitParenthesizedExpression(ParenthesizedExpression expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitExpression(expr.getExpression()));
+        return ret;
+    }
+
+    private static List<ASTNode> visitPostfixExpression(PostfixExpression expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitExpression(expr.getOperand()));
+        return ret;
+    }
+
+    private static List<ASTNode> visitPrefixExpression(PrefixExpression expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitExpression(expr.getOperand()));
         return ret;
     }
 
@@ -844,6 +943,44 @@ public class MethodListGenerator
         return Arrays.asList(literal);
     }
 
+    private static List<ASTNode> visitSuperFieldAccess(SuperFieldAccess expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitName(expr.getQualifier()));
+        ret.addAll(visitSimpleName(expr.getName()));
+        return ret;
+    }
+
+    private static List<ASTNode> visitSuperMethodInvocation(SuperMethodInvocation expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitName(expr.getQualifier()));
+        ret.addAll(visitAll(expr.typeArguments(), MethodListGenerator::visitType));
+        ret.addAll(visitSimpleName(expr.getName()));
+        ret.addAll(visitAll(expr.arguments(), MethodListGenerator::visitExpression));
+        return ret;
+    }
+
+    private static List<ASTNode> visitSuperMethodReference(SuperMethodReference expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitName(expr.getQualifier()));
+        ret.addAll(visitAll(expr.typeArguments(), MethodListGenerator::visitType));
+        ret.addAll(visitSimpleName(expr.getName()));
+        return ret;
+    }
+
+    private static List<ASTNode> visitThisExpression(ThisExpression expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitName(expr.getQualifier()));
+        return ret;
+    }
+
     private static List<ASTNode> visitThrowStatement(ThrowStatement stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
@@ -923,6 +1060,24 @@ public class MethodListGenerator
         ret.addAll(visitType(decl.getSuperclassType()));
         ret.addAll(visitAll(decl.superInterfaceTypes(), MethodListGenerator::visitType));
         ret.addAll(visitAll(decl.bodyDeclarations(), MethodListGenerator::visitBodyDeclaration));
+        return ret;
+    }
+
+    private static List<ASTNode> visitTypeLiteral(TypeLiteral expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitType(expr.getType()));
+        return ret;
+    }
+
+    private static List<ASTNode> visitTypeMethodReference(TypeMethodReference expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitType(expr.getType()));
+        ret.addAll(visitAll(expr.typeArguments(), MethodListGenerator::visitType));
+        ret.addAll(visitSimpleName(expr.getName()));
         return ret;
     }
 
