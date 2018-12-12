@@ -15,27 +15,40 @@ import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
 import org.eclipse.jdt.core.dom.AnnotationTypeMemberDeclaration;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
+import org.eclipse.jdt.core.dom.ArrayAccess;
+import org.eclipse.jdt.core.dom.ArrayCreation;
+import org.eclipse.jdt.core.dom.ArrayInitializer;
 import org.eclipse.jdt.core.dom.ArrayType;
+import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
+import org.eclipse.jdt.core.dom.BooleanLiteral;
+import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.CatchClause;
+import org.eclipse.jdt.core.dom.CharacterLiteral;
 import org.eclipse.jdt.core.dom.ChildListPropertyDescriptor;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ConditionalExpression;
+import org.eclipse.jdt.core.dom.CreationReference;
 import org.eclipse.jdt.core.dom.Dimension;
 import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
+import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.IExtendedModifier;
+import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.Initializer;
+import org.eclipse.jdt.core.dom.InstanceofExpression;
 import org.eclipse.jdt.core.dom.IntersectionType;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.MemberValuePair;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.MethodReference;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.NameQualifiedType;
@@ -124,7 +137,7 @@ public class MethodListGenerator
         }
         else
         {
-            return throwIncompatibleJavaException("visitAbstractTypeDeclaration");
+            return throwIncompatibleJavaException("visitAbstractTypeDeclaration", decl.getClass());
         }
     }
 
@@ -162,7 +175,7 @@ public class MethodListGenerator
         }
         else
         {
-            return throwIncompatibleJavaException("visitAnnotatableType");
+            return throwIncompatibleJavaException("visitAnnotatableType", type.getClass());
         }
     }
 
@@ -182,7 +195,7 @@ public class MethodListGenerator
         }
         else
         {
-            return throwIncompatibleJavaException("visitAnnotation");
+            return throwIncompatibleJavaException("visitAnnotation", annotation.getClass());
         }
     }
 
@@ -222,12 +235,48 @@ public class MethodListGenerator
         return ret;
     }
 
+    private static List<ASTNode> visitArrayAccess(ArrayAccess expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitExpression(expr.getArray()));
+        ret.addAll(visitExpression(expr.getIndex()));
+        return ret;
+    }
+
+    private static List<ASTNode> visitArrayCreation(ArrayCreation expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitAll(expr.dimensions(), MethodListGenerator::visitDimension));
+        ret.addAll(visitArrayType(expr.getType()));
+        ret.addAll(visitArrayInitializer(expr.getInitializer()));
+        return ret;
+    }
+
+    private static List<ASTNode> visitArrayInitializer(ArrayInitializer expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitAll(expr.expressions(), MethodListGenerator::visitExpression));
+        return ret;
+    }
+
     private static List<ASTNode> visitArrayType(ArrayType type)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
         ret.addAll(visitType(type.getElementType()));
         ret.addAll(visitAll(type.dimensions(), MethodListGenerator::visitDimension));
+        return ret;
+    }
+
+    private static List<ASTNode> visitAssignment(Assignment expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitExpression(expr.getLeftHandSide()));
+        ret.addAll(visitExpression(expr.getRightHandSide()));
         return ret;
     }
 
@@ -247,7 +296,6 @@ public class MethodListGenerator
 
     private static List<ASTNode> visitBodyDeclaration(BodyDeclaration decl)
     {
-        // TODO Finish
         if(decl instanceof AbstractTypeDeclaration)
         {
             return visitAbstractTypeDeclaration((AbstractTypeDeclaration)decl);
@@ -274,8 +322,22 @@ public class MethodListGenerator
         }
         else
         {
-            return throwIncompatibleJavaException("visitBodyDeclaration");
+            return throwIncompatibleJavaException("visitBodyDeclaration", decl.getClass());
         }
+    }
+
+    private static List<ASTNode> visitBooleanLiteral(BooleanLiteral literal)
+    {
+        return Arrays.asList(literal);
+    }
+
+    private static List<ASTNode> visitCastExpression(CastExpression expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitType(expr.getType()));
+        ret.addAll(visitExpression(expr.getExpression()));
+        return ret;
     }
 
     private static List<ASTNode> visitCatchClause(CatchClause stmt)
@@ -287,6 +349,11 @@ public class MethodListGenerator
         return ret;
     }
 
+    private static List<ASTNode> visitCharacterLiteral(CharacterLiteral literal)
+    {
+        return Arrays.asList(literal);
+    }
+
     private static List<ASTNode> visitClassInstanceCreation(ClassInstanceCreation expr)
     {
         List<ASTNode> ret = new ArrayList<>();
@@ -296,6 +363,16 @@ public class MethodListGenerator
         ret.addAll(visitType(expr.getType()));
         ret.addAll(visitAll(expr.arguments(), MethodListGenerator::visitExpression));
         ret.addAll(visitAnonymousClassDeclaration(expr.getAnonymousClassDeclaration()));
+        return ret;
+    }
+
+    private static List<ASTNode> visitConditionalExpression(ConditionalExpression expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitExpression(expr.getExpression()));
+        ret.addAll(visitExpression(expr.getThenExpression()));
+        ret.addAll(visitExpression(expr.getElseExpression()));
         return ret;
     }
 
@@ -339,13 +416,65 @@ public class MethodListGenerator
         }
 
         // TODO Finish
-        if(expr instanceof ClassInstanceCreation)
+        if(expr instanceof Annotation)
+        {
+            return visitAnnotation((Annotation)expr);
+        }
+        else if(expr instanceof ArrayAccess)
+        {
+            return visitArrayAccess((ArrayAccess)expr);
+        }
+        else if(expr instanceof ArrayCreation)
+        {
+            return visitArrayCreation((ArrayCreation)expr);
+        }
+        else if(expr instanceof ArrayInitializer)
+        {
+            return visitArrayInitializer((ArrayInitializer)expr);
+        }
+        else if(expr instanceof Assignment)
+        {
+            return visitAssignment((Assignment)expr);
+        }
+        else if(expr instanceof BooleanLiteral)
+        {
+            return visitBooleanLiteral((BooleanLiteral)expr);
+        }
+        else if(expr instanceof CastExpression)
+        {
+            return visitCastExpression((CastExpression)expr);
+        }
+        else if(expr instanceof CharacterLiteral)
+        {
+            return visitCharacterLiteral((CharacterLiteral)expr);
+        }
+        else if(expr instanceof ClassInstanceCreation)
         {
             return visitClassInstanceCreation((ClassInstanceCreation)expr);
         }
-        if(expr instanceof LambdaExpression)
+        else if(expr instanceof ConditionalExpression)
+        {
+            return visitConditionalExpression((ConditionalExpression)expr);
+        }
+        else if(expr instanceof FieldAccess)
+        {
+            return visitFieldAccess((FieldAccess)expr);
+        }
+        else if(expr instanceof InfixExpression)
+        {
+            return visitInfixExpression((InfixExpression)expr);
+        }
+        else if(expr instanceof InstanceofExpression)
+        {
+            return visitInstanceOfExpression((InstanceofExpression)expr);
+        }
+        else if(expr instanceof LambdaExpression)
         {
             return visitLambdaExpression((LambdaExpression)expr);
+        }
+        else if(expr instanceof MethodReference)
+        {
+            return visitMethodReference((MethodReference)expr);
         }
         else if(expr instanceof MethodInvocation)
         {
@@ -365,7 +494,7 @@ public class MethodListGenerator
         }
         else
         {
-            return throwIncompatibleJavaException("visitExpression");
+            return throwIncompatibleJavaException("visitExpression", expr.getClass());
         }
     }
 
@@ -389,8 +518,17 @@ public class MethodListGenerator
         }
         else
         {
-            return throwIncompatibleJavaException("visitExtendedModifier");
+            return throwIncompatibleJavaException("visitExtendedModifier", (Class<? extends ASTNode>)modifier.getClass());
         }
+    }
+
+    private static List<ASTNode> visitFieldAccess(FieldAccess expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitExpression(expr.getExpression()));
+        ret.addAll(visitSimpleName(expr.getName()));
+        return ret;
     }
 
     private static List<ASTNode> visitFieldDeclaration(FieldDeclaration decl)
@@ -400,6 +538,25 @@ public class MethodListGenerator
         ret.addAll(visitAll(decl.modifiers(), MethodListGenerator::visitExtendedModifier));
         ret.addAll(visitType(decl.getType()));
         ret.addAll(visitAll(decl.fragments(), MethodListGenerator::visitVariableDeclarationFragment));
+        return ret;
+    }
+
+    private static List<ASTNode> visitInfixExpression(InfixExpression expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitExpression(expr.getLeftOperand()));
+        ret.addAll(visitExpression(expr.getRightOperand()));
+        ret.addAll(visitAll(expr.extendedOperands(), MethodListGenerator::visitExpression));
+        return ret;
+    }
+
+    private static List<ASTNode> visitInstanceOfExpression(InstanceofExpression expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitExpression(expr.getLeftOperand()));
+        ret.addAll(visitType(expr.getRightOperand()));
         return ret;
     }
 
@@ -431,7 +588,7 @@ public class MethodListGenerator
         }
         else
         {
-            return throwIncompatibleJavaException("visitLambdaBody");
+            return throwIncompatibleJavaException("visitLambdaBody", body.getClass());
         }
     }
 
@@ -489,6 +646,27 @@ public class MethodListGenerator
         return ret;
     }
 
+    private static List<ASTNode> visitMethodReference(MethodReference expr)
+    {
+        if(expr instanceof CreationReference)
+        {
+            return visitCreationReference((CreationReference)expr);
+        }
+        else
+        {
+            return throwIncompatibleJavaException("visitMethodReference", expr.getClass());
+        }
+    }
+
+    private static List<ASTNode> visitCreationReference(CreationReference expr)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(expr);
+        ret.addAll(visitType(expr.getType()));
+        ret.addAll(visitAll(expr.typeArguments(), MethodListGenerator::visitType));
+        return ret;
+    }
+
     private static List<ASTNode> visitModifier(Modifier modifier)
     {
         return Arrays.asList(modifier);
@@ -512,7 +690,7 @@ public class MethodListGenerator
         }
         else
         {
-            return throwIncompatibleJavaException("visitName");
+            return throwIncompatibleJavaException("visitName", name.getClass());
         }
     }
 
@@ -535,9 +713,9 @@ public class MethodListGenerator
         return ret;
     }
 
-    private static List<ASTNode> visitNumberLiteral(NumberLiteral expr)
+    private static List<ASTNode> visitNumberLiteral(NumberLiteral literal)
     {
-        return Arrays.asList(expr);
+        return Arrays.asList(literal);
     }
 
     private static List<ASTNode> visitParameterizedType(ParameterizedType type)
@@ -657,13 +835,13 @@ public class MethodListGenerator
         }
         else
         {
-            return throwIncompatibleJavaException("visitStatement");
+            return throwIncompatibleJavaException("visitStatement", stmt.getClass());
         }
     }
 
-    private static List<ASTNode> visitStringLiteral(StringLiteral expr)
+    private static List<ASTNode> visitStringLiteral(StringLiteral literal)
     {
-        return Arrays.asList(expr);
+        return Arrays.asList(literal);
     }
 
     private static List<ASTNode> visitThrowStatement(ThrowStatement stmt)
@@ -686,7 +864,7 @@ public class MethodListGenerator
         }
         else
         {
-            return throwIncompatibleJavaException("visitTryResource");
+            return throwIncompatibleJavaException("visitTryResource", resource.getClass());
         }
     }
 
@@ -731,7 +909,7 @@ public class MethodListGenerator
         }
         else
         {
-            return throwIncompatibleJavaException("visitType");
+            return throwIncompatibleJavaException("visitType", type.getClass());
         }
     }
 
@@ -745,7 +923,7 @@ public class MethodListGenerator
         ret.addAll(visitType(decl.getSuperclassType()));
         ret.addAll(visitAll(decl.superInterfaceTypes(), MethodListGenerator::visitType));
         ret.addAll(visitAll(decl.bodyDeclarations(), MethodListGenerator::visitBodyDeclaration));
-        return null;
+        return ret;
     }
 
     private static List<ASTNode> visitTypeParameter(TypeParameter typeParameter)
@@ -778,7 +956,7 @@ public class MethodListGenerator
         }
         else
         {
-            return throwIncompatibleJavaException("visitVariableDeclaration");
+            return throwIncompatibleJavaException("visitVariableDeclaration", decl.getClass());
         }
     }
 
@@ -857,8 +1035,8 @@ public class MethodListGenerator
         return false;
     }
 
-    private static List<ASTNode> throwIncompatibleJavaException(String method)
+    private static List<ASTNode> throwIncompatibleJavaException(String method, Class<? extends ASTNode> clazz)
     {
-        throw new RuntimeException("SequenceGenerator is not compatible with your Java version: " + method + "() has to be updated.");
+        throw new RuntimeException("SequenceGenerator is not compatible with your Java version: " + method + "() has to be updated, " + clazz.getName() + " could not be handled.");
     }
 }
