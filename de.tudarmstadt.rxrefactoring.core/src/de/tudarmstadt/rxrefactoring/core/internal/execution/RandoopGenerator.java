@@ -1,10 +1,18 @@
 package de.tudarmstadt.rxrefactoring.core.internal.execution;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -19,10 +27,12 @@ import org.eclipse.jdt.core.dom.ArrayAccess;
 import org.eclipse.jdt.core.dom.ArrayCreation;
 import org.eclipse.jdt.core.dom.ArrayInitializer;
 import org.eclipse.jdt.core.dom.ArrayType;
+import org.eclipse.jdt.core.dom.AssertStatement;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.BooleanLiteral;
+import org.eclipse.jdt.core.dom.BreakStatement;
 import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.CharacterLiteral;
@@ -30,8 +40,13 @@ import org.eclipse.jdt.core.dom.ChildListPropertyDescriptor;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ConditionalExpression;
+import org.eclipse.jdt.core.dom.ConstructorInvocation;
+import org.eclipse.jdt.core.dom.ContinueStatement;
 import org.eclipse.jdt.core.dom.CreationReference;
 import org.eclipse.jdt.core.dom.Dimension;
+import org.eclipse.jdt.core.dom.DoStatement;
+import org.eclipse.jdt.core.dom.EmptyStatement;
+import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.Expression;
@@ -46,6 +61,7 @@ import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.Initializer;
 import org.eclipse.jdt.core.dom.InstanceofExpression;
 import org.eclipse.jdt.core.dom.IntersectionType;
+import org.eclipse.jdt.core.dom.LabeledStatement;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.MemberValuePair;
@@ -73,14 +89,19 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.StringLiteral;
 import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
+import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
 import org.eclipse.jdt.core.dom.SuperFieldAccess;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.SuperMethodReference;
+import org.eclipse.jdt.core.dom.SwitchCase;
+import org.eclipse.jdt.core.dom.SwitchStatement;
+import org.eclipse.jdt.core.dom.SynchronizedStatement;
 import org.eclipse.jdt.core.dom.ThisExpression;
 import org.eclipse.jdt.core.dom.ThrowStatement;
 import org.eclipse.jdt.core.dom.TryStatement;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
 import org.eclipse.jdt.core.dom.TypeLiteral;
 import org.eclipse.jdt.core.dom.TypeMethodReference;
 import org.eclipse.jdt.core.dom.TypeParameter;
@@ -89,6 +110,7 @@ import org.eclipse.jdt.core.dom.VariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
+import org.eclipse.jdt.core.dom.WhileStatement;
 import org.eclipse.jdt.core.dom.WildcardType;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
@@ -97,12 +119,19 @@ import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 @SuppressWarnings("unchecked")
-public final class MethodListGenerator
+public final class RandoopGenerator
 {
-    private MethodListGenerator() {}
+    private static final String OMITMETHODS_FILE = "omitmethods.txt";
+    private static final String CLASSLIST_FILE = "classlist.txt";
+    private static final String RANDOOP_JAR = "randoop-all-4.1.0.jar";
 
-    public static void printMethodLists(ProjectUnits units)
+    private RandoopGenerator() {}
+
+    public static void runRandoopGenerator(ProjectUnits units)
     {
+        List<String> methodsToOmit = new ArrayList<>();
+        Set<String> classesToTest = new HashSet<>();
+
         for(IRewriteCompilationUnit unit : units)
         {
             if(unit.hasChanges())
@@ -114,31 +143,119 @@ public final class MethodListGenerator
                     for(MethodDeclaration method : type.getMethods())
                     {
                         String className = cu.getPackage().getName() + "." + type.getName().getFullyQualifiedName();
-                        Log.info(MethodListGenerator.class, "Looking for changes in method " + className + "." + method.getName().getFullyQualifiedName() + "()");
-                        if(method.getName().getFullyQualifiedName().equals("runWithTimeout"))
-                        {
-                            System.out.println("uh-oh");
-                        }
+                        classesToTest.add(className);
+                        Log.info(RandoopGenerator.class, "Looking for changes in method " + className + "." + method.getName().getFullyQualifiedName() + "()");
                         List<ASTNode> nodes = visitMethodDeclaration(method);
+
+                        boolean shouldOmit = true;
                         for(ASTNode node : nodes)
                         {
                             if(nodeHasChanges(node, unit))
                             {
-                                List<SingleVariableDeclaration> objParams = method.parameters();
-                                // @formatter:off
-                                String params = objParams.stream().map(SingleVariableDeclaration::getType)
-                                                                  .map(t -> t.isParameterizedType() ? ((ParameterizedType)t).getType() : t)
-                                                                  .map(t -> t.resolveBinding().getPackage() != null ? t.resolveBinding().getPackage().getName() : "" + "." + t.toString())
-                                                                  .collect(Collectors.joining(", "));
-                                // @formatter:on
-
-                                Log.info(MethodListGenerator.class, "Generated method list entry: " + className + "." + method.getName().getFullyQualifiedName() + "(" + params + ")");
+                                shouldOmit = false;
                                 break;
                             }
+                        }
+
+                        if(shouldOmit)
+                        {
+                            List<SingleVariableDeclaration> objParams = method.parameters();
+                            // @formatter:off
+                            String params = objParams.stream().map(SingleVariableDeclaration::getType)
+                                                              .map(t -> t.isParameterizedType() ? ((ParameterizedType)t).getType() : t)
+                                                              .map(t -> (t.resolveBinding().getPackage() != null ? t.resolveBinding().getPackage().getName() + "." : "") + t.toString())
+                                                              .collect(Collectors.joining(", "));
+                            // @formatter:on
+
+                            methodsToOmit.add(className + "." + method.getName().getFullyQualifiedName() + "(" + params + ")");
                         }
                     }
                 }
             }
+        }
+
+        createOutput(methodsToOmit, classesToTest);
+    }
+
+    private static void createOutput(List<String> methodsToOmit, Set<String> classesToTest)
+    {
+        File folder = new File(new File("").getAbsolutePath() + File.separator + "randoop-spec");
+        folder.mkdirs();
+
+        // Create a shell file for running randoop
+        File randoopSh = new File(folder, "randoop.sh");
+        try
+        {
+            randoopSh.createNewFile();
+            try(OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(randoopSh), StandardCharsets.UTF_8.newEncoder()); BufferedWriter out = new BufferedWriter(writer))
+            {
+                out.write("#!/bin/bash");
+                out.newLine();
+                out.newLine();
+
+                String classpath = " -classpath \"bin:" + RANDOOP_JAR + "\"";
+                String main = " randoop.main.Main";
+                String command = " gentests";
+                String classlist = " --classlist=classlist.txt";
+                String omitmethods_file = " --omitmethods-file=omitmethods.txt";
+                String no_error_revealing_tests = " --no-error-revealing-tests=true";
+                String junit_output_dir = " --junit-output-dir=src/main/test";
+                String time_limit = " --time-limit=10";
+
+                // The actual command
+                out.write("java");
+                out.write(classpath);
+                out.write(main);
+                out.write(command);
+                out.write(classlist);
+                out.write(omitmethods_file);
+                out.write(no_error_revealing_tests);
+                out.write(junit_output_dir);
+                out.write(time_limit);
+                out.newLine();
+            }
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
+        }
+
+        // Create a file of classes to test
+        File classListFile = new File(folder, CLASSLIST_FILE);
+        try
+        {
+            classListFile.createNewFile();
+            try(OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(classListFile), StandardCharsets.UTF_8.newEncoder()); BufferedWriter out = new BufferedWriter(writer))
+            {
+                for(String line : classesToTest)
+                {
+                    out.write(line);
+                    out.newLine();
+                }
+            }
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
+        }
+
+        // Create a file of methods to omit
+        File omitMethodsFile = new File(folder, OMITMETHODS_FILE);
+        try
+        {
+            omitMethodsFile.createNewFile();
+            try(OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(omitMethodsFile), StandardCharsets.UTF_8.newEncoder()); BufferedWriter out = new BufferedWriter(writer))
+            {
+                for(String line : methodsToOmit)
+                {
+                    out.write(line);
+                    out.newLine();
+                }
+            }
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
         }
     }
 
@@ -164,6 +281,12 @@ public final class MethodListGenerator
 
     private static <T extends ASTNode> List<ASTNode> visitAll(List<T> objects, Function<T, List<ASTNode>> visitor)
     {
+        // Shouldn't happen, but just in case...
+        if(objects == null)
+        {
+            return Collections.emptyList();
+        }
+
         List<ASTNode> ret = new ArrayList<>();
         for(T object : objects)
         {
@@ -224,9 +347,9 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
-        ret.addAll(visitAll(decl.modifiers(), MethodListGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(decl.modifiers(), RandoopGenerator::visitExtendedModifier));
         ret.addAll(visitSimpleName(decl.getName()));
-        ret.addAll(visitAll(decl.bodyDeclarations(), MethodListGenerator::visitBodyDeclaration));
+        ret.addAll(visitAll(decl.bodyDeclarations(), RandoopGenerator::visitBodyDeclaration));
         return ret;
     }
 
@@ -234,7 +357,7 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
-        ret.addAll(visitAll(decl.modifiers(), MethodListGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(decl.modifiers(), RandoopGenerator::visitExtendedModifier));
         ret.addAll(visitType(decl.getType()));
         ret.addAll(visitSimpleName(decl.getName()));
         ret.addAll(visitExpression(decl.getDefault()));
@@ -252,7 +375,7 @@ public final class MethodListGenerator
 
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
-        ret.addAll(visitAll(decl.bodyDeclarations(), MethodListGenerator::visitBodyDeclaration));
+        ret.addAll(visitAll(decl.bodyDeclarations(), RandoopGenerator::visitBodyDeclaration));
         return ret;
     }
 
@@ -269,7 +392,7 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
-        ret.addAll(visitAll(expr.dimensions(), MethodListGenerator::visitDimension));
+        ret.addAll(visitAll(expr.dimensions(), RandoopGenerator::visitDimension));
         ret.addAll(visitArrayType(expr.getType()));
         ret.addAll(visitArrayInitializer(expr.getInitializer()));
         return ret;
@@ -279,7 +402,7 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
-        ret.addAll(visitAll(expr.expressions(), MethodListGenerator::visitExpression));
+        ret.addAll(visitAll(expr.expressions(), RandoopGenerator::visitExpression));
         return ret;
     }
 
@@ -288,7 +411,16 @@ public final class MethodListGenerator
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
         ret.addAll(visitType(type.getElementType()));
-        ret.addAll(visitAll(type.dimensions(), MethodListGenerator::visitDimension));
+        ret.addAll(visitAll(type.dimensions(), RandoopGenerator::visitDimension));
+        return ret;
+    }
+
+    private static List<ASTNode> visitAssertStatement(AssertStatement stmt)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(stmt);
+        ret.addAll(visitExpression(stmt.getExpression()));
+        ret.addAll(visitExpression(stmt.getMessage()));
         return ret;
     }
 
@@ -311,7 +443,7 @@ public final class MethodListGenerator
 
         List<ASTNode> ret = new ArrayList<>();
         ret.add(block);
-        ret.addAll(visitAll(block.statements(), MethodListGenerator::visitStatement));
+        ret.addAll(visitAll(block.statements(), RandoopGenerator::visitStatement));
         return ret;
     }
 
@@ -352,6 +484,13 @@ public final class MethodListGenerator
         return Arrays.asList(literal);
     }
 
+    private static List<ASTNode> visitBreakStatement(BreakStatement stmt)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.addAll(visitSimpleName(stmt.getLabel()));
+        return ret;
+    }
+
     private static List<ASTNode> visitCastExpression(CastExpression expr)
     {
         List<ASTNode> ret = new ArrayList<>();
@@ -380,9 +519,9 @@ public final class MethodListGenerator
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
         ret.addAll(visitExpression(expr.getExpression()));
-        ret.addAll(visitAll(expr.typeArguments(), MethodListGenerator::visitType));
+        ret.addAll(visitAll(expr.typeArguments(), RandoopGenerator::visitType));
         ret.addAll(visitType(expr.getType()));
-        ret.addAll(visitAll(expr.arguments(), MethodListGenerator::visitExpression));
+        ret.addAll(visitAll(expr.arguments(), RandoopGenerator::visitExpression));
         ret.addAll(visitAnonymousClassDeclaration(expr.getAnonymousClassDeclaration()));
         return ret;
     }
@@ -397,12 +536,29 @@ public final class MethodListGenerator
         return ret;
     }
 
+    private static List<ASTNode> visitConstructorInvocation(ConstructorInvocation stmt)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(stmt);
+        ret.addAll(visitAll(stmt.typeArguments(), RandoopGenerator::visitType));
+        ret.addAll(visitAll(stmt.arguments(), RandoopGenerator::visitExpression));
+        return ret;
+    }
+
+    private static List<ASTNode> visitContinueStatement(ContinueStatement stmt)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(stmt);
+        ret.addAll(visitSimpleName(stmt.getLabel()));
+        return ret;
+    }
+
     private static List<ASTNode> visitCreationReference(CreationReference expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
         ret.addAll(visitType(expr.getType()));
-        ret.addAll(visitAll(expr.typeArguments(), MethodListGenerator::visitType));
+        ret.addAll(visitAll(expr.typeArguments(), RandoopGenerator::visitType));
         return ret;
     }
 
@@ -410,7 +566,31 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(dim);
-        ret.addAll(visitAll(dim.annotations(), MethodListGenerator::visitAnnotation));
+        ret.addAll(visitAll(dim.annotations(), RandoopGenerator::visitAnnotation));
+        return ret;
+    }
+
+    private static List<ASTNode> visitDoStatement(DoStatement stmt)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(stmt);
+        ret.addAll(visitExpression(stmt.getExpression()));
+        ret.addAll(visitStatement(stmt.getBody()));
+        return ret;
+    }
+
+    private static List<ASTNode> visitEmptyStatement(EmptyStatement stmt)
+    {
+        return Arrays.asList(stmt);
+    }
+
+    private static List<ASTNode> visitEnhancedForStatement(EnhancedForStatement stmt)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(stmt);
+        ret.addAll(visitSingleVariableDeclaration(stmt.getParameter()));
+        ret.addAll(visitExpression(stmt.getExpression()));
+        ret.addAll(visitStatement(stmt.getBody()));
         return ret;
     }
 
@@ -418,9 +598,9 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
-        ret.addAll(visitAll(decl.modifiers(), MethodListGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(decl.modifiers(), RandoopGenerator::visitExtendedModifier));
         ret.addAll(visitSimpleName(decl.getName()));
-        ret.addAll(visitAll(decl.arguments(), MethodListGenerator::visitExpression));
+        ret.addAll(visitAll(decl.arguments(), RandoopGenerator::visitExpression));
         ret.addAll(visitAnonymousClassDeclaration(decl.getAnonymousClassDeclaration()));
         return ret;
     }
@@ -429,11 +609,11 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
-        ret.addAll(visitAll(decl.modifiers(), MethodListGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(decl.modifiers(), RandoopGenerator::visitExtendedModifier));
         ret.addAll(visitSimpleName(decl.getName()));
-        ret.addAll(visitAll(decl.superInterfaceTypes(), MethodListGenerator::visitType));
-        ret.addAll(visitAll(decl.enumConstants(), MethodListGenerator::visitEnumConstantDeclaration));
-        ret.addAll(visitAll(decl.bodyDeclarations(), MethodListGenerator::visitBodyDeclaration));
+        ret.addAll(visitAll(decl.superInterfaceTypes(), RandoopGenerator::visitType));
+        ret.addAll(visitAll(decl.enumConstants(), RandoopGenerator::visitEnumConstantDeclaration));
+        ret.addAll(visitAll(decl.bodyDeclarations(), RandoopGenerator::visitBodyDeclaration));
         return ret;
     }
 
@@ -537,7 +717,7 @@ public final class MethodListGenerator
         {
             return visitStringLiteral((StringLiteral)expr);
         }
-        else if(expr instanceof  SuperFieldAccess)
+        else if(expr instanceof SuperFieldAccess)
         {
             return visitSuperFieldAccess((SuperFieldAccess)expr);
         }
@@ -568,7 +748,7 @@ public final class MethodListGenerator
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
         ret.addAll(visitExpression(expr.getExpression()));
-        ret.addAll(visitAll(expr.typeArguments(), MethodListGenerator::visitType));
+        ret.addAll(visitAll(expr.typeArguments(), RandoopGenerator::visitType));
         ret.addAll(visitSimpleName(expr.getName()));
         return ret;
     }
@@ -610,9 +790,9 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
-        ret.addAll(visitAll(decl.modifiers(), MethodListGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(decl.modifiers(), RandoopGenerator::visitExtendedModifier));
         ret.addAll(visitType(decl.getType()));
-        ret.addAll(visitAll(decl.fragments(), MethodListGenerator::visitVariableDeclarationFragment));
+        ret.addAll(visitAll(decl.fragments(), RandoopGenerator::visitVariableDeclarationFragment));
         return ret;
     }
 
@@ -620,10 +800,20 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
-        ret.addAll(visitAll(stmt.initializers(), MethodListGenerator::visitExpression));
+        ret.addAll(visitAll(stmt.initializers(), RandoopGenerator::visitExpression));
         ret.addAll(visitExpression(stmt.getExpression()));
-        ret.addAll(visitAll(stmt.updaters(), MethodListGenerator::visitExpression));
+        ret.addAll(visitAll(stmt.updaters(), RandoopGenerator::visitExpression));
         ret.addAll(visitStatement(stmt.getBody()));
+        return ret;
+    }
+
+    private static List<ASTNode> visitIfStatement(IfStatement stmt)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(stmt);
+        ret.addAll(visitExpression(stmt.getExpression()));
+        ret.addAll(visitStatement(stmt.getThenStatement()));
+        ret.addAll(visitStatement(stmt.getElseStatement()));
         return ret;
     }
 
@@ -633,7 +823,7 @@ public final class MethodListGenerator
         ret.add(expr);
         ret.addAll(visitExpression(expr.getLeftOperand()));
         ret.addAll(visitExpression(expr.getRightOperand()));
-        ret.addAll(visitAll(expr.extendedOperands(), MethodListGenerator::visitExpression));
+        ret.addAll(visitAll(expr.extendedOperands(), RandoopGenerator::visitExpression));
         return ret;
     }
 
@@ -658,7 +848,16 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
-        ret.addAll(visitAll(type.types(), MethodListGenerator::visitType));
+        ret.addAll(visitAll(type.types(), RandoopGenerator::visitType));
+        return ret;
+    }
+
+    private static List<ASTNode> visitLabeledStatement(LabeledStatement stmt)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(stmt);
+        ret.addAll(visitSimpleName(stmt.getLabel()));
+        ret.addAll(visitStatement(stmt.getBody()));
         return ret;
     }
 
@@ -682,7 +881,7 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
-        ret.addAll(visitAll(expr.parameters(), MethodListGenerator::visitVariableDeclaration));
+        ret.addAll(visitAll(expr.parameters(), RandoopGenerator::visitVariableDeclaration));
         ret.addAll(visitLambdaBody(expr.getBody()));
         return ret;
     }
@@ -708,15 +907,15 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(method);
-        ret.addAll(visitAll(method.modifiers(), MethodListGenerator::visitExtendedModifier));
-        ret.addAll(visitAll(method.typeParameters(), MethodListGenerator::visitTypeParameter));
+        ret.addAll(visitAll(method.modifiers(), RandoopGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(method.typeParameters(), RandoopGenerator::visitTypeParameter));
         ret.addAll(visitType(method.getReturnType2()));
         ret.addAll(visitSimpleName(method.getName()));
         ret.addAll(visitType(method.getReceiverType()));
         ret.addAll(visitSimpleName(method.getReceiverQualifier()));
-        ret.addAll(visitAll(method.parameters(), MethodListGenerator::visitSingleVariableDeclaration));
-        ret.addAll(visitAll(method.extraDimensions(), MethodListGenerator::visitDimension));
-        ret.addAll(visitAll(method.thrownExceptionTypes(), MethodListGenerator::visitType));
+        ret.addAll(visitAll(method.parameters(), RandoopGenerator::visitSingleVariableDeclaration));
+        ret.addAll(visitAll(method.extraDimensions(), RandoopGenerator::visitDimension));
+        ret.addAll(visitAll(method.thrownExceptionTypes(), RandoopGenerator::visitType));
         ret.addAll(visitBlock(method.getBody()));
         return ret;
     }
@@ -726,9 +925,9 @@ public final class MethodListGenerator
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
         ret.addAll(visitExpression(expr.getExpression()));
-        ret.addAll(visitAll(expr.typeArguments(), MethodListGenerator::visitType));
+        ret.addAll(visitAll(expr.typeArguments(), RandoopGenerator::visitType));
         ret.addAll(visitSimpleName(expr.getName()));
-        ret.addAll(visitAll(expr.arguments(), MethodListGenerator::visitExpression));
+        ret.addAll(visitAll(expr.arguments(), RandoopGenerator::visitExpression));
         return ret;
     }
 
@@ -788,7 +987,7 @@ public final class MethodListGenerator
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
         ret.addAll(visitName(type.getQualifier()));
-        ret.addAll(visitAll(type.annotations(), MethodListGenerator::visitAnnotation));
+        ret.addAll(visitAll(type.annotations(), RandoopGenerator::visitAnnotation));
         ret.addAll(visitSimpleName(type.getName()));
         return ret;
     }
@@ -798,7 +997,7 @@ public final class MethodListGenerator
         List<ASTNode> ret = new ArrayList<>();
         ret.add(annotation);
         ret.addAll(visitName(annotation.getTypeName()));
-        ret.addAll(visitAll(annotation.values(), MethodListGenerator::visitMemberValuePair));
+        ret.addAll(visitAll(annotation.values(), RandoopGenerator::visitMemberValuePair));
         return ret;
     }
 
@@ -817,7 +1016,7 @@ public final class MethodListGenerator
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
         ret.addAll(visitType(type.getType()));
-        ret.addAll(visitAll(type.typeArguments(), MethodListGenerator::visitType));
+        ret.addAll(visitAll(type.typeArguments(), RandoopGenerator::visitType));
         return ret;
     }
 
@@ -849,7 +1048,7 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
-        ret.addAll(visitAll(type.annotations(), MethodListGenerator::visitAnnotation));
+        ret.addAll(visitAll(type.annotations(), RandoopGenerator::visitAnnotation));
         return ret;
     }
 
@@ -860,7 +1059,7 @@ public final class MethodListGenerator
         {
             return Collections.emptyList();
         }
-    
+
         List<ASTNode> ret = new ArrayList<>();
         ret.add(name);
         ret.addAll(visitName(name.getQualifier()));
@@ -873,7 +1072,7 @@ public final class MethodListGenerator
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
         ret.addAll(visitType(type.getQualifier()));
-        ret.addAll(visitAll(type.annotations(), MethodListGenerator::visitAnnotation));
+        ret.addAll(visitAll(type.annotations(), RandoopGenerator::visitAnnotation));
         ret.addAll(visitSimpleName(type.getName()));
         return ret;
     }
@@ -893,7 +1092,7 @@ public final class MethodListGenerator
         {
             return Collections.emptyList();
         }
-    
+
         return Arrays.asList(name);
     }
 
@@ -901,7 +1100,7 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
-        ret.addAll(visitAll(type.annotations(), MethodListGenerator::visitAnnotation));
+        ret.addAll(visitAll(type.annotations(), RandoopGenerator::visitAnnotation));
         ret.addAll(visitName(type.getName()));
         return ret;
     }
@@ -919,11 +1118,11 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
-        ret.addAll(visitAll(decl.modifiers(), MethodListGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(decl.modifiers(), RandoopGenerator::visitExtendedModifier));
         ret.addAll(visitType(decl.getType()));
-        ret.addAll(visitAll(decl.varargsAnnotations(), MethodListGenerator::visitAnnotation));
+        ret.addAll(visitAll(decl.varargsAnnotations(), RandoopGenerator::visitAnnotation));
         ret.addAll(visitSimpleName(decl.getName()));
-        ret.addAll(visitAll(decl.extraDimensions(), MethodListGenerator::visitDimension));
+        ret.addAll(visitAll(decl.extraDimensions(), RandoopGenerator::visitDimension));
         ret.addAll(visitExpression(decl.getInitializer()));
         return ret;
     }
@@ -936,26 +1135,73 @@ public final class MethodListGenerator
             return Collections.emptyList();
         }
 
-        // TODO Finish
-        if(stmt instanceof Block)
+        if(stmt instanceof AssertStatement)
+        {
+            return visitAssertStatement((AssertStatement)stmt);
+        }
+        else if(stmt instanceof Block)
         {
             return visitBlock((Block)stmt);
+        }
+        else if(stmt instanceof BreakStatement)
+        {
+            return visitBreakStatement((BreakStatement)stmt);
+        }
+        else if(stmt instanceof ConstructorInvocation)
+        {
+            return visitConstructorInvocation((ConstructorInvocation)stmt);
+        }
+        else if(stmt instanceof ContinueStatement)
+        {
+            return visitContinueStatement((ContinueStatement)stmt);
+        }
+        else if(stmt instanceof DoStatement)
+        {
+            return visitDoStatement((DoStatement)stmt);
+        }
+        else if(stmt instanceof EmptyStatement)
+        {
+            return visitEmptyStatement((EmptyStatement)stmt);
+        }
+        else if(stmt instanceof EnhancedForStatement)
+        {
+            return visitEnhancedForStatement((EnhancedForStatement)stmt);
         }
         else if(stmt instanceof ExpressionStatement)
         {
             return visitExpressionStatement((ExpressionStatement)stmt);
         }
-        else if(stmt instanceof IfStatement)
-        {
-            return visitIfStatement((IfStatement)stmt);
-        }
         else if(stmt instanceof ForStatement)
         {
             return visitForStatement((ForStatement)stmt);
         }
+        else if(stmt instanceof IfStatement)
+        {
+            return visitIfStatement((IfStatement)stmt);
+        }
+        else if(stmt instanceof LabeledStatement)
+        {
+            return visitLabeledStatement((LabeledStatement)stmt);
+        }
         else if(stmt instanceof ReturnStatement)
         {
             return visitReturnStatement((ReturnStatement)stmt);
+        }
+        else if(stmt instanceof SuperConstructorInvocation)
+        {
+            return visitSuperConstructorInvocation((SuperConstructorInvocation)stmt);
+        }
+        else if(stmt instanceof SwitchCase)
+        {
+            return visitSwitchCase((SwitchCase)stmt);
+        }
+        else if(stmt instanceof SwitchStatement)
+        {
+            return visitSwitchStatement((SwitchStatement)stmt);
+        }
+        else if(stmt instanceof SynchronizedStatement)
+        {
+            return visitSynchronizedStatement((SynchronizedStatement)stmt);
         }
         else if(stmt instanceof ThrowStatement)
         {
@@ -965,9 +1211,17 @@ public final class MethodListGenerator
         {
             return visitTryStatement((TryStatement)stmt);
         }
+        else if(stmt instanceof TypeDeclarationStatement)
+        {
+            return visitTypeDeclarationStatement((TypeDeclarationStatement)stmt);
+        }
         else if(stmt instanceof VariableDeclarationStatement)
         {
             return visitVariableDeclarationStatement((VariableDeclarationStatement)stmt);
+        }
+        else if(stmt instanceof WhileStatement)
+        {
+            return visitWhileStatement((WhileStatement)stmt);
         }
         else
         {
@@ -975,19 +1229,19 @@ public final class MethodListGenerator
         }
     }
 
-    private static List<ASTNode> visitIfStatement(IfStatement stmt)
+    private static List<ASTNode> visitStringLiteral(StringLiteral literal)
+    {
+        return Arrays.asList(literal);
+    }
+
+    private static List<ASTNode> visitSuperConstructorInvocation(SuperConstructorInvocation stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
         ret.addAll(visitExpression(stmt.getExpression()));
-        ret.addAll(visitStatement(stmt.getThenStatement()));
-        ret.addAll(visitStatement(stmt.getElseStatement()));
+        ret.addAll(visitAll(stmt.typeArguments(), RandoopGenerator::visitType));
+        ret.addAll(visitAll(stmt.arguments(), RandoopGenerator::visitExpression));
         return ret;
-    }
-
-    private static List<ASTNode> visitStringLiteral(StringLiteral literal)
-    {
-        return Arrays.asList(literal);
     }
 
     private static List<ASTNode> visitSuperFieldAccess(SuperFieldAccess expr)
@@ -1004,9 +1258,9 @@ public final class MethodListGenerator
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
         ret.addAll(visitName(expr.getQualifier()));
-        ret.addAll(visitAll(expr.typeArguments(), MethodListGenerator::visitType));
+        ret.addAll(visitAll(expr.typeArguments(), RandoopGenerator::visitType));
         ret.addAll(visitSimpleName(expr.getName()));
-        ret.addAll(visitAll(expr.arguments(), MethodListGenerator::visitExpression));
+        ret.addAll(visitAll(expr.arguments(), RandoopGenerator::visitExpression));
         return ret;
     }
 
@@ -1015,8 +1269,34 @@ public final class MethodListGenerator
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
         ret.addAll(visitName(expr.getQualifier()));
-        ret.addAll(visitAll(expr.typeArguments(), MethodListGenerator::visitType));
+        ret.addAll(visitAll(expr.typeArguments(), RandoopGenerator::visitType));
         ret.addAll(visitSimpleName(expr.getName()));
+        return ret;
+    }
+
+    private static List<ASTNode> visitSwitchCase(SwitchCase stmt)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(stmt);
+        ret.addAll(visitExpression(stmt.getExpression()));
+        return ret;
+    }
+
+    private static List<ASTNode> visitSwitchStatement(SwitchStatement stmt)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(stmt);
+        ret.addAll(visitExpression(stmt.getExpression()));
+        ret.addAll(visitAll(stmt.statements(), RandoopGenerator::visitStatement));
+        return ret;
+    }
+
+    private static List<ASTNode> visitSynchronizedStatement(SynchronizedStatement stmt)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(stmt);
+        ret.addAll(visitExpression(stmt.getExpression()));
+        ret.addAll(visitBlock(stmt.getBody()));
         return ret;
     }
 
@@ -1056,9 +1336,9 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
-        ret.addAll(visitAll(stmt.resources(), MethodListGenerator::visitTryResource));
+        ret.addAll(visitAll(stmt.resources(), RandoopGenerator::visitTryResource));
         ret.addAll(visitBlock(stmt.getBody()));
-        ret.addAll(visitAll(stmt.catchClauses(), MethodListGenerator::visitCatchClause));
+        ret.addAll(visitAll(stmt.catchClauses(), RandoopGenerator::visitCatchClause));
         ret.addAll(visitBlock(stmt.getFinally()));
         return ret;
     }
@@ -1101,12 +1381,20 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
-        ret.addAll(visitAll(decl.modifiers(), MethodListGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(decl.modifiers(), RandoopGenerator::visitExtendedModifier));
         ret.addAll(visitSimpleName(decl.getName()));
-        ret.addAll(visitAll(decl.typeParameters(), MethodListGenerator::visitTypeParameter));
+        ret.addAll(visitAll(decl.typeParameters(), RandoopGenerator::visitTypeParameter));
         ret.addAll(visitType(decl.getSuperclassType()));
-        ret.addAll(visitAll(decl.superInterfaceTypes(), MethodListGenerator::visitType));
-        ret.addAll(visitAll(decl.bodyDeclarations(), MethodListGenerator::visitBodyDeclaration));
+        ret.addAll(visitAll(decl.superInterfaceTypes(), RandoopGenerator::visitType));
+        ret.addAll(visitAll(decl.bodyDeclarations(), RandoopGenerator::visitBodyDeclaration));
+        return ret;
+    }
+
+    private static List<ASTNode> visitTypeDeclarationStatement(TypeDeclarationStatement stmt)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(stmt);
+        ret.addAll(visitAbstractTypeDeclaration(stmt.getDeclaration()));
         return ret;
     }
 
@@ -1123,7 +1411,7 @@ public final class MethodListGenerator
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
         ret.addAll(visitType(expr.getType()));
-        ret.addAll(visitAll(expr.typeArguments(), MethodListGenerator::visitType));
+        ret.addAll(visitAll(expr.typeArguments(), RandoopGenerator::visitType));
         ret.addAll(visitSimpleName(expr.getName()));
         return ret;
     }
@@ -1132,9 +1420,9 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(typeParameter);
-        ret.addAll(visitAll(typeParameter.modifiers(), MethodListGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(typeParameter.modifiers(), RandoopGenerator::visitExtendedModifier));
         ret.addAll(visitName(typeParameter.getName()));
-        ret.addAll(visitAll(typeParameter.typeBounds(), MethodListGenerator::visitType));
+        ret.addAll(visitAll(typeParameter.typeBounds(), RandoopGenerator::visitType));
         return ret;
     }
 
@@ -1142,7 +1430,7 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
-        ret.addAll(visitAll(type.types(), MethodListGenerator::visitType));
+        ret.addAll(visitAll(type.types(), RandoopGenerator::visitType));
         return ret;
     }
 
@@ -1167,7 +1455,7 @@ public final class MethodListGenerator
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
         ret.addAll(visitSimpleName(decl.getName()));
-        ret.addAll(visitAll(decl.extraDimensions(), MethodListGenerator::visitDimension));
+        ret.addAll(visitAll(decl.extraDimensions(), RandoopGenerator::visitDimension));
         ret.addAll(visitExpression(decl.getInitializer()));
         return ret;
     }
@@ -1176,9 +1464,9 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
-        ret.addAll(visitAll(expr.modifiers(), MethodListGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(expr.modifiers(), RandoopGenerator::visitExtendedModifier));
         ret.addAll(visitType(expr.getType()));
-        ret.addAll(visitAll(expr.fragments(), MethodListGenerator::visitVariableDeclarationFragment));
+        ret.addAll(visitAll(expr.fragments(), RandoopGenerator::visitVariableDeclarationFragment));
         return ret;
     }
 
@@ -1186,9 +1474,18 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
-        ret.addAll(visitAll(stmt.modifiers(), MethodListGenerator::visitExtendedModifier));
+        ret.addAll(visitAll(stmt.modifiers(), RandoopGenerator::visitExtendedModifier));
         ret.addAll(visitType(stmt.getType()));
-        ret.addAll(visitAll(stmt.fragments(), MethodListGenerator::visitVariableDeclarationFragment));
+        ret.addAll(visitAll(stmt.fragments(), RandoopGenerator::visitVariableDeclarationFragment));
+        return ret;
+    }
+
+    private static List<ASTNode> visitWhileStatement(WhileStatement stmt)
+    {
+        List<ASTNode> ret = new ArrayList<>();
+        ret.add(stmt);
+        ret.addAll(visitExpression(stmt.getExpression()));
+        ret.addAll(visitStatement(stmt.getBody()));
         return ret;
     }
 
@@ -1196,7 +1493,7 @@ public final class MethodListGenerator
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
-        ret.addAll(visitAll(type.annotations(), MethodListGenerator::visitAnnotation));
+        ret.addAll(visitAll(type.annotations(), RandoopGenerator::visitAnnotation));
         ret.addAll(visitType(type.getBound()));
         return ret;
     }
@@ -1239,6 +1536,6 @@ public final class MethodListGenerator
 
     private static List<ASTNode> throwIncompatibleJavaException(String method, Class<? extends ASTNode> clazz)
     {
-        throw new RuntimeException(MethodListGenerator.class.getSimpleName() + " is not compatible with your Java version: " + method + "() has to be updated, " + clazz.getName() + " could not be handled.");
+        throw new RuntimeException(RandoopGenerator.class.getSimpleName() + " is not compatible with your Java version: " + method + "() has to be updated, " + clazz.getName() + " could not be handled.");
     }
 }
