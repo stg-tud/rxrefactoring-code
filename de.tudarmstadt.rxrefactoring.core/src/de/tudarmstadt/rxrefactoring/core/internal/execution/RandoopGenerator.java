@@ -12,11 +12,26 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
+
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 public class RandoopGenerator
@@ -25,7 +40,75 @@ public class RandoopGenerator
     private static final String CLASSLIST_FILE = "classlist.txt";
     private static final String RANDOOP_JAR = "randoop-all-4.1.0.jar";
 
-    public static void createOutput(List<String> methodsToOmit, Set<String> classesToTest, String projectPath, String localPath)
+    public static void runRandoopGenerator(ProjectUnits units, IProject project)
+    {
+        IPackageFragmentRoot[] pkgs = new IPackageFragmentRoot[0];
+        try
+        {
+            pkgs = JavaCore.create(project).getAllPackageFragmentRoots();
+        }
+        catch(JavaModelException e)
+        {
+            e.printStackTrace();
+        }
+
+        String projectPath = "";
+        String localPath = "";
+        if(pkgs.length >= 1)
+        {
+            projectPath = project.getLocation().toOSString();
+            localPath = pkgs[0].getResource().getFullPath().removeFirstSegments(1).toOSString();
+        }
+
+        List<String> methodsToOmit = new ArrayList<>();
+        Set<String> classesToTest = new HashSet<>();
+
+        for(IRewriteCompilationUnit unit : units)
+        {
+            if(unit.hasChanges())
+            {
+                CompilationUnit cu = (CompilationUnit)unit.getRoot();
+                for(Object objType : cu.types())
+                {
+                    TypeDeclaration type = (TypeDeclaration)objType;
+                    for(MethodDeclaration method : type.getMethods())
+                    {
+                        String className = cu.getPackage().getName() + "." + type.getName().getFullyQualifiedName();
+                        classesToTest.add(className);
+                        Log.info(JavaVisitor.class, "Looking for changes in method " + className + "." + method.getName().getFullyQualifiedName() + "()");
+                        List<ASTNode> nodes = JavaVisitor.visitMethodDeclaration(method);
+
+                        boolean shouldOmit = true;
+                        for(ASTNode node : nodes)
+                        {
+                            if(JavaVisitor.nodeHasChanges(node, unit))
+                            {
+                                shouldOmit = false;
+                                break;
+                            }
+                        }
+
+                        if(shouldOmit)
+                        {
+                            @SuppressWarnings("unchecked") List<SingleVariableDeclaration> objParams = method.parameters();
+                            // @formatter:off
+                            String params = objParams.stream().map(SingleVariableDeclaration::getType)
+                                                              .map(t -> t.isParameterizedType() ? ((ParameterizedType)t).getType() : t)
+                                                              .map(t -> (t.resolveBinding().getPackage() != null ? t.resolveBinding().getPackage().getName() + "." : "") + t.toString())
+                                                              .collect(Collectors.joining(", "));
+                            // @formatter:on
+
+                            methodsToOmit.add(className + "." + method.getName().getFullyQualifiedName() + "(" + params + ")");
+                        }
+                    }
+                }
+            }
+        }
+
+        createOutput(methodsToOmit, classesToTest, projectPath, localPath);
+    }
+
+    private static void createOutput(List<String> methodsToOmit, Set<String> classesToTest, String projectPath, String localPath)
     {
         String time = Calendar.getInstance().getTime().toString().replace(' ', '_').replace(':', '_');
         File randoopTemp = new File(determineTempPath() + File.separator + "randoop-gen-" + time);

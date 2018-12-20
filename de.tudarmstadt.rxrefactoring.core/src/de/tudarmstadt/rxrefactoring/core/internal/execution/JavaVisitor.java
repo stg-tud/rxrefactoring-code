@@ -3,17 +3,10 @@ package de.tudarmstadt.rxrefactoring.core.internal.execution;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.AnnotatableType;
@@ -36,7 +29,6 @@ import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.CharacterLiteral;
 import org.eclipse.jdt.core.dom.ChildListPropertyDescriptor;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ConditionalExpression;
 import org.eclipse.jdt.core.dom.ConstructorInvocation;
 import org.eclipse.jdt.core.dom.ContinueStatement;
@@ -114,82 +106,13 @@ import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 @SuppressWarnings("unchecked")
 public final class JavaVisitor
 {
     private JavaVisitor() {}
 
-    public static void runRandoopGenerator(ProjectUnits units, IProject project)
-    {
-        IPackageFragmentRoot[] pkgs = new IPackageFragmentRoot[0];
-        try
-        {
-            pkgs = JavaCore.create(project).getAllPackageFragmentRoots();
-        }
-        catch(JavaModelException e)
-        {
-            e.printStackTrace();
-        }
-
-        String projectPath = "";
-        String localPath = "";
-        if(pkgs.length >= 1)
-        {
-            projectPath = project.getLocation().toOSString();
-            localPath = pkgs[0].getResource().getFullPath().removeFirstSegments(1).toOSString();
-        }
-
-        List<String> methodsToOmit = new ArrayList<>();
-        Set<String> classesToTest = new HashSet<>();
-
-        for(IRewriteCompilationUnit unit : units)
-        {
-            if(unit.hasChanges())
-            {
-                CompilationUnit cu = (CompilationUnit)unit.getRoot();
-                for(Object objType : cu.types())
-                {
-                    TypeDeclaration type = (TypeDeclaration)objType;
-                    for(MethodDeclaration method : type.getMethods())
-                    {
-                        String className = cu.getPackage().getName() + "." + type.getName().getFullyQualifiedName();
-                        classesToTest.add(className);
-                        Log.info(JavaVisitor.class, "Looking for changes in method " + className + "." + method.getName().getFullyQualifiedName() + "()");
-                        List<ASTNode> nodes = visitMethodDeclaration(method);
-
-                        boolean shouldOmit = true;
-                        for(ASTNode node : nodes)
-                        {
-                            if(nodeHasChanges(node, unit))
-                            {
-                                shouldOmit = false;
-                                break;
-                            }
-                        }
-
-                        if(shouldOmit)
-                        {
-                            List<SingleVariableDeclaration> objParams = method.parameters();
-                            // @formatter:off
-                            String params = objParams.stream().map(SingleVariableDeclaration::getType)
-                                                              .map(t -> t.isParameterizedType() ? ((ParameterizedType)t).getType() : t)
-                                                              .map(t -> (t.resolveBinding().getPackage() != null ? t.resolveBinding().getPackage().getName() + "." : "") + t.toString())
-                                                              .collect(Collectors.joining(", "));
-                            // @formatter:on
-
-                            methodsToOmit.add(className + "." + method.getName().getFullyQualifiedName() + "(" + params + ")");
-                        }
-                    }
-                }
-            }
-        }
-
-        RandoopGenerator.createOutput(methodsToOmit, classesToTest, projectPath, localPath);
-    }
-
-    private static List<ASTNode> visitAbstractTypeDeclaration(AbstractTypeDeclaration decl)
+    public static List<ASTNode> visitAbstractTypeDeclaration(AbstractTypeDeclaration decl)
     {
         if(decl instanceof AnnotationTypeDeclaration)
         {
@@ -225,7 +148,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitAnnotatableType(AnnotatableType type)
+    public static List<ASTNode> visitAnnotatableType(AnnotatableType type)
     {
         if(type instanceof NameQualifiedType)
         {
@@ -253,7 +176,7 @@ public final class JavaVisitor
         }
     }
 
-    private static List<ASTNode> visitAnnotation(Annotation annotation)
+    public static List<ASTNode> visitAnnotation(Annotation annotation)
     {
         if(annotation instanceof MarkerAnnotation)
         {
@@ -273,7 +196,7 @@ public final class JavaVisitor
         }
     }
 
-    private static List<ASTNode> visitAnnotationTypeDeclaration(AnnotationTypeDeclaration decl)
+    public static List<ASTNode> visitAnnotationTypeDeclaration(AnnotationTypeDeclaration decl)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
@@ -283,7 +206,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitAnnotationTypeMemberDeclaration(AnnotationTypeMemberDeclaration decl)
+    public static List<ASTNode> visitAnnotationTypeMemberDeclaration(AnnotationTypeMemberDeclaration decl)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
@@ -294,7 +217,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitAnonymousClassDeclaration(AnonymousClassDeclaration decl)
+    public static List<ASTNode> visitAnonymousClassDeclaration(AnonymousClassDeclaration decl)
     {
         // Ignore. Caused by class instantiation that does not use an anonymous
         // class.
@@ -309,7 +232,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitArrayAccess(ArrayAccess expr)
+    public static List<ASTNode> visitArrayAccess(ArrayAccess expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -318,7 +241,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitArrayCreation(ArrayCreation expr)
+    public static List<ASTNode> visitArrayCreation(ArrayCreation expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -328,7 +251,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitArrayInitializer(ArrayInitializer expr)
+    public static List<ASTNode> visitArrayInitializer(ArrayInitializer expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -336,7 +259,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitArrayType(ArrayType type)
+    public static List<ASTNode> visitArrayType(ArrayType type)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
@@ -345,7 +268,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitAssertStatement(AssertStatement stmt)
+    public static List<ASTNode> visitAssertStatement(AssertStatement stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
@@ -354,7 +277,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitAssignment(Assignment expr)
+    public static List<ASTNode> visitAssignment(Assignment expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -363,7 +286,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitBlock(Block block)
+    public static List<ASTNode> visitBlock(Block block)
     {
         // Ignore. Caused by missing finally blocks.
         if(block == null)
@@ -377,7 +300,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitBodyDeclaration(BodyDeclaration decl)
+    public static List<ASTNode> visitBodyDeclaration(BodyDeclaration decl)
     {
         if(decl instanceof AbstractTypeDeclaration)
         {
@@ -409,19 +332,19 @@ public final class JavaVisitor
         }
     }
 
-    private static List<ASTNode> visitBooleanLiteral(BooleanLiteral literal)
+    public static List<ASTNode> visitBooleanLiteral(BooleanLiteral literal)
     {
         return Arrays.asList(literal);
     }
 
-    private static List<ASTNode> visitBreakStatement(BreakStatement stmt)
+    public static List<ASTNode> visitBreakStatement(BreakStatement stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.addAll(visitSimpleName(stmt.getLabel()));
         return ret;
     }
 
-    private static List<ASTNode> visitCastExpression(CastExpression expr)
+    public static List<ASTNode> visitCastExpression(CastExpression expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -430,7 +353,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitCatchClause(CatchClause stmt)
+    public static List<ASTNode> visitCatchClause(CatchClause stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
@@ -439,12 +362,12 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitCharacterLiteral(CharacterLiteral literal)
+    public static List<ASTNode> visitCharacterLiteral(CharacterLiteral literal)
     {
         return Arrays.asList(literal);
     }
 
-    private static List<ASTNode> visitClassInstanceCreation(ClassInstanceCreation expr)
+    public static List<ASTNode> visitClassInstanceCreation(ClassInstanceCreation expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -456,7 +379,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitConditionalExpression(ConditionalExpression expr)
+    public static List<ASTNode> visitConditionalExpression(ConditionalExpression expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -466,7 +389,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitConstructorInvocation(ConstructorInvocation stmt)
+    public static List<ASTNode> visitConstructorInvocation(ConstructorInvocation stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
@@ -475,7 +398,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitContinueStatement(ContinueStatement stmt)
+    public static List<ASTNode> visitContinueStatement(ContinueStatement stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
@@ -483,7 +406,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitCreationReference(CreationReference expr)
+    public static List<ASTNode> visitCreationReference(CreationReference expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -492,7 +415,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitDimension(Dimension dim)
+    public static List<ASTNode> visitDimension(Dimension dim)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(dim);
@@ -500,7 +423,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitDoStatement(DoStatement stmt)
+    public static List<ASTNode> visitDoStatement(DoStatement stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
@@ -509,12 +432,12 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitEmptyStatement(EmptyStatement stmt)
+    public static List<ASTNode> visitEmptyStatement(EmptyStatement stmt)
     {
         return Arrays.asList(stmt);
     }
 
-    private static List<ASTNode> visitEnhancedForStatement(EnhancedForStatement stmt)
+    public static List<ASTNode> visitEnhancedForStatement(EnhancedForStatement stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
@@ -524,7 +447,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitEnumConstantDeclaration(EnumConstantDeclaration decl)
+    public static List<ASTNode> visitEnumConstantDeclaration(EnumConstantDeclaration decl)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
@@ -535,7 +458,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitEnumDeclaration(EnumDeclaration decl)
+    public static List<ASTNode> visitEnumDeclaration(EnumDeclaration decl)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
@@ -547,7 +470,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitExpression(Expression expr)
+    public static List<ASTNode> visitExpression(Expression expr)
     {
         // Ignore. Caused by statements like 'return;'
         if(expr == null)
@@ -673,7 +596,7 @@ public final class JavaVisitor
         }
     }
 
-    private static List<ASTNode> visitExpressionMethodReference(ExpressionMethodReference expr)
+    public static List<ASTNode> visitExpressionMethodReference(ExpressionMethodReference expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -683,7 +606,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitExpressionStatement(ExpressionStatement stmt)
+    public static List<ASTNode> visitExpressionStatement(ExpressionStatement stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
@@ -691,7 +614,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitExtendedModifier(IExtendedModifier modifier)
+    public static List<ASTNode> visitExtendedModifier(IExtendedModifier modifier)
     {
         if(modifier instanceof Annotation)
         {
@@ -707,7 +630,7 @@ public final class JavaVisitor
         }
     }
 
-    private static List<ASTNode> visitFieldAccess(FieldAccess expr)
+    public static List<ASTNode> visitFieldAccess(FieldAccess expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -716,7 +639,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitFieldDeclaration(FieldDeclaration decl)
+    public static List<ASTNode> visitFieldDeclaration(FieldDeclaration decl)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
@@ -726,7 +649,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitForStatement(ForStatement stmt)
+    public static List<ASTNode> visitForStatement(ForStatement stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
@@ -737,7 +660,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitIfStatement(IfStatement stmt)
+    public static List<ASTNode> visitIfStatement(IfStatement stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
@@ -747,7 +670,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitInfixExpression(InfixExpression expr)
+    public static List<ASTNode> visitInfixExpression(InfixExpression expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -757,7 +680,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitInstanceOfExpression(InstanceofExpression expr)
+    public static List<ASTNode> visitInstanceOfExpression(InstanceofExpression expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -766,7 +689,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitInitializer(Initializer init)
+    public static List<ASTNode> visitInitializer(Initializer init)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(init);
@@ -774,7 +697,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitIntersectionType(IntersectionType type)
+    public static List<ASTNode> visitIntersectionType(IntersectionType type)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
@@ -782,7 +705,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitLabeledStatement(LabeledStatement stmt)
+    public static List<ASTNode> visitLabeledStatement(LabeledStatement stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
@@ -791,7 +714,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitLambdaBody(ASTNode body)
+    public static List<ASTNode> visitLambdaBody(ASTNode body)
     {
         if(body instanceof Expression)
         {
@@ -807,7 +730,7 @@ public final class JavaVisitor
         }
     }
 
-    private static List<ASTNode> visitLambdaExpression(LambdaExpression expr)
+    public static List<ASTNode> visitLambdaExpression(LambdaExpression expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -816,7 +739,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitMarkerAnnotation(MarkerAnnotation annotation)
+    public static List<ASTNode> visitMarkerAnnotation(MarkerAnnotation annotation)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(annotation);
@@ -824,7 +747,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitMemberValuePair(MemberValuePair pair)
+    public static List<ASTNode> visitMemberValuePair(MemberValuePair pair)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(pair);
@@ -833,7 +756,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitMethodDeclaration(MethodDeclaration method)
+    public static List<ASTNode> visitMethodDeclaration(MethodDeclaration method)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(method);
@@ -850,7 +773,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitMethodInvocation(MethodInvocation expr)
+    public static List<ASTNode> visitMethodInvocation(MethodInvocation expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -861,7 +784,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitMethodReference(MethodReference expr)
+    public static List<ASTNode> visitMethodReference(MethodReference expr)
     {
         if(expr instanceof CreationReference)
         {
@@ -885,12 +808,12 @@ public final class JavaVisitor
         }
     }
 
-    private static List<ASTNode> visitModifier(Modifier modifier)
+    public static List<ASTNode> visitModifier(Modifier modifier)
     {
         return Arrays.asList(modifier);
     }
 
-    private static List<ASTNode> visitName(Name name)
+    public static List<ASTNode> visitName(Name name)
     {
         // Ignore. Caused by explicit receivers in methods.
         if(name == null)
@@ -912,7 +835,7 @@ public final class JavaVisitor
         }
     }
 
-    private static List<ASTNode> visitNameQualifiedType(NameQualifiedType type)
+    public static List<ASTNode> visitNameQualifiedType(NameQualifiedType type)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
@@ -922,7 +845,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitNormalAnnotation(NormalAnnotation annotation)
+    public static List<ASTNode> visitNormalAnnotation(NormalAnnotation annotation)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(annotation);
@@ -931,17 +854,17 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitNullLiteral(NullLiteral literal)
+    public static List<ASTNode> visitNullLiteral(NullLiteral literal)
     {
         return Arrays.asList(literal);
     }
 
-    private static List<ASTNode> visitNumberLiteral(NumberLiteral literal)
+    public static List<ASTNode> visitNumberLiteral(NumberLiteral literal)
     {
         return Arrays.asList(literal);
     }
 
-    private static List<ASTNode> visitParameterizedType(ParameterizedType type)
+    public static List<ASTNode> visitParameterizedType(ParameterizedType type)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
@@ -950,7 +873,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitParenthesizedExpression(ParenthesizedExpression expr)
+    public static List<ASTNode> visitParenthesizedExpression(ParenthesizedExpression expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -958,7 +881,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitPostfixExpression(PostfixExpression expr)
+    public static List<ASTNode> visitPostfixExpression(PostfixExpression expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -966,7 +889,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitPrefixExpression(PrefixExpression expr)
+    public static List<ASTNode> visitPrefixExpression(PrefixExpression expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -974,7 +897,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitPrimitiveType(PrimitiveType type)
+    public static List<ASTNode> visitPrimitiveType(PrimitiveType type)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
@@ -982,7 +905,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitQualifiedName(QualifiedName name)
+    public static List<ASTNode> visitQualifiedName(QualifiedName name)
     {
         // Ignore. Caused by explicit receivers in methods.
         if(name == null)
@@ -997,7 +920,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitQualifiedType(QualifiedType type)
+    public static List<ASTNode> visitQualifiedType(QualifiedType type)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
@@ -1007,7 +930,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitReturnStatement(ReturnStatement stmt)
+    public static List<ASTNode> visitReturnStatement(ReturnStatement stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
@@ -1015,7 +938,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitSimpleName(SimpleName name)
+    public static List<ASTNode> visitSimpleName(SimpleName name)
     {
         // Ignore. Caused by explicit receivers in methods.
         if(name == null)
@@ -1026,7 +949,7 @@ public final class JavaVisitor
         return Arrays.asList(name);
     }
 
-    private static List<ASTNode> visitSimpleType(SimpleType type)
+    public static List<ASTNode> visitSimpleType(SimpleType type)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
@@ -1035,7 +958,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitSingleMemberAnnotation(SingleMemberAnnotation annotation)
+    public static List<ASTNode> visitSingleMemberAnnotation(SingleMemberAnnotation annotation)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(annotation);
@@ -1044,7 +967,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitSingleVariableDeclaration(SingleVariableDeclaration decl)
+    public static List<ASTNode> visitSingleVariableDeclaration(SingleVariableDeclaration decl)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
@@ -1057,7 +980,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitStatement(Statement stmt)
+    public static List<ASTNode> visitStatement(Statement stmt)
     {
         // Ignore. Caused by if statements without an else.
         if(stmt == null)
@@ -1159,12 +1082,12 @@ public final class JavaVisitor
         }
     }
 
-    private static List<ASTNode> visitStringLiteral(StringLiteral literal)
+    public static List<ASTNode> visitStringLiteral(StringLiteral literal)
     {
         return Arrays.asList(literal);
     }
 
-    private static List<ASTNode> visitSuperConstructorInvocation(SuperConstructorInvocation stmt)
+    public static List<ASTNode> visitSuperConstructorInvocation(SuperConstructorInvocation stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
@@ -1174,7 +1097,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitSuperFieldAccess(SuperFieldAccess expr)
+    public static List<ASTNode> visitSuperFieldAccess(SuperFieldAccess expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -1183,7 +1106,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitSuperMethodInvocation(SuperMethodInvocation expr)
+    public static List<ASTNode> visitSuperMethodInvocation(SuperMethodInvocation expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -1194,7 +1117,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitSuperMethodReference(SuperMethodReference expr)
+    public static List<ASTNode> visitSuperMethodReference(SuperMethodReference expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -1204,7 +1127,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitSwitchCase(SwitchCase stmt)
+    public static List<ASTNode> visitSwitchCase(SwitchCase stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
@@ -1212,7 +1135,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitSwitchStatement(SwitchStatement stmt)
+    public static List<ASTNode> visitSwitchStatement(SwitchStatement stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
@@ -1221,7 +1144,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitSynchronizedStatement(SynchronizedStatement stmt)
+    public static List<ASTNode> visitSynchronizedStatement(SynchronizedStatement stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
@@ -1230,7 +1153,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitThisExpression(ThisExpression expr)
+    public static List<ASTNode> visitThisExpression(ThisExpression expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -1238,7 +1161,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitThrowStatement(ThrowStatement stmt)
+    public static List<ASTNode> visitThrowStatement(ThrowStatement stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
@@ -1246,7 +1169,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitTryResource(ASTNode resource)
+    public static List<ASTNode> visitTryResource(ASTNode resource)
     {
         if(resource instanceof Name)
         {
@@ -1262,7 +1185,7 @@ public final class JavaVisitor
         }
     }
 
-    private static List<ASTNode> visitTryStatement(TryStatement stmt)
+    public static List<ASTNode> visitTryStatement(TryStatement stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
@@ -1273,7 +1196,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitType(Type type)
+    public static List<ASTNode> visitType(Type type)
     {
         // Ignore. Caused by void methods.
         if(type == null)
@@ -1307,7 +1230,7 @@ public final class JavaVisitor
         }
     }
 
-    private static List<ASTNode> visitTypeDeclaration(TypeDeclaration decl)
+    public static List<ASTNode> visitTypeDeclaration(TypeDeclaration decl)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
@@ -1320,7 +1243,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitTypeDeclarationStatement(TypeDeclarationStatement stmt)
+    public static List<ASTNode> visitTypeDeclarationStatement(TypeDeclarationStatement stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
@@ -1328,7 +1251,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitTypeLiteral(TypeLiteral expr)
+    public static List<ASTNode> visitTypeLiteral(TypeLiteral expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -1336,7 +1259,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitTypeMethodReference(TypeMethodReference expr)
+    public static List<ASTNode> visitTypeMethodReference(TypeMethodReference expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -1346,7 +1269,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitTypeParameter(TypeParameter typeParameter)
+    public static List<ASTNode> visitTypeParameter(TypeParameter typeParameter)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(typeParameter);
@@ -1356,7 +1279,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitUnionType(UnionType type)
+    public static List<ASTNode> visitUnionType(UnionType type)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
@@ -1364,7 +1287,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitVariableDeclaration(VariableDeclaration decl)
+    public static List<ASTNode> visitVariableDeclaration(VariableDeclaration decl)
     {
         if(decl instanceof SingleVariableDeclaration)
         {
@@ -1380,7 +1303,7 @@ public final class JavaVisitor
         }
     }
 
-    private static List<ASTNode> visitVariableDeclarationFragment(VariableDeclarationFragment decl)
+    public static List<ASTNode> visitVariableDeclarationFragment(VariableDeclarationFragment decl)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(decl);
@@ -1390,7 +1313,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitVariableDeclarationExpression(VariableDeclarationExpression expr)
+    public static List<ASTNode> visitVariableDeclarationExpression(VariableDeclarationExpression expr)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(expr);
@@ -1400,7 +1323,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitVariableDeclarationStatement(VariableDeclarationStatement stmt)
+    public static List<ASTNode> visitVariableDeclarationStatement(VariableDeclarationStatement stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
@@ -1410,7 +1333,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitWhileStatement(WhileStatement stmt)
+    public static List<ASTNode> visitWhileStatement(WhileStatement stmt)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(stmt);
@@ -1419,7 +1342,7 @@ public final class JavaVisitor
         return ret;
     }
 
-    private static List<ASTNode> visitWildcardType(WildcardType type)
+    public static List<ASTNode> visitWildcardType(WildcardType type)
     {
         List<ASTNode> ret = new ArrayList<>();
         ret.add(type);
@@ -1429,7 +1352,7 @@ public final class JavaVisitor
     }
 
     // Basically a fixed version of IRewriteCompilationUnit.getRewrittenNode
-    private static boolean nodeHasChanges(ASTNode node, IRewriteCompilationUnit root)
+    static boolean nodeHasChanges(ASTNode node, IRewriteCompilationUnit root)
     {
         ASTRewrite rewriter = root.writer();
         StructuralPropertyDescriptor spd = node.getLocationInParent();

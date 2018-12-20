@@ -349,7 +349,7 @@ public final class RefactorExecution implements Runnable {
 		workerTree.run(extension.createExecutorService());
 
 		// IPL: Try to print out some sequences
-		JavaVisitor.runRandoopGenerator(units, project);
+		RandoopGenerator.runRandoopGenerator(units, project);
 
 		// The changes of the compilation units are applied
 		Log.info(getClass(), "Write changes...");
