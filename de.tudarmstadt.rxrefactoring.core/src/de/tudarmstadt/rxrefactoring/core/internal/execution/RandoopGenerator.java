@@ -6,9 +6,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -16,6 +24,10 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.AnnotatableType;
@@ -127,8 +139,26 @@ public final class RandoopGenerator
 
     private RandoopGenerator() {}
 
-    public static void runRandoopGenerator(ProjectUnits units)
+    public static void runRandoopGenerator(ProjectUnits units, IProject project)
     {
+        IPackageFragmentRoot[] pkgs = new IPackageFragmentRoot[0];
+        try
+        {
+            pkgs = JavaCore.create(project).getAllPackageFragmentRoots();
+        }
+        catch(JavaModelException e)
+        {
+            e.printStackTrace();
+        }
+
+        String projectPath = "";
+        String localPath = "";
+        if(pkgs.length >= 1)
+        {
+            projectPath = project.getLocation().toOSString();
+            localPath = pkgs[0].getResource().getFullPath().removeFirstSegments(1).toOSString();
+        }
+
         List<String> methodsToOmit = new ArrayList<>();
         Set<String> classesToTest = new HashSet<>();
 
@@ -174,16 +204,57 @@ public final class RandoopGenerator
             }
         }
 
-        createOutput(methodsToOmit, classesToTest);
+        createOutput(methodsToOmit, classesToTest, projectPath, localPath);
     }
 
-    private static void createOutput(List<String> methodsToOmit, Set<String> classesToTest)
+    private static void createOutput(List<String> methodsToOmit, Set<String> classesToTest, String projectPath, String localPath)
     {
-        File folder = new File(new File("").getAbsolutePath() + File.separator + "randoop-spec");
-        folder.mkdirs();
+        String time = Calendar.getInstance().getTime().toString().replace(' ', '_').replace(':', '_');
+        File randoopTemp = new File(determineTempPath() + File.separator + "randoop-gen-" + time);
+        randoopTemp.mkdirs();
+
+        File preDir = new File(randoopTemp, "pre");
+        File postDir = new File(randoopTemp, "post");
+
+        // @formatter:off
+        try
+        {
+            if(preDir.isDirectory())
+            {
+                Files.walk(Paths.get(preDir.getAbsolutePath()))
+                     .sorted(Comparator.reverseOrder())
+                     .map(Path::toFile)
+                     .forEach(File::delete);
+            }
+            if(postDir.isDirectory())
+            {
+                Files.walk(Paths.get(postDir.getAbsolutePath()))
+                     .sorted(Comparator.reverseOrder())
+                     .map(Path::toFile)
+                     .forEach(File::delete);
+            }
+        }
+        catch(IOException e)
+        {
+            Log.error(RandoopGenerator.class, "Failed to delete existing randoop temp directory.", e);
+        }
+        // @formatter:on
+
+        preDir.mkdirs();
+        postDir.mkdirs();
+
+        // Copy the source code over
+        try
+        {
+            Files.walkFileTree(Paths.get(projectPath, localPath), new CopyVisitor(Paths.get(preDir.getAbsolutePath())));
+        }
+        catch(IOException e)
+        {
+            Log.error(RandoopGenerator.class, "Failed to copy source folder into temp directory.", e);
+        }
 
         // Create a shell file for running randoop
-        File randoopSh = new File(folder, "randoop.sh");
+        File randoopSh = new File(randoopTemp, "randoop.sh");
         try
         {
             randoopSh.createNewFile();
@@ -193,24 +264,39 @@ public final class RandoopGenerator
                 out.newLine();
                 out.newLine();
 
-                String classpath = " -classpath \"bin:" + RANDOOP_JAR + "\"";
+                String pre_classpath = " -classpath \"pre/bin:" + RANDOOP_JAR + "\"";
+                String post_classpath = " -classpath \"post/bin:" + RANDOOP_JAR + "\"";
                 String main = " randoop.main.Main";
                 String command = " gentests";
                 String classlist = " --classlist=classlist.txt";
                 String omitmethods_file = " --omitmethods-file=omitmethods.txt";
                 String no_error_revealing_tests = " --no-error-revealing-tests=true";
-                String junit_output_dir = " --junit-output-dir=src/main/test";
+                String pre_junit_output_dir = " --junit-output-dir=tests/pre";
+                String post_junit_output_dir = " --junit-output-dir=tests/post";
                 String time_limit = " --time-limit=10";
 
-                // The actual command
+                // The actual command for the pre folder
                 out.write("java");
-                out.write(classpath);
+                out.write(pre_classpath);
                 out.write(main);
                 out.write(command);
                 out.write(classlist);
                 out.write(omitmethods_file);
                 out.write(no_error_revealing_tests);
-                out.write(junit_output_dir);
+                out.write(pre_junit_output_dir);
+                out.write(time_limit);
+                out.newLine();
+                out.newLine();
+
+                // The actual command for the post folder
+                out.write("java");
+                out.write(post_classpath);
+                out.write(main);
+                out.write(command);
+                out.write(classlist);
+                out.write(omitmethods_file);
+                out.write(no_error_revealing_tests);
+                out.write(post_junit_output_dir);
                 out.write(time_limit);
                 out.newLine();
             }
@@ -221,7 +307,7 @@ public final class RandoopGenerator
         }
 
         // Create a file of classes to test
-        File classListFile = new File(folder, CLASSLIST_FILE);
+        File classListFile = new File(randoopTemp, CLASSLIST_FILE);
         try
         {
             classListFile.createNewFile();
@@ -236,11 +322,11 @@ public final class RandoopGenerator
         }
         catch(IOException e)
         {
-            e.printStackTrace();
+            Log.error(RandoopGenerator.class, "Failed to write " + classListFile.getAbsolutePath(), e);
         }
 
         // Create a file of methods to omit
-        File omitMethodsFile = new File(folder, OMITMETHODS_FILE);
+        File omitMethodsFile = new File(randoopTemp, OMITMETHODS_FILE);
         try
         {
             omitMethodsFile.createNewFile();
@@ -255,8 +341,22 @@ public final class RandoopGenerator
         }
         catch(IOException e)
         {
-            e.printStackTrace();
+            Log.error(RandoopGenerator.class, "Failed to write " + omitMethodsFile.getAbsolutePath(), e);
         }
+
+        Log.info(RandoopGenerator.class, "Randoop configuration written to " + randoopTemp.getAbsolutePath());
+    }
+
+    private static String determineTempPath()
+    {
+        if(System.getProperty("os.name").startsWith("Windows"))
+        {
+            return "%USERPROFILE%\\AppData\\Local\\Temp";
+        }
+
+        // Mac, Linux, other Unixes
+        // Sorry to all the other ones that don't use this path :(
+        return "/tmp";
     }
 
     private static List<ASTNode> visitAbstractTypeDeclaration(AbstractTypeDeclaration decl)
@@ -1537,5 +1637,38 @@ public final class RandoopGenerator
     private static List<ASTNode> throwIncompatibleJavaException(String method, Class<? extends ASTNode> clazz)
     {
         throw new RuntimeException(RandoopGenerator.class.getSimpleName() + " is not compatible with your Java version: " + method + "() has to be updated, " + clazz.getName() + " could not be handled.");
+    }
+
+    private static class CopyVisitor extends SimpleFileVisitor<Path>
+    {
+        private final Path target;
+        private Path source;
+
+        public CopyVisitor(Path target)
+        {
+            this.target = target;
+            this.source = null;
+        }
+
+        @Override
+        public FileVisitResult preVisitDirectory(final Path dir, final BasicFileAttributes attrs) throws IOException
+        {
+            if(this.source == null)
+            {
+                this.source = dir;
+            }
+            else
+            {
+                Files.createDirectories(this.target.resolve(this.source.relativize(dir)));
+            }
+            return FileVisitResult.CONTINUE;
+        }
+
+        @Override
+        public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException
+        {
+            Files.copy(file, this.target.resolve(this.source.relativize(file)));
+            return FileVisitResult.CONTINUE;
+        }
     }
 }

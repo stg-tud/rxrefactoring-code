@@ -149,7 +149,7 @@ public final class RefactorExecution implements Runnable {
 
 							// Performs the refactoring by applying the workers of the extension.
 							Log.info(RefactorExecution.class, "Refactor units...");
-							doRefactorProject(units, changes, projectSummary);
+							doRefactorProject(units, changes, projectSummary, project);
 
 							
 							Log.info(RefactorExecution.class, "<<< Refactor project");
@@ -338,7 +338,7 @@ public final class RefactorExecution implements Runnable {
 
 	}
 
-	private void doRefactorProject(@NonNull ProjectUnits units, @NonNull CompositeChange changes, @NonNull ProjectSummary projectSummary)
+	private void doRefactorProject(@NonNull ProjectUnits units, @NonNull CompositeChange changes, @NonNull ProjectSummary projectSummary, IProject project)
 			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException, InterruptedException {
 
 		// Produce the worker tree
@@ -349,7 +349,7 @@ public final class RefactorExecution implements Runnable {
 		workerTree.run(extension.createExecutorService());
 
 		// IPL: Try to print out some sequences
-		RandoopGenerator.runRandoopGenerator(units);
+		RandoopGenerator.runRandoopGenerator(units, project);
 
 		// The changes of the compilation units are applied
 		Log.info(getClass(), "Write changes...");
