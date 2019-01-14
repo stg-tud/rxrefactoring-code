@@ -18,6 +18,7 @@ import java.util.Calendar;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
@@ -25,9 +26,13 @@ import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ChildListPropertyDescriptor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
+import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
@@ -103,19 +108,9 @@ public class RandoopGenerator
                         String className = cu.getPackage().getName() + "." + type.getName().getFullyQualifiedName();
                         classesToTest.add(className);
                         Log.info(JavaVisitor.class, "Looking for changes in method " + className + "." + method.getName().getFullyQualifiedName() + "()");
-                        List<ASTNode> nodes = JavaVisitor.visitMethodDeclaration(method);
+                        List<ASTNode> nodes = new JavaVisitor(node -> nodeHasChanges(node, unit)).visitMethodDeclaration(method);
 
-                        boolean shouldOmit = true;
-                        for(ASTNode node : nodes)
-                        {
-                            if(JavaVisitor.nodeHasChanges(node, unit))
-                            {
-                                shouldOmit = false;
-                                break;
-                            }
-                        }
-
-                        if(shouldOmit)
+                        if(!nodes.isEmpty())
                         {
                             methodsToOmit.add(className.replace(".", "\\.") + "\\." + method.getName().getFullyQualifiedName().replace(".", "\\.") + "\\(");
                         }
@@ -324,6 +319,43 @@ public class RandoopGenerator
         // Mac, Linux, other Unixes
         // Sorry to all the other ones that don't use this path :(
         return "/tmp";
+    }
+
+    // Basically a fixed version of IRewriteCompilationUnit.getRewrittenNode
+    @SuppressWarnings("unchecked")
+    private static boolean nodeHasChanges(ASTNode node, IRewriteCompilationUnit root)
+    {
+        ASTRewrite rewriter = root.writer();
+        StructuralPropertyDescriptor spd = node.getLocationInParent();
+        if(spd.isChildListProperty())
+        {
+            ListRewrite lw = rewriter.getListRewrite(node.getParent(), (ChildListPropertyDescriptor)node.getLocationInParent());
+            List<Object> rewritten = lw.getRewrittenList();
+            List<Object> original = lw.getOriginalList();
+
+            for(int i = 0; i < original.size(); i++)
+            {
+                if(Objects.equals(original.get(i), node))
+                {
+                    try
+                    {
+                        return rewritten.get(i) != null && rewritten.get(i) != original.get(i);
+                    }
+                    catch(IndexOutOfBoundsException e)
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+        else
+        {
+            if(rewriter.get(node.getParent(), node.getLocationInParent()) != node)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static class CopyVisitor extends SimpleFileVisitor<Path>
