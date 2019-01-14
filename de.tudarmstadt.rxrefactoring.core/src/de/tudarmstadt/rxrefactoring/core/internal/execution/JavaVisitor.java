@@ -5,99 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
-import org.eclipse.jdt.core.dom.AnnotatableType;
-import org.eclipse.jdt.core.dom.Annotation;
-import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
-import org.eclipse.jdt.core.dom.AnnotationTypeMemberDeclaration;
-import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
-import org.eclipse.jdt.core.dom.ArrayAccess;
-import org.eclipse.jdt.core.dom.ArrayCreation;
-import org.eclipse.jdt.core.dom.ArrayInitializer;
-import org.eclipse.jdt.core.dom.ArrayType;
-import org.eclipse.jdt.core.dom.AssertStatement;
-import org.eclipse.jdt.core.dom.Assignment;
-import org.eclipse.jdt.core.dom.Block;
-import org.eclipse.jdt.core.dom.BodyDeclaration;
-import org.eclipse.jdt.core.dom.BooleanLiteral;
-import org.eclipse.jdt.core.dom.BreakStatement;
-import org.eclipse.jdt.core.dom.CastExpression;
-import org.eclipse.jdt.core.dom.CatchClause;
-import org.eclipse.jdt.core.dom.CharacterLiteral;
-import org.eclipse.jdt.core.dom.ClassInstanceCreation;
-import org.eclipse.jdt.core.dom.ConditionalExpression;
-import org.eclipse.jdt.core.dom.ConstructorInvocation;
-import org.eclipse.jdt.core.dom.ContinueStatement;
-import org.eclipse.jdt.core.dom.CreationReference;
-import org.eclipse.jdt.core.dom.Dimension;
-import org.eclipse.jdt.core.dom.DoStatement;
-import org.eclipse.jdt.core.dom.EmptyStatement;
-import org.eclipse.jdt.core.dom.EnhancedForStatement;
-import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
-import org.eclipse.jdt.core.dom.EnumDeclaration;
-import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.ExpressionMethodReference;
-import org.eclipse.jdt.core.dom.ExpressionStatement;
-import org.eclipse.jdt.core.dom.FieldAccess;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.ForStatement;
-import org.eclipse.jdt.core.dom.IExtendedModifier;
-import org.eclipse.jdt.core.dom.IfStatement;
-import org.eclipse.jdt.core.dom.InfixExpression;
-import org.eclipse.jdt.core.dom.Initializer;
-import org.eclipse.jdt.core.dom.InstanceofExpression;
-import org.eclipse.jdt.core.dom.IntersectionType;
-import org.eclipse.jdt.core.dom.LabeledStatement;
-import org.eclipse.jdt.core.dom.LambdaExpression;
-import org.eclipse.jdt.core.dom.MarkerAnnotation;
-import org.eclipse.jdt.core.dom.MemberValuePair;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.MethodReference;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.Name;
-import org.eclipse.jdt.core.dom.NameQualifiedType;
-import org.eclipse.jdt.core.dom.NormalAnnotation;
-import org.eclipse.jdt.core.dom.NullLiteral;
-import org.eclipse.jdt.core.dom.NumberLiteral;
-import org.eclipse.jdt.core.dom.ParameterizedType;
-import org.eclipse.jdt.core.dom.ParenthesizedExpression;
-import org.eclipse.jdt.core.dom.PostfixExpression;
-import org.eclipse.jdt.core.dom.PrefixExpression;
-import org.eclipse.jdt.core.dom.PrimitiveType;
-import org.eclipse.jdt.core.dom.QualifiedName;
-import org.eclipse.jdt.core.dom.QualifiedType;
-import org.eclipse.jdt.core.dom.ReturnStatement;
-import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.SimpleType;
-import org.eclipse.jdt.core.dom.SingleMemberAnnotation;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.dom.Statement;
-import org.eclipse.jdt.core.dom.StringLiteral;
-import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
-import org.eclipse.jdt.core.dom.SuperFieldAccess;
-import org.eclipse.jdt.core.dom.SuperMethodInvocation;
-import org.eclipse.jdt.core.dom.SuperMethodReference;
-import org.eclipse.jdt.core.dom.SwitchCase;
-import org.eclipse.jdt.core.dom.SwitchStatement;
-import org.eclipse.jdt.core.dom.SynchronizedStatement;
-import org.eclipse.jdt.core.dom.ThisExpression;
-import org.eclipse.jdt.core.dom.ThrowStatement;
-import org.eclipse.jdt.core.dom.TryStatement;
-import org.eclipse.jdt.core.dom.Type;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
-import org.eclipse.jdt.core.dom.TypeLiteral;
-import org.eclipse.jdt.core.dom.TypeMethodReference;
-import org.eclipse.jdt.core.dom.TypeParameter;
-import org.eclipse.jdt.core.dom.UnionType;
-import org.eclipse.jdt.core.dom.VariableDeclaration;
-import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
-import org.eclipse.jdt.core.dom.WhileStatement;
-import org.eclipse.jdt.core.dom.WildcardType;
+import org.eclipse.jdt.core.dom.*;
 
 import de.tudarmstadt.rxrefactoring.core.internal.execution.filter.FilteredArrayList;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.filter.IFilter;
@@ -130,22 +38,6 @@ public final class JavaVisitor
         {
             return throwIncompatibleJavaException("visitAbstractTypeDeclaration", decl.getClass());
         }
-    }
-
-    private <T extends ASTNode> List<ASTNode> visitAll(List<T> objects, Function<T, List<ASTNode>> visitor)
-    {
-        // Shouldn't happen, but just in case...
-        if(objects == null)
-        {
-            return Collections.emptyList();
-        }
-
-        List<ASTNode> ret = newList();
-        for(T object : objects)
-        {
-            ret.addAll(visitor.apply(object));
-        }
-        return ret;
     }
 
     public List<ASTNode> visitAnnotatableType(AnnotatableType type)
@@ -379,6 +271,17 @@ public final class JavaVisitor
         return ret;
     }
 
+    public List<ASTNode> visitCompilationUnit(CompilationUnit unit)
+    {
+        List<ASTNode> ret = newList();
+        ret.add(unit);
+        ret.addAll(visitModuleDeclaration(unit.getModule()));
+        ret.addAll(visitPackageDeclaration(unit.getPackage()));
+        ret.addAll(visitAll(unit.imports(), this::visitImportDeclaration));
+        ret.addAll(visitAll(unit.types(), this::visitAbstractTypeDeclaration));
+        return ret;
+    }
+
     public List<ASTNode> visitConditionalExpression(ConditionalExpression expr)
     {
         List<ASTNode> ret = newList();
@@ -467,6 +370,15 @@ public final class JavaVisitor
         ret.addAll(visitAll(decl.superInterfaceTypes(), this::visitType));
         ret.addAll(visitAll(decl.enumConstants(), this::visitEnumConstantDeclaration));
         ret.addAll(visitAll(decl.bodyDeclarations(), this::visitBodyDeclaration));
+        return ret;
+    }
+
+    public List<ASTNode> visitExportsDirective(ExportsDirective dir)
+    {
+        List<ASTNode> ret = newList();
+        ret.add(dir);
+        ret.addAll(visitName(dir.getName()));
+        ret.addAll(visitAll(dir.modules(), this::visitName));
         return ret;
     }
 
@@ -670,6 +582,14 @@ public final class JavaVisitor
         return ret;
     }
 
+    public List<ASTNode> visitImportDeclaration(ImportDeclaration decl)
+    {
+        List<ASTNode> ret = newList();
+        ret.add(decl);
+        ret.addAll(visitName(decl.getName()));
+        return ret;
+    }
+
     public List<ASTNode> visitInfixExpression(InfixExpression expr)
     {
         List<ASTNode> ret = newList();
@@ -813,6 +733,67 @@ public final class JavaVisitor
         return Arrays.asList(modifier);
     }
 
+    public List<ASTNode> visitModuleDeclaration(ModuleDeclaration decl)
+    {
+        // Ignore. Caused by classes that don't use modules.
+        if(decl == null)
+        {
+            return Collections.emptyList();
+        }
+
+        List<ASTNode> ret = newList();
+        ret.add(decl);
+        ret.addAll(visitAll(decl.annotations(), this::visitAnnotation));
+        ret.addAll(visitName(decl.getName()));
+        ret.addAll(visitAll(decl.moduleStatements(), this::visitModuleDirective));
+        return ret;
+    }
+
+    public List<ASTNode> visitModuleDirective(ModuleDirective dir)
+    {
+        if(dir instanceof ModulePackageAccess)
+        {
+            return visitModulePackageAccess((ModulePackageAccess)dir);
+        }
+        else if(dir instanceof ProvidesDirective)
+        {
+            return visitProvidesDirective((ProvidesDirective)dir);
+        }
+        else if(dir instanceof RequiresDirective)
+        {
+            return visitRequiresDirective((RequiresDirective)dir);
+        }
+        else if(dir instanceof UsesDirective)
+        {
+            return visitUsesDirective((UsesDirective)dir);
+        }
+        else
+        {
+            return throwIncompatibleJavaException("visitModuleDirective", dir.getClass());
+        }
+    }
+
+    public List<ASTNode> visitModuleModifier(ModuleModifier modifier)
+    {
+        return Arrays.asList(modifier);
+    }
+
+    public List<ASTNode> visitModulePackageAccess(ModulePackageAccess dir)
+    {
+        if(dir instanceof ExportsDirective)
+        {
+            return visitExportsDirective((ExportsDirective)dir);
+        }
+        else if(dir instanceof OpensDirective)
+        {
+            return visitOpensDirective((OpensDirective)dir);
+        }
+        else
+        {
+            return throwIncompatibleJavaException("visitModulePackageAccess", dir.getClass());
+        }
+    }
+
     public List<ASTNode> visitName(Name name)
     {
         // Ignore. Caused by explicit receivers in methods.
@@ -864,6 +845,30 @@ public final class JavaVisitor
         return Arrays.asList(literal);
     }
 
+    public List<ASTNode> visitOpensDirective(OpensDirective dir)
+    {
+        List<ASTNode> ret = newList();
+        ret.add(dir);
+        ret.addAll(visitName(dir.getName()));
+        ret.addAll(visitAll(dir.modules(), this::visitName));
+        return ret;
+    }
+
+    public List<ASTNode> visitPackageDeclaration(PackageDeclaration decl)
+    {
+        // Ignore. Caused by classes with the 'default' package.
+        if(decl == null)
+        {
+            return Collections.emptyList();
+        }
+
+        List<ASTNode> ret = newList();
+        ret.add(decl);
+        ret.addAll(visitAll(decl.annotations(), this::visitAnnotation));
+        ret.addAll(visitName(decl.getName()));
+        return ret;
+    }
+
     public List<ASTNode> visitParameterizedType(ParameterizedType type)
     {
         List<ASTNode> ret = newList();
@@ -905,6 +910,15 @@ public final class JavaVisitor
         return ret;
     }
 
+    public List<ASTNode> visitProvidesDirective(ProvidesDirective dir)
+    {
+        List<ASTNode> ret = newList();
+        ret.add(dir);
+        ret.addAll(visitName(dir.getName()));
+        ret.addAll(visitAll(dir.implementations(), this::visitName));
+        return ret;
+    }
+
     public List<ASTNode> visitQualifiedName(QualifiedName name)
     {
         // Ignore. Caused by explicit receivers in methods.
@@ -927,6 +941,15 @@ public final class JavaVisitor
         ret.addAll(visitType(type.getQualifier()));
         ret.addAll(visitAll(type.annotations(), this::visitAnnotation));
         ret.addAll(visitSimpleName(type.getName()));
+        return ret;
+    }
+
+    public List<ASTNode> visitRequiresDirective(RequiresDirective dir)
+    {
+        List<ASTNode> ret = newList();
+        ret.add(dir);
+        ret.addAll(visitAll(dir.modifiers(), this::visitModuleModifier));
+        ret.addAll(visitName(dir.getName()));
         return ret;
     }
 
@@ -1287,6 +1310,14 @@ public final class JavaVisitor
         return ret;
     }
 
+    public List<ASTNode> visitUsesDirective(UsesDirective dir)
+    {
+        List<ASTNode> ret = newList();
+        ret.add(dir);
+        ret.addAll(visitName(dir.getName()));
+        return ret;
+    }
+
     public List<ASTNode> visitVariableDeclaration(VariableDeclaration decl)
     {
         if(decl instanceof SingleVariableDeclaration)
@@ -1348,6 +1379,22 @@ public final class JavaVisitor
         ret.add(type);
         ret.addAll(visitAll(type.annotations(), this::visitAnnotation));
         ret.addAll(visitType(type.getBound()));
+        return ret;
+    }
+
+    private <T extends ASTNode> List<ASTNode> visitAll(List<T> objects, Function<T, List<ASTNode>> visitor)
+    {
+        // Shouldn't happen, but just in case...
+        if(objects == null)
+        {
+            return Collections.emptyList();
+        }
+
+        List<ASTNode> ret = newList();
+        for(T object : objects)
+        {
+            ret.addAll(visitor.apply(object));
+        }
         return ret;
     }
 
