@@ -52,7 +52,9 @@ import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectStatus;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
-import de.tudarmstadt.rxrefactoring.core.internal.execution.collect.Pair;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.MethodScanner;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.RandoopGenerator;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.collect.Pair;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 /**

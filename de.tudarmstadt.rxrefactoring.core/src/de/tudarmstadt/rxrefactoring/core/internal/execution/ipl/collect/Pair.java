@@ -4,7 +4,7 @@
  * permissions are hereby granted to use it under
  * whichever license is desired.
  */
-package de.tudarmstadt.rxrefactoring.core.internal.execution.collect;
+package de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.collect;
 
 import java.io.Serializable;
 

@@ -4,7 +4,7 @@
  * permissions are hereby granted to use it under
  * whichever license is desired.
  */
-package de.tudarmstadt.rxrefactoring.core.internal.execution.filter;
+package de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.filter;
 
 /**
  * A utility class for composing {@link IFilter} instances to form more complex

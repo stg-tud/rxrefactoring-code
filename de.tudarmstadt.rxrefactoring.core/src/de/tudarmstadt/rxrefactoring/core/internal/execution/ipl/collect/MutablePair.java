@@ -4,19 +4,19 @@
  * permissions are hereby granted to use it under
  * whichever license is desired.
  */
-package de.tudarmstadt.rxrefactoring.core.internal.execution.collect;
+package de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.collect;
 
 /**
- * An immutable implementation of {@link Pair}.
+ * A mutable implementation of {@link Pair}.
  * @author Nikolas Hanstein
  * @param <T1> The type of the first element.
  * @param <T2> The type of the second element.
  * @since 1.0
  */
-public class ImmutablePair<T1, T2> extends Pair<T1, T2>
+public class MutablePair<T1, T2> extends Pair<T1, T2>
 {
     /** The serial version UID. */
-    private static final long serialVersionUID = 5421474567298108985L;
+    private static final long serialVersionUID = 5723455863023304693L;
 
     /** The first element. */
     private T1 first;
@@ -26,7 +26,7 @@ public class ImmutablePair<T1, T2> extends Pair<T1, T2>
     /**
      * Constructs a new mutable pair containing two {@code null} elements.
      */
-    public ImmutablePair()
+    public MutablePair()
     {
         this(null, null);
     }
@@ -36,7 +36,7 @@ public class ImmutablePair<T1, T2> extends Pair<T1, T2>
      * pair contains.
      * @param pair The pair whose elements this pair should contain.
      */
-    public ImmutablePair(final Pair<T1, T2> pair)
+    public MutablePair(final Pair<T1, T2> pair)
     {
         this(pair.getFirst(), pair.getSecond());
     }
@@ -46,7 +46,7 @@ public class ImmutablePair<T1, T2> extends Pair<T1, T2>
      * @param element1 The first element in this pair.
      * @param element2 The second element in this pair.
      */
-    public ImmutablePair(final T1 element1, final T2 element2)
+    public MutablePair(final T1 element1, final T2 element2)
     {
         this.first = element1;
         this.second = element2;
@@ -68,13 +68,13 @@ public class ImmutablePair<T1, T2> extends Pair<T1, T2>
     @Override
     public void setFirst(final T1 value) throws UnsupportedOperationException
     {
-        throw new UnsupportedOperationException("Elements contained within an immutable pair cannot be modified.");
+        this.first = value;
     }
 
     /** {@inheritDoc} */
     @Override
     public void setSecond(final T2 value) throws UnsupportedOperationException
     {
-        throw new UnsupportedOperationException("Elements contained within an immutable pair cannot be modified.");
+        this.second = value;
     }
 }

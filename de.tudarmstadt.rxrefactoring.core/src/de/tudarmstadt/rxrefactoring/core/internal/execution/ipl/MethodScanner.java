@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core.internal.execution;
+package de.tudarmstadt.rxrefactoring.core.internal.execution.ipl;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -23,8 +23,9 @@ import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.internal.execution.collect.ImmutablePair;
-import de.tudarmstadt.rxrefactoring.core.internal.execution.collect.Pair;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.collect.ImmutablePair;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.collect.Pair;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 public class MethodScanner

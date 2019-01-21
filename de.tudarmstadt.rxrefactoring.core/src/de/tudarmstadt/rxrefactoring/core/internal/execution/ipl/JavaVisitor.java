@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core.internal.execution;
+package de.tudarmstadt.rxrefactoring.core.internal.execution.ipl;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -7,8 +7,8 @@ import java.util.function.Function;
 
 import org.eclipse.jdt.core.dom.*;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.filter.FilteredArrayList;
-import de.tudarmstadt.rxrefactoring.core.internal.execution.filter.IFilter;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.filter.FilteredArrayList;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.filter.IFilter;
 
 /**
  * This class traverses Eclipse ASTs and returns all nodes in the tree, subject
