@@ -10,11 +10,26 @@ import org.eclipse.jdt.core.dom.*;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.filter.FilteredArrayList;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.filter.IFilter;
 
+/**
+ * This class traverses Eclipse ASTs and returns all nodes in the tree, subject
+ * to a filter passed to the constructor. That is, if a node is accepted by the
+ * filter, it is placed in the returned list. Otherwise, it is discarded.<br>
+ * <br>
+ * Each visit* method in this class visits a specific type of AST node and all
+ * children of that node, and the visitor can begin at any one of them. For more
+ * information on the AST nodes, please see Eclipse's documentation on them.
+ * @author Nikolas Hanstein
+ */
 @SuppressWarnings("unchecked")
 public final class JavaVisitor
 {
+    /* The filter to use. */
     private final IFilter<ASTNode> filter;
 
+    /**
+     * Constructs a new JavaVisitor with the specified filter.
+     * @param filter The filter to use.
+     */
     public JavaVisitor(IFilter<ASTNode> filter)
     {
         this.filter = filter;
@@ -1382,6 +1397,15 @@ public final class JavaVisitor
         return ret;
     }
 
+    /**
+     * Visits all nodes in the specified list of objects, using the specified
+     * function to do so. It then combines all lists of nodes returned by the
+     * function into one list and returns that list.
+     * @param objects The objects to visit.
+     * @param visitor The function to use for visiting those objects.
+     * @return A list of all nodes that were retrieved while visiting the
+     *         objects.
+     */
     private <T extends ASTNode> List<ASTNode> visitAll(List<T> objects, Function<T, List<ASTNode>> visitor)
     {
         // Shouldn't happen, but just in case...
@@ -1398,11 +1422,24 @@ public final class JavaVisitor
         return ret;
     }
 
+    /**
+     * Constructs a new, empty filtered list using {@link #filter}.
+     * @return A new filtered list to use for returning AST nodes.
+     */
     private List<ASTNode> newList()
     {
         return new FilteredArrayList<>(this.filter);
     }
 
+    /**
+     * Throws a RuntimeException informing the user that their Java version is
+     * not compatible with this JavaVisitor version.
+     * @param method The name of the method in which this problem occurred.
+     * @param clazz The class of the AST node that {@code method} was unable to
+     *        handle.
+     * @return Nothing, since this method always throws. The return type is
+     *         List<ASTNode> for convenience only.
+     */
     private List<ASTNode> throwIncompatibleJavaException(String method, Class<? extends ASTNode> clazz)
     {
         throw new RuntimeException(JavaVisitor.class.getSimpleName() + " is not compatible with your Java version: " + method + "() has to be updated, " + clazz.getName() + " could not be handled.");
