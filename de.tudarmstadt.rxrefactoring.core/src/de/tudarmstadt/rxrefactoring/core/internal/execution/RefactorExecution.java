@@ -52,6 +52,7 @@ import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectStatus;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.collect.Pair;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 /**
@@ -348,8 +349,11 @@ public final class RefactorExecution implements Runnable {
 		// The workers add their changes to the bundled compilation units
 		workerTree.run(extension.createExecutorService());
 
-		// IPL: Try to print out some sequences
-		RandoopGenerator.runRandoopGenerator(units, project);
+		// IPL: Find the changing and calling methods
+		Pair<Set<String>, Set<String>> methods = MethodScanner.findMethods(units);
+
+		// IPL: Copy the pre-refactoring binaries over
+		RandoopGenerator.copyBinaries(project);
 
 		// The changes of the compilation units are applied
 		Log.info(getClass(), "Write changes...");
