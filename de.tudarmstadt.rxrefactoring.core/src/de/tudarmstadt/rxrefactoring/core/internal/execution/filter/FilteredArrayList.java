@@ -1,3 +1,9 @@
+/*
+ * This file comes from one of my own projects and
+ * is licensed under the Apache 2.0 license. Exclusive
+ * permissions are hereby granted to use it under
+ * whichever license is desired.
+ */
 package de.tudarmstadt.rxrefactoring.core.internal.execution.filter;
 
 import java.util.ArrayList;
@@ -7,9 +13,8 @@ import java.util.Collection;
  * An ArrayList that can filter elements added to it using an {@link IFilter}.
  * @param <E> The type of element that this FilteredArrayList should hold.
  * @author Nikolas Hanstein
- * @since 1.0
  */
-public final class FilteredArrayList<E> extends ArrayList<E> implements IFilteredList<E>
+public final class FilteredArrayList<E> extends ArrayList<E>
 {
     /** Serial version unique ID. */
     private static final long serialVersionUID = 1L;
