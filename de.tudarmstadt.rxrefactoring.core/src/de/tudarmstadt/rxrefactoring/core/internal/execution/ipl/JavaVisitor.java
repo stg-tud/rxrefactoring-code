@@ -152,7 +152,7 @@ public final class JavaVisitor
     {
         List<ASTNode> ret = newList();
         ret.add(expr);
-        ret.addAll(visitAll(expr.dimensions(), this::visitDimension));
+        ret.addAll(visitAll(expr.dimensions(), this::visitExpression));
         ret.addAll(visitArrayType(expr.getType()));
         ret.addAll(visitArrayInitializer(expr.getInitializer()));
         return ret;
