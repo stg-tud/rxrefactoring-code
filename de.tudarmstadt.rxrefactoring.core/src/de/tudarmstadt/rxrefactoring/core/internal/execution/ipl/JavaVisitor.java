@@ -160,6 +160,12 @@ public final class JavaVisitor
 
     public List<ASTNode> visitArrayInitializer(ArrayInitializer expr)
     {
+        // Ignore. Caused by array creations without an initializer.
+        if(expr == null)
+        {
+            return Collections.emptyList();
+        }
+
         List<ASTNode> ret = newList();
         ret.add(expr);
         ret.addAll(visitAll(expr.expressions(), this::visitExpression));
