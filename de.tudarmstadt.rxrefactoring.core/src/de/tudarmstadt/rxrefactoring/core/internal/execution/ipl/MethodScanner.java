@@ -111,6 +111,10 @@ public class MethodScanner
                             .map(MethodScanner::buildSignatureFromNode)
                             .collect(Collectors.toList()));
         }
+
+        // No need to keep nulls in, they indicate that the
+        // method binding could not be resolved
+        ret.removeIf(node -> node == null);
         return ret;
     }
 
@@ -129,17 +133,24 @@ public class MethodScanner
         if(node instanceof MethodInvocation)
         {
             MethodInvocation invocation = (MethodInvocation)node;
-            binding = invocation.resolveMethodBinding().getMethodDeclaration();
+            binding = invocation.resolveMethodBinding();
         }
         else if(node instanceof MethodReference)
         {
             MethodReference reference = (MethodReference)node;
-            binding = reference.resolveMethodBinding().getMethodDeclaration();
+            binding = reference.resolveMethodBinding();
         }
         else
         {
             return null;
         }
+
+        // Occurs if the binding cannot be resolved
+        if(binding == null)
+        {
+            return null;
+        }
+        binding = binding.getMethodDeclaration();
 
         String className = binding.getDeclaringClass().getBinaryName();
         String methodName = binding.getName();
