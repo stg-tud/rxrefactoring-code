@@ -17,13 +17,21 @@ import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Set;
 
+import org.eclipse.core.resources.IBuildConfiguration;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
+/**
+ * This class is responsible for setting up the test environment (e.g. creating
+ * temporary folders, copying binaries over...).
+ * @author Nikolas Hanstein, Maximilian Kirschner
+ */
 public class RandoopGenerator
 {
     private static final String OMITMETHODS_FILE = "omitmethods.txt";
@@ -59,14 +67,16 @@ public class RandoopGenerator
     private static final String ELSE = "else";
     private static final String ECHO_ALL_OK = "    echo -e \"${C_BLUE}==> ${C_GREEN}All tests ran OK. This refactoring is probably safe.${C_NC}\"";
 
-    public static File copyBinaries(IProject project)
+    public static File copyBinaries(IProject project, String dest)
     {
         IPackageFragmentRoot[] pkgs = new IPackageFragmentRoot[0];
+        IJavaProject jProj = JavaCore.create(project);
         try
         {
-            pkgs = JavaCore.create(project).getAllPackageFragmentRoots();
+            pkgs = jProj.getAllPackageFragmentRoots();
+            project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null);
         }
-        catch(JavaModelException e)
+        catch(CoreException e)
         {
             e.printStackTrace();
         }
@@ -106,7 +116,7 @@ public class RandoopGenerator
         }
         catch(IOException e)
         {
-            Log.error(JavaVisitor.class, "Failed to delete existing randoop temp directory.", e);
+            Log.error(RandoopGenerator.class, "Failed to delete existing randoop temp directory.", e);
         }
         // @formatter:on
 
@@ -121,7 +131,7 @@ public class RandoopGenerator
         }
         catch(IOException e)
         {
-            Log.error(JavaVisitor.class, "Failed to copy source folder into temp directory.", e);
+            Log.error(RandoopGenerator.class, "Failed to copy source folder into temp directory.", e);
         }
 
         return randoopTemp;
@@ -242,7 +252,7 @@ public class RandoopGenerator
         }
         catch(IOException e)
         {
-            Log.error(JavaVisitor.class, "Failed to write " + classListFile.getAbsolutePath(), e);
+            Log.error(RandoopGenerator.class, "Failed to write " + classListFile.getAbsolutePath(), e);
         }
 
         // Create a file of methods to omit

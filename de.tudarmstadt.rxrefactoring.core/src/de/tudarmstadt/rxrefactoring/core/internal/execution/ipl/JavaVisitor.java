@@ -18,7 +18,7 @@ import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.filter.IFilter;
  * Each visit* method in this class visits a specific type of AST node and all
  * children of that node, and the visitor can begin at any one of them. For more
  * information on the AST nodes, please see Eclipse's documentation on them.
- * @author Nikolas Hanstein
+ * @author Nikolas Hanstein, Maximilian Kirschner
  */
 @SuppressWarnings("unchecked")
 public final class JavaVisitor

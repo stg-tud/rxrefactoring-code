@@ -8,8 +8,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
+import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.ChildListPropertyDescriptor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
@@ -31,10 +34,15 @@ import de.tudarmstadt.rxrefactoring.core.utils.Log;
 /**
  * The method scanner finds methods that are directly impacted by the
  * refactoring, as well as ones that call the impacted methods.
- * @author Nikolas Hanstein
+ * @author Nikolas Hanstein, Maximilian Kirschner
  */
 public class MethodScanner
 {
+    /**
+     * The string used for signatures that could not be created due to errors.
+     */
+    public static final String MISSING_SIGNATURE = "Hier könnte Ihre Werbung stehen!";
+
     /**
      * Find both {@link #findImpactedMethods(ProjectUnits) impacted} and
      * {@link #findCallingMethods(ProjectUnits, Set) calling} methods, i.e.
@@ -47,6 +55,8 @@ public class MethodScanner
     {
         Set<String> impacted = findImpactedMethods(units);
         Set<String> calling = findCallingMethods(units, impacted);
+        Log.info(MethodScanner.class, "Impacted Methods: " + impacted);
+        Log.info(MethodScanner.class, "Calling Methods: " + calling);
         return new ImmutablePair<>(impacted, calling);
     }
 
@@ -69,21 +79,11 @@ public class MethodScanner
                     TypeDeclaration type = (TypeDeclaration)objType;
                     for(MethodDeclaration method : type.getMethods())
                     {
-                        // Store the class and method name, for logging and building signatures
-                        String className = type.resolveBinding().getBinaryName();
-                        String methodName = method.getName().getFullyQualifiedName();
-                        Log.info(JavaVisitor.class, "Looking for changes in method " + className + "." + methodName + "()");
-
                         // Find all nodes that have changes, and build signatures for them
                         List<ASTNode> nodes = new JavaVisitor(node -> nodeHasChanges(node, unit)).visitMethodDeclaration(method);
                         if(!nodes.isEmpty())
                         {
-                            @SuppressWarnings("unchecked") List<SingleVariableDeclaration> objParams = method.parameters();
-                            String params = objParams.stream().map(SingleVariableDeclaration::resolveBinding)
-                                    .map(IVariableBinding::getType)
-                                    .map(ITypeBinding::getBinaryName)
-                                    .collect(Collectors.joining(", "));
-                            ret.add(buildSignature(className, methodName, params, method.getReturnType2().resolveBinding().getBinaryName()));
+                            ret.add(buildSignatureForDeclaration(method));
                         }
                     }
                 }
@@ -102,13 +102,13 @@ public class MethodScanner
     private static Set<String> findCallingMethods(ProjectUnits units, Set<String> impactedMethods)
     {
         Set<String> ret = new HashSet<>();
-        JavaVisitor visitor = new JavaVisitor(node -> impactedMethods.contains(buildSignatureFromNode(node)));
+        JavaVisitor visitor = new JavaVisitor(node -> impactedMethods.contains(buildSignatureForCalled(node)));
         for(IRewriteCompilationUnit unit : units)
         {
             CompilationUnit cu = (CompilationUnit)unit.getRoot();
             List<ASTNode> nodes = visitor.visitCompilationUnit(cu);
             ret.addAll(nodes.stream()
-                            .map(MethodScanner::buildSignatureFromNode)
+                            .map(MethodScanner::buildSignatureForCallee)
                             .collect(Collectors.toList()));
         }
 
@@ -119,15 +119,15 @@ public class MethodScanner
     }
 
     /**
-     * Builds a method signature for the specified AST node. Note that this only
-     * works if the node is of type {@link MethodInvocation} or
-     * {@link MethodReference}. See
+     * Builds a method signature for the method called by the specified AST
+     * node. Note that this only works for AST nodes of the type
+     * {@link MethodInvocation} or {@link MethodReference}. See
      * {@link #buildSignature(String, String, String, String)} for the format of
      * these signatures.
      * @param node The node to build a signature for.
      * @return A string representing the built signature.
      */
-    private static String buildSignatureFromNode(ASTNode node)
+    private static String buildSignatureForCalled(ASTNode node)
     {
         IMethodBinding binding;
         if(node instanceof MethodInvocation)
@@ -156,6 +156,72 @@ public class MethodScanner
         String methodName = binding.getName();
         String params = Arrays.stream(binding.getParameterTypes()).map(t -> t.getBinaryName()).collect(Collectors.joining(", "));
         String returnName = binding.getReturnType().getBinaryName();
+        return buildSignature(className, methodName, params, returnName);
+    }
+
+    /**
+     * Builds a method signature for the method declaration that contains the
+     * specified AST node. Note that this only works for AST nodes of the type
+     * {@link MethodInvocation} or {@link MethodReference}. See
+     * {@link #buildSignature(String, String, String, String)} for the format of
+     * these signatures.
+     * @param node The node to build a signature for.
+     * @return A string representing the built signature.
+     */
+    private static String buildSignatureForCallee(ASTNode node)
+    {
+        ASTNode parent = node;
+        while(!(parent instanceof MethodDeclaration))
+        {
+            if(parent == null)
+            {
+                return MISSING_SIGNATURE;
+            }
+            parent = parent.getParent();
+        }
+        return buildSignatureForDeclaration((MethodDeclaration)parent);
+    }
+
+    /**
+     * Builds a method signature for the specified method declaration. See
+     * {@link #buildSignature(String, String, String, String)} for the format of
+     * these signatures.
+     * @param method The method declaration to build a signature for.
+     * @return A string representing the built signature.
+     */
+    private static String buildSignatureForDeclaration(MethodDeclaration method)
+    {
+        ITypeBinding classBinding;
+        ASTNode parent = method.getParent();
+        if(parent instanceof AnnotationTypeDeclaration)
+        {
+            classBinding = ((AnnotationTypeDeclaration)parent).resolveBinding();
+        }
+        else if(parent instanceof AnonymousClassDeclaration)
+        {
+            classBinding = ((AnonymousClassDeclaration)parent).resolveBinding();
+        }
+        else if(parent instanceof EnumDeclaration)
+        {
+            classBinding = ((EnumDeclaration)parent).resolveBinding();
+        }
+        else if(parent instanceof TypeDeclaration)
+        {
+            classBinding = ((TypeDeclaration)parent).resolveBinding();
+        }
+        else
+        {
+            throw new RuntimeException("Found naughty method declaration hiding somewhere it doesn't belong (" + parent.getClass().getName() + ").");
+        }
+        String className = classBinding.getBinaryName();
+
+        String methodName = method.getName().getFullyQualifiedName();
+        @SuppressWarnings("unchecked") List<SingleVariableDeclaration> objParams = method.parameters();
+        String params = objParams.stream().map(SingleVariableDeclaration::resolveBinding)
+                .map(IVariableBinding::getType)
+                .map(ITypeBinding::getBinaryName)
+                .collect(Collectors.joining(", "));
+        String returnName = method.getReturnType2().resolveBinding().getBinaryName();
         return buildSignature(className, methodName, params, returnName);
     }
 

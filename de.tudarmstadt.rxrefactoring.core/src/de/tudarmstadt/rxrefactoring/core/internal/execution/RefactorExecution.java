@@ -5,17 +5,21 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.core.resources.IBuildConfiguration;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
@@ -34,6 +38,7 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
@@ -52,6 +57,7 @@ import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectStatus;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.JavaVisitor;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.MethodScanner;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.RandoopGenerator;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.collect.Pair;
@@ -70,8 +76,13 @@ public final class RefactorExecution implements Runnable {
 	 * given by the extension .
 	 */
 	private final IRefactorExtension extension;
-
 	
+    /**
+     * IPL: Mapping of projects to found methods that contains all impacted and
+     * changed methods for each project.
+     */
+	private final Map<IProject, Pair<Set<String>, Set<String>>> foundMethods = new HashMap<>();
+
 	public RefactorExecution(IRefactorExtension env) {
 		Objects.requireNonNull(env);
 		this.extension = env;
@@ -199,13 +210,35 @@ public final class RefactorExecution implements Runnable {
 		RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
 		
 		Shell shell = Display.getCurrent().getActiveShell();
-		
+
+		int result = IDialogConstants.CANCEL_ID;
 		try {
-			op.run(shell, "This is an dialog title!");
+			result = op.run(shell, "This is an dialog title!");
 		} catch (InterruptedException e) {
 			//operation was cancelled 
 			Log.info(RefactorExecution.class, "Operation was cancelled.");
-		}		
+		}
+
+		if(result == IDialogConstants.OK_ID) {
+		    // IPL: OK has been pressed, time to continue post-refactoring
+		    IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
+            IProject[] projects = workspace.getProjects();
+            for(IProject project : projects) {
+                Set<String> impacted = foundMethods.get(project).getFirst();
+                Set<String> calling = foundMethods.get(project).getSecond();
+
+                // IPL: Copy over post-refactoring binaries
+                try
+                {
+                    project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null);
+                }
+                catch(CoreException e)
+                {
+                    throw new RuntimeException(e);
+                }
+                RandoopGenerator.copyBinaries(project, "post");
+            }
+		}
 	}
 	
 		
@@ -352,10 +385,10 @@ public final class RefactorExecution implements Runnable {
 		workerTree.run(extension.createExecutorService());
 
 		// IPL: Find the changing and calling methods
-		Pair<Set<String>, Set<String>> methods = MethodScanner.findMethods(units);
+		foundMethods.put(project, MethodScanner.findMethods(units));
 
 		// IPL: Copy the pre-refactoring binaries over
-		RandoopGenerator.copyBinaries(project);
+		RandoopGenerator.copyBinaries(project, "pre");
 
 		// The changes of the compilation units are applied
 		Log.info(getClass(), "Write changes...");
