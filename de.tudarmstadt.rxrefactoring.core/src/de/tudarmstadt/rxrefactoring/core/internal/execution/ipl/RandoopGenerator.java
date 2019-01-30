@@ -13,17 +13,9 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
-import java.util.Calendar;
-import java.util.Comparator;
 import java.util.Set;
 
-import org.eclipse.core.resources.IBuildConfiguration;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IncrementalProjectBuilder;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.JavaCore;
 
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
@@ -67,74 +59,73 @@ public class RandoopGenerator
     private static final String ELSE = "else";
     private static final String ECHO_ALL_OK = "    echo -e \"${C_BLUE}==> ${C_GREEN}All tests ran OK. This refactoring is probably safe.${C_NC}\"";
 
-    public static File copyBinaries(IProject project, String dest)
+    // TODO Commented out for now so that it doesn't spam my /tmp
+    public static void copyBinaries(IProject project, String dest)
     {
-        IPackageFragmentRoot[] pkgs = new IPackageFragmentRoot[0];
-        IJavaProject jProj = JavaCore.create(project);
-        try
-        {
-            pkgs = jProj.getAllPackageFragmentRoots();
-            project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null);
-        }
-        catch(CoreException e)
-        {
-            e.printStackTrace();
-        }
-
-        String projectPath = "";
-        String localPath = "";
-        if(pkgs.length >= 1)
-        {
-            projectPath = project.getLocation().toOSString();
-            localPath = pkgs[0].getResource().getFullPath().removeFirstSegments(1).toOSString();
-        }
-
-        String time = Calendar.getInstance().getTime().toString().replace(' ', '_').replace(':', '_');
-        File randoopTemp = new File(determineTempPath() + File.separator + "randoop-gen-" + time);
-        randoopTemp.mkdirs();
-
-        File preDir = new File(randoopTemp, "pre");
-        File postDir = new File(randoopTemp, "post");
-
-        // @formatter:off
-        try
-        {
-            if(preDir.isDirectory())
-            {
-                Files.walk(Paths.get(preDir.getAbsolutePath()))
-                     .sorted(Comparator.reverseOrder())
-                     .map(Path::toFile)
-                     .forEach(File::delete);
-            }
-            if(postDir.isDirectory())
-            {
-                Files.walk(Paths.get(postDir.getAbsolutePath()))
-                     .sorted(Comparator.reverseOrder())
-                     .map(Path::toFile)
-                     .forEach(File::delete);
-            }
-        }
-        catch(IOException e)
-        {
-            Log.error(RandoopGenerator.class, "Failed to delete existing randoop temp directory.", e);
-        }
-        // @formatter:on
-
-        preDir.mkdirs();
-        postDir.mkdirs();
-
-        // TODO We need the binaries, not the source code
-        // Copy the source code over
-        try
-        {
-            Files.walkFileTree(Paths.get(projectPath, localPath), new CopyVisitor(Paths.get(preDir.getAbsolutePath())));
-        }
-        catch(IOException e)
-        {
-            Log.error(RandoopGenerator.class, "Failed to copy source folder into temp directory.", e);
-        }
-
-        return randoopTemp;
+//        IPackageFragmentRoot[] pkgs = new IPackageFragmentRoot[0];
+//        IJavaProject jProj = JavaCore.create(project);
+//        try
+//        {
+//            pkgs = jProj.getAllPackageFragmentRoots();
+//            project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null);
+//        }
+//        catch(CoreException e)
+//        {
+//            e.printStackTrace();
+//        }
+//
+//        String projectPath = "";
+//        String localPath = "";
+//        if(pkgs.length >= 1)
+//        {
+//            projectPath = project.getLocation().toOSString();
+//            localPath = pkgs[0].getResource().getFullPath().removeFirstSegments(1).toOSString();
+//        }
+//
+//        String time = Calendar.getInstance().getTime().toString().replace(' ', '_').replace(':', '_');
+//        File randoopTemp = new File(determineTempPath() + File.separator + "randoop-gen-" + time);
+//        randoopTemp.mkdirs();
+//
+//        File preDir = new File(randoopTemp, "pre");
+//        File postDir = new File(randoopTemp, "post");
+//
+//        // @formatter:off
+//        try
+//        {
+//            if(preDir.isDirectory())
+//            {
+//                Files.walk(Paths.get(preDir.getAbsolutePath()))
+//                     .sorted(Comparator.reverseOrder())
+//                     .map(Path::toFile)
+//                     .forEach(File::delete);
+//            }
+//            if(postDir.isDirectory())
+//            {
+//                Files.walk(Paths.get(postDir.getAbsolutePath()))
+//                     .sorted(Comparator.reverseOrder())
+//                     .map(Path::toFile)
+//                     .forEach(File::delete);
+//            }
+//        }
+//        catch(IOException e)
+//        {
+//            Log.error(RandoopGenerator.class, "Failed to delete existing randoop temp directory.", e);
+//        }
+//        // @formatter:on
+//
+//        preDir.mkdirs();
+//        postDir.mkdirs();
+//
+//        // TODO We need the binaries, not the source code
+//        // Copy the source code over
+//        try
+//        {
+//            Files.walkFileTree(Paths.get(projectPath, localPath), new CopyVisitor(Paths.get(preDir.getAbsolutePath())));
+//        }
+//        catch(IOException e)
+//        {
+//            Log.error(RandoopGenerator.class, "Failed to copy source folder into temp directory.", e);
+//        }
     }
 
     public static void createOutput(File randoopTemp, Set<String> classesToTest, Set<String> methodsToOmit)

@@ -228,15 +228,17 @@ public final class RefactorExecution implements Runnable {
                 Set<String> calling = foundMethods.get(project).getSecond();
 
                 // IPL: Copy over post-refactoring binaries
+                RandoopGenerator.copyBinaries(project, "post");
+
                 try
                 {
-                    project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null);
+                    parseCompilationUnits(JavaCore.create(project));
                 }
-                catch(CoreException e)
+                catch(JavaModelException e)
                 {
-                    throw new RuntimeException(e);
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
                 }
-                RandoopGenerator.copyBinaries(project, "post");
             }
 		}
 	}
