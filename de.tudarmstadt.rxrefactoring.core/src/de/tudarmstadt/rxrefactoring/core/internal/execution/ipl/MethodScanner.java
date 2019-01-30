@@ -112,9 +112,12 @@ public class MethodScanner
                             .collect(Collectors.toList()));
         }
 
-        // No need to keep nulls in, they indicate that the
-        // method binding could not be resolved
-        ret.removeIf(node -> node == null);
+        // No need to keep nulls, they indicate that the
+        // method binding could not be resolved. We should
+        // also remove calling methods that are also impacted
+        // methods, since impacted methods will have to be
+        // treated differently when generating tests.
+        ret.removeIf(sig -> sig == null || impactedMethods.contains(sig));
         return ret;
     }
 
