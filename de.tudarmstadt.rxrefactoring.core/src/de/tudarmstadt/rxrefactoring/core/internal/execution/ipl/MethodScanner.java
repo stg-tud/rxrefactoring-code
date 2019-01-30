@@ -61,6 +61,54 @@ public class MethodScanner
     }
 
     /**
+     * Retains only methods whose signatures have not changed after the
+     * refactoring.
+     * @param impactedMethods The set of impacted methods to investigate.
+     * @param units The affected project's units.
+     * @return A subset of {@code impactedMethods}, containing only those
+     *         impacted methods whose signature did not change.
+     */
+    public static Set<String> retainUnchangedMethods(Set<String> impactedMethods, ProjectUnits units)
+    {
+        // Optimization: Look only at classes that contain impacted methods
+        // @formatter:off
+        Set<String> impactedClasses = impactedMethods.stream()
+                                                     .map(MethodScanner::extractClassName)
+                                                     .collect(Collectors.toSet());
+
+        Set<String> ret = new HashSet<>();
+        JavaVisitor visitor = new JavaVisitor(node -> node instanceof MethodDeclaration &&
+                                                      impactedMethods.contains(buildSignatureForDeclaration((MethodDeclaration)node)));
+        // @formatter:on
+        for(IRewriteCompilationUnit unit : units)
+        {
+            CompilationUnit cu = (CompilationUnit)unit.getRoot();
+            for(Object objType : cu.types())
+            {
+                TypeDeclaration type = (TypeDeclaration)objType;
+                if(impactedClasses.contains(type.resolveBinding().getBinaryName()))
+                {
+                    // @formatter:off
+                    ret.addAll(visitor.visitCompilationUnit(cu).stream()
+                                                               .map(node -> (MethodDeclaration)node)
+                                                               .map(MethodScanner::buildSignatureForDeclaration)
+                                                               .collect(Collectors.toSet()));
+                    // @formatter:on
+                }
+            }
+        }
+
+        Log.info(MethodScanner.class, "Unchanged Impacted Methods: " + ret);
+        return ret;
+    }
+
+    private static String extractClassName(String signature)
+    {
+        String classAndMethod = signature.substring(0, signature.indexOf('('));
+        return classAndMethod.substring(0, classAndMethod.lastIndexOf('.'));
+    }
+
+    /**
      * Finds methods that are directly impacted by the refactoring, i.e. ones
      * that the rewriter flags as 'needing a rewrite'.
      * @param units The project compilation units to work on.
@@ -107,9 +155,11 @@ public class MethodScanner
         {
             CompilationUnit cu = (CompilationUnit)unit.getRoot();
             List<ASTNode> nodes = visitor.visitCompilationUnit(cu);
+            // @formatter:off
             ret.addAll(nodes.stream()
                             .map(MethodScanner::buildSignatureForCallee)
                             .collect(Collectors.toList()));
+            // @formatter:on
         }
 
         // No need to keep nulls, they indicate that the
@@ -220,10 +270,12 @@ public class MethodScanner
 
         String methodName = method.getName().getFullyQualifiedName();
         @SuppressWarnings("unchecked") List<SingleVariableDeclaration> objParams = method.parameters();
+        // @formatter:off
         String params = objParams.stream().map(SingleVariableDeclaration::resolveBinding)
                 .map(IVariableBinding::getType)
                 .map(ITypeBinding::getBinaryName)
                 .collect(Collectors.joining(", "));
+        // @formatter:on
         String returnName = method.getReturnType2().resolveBinding().getBinaryName();
         return buildSignature(className, methodName, params, returnName);
     }

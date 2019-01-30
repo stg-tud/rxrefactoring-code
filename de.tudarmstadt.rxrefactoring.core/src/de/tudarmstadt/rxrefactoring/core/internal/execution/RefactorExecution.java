@@ -54,6 +54,7 @@ import org.osgi.framework.Bundle;
 import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectStatus;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
@@ -230,15 +231,17 @@ public final class RefactorExecution implements Runnable {
                 // IPL: Copy over post-refactoring binaries
                 RandoopGenerator.copyBinaries(project, "post");
 
-                try
-                {
-                    parseCompilationUnits(JavaCore.create(project));
+                // IPL: Parse the refactored compilation units to obtain the ASTs
+                ProjectUnits units;
+                try {
+                    units = parseCompilationUnits(JavaCore.create(project));
                 }
-                catch(JavaModelException e)
-                {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                catch(JavaModelException e) {
+                    throw new RuntimeException(e);
                 }
+
+                // IPL: Throw out any impacted methods that changed signatures
+                impacted = MethodScanner.retainUnchangedMethods(impacted, units);
             }
 		}
 	}
