@@ -229,7 +229,8 @@ public final class RefactorExecution implements Runnable {
                 Set<String> calling = foundMethods.get(project).getSecond();
 
                 // IPL: Copy over post-refactoring binaries
-                RandoopGenerator.copyBinaries(project, "post");
+                File postDir = new File(RandoopGenerator.mkTempDir().getAbsolutePath() + "/post");
+                RandoopGenerator.copyBinaries(project, postDir);
 
                 // IPL: Parse the refactored compilation units to obtain the ASTs
                 ProjectUnits units;
@@ -393,7 +394,8 @@ public final class RefactorExecution implements Runnable {
 		foundMethods.put(project, MethodScanner.findMethods(units));
 
 		// IPL: Copy the pre-refactoring binaries over
-		RandoopGenerator.copyBinaries(project, "pre");
+		File preDir = new File(RandoopGenerator.mkTempDir().getAbsolutePath() + "/pre");
+		RandoopGenerator.copyBinaries(project, preDir);
 
 		// The changes of the compilation units are applied
 		Log.info(getClass(), "Write changes...");

@@ -13,9 +13,17 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
@@ -28,8 +36,9 @@ public class RandoopGenerator
 {
     private static final String OMITMETHODS_FILE = "omitmethods.txt";
     private static final String CLASSLIST_FILE = "classlist.txt";
+    private static final String TIME = Calendar.getInstance().getTime().toString().replace(' ', '_').replace(':', '_');
 
-    private static final String HASHBANG = "#!/bin/bash";
+    private static final String SHEBANG = "#!/bin/bash";
     // @formatter:off
     private static final String[] COLORS = new String[]
     {
@@ -59,73 +68,69 @@ public class RandoopGenerator
     private static final String ELSE = "else";
     private static final String ECHO_ALL_OK = "    echo -e \"${C_BLUE}==> ${C_GREEN}All tests ran OK. This refactoring is probably safe.${C_NC}\"";
 
-    // TODO Commented out for now so that it doesn't spam my /tmp
-    public static void copyBinaries(IProject project, String dest)
+    public static File mkTempDir()
     {
-//        IPackageFragmentRoot[] pkgs = new IPackageFragmentRoot[0];
-//        IJavaProject jProj = JavaCore.create(project);
-//        try
-//        {
-//            pkgs = jProj.getAllPackageFragmentRoots();
-//            project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null);
-//        }
-//        catch(CoreException e)
-//        {
-//            e.printStackTrace();
-//        }
-//
-//        String projectPath = "";
-//        String localPath = "";
-//        if(pkgs.length >= 1)
-//        {
-//            projectPath = project.getLocation().toOSString();
-//            localPath = pkgs[0].getResource().getFullPath().removeFirstSegments(1).toOSString();
-//        }
-//
-//        String time = Calendar.getInstance().getTime().toString().replace(' ', '_').replace(':', '_');
-//        File randoopTemp = new File(determineTempPath() + File.separator + "randoop-gen-" + time);
-//        randoopTemp.mkdirs();
-//
-//        File preDir = new File(randoopTemp, "pre");
-//        File postDir = new File(randoopTemp, "post");
-//
-//        // @formatter:off
-//        try
-//        {
-//            if(preDir.isDirectory())
-//            {
-//                Files.walk(Paths.get(preDir.getAbsolutePath()))
-//                     .sorted(Comparator.reverseOrder())
-//                     .map(Path::toFile)
-//                     .forEach(File::delete);
-//            }
-//            if(postDir.isDirectory())
-//            {
-//                Files.walk(Paths.get(postDir.getAbsolutePath()))
-//                     .sorted(Comparator.reverseOrder())
-//                     .map(Path::toFile)
-//                     .forEach(File::delete);
-//            }
-//        }
-//        catch(IOException e)
-//        {
-//            Log.error(RandoopGenerator.class, "Failed to delete existing randoop temp directory.", e);
-//        }
-//        // @formatter:on
-//
-//        preDir.mkdirs();
-//        postDir.mkdirs();
-//
-//        // TODO We need the binaries, not the source code
-//        // Copy the source code over
-//        try
-//        {
-//            Files.walkFileTree(Paths.get(projectPath, localPath), new CopyVisitor(Paths.get(preDir.getAbsolutePath())));
-//        }
-//        catch(IOException e)
-//        {
-//            Log.error(RandoopGenerator.class, "Failed to copy source folder into temp directory.", e);
-//        }
+        File randoopTemp = new File("/tmp/randoop-gen-" + TIME);
+
+        // If it doesn't exist yet, create it and its subfolders
+        if(!randoopTemp.exists())
+        {
+            randoopTemp.mkdirs();
+            new File(randoopTemp, "pre").mkdirs();
+            new File(randoopTemp, "post").mkdirs();
+        }
+        return randoopTemp;
+    }
+
+    public static void copyBinaries(IProject project, File dest)
+    {
+        try
+        {
+            // Rebuild the project to make sure the binaries we'll copy are
+            // up-to-date
+            project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null);
+        }
+        catch(CoreException e)
+        {
+            Log.error(RandoopGenerator.class, "Failed to rebuild project.", e);
+        }
+
+        IPackageFragmentRoot[] pkgs = new IPackageFragmentRoot[0];
+        IJavaProject jProj = JavaCore.create(project);
+        try
+        {
+            pkgs = jProj.getAllPackageFragmentRoots();
+        }
+        catch(JavaModelException e)
+        {
+            Log.error(RandoopGenerator.class, "Failed to retrieve list of project packages.", e);
+        }
+
+        String projectPath = "";
+        String localPath = "";
+        if(pkgs.length >= 1)
+        {
+            projectPath = project.getLocation().toOSString();
+            try
+            {
+                // getOutputLocation() prepends the project name again, so remove it
+                localPath = jProj.getOutputLocation().removeFirstSegments(1).toOSString();
+            }
+            catch(JavaModelException e)
+            {
+                Log.error(RandoopGenerator.class, "Failed to retrieve output path for project.", e);
+            }
+        }
+
+        // Copy the binaries over
+        try
+        {
+            Files.walkFileTree(Paths.get(projectPath, localPath), new CopyVisitor(Paths.get(dest.getAbsolutePath())));
+        }
+        catch(IOException e)
+        {
+            Log.error(RandoopGenerator.class, "Failed to copy binaries into temp directory.", e);
+        }
     }
 
     public static void createOutput(File randoopTemp, Set<String> classesToTest, Set<String> methodsToOmit)
@@ -137,7 +142,7 @@ public class RandoopGenerator
             randoopSh.createNewFile();
             try(OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(randoopSh), StandardCharsets.UTF_8.newEncoder()); BufferedWriter out = new BufferedWriter(writer))
             {
-                out.write(HASHBANG);
+                out.write(SHEBANG);
                 out.newLine();
                 out.newLine();
 
@@ -268,18 +273,6 @@ public class RandoopGenerator
         // TODO Copy libs over (randoop, junit, hamcrest, reactivex, reactive-streams)
 
         Log.info(RandoopGenerator.class, "Randoop configuration written to " + randoopTemp.getAbsolutePath());
-    }
-
-    private static String determineTempPath()
-    {
-        if(System.getProperty("os.name").startsWith("Windows"))
-        {
-            return "%USERPROFILE%\\AppData\\Local\\Temp";
-        }
-
-        // Mac, Linux, other Unixes
-        // Sorry to all the other ones that don't use this path :(
-        return "/tmp";
     }
 
     private static class CopyVisitor extends SimpleFileVisitor<Path>

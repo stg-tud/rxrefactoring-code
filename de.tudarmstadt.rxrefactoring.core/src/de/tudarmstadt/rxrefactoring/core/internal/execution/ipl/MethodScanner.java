@@ -98,6 +98,7 @@ public class MethodScanner
             }
         }
 
+        // TODO Remove again, only for debugging
         Log.info(MethodScanner.class, "Unchanged Impacted Methods: " + ret);
         return ret;
     }
