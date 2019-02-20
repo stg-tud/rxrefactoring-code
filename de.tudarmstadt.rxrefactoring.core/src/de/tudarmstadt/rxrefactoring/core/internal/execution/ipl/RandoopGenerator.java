@@ -271,6 +271,19 @@ public class RandoopGenerator
         Log.info(RandoopGenerator.class, "Randoop configuration written to " + tempDir.getAbsolutePath());
     }
 
+    public static Set<String> convertToRegexFormat(Set<String> signatures)
+    {
+        Set<String> ret = new HashSet<>();
+        for(String sig : signatures)
+        {
+            // We keep the last '(', because otherwise multiple unrelated
+            // methods may be matched by the regex (e.g. testA and testAB)
+            String temp = sig.substring(0, sig.indexOf('(') + 1);
+            ret.add(temp.replace(".", "\\.").replace("(", "\\("));
+        }
+        return ret;
+    }
+
     private static class CopyVisitor extends SimpleFileVisitor<Path>
     {
         private final Path target;

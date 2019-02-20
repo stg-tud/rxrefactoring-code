@@ -265,6 +265,10 @@ public final class RefactorExecution implements Runnable {
                     // IPL: Compute the set of methods that should NOT be tested
                     Set<String> methodsToOmit = MethodScanner.findAllMethods(units, classesToTest);
                     methodsToOmit.removeAll(methodsToTest);
+                    methodsToOmit = RandoopGenerator.convertToRegexFormat(methodsToOmit);
+                    // IPL: Disgusting hack, because Randoop LOVES calling
+                    // getClass() and comparing the result to null
+                    methodsToOmit.add("java\\.lang\\.Object\\.getClass\\(");
 
                     // IPL: Finally, create the output
                     RandoopGenerator.createOutput(classesToTest, methodsToOmit);
