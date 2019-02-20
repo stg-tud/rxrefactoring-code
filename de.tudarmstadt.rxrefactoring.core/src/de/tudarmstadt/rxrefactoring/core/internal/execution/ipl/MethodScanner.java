@@ -101,6 +101,26 @@ public class MethodScanner
         return ret;
     }
 
+    /**
+     * Extracts the class names, including the packages, from the specified
+     * signatures. See {@link #extractClassName(String)} for more information.
+     * @param signatures The signatures to extract the class names from.
+     * @return A set containing all extracted class names.
+     */
+    public static Set<String> extractClassNames(Set<String> signatures)
+    {
+        return signatures.stream().map(MethodScanner::extractClassName).collect(Collectors.toSet());
+    }
+
+    /**
+     * Extracts the class name, including the package, from the specified
+     * signature. That is, if the signature is of the form
+     * {@code my.package.MyClass.myMethod(...) -> V}, then this will return
+     * {@code my.package.MyClass}.
+     * @param signature The signature to extract the class name from.
+     * @return The class name and package extracted from the specified
+     *         signature.
+     */
     private static String extractClassName(String signature)
     {
         String classAndMethod = signature.substring(0, signature.indexOf('('));

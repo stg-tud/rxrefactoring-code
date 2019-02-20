@@ -1242,7 +1242,7 @@ public final class JavaVisitor
 
     public List<ASTNode> visitType(Type type)
     {
-        // Ignore. Caused by void methods.
+        // Ignore. Caused by constructors.
         if(type == null)
         {
             return Collections.emptyList();
