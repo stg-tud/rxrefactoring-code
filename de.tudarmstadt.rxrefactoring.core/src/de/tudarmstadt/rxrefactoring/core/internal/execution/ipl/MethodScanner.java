@@ -144,14 +144,22 @@ public class MethodScanner
                 CompilationUnit cu = (CompilationUnit)unit.getRoot();
                 for(Object objType : cu.types())
                 {
-                    TypeDeclaration type = (TypeDeclaration)objType;
-                    for(MethodDeclaration method : type.getMethods())
+                    // We're only interested in type declarations:
+                    // AnnotationTypeDeclaration can't declare regular methods
+                    // and EnumDeclarations are not refactored (yet)
+                    // TODO If EnumDeclarations ever become important, this will
+                    // have to be extended
+                    if(objType instanceof TypeDeclaration)
                     {
-                        // Find all nodes that have changes, and build signatures for them
-                        List<ASTNode> nodes = new JavaVisitor(node -> nodeHasChanges(node, unit)).visitMethodDeclaration(method);
-                        if(!nodes.isEmpty())
+                        TypeDeclaration type = (TypeDeclaration)objType;
+                        for(MethodDeclaration method : type.getMethods())
                         {
-                            ret.add(buildSignatureForDeclaration(method));
+                            // Find all nodes that have changes, and build signatures for them
+                            List<ASTNode> nodes = new JavaVisitor(node -> nodeHasChanges(node, unit)).visitMethodDeclaration(method);
+                            if(!nodes.isEmpty())
+                            {
+                                ret.add(buildSignatureForDeclaration(method));
+                            }
                         }
                     }
                 }

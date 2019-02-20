@@ -74,6 +74,7 @@ public class RandoopGenerator
         File randoopTemp = new File("/tmp/randoop-gen-" + time);
         tempDir = randoopTemp;
         randoopTemp.mkdirs();
+        new File(randoopTemp, "libs").mkdirs();
         new File(randoopTemp, "pre").mkdirs();
         new File(randoopTemp, "post").mkdirs();
         return randoopTemp;
@@ -86,6 +87,7 @@ public class RandoopGenerator
 
     public static void copyBinaries(IProject project, File dest)
     {
+        // TODO Copy libs over (randoop, junit, hamcrest, reactivex, reactive-streams)
         try
         {
             // Rebuild the project to make sure the binaries we'll copy are
@@ -135,10 +137,10 @@ public class RandoopGenerator
         }
     }
 
-    public static void createOutput(File randoopTemp, Set<String> classesToTest, Set<String> methodsToOmit)
+    public static void createOutput(Set<String> classesToTest, Set<String> methodsToOmit)
     {
         // Create a shell file for running randoop
-        File randoopSh = new File(randoopTemp, "randoop.sh");
+        File randoopSh = new File(tempDir, "randoop.sh");
         try
         {
             randoopSh.createNewFile();
@@ -235,7 +237,7 @@ public class RandoopGenerator
         }
 
         // Create a file of classes to test
-        File classListFile = new File(randoopTemp, CLASSLIST_FILE);
+        File classListFile = new File(tempDir, CLASSLIST_FILE);
         try
         {
             classListFile.createNewFile();
@@ -254,7 +256,7 @@ public class RandoopGenerator
         }
 
         // Create a file of methods to omit
-        File omitMethodsFile = new File(randoopTemp, OMITMETHODS_FILE);
+        File omitMethodsFile = new File(tempDir, OMITMETHODS_FILE);
         try
         {
             omitMethodsFile.createNewFile();
@@ -272,9 +274,7 @@ public class RandoopGenerator
             Log.error(RandoopGenerator.class, "Failed to write " + omitMethodsFile.getAbsolutePath(), e);
         }
 
-        // TODO Copy libs over (randoop, junit, hamcrest, reactivex, reactive-streams)
-
-        Log.info(RandoopGenerator.class, "Randoop configuration written to " + randoopTemp.getAbsolutePath());
+        Log.info(RandoopGenerator.class, "Randoop configuration written to " + tempDir.getAbsolutePath());
     }
 
     private static class CopyVisitor extends SimpleFileVisitor<Path>
