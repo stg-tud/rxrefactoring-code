@@ -51,21 +51,17 @@ public class RandoopGenerator
         "C_NC='\\033[0m'"
     };
     // @formatter:on
-    private static final String ECHO_RUN_RANDOOP = "echo -e \"${C_BLUE}==> ${C_YELLOW}Running randoop on pre-refactoring source code${C_NC}\"";
-    private static final String COMMAND_RUN_RANDOOP = "java -classpath \"pre/bin:libs/*\" randoop.main.Main gentests --classlist=classlist.txt --omitmethods-file=omitmethods.txt --no-error-revealing-tests=true --junit-output-dir=tests/src --time-limit=10";
+    private static final String ECHO_RUN_RANDOOP = "echo -e \"${C_BLUE}==> ${C_YELLOW}Running randoop on pre-refactoring binaries${C_NC}\"";
+    private static final String COMMAND_RUN_RANDOOP = "java -classpath \"pre:libs/*\" randoop.main.Main gentests --classlist=classlist.txt --omitmethods-file=omitmethods.txt --no-error-revealing-tests=true --junit-output-dir=tests/src --time-limit=10";
     private static final String IF_CHECK_RETURN_CODE = "if [ ! $? -eq 0 ]";
     private static final String THEN = "then";
     private static final String EXIT_ERROR = "    exit 1";
     private static final String FI = "fi";
-    private static final String ECHO_JAVAC = "echo -e \"${C_BLUE}==> ${C_YELLOW}Compiling pre-refactoring source code${C_NC}\"";
-    private static final String COMMAND_JAVAC = "javac -cp \"pre/bin:libs/*\" -d \"tests/bin\" tests/src/RegressionTest*.java";
-    private static final String ECHO_JUNIT_PRE = "echo -e \"${C_BLUE}==> ${C_YELLOW}Running tests on pre-refactoring binaries${C_NC}\"";
-    private static final String COMMAND_JUNIT_PRE = "java -cp \"tests/bin:pre/bin:libs/*\" org.junit.runner.JUnitCore RegressionTest";
-    private static final String COMMAND_SAVE_RESULT_1 = "res1=$?";
+    private static final String ECHO_JAVAC = "echo -e \"${C_BLUE}==> ${C_YELLOW}Compiling generated tests with pre-refactoring binaries${C_NC}\"";
+    private static final String COMMAND_JAVAC = "javac -cp \"pre:libs/*\" -d \"tests/bin\" tests/src/RegressionTest*.java";
     private static final String ECHO_JUNIT_POST = "echo -e \"${C_BLUE}==> ${C_YELLOW}Running tests on post-refactoring binaries${C_NC}\"";
-    private static final String COMMAND_JUNIT_POST = "java -cp \"tests/bin:post/bin:libs/*\" org.junit.runner.JUnitCore RegressionTest";
-    private static final String COMMAND_SAVE_RESULT_2 = "res2=$?";
-    private static final String IF_CHECK_SAVED_RESULTS = "if [ ! $res1 -eq 0 ] || [ ! $res2 -eq 0 ]";
+    private static final String COMMAND_JUNIT_POST = "java -cp \"tests/bin:post:libs/*\" org.junit.runner.JUnitCore RegressionTest";
+    private static final String IF_CHECK_SAVED_RESULTS = "if [ ! $? -eq 0 ]";
     private static final String ECHO_PRINT_ERROR = "    echo -e \"${C_BLUE}==> ${C_RED}Error: One or more tests failed! This refactoring may not be safe.${C_NC}\"";
     private static final String ELSE = "else";
     private static final String ECHO_ALL_OK = "    echo -e \"${C_BLUE}==> ${C_GREEN}All tests ran OK. This refactoring is probably safe.${C_NC}\"";
@@ -125,6 +121,7 @@ public class RandoopGenerator
                         }
                     }
                 }
+            }
         }
         catch(JavaModelException e)
         {
@@ -193,19 +190,9 @@ public class RandoopGenerator
                 out.newLine();
                 out.newLine();
 
-                out.write(ECHO_JUNIT_PRE);
-                out.newLine();
-                out.write(COMMAND_JUNIT_PRE);
-                out.newLine();
-                out.write(COMMAND_SAVE_RESULT_1);
-                out.newLine();
-                out.newLine();
-
                 out.write(ECHO_JUNIT_POST);
                 out.newLine();
                 out.write(COMMAND_JUNIT_POST);
-                out.newLine();
-                out.write(COMMAND_SAVE_RESULT_2);
                 out.newLine();
                 out.newLine();
 
@@ -220,7 +207,6 @@ public class RandoopGenerator
                 out.write(ECHO_ALL_OK);
                 out.newLine();
                 out.write(FI);
-                out.newLine();
                 out.newLine();
             }
         }
