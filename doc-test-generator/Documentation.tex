@@ -8,24 +8,27 @@
 
 \begin{document}
 	\maketitle
-	
-	\tableofcontents
-	
 	\chapter{Usage Hints}
+		Important:
 		\begin{itemize}
 			\item Windows is not supported, due to some hard-coded file paths
-			\item The tmp directory is used to save the project binaries
+			\item The tmp directory is used to save the project binaries, therefore a directory (/tmp/randoop-gen-<DATE>) is created
 			\item Refactor and generate tests only for one project at a time, all other projects have to be closed
-			\item
-			
 		\end{itemize}
+		Steps to perform manually:
+		\begin{enumerate}
+			\item Use the Refactoring Tool as usual
+			\item Copy all project libaries, JUnit, Hamcrest, ReactiveX, Reactive-Streams and Randoop as jar-files to the a libs directory inside the created "randoop-gen" directory
+			\item Execute the generated bash script in the "randoop-gen" directory
+		\end{enumerate}
+		
 	\chapter{Flow Chart}
 		\includegraphics[height=\textheight-100pt]{Ablaufdiagramm.jpg}
 	\chapter{Code location}
 		Our code is located in the following three packages:
 		\begin{itemize}
 			\item \textit{\textbf{de.tudarmstadt.rxrefactoring.core.internal.execution.ipl}}\\
-				Main Part of our code: The JavaVisitor traverses Eclipse ASTs. The MethodScanner searches for impacted and calling methods. The Randoop Generator builds the project, copies the binaries and calls Randoop.
+				Main Part of our code: The JavaVisitor traverses Eclipse ASTs. The MethodScanner searches for impacted and calling methods. The Randoop Generator builds the project, copies the binaries and generates the bash script
 			\item \textit{\textbf{de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.collect}}\\
 				Collections we needed, basically a Pair Class.
 			\item \textit{\textbf{de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.filter}}\\

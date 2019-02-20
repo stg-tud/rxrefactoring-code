@@ -3,8 +3,8 @@
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>546</x>
-      <y>147</y>
+      <x>560</x>
+      <y>0</y>
       <w>126</w>
       <h>77</h>
     </coordinates>
@@ -16,8 +16,8 @@ refactoring</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>546</x>
-      <y>294</y>
+      <x>560</x>
+      <y>147</y>
       <w>126</w>
       <h>77</h>
     </coordinates>
@@ -29,8 +29,8 @@ Method</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>546</x>
-      <y>581</y>
+      <x>560</x>
+      <y>434</y>
       <w>126</w>
       <h>77</h>
     </coordinates>
@@ -41,8 +41,8 @@ bg=red</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>602</x>
-      <y>217</y>
+      <x>616</x>
+      <y>70</y>
       <w>21</w>
       <h>91</h>
     </coordinates>
@@ -52,8 +52,8 @@ bg=red</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>602</x>
-      <y>364</y>
+      <x>616</x>
+      <y>217</y>
       <w>21</w>
       <h>84</h>
     </coordinates>
@@ -63,8 +63,8 @@ bg=red</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>532</x>
-      <y>889</y>
+      <x>546</x>
+      <y>742</y>
       <w>154</w>
       <h>91</h>
     </coordinates>
@@ -80,8 +80,8 @@ from impactedMethods</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>602</x>
-      <y>651</y>
+      <x>616</x>
+      <y>504</y>
       <w>21</w>
       <h>98</h>
     </coordinates>
@@ -91,8 +91,8 @@ from impactedMethods</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>448</x>
-      <y>175</y>
+      <x>462</x>
+      <y>28</y>
       <w>91</w>
       <h>21</h>
     </coordinates>
@@ -102,8 +102,8 @@ from impactedMethods</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>441</x>
-      <y>322</y>
+      <x>455</x>
+      <y>175</y>
       <w>98</w>
       <h>21</h>
     </coordinates>
@@ -113,23 +113,23 @@ from impactedMethods</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>546</x>
-      <y>1050</y>
+      <x>560</x>
+      <y>903</y>
       <w>126</w>
       <h>77</h>
     </coordinates>
     <panel_attributes>Generate
 omitMethods.txt,
 classList.txt and
-the command to call
-randoop</panel_attributes>
+the bash script
+to call randoop</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>UMLNote</id>
     <coordinates>
-      <x>707</x>
-      <y>917</y>
+      <x>721</x>
+      <y>770</y>
       <w>140</w>
       <h>42</h>
     </coordinates>
@@ -140,8 +140,8 @@ bg=yellow</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>602</x>
-      <y>973</y>
+      <x>616</x>
+      <y>826</y>
       <w>21</w>
       <h>91</h>
     </coordinates>
@@ -151,8 +151,8 @@ bg=yellow</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>546</x>
-      <y>735</y>
+      <x>560</x>
+      <y>588</y>
       <w>126</w>
       <h>77</h>
     </coordinates>
@@ -163,8 +163,8 @@ copy binaries to tmp</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>602</x>
-      <y>805</y>
+      <x>616</x>
+      <y>658</y>
       <w>21</w>
       <h>98</h>
     </coordinates>
@@ -174,8 +174,8 @@ copy binaries to tmp</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>546</x>
-      <y>434</y>
+      <x>560</x>
+      <y>287</y>
       <w>126</w>
       <h>77</h>
     </coordinates>
@@ -186,8 +186,8 @@ copy binaries to tmp</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>602</x>
-      <y>504</y>
+      <x>616</x>
+      <y>357</y>
       <w>21</w>
       <h>91</h>
     </coordinates>
