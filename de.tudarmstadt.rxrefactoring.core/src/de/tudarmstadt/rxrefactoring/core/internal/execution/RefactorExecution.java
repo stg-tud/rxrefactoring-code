@@ -222,34 +222,45 @@ public final class RefactorExecution implements Runnable {
 		    IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
             IProject[] projects = workspace.getProjects();
             for(IProject project : projects) {
-                Set<String> impacted = foundMethods.get(project).getFirst();
-                Set<String> calling = foundMethods.get(project).getSecond();
+                if(project.isOpen()) {
+                    Set<String> impacted = foundMethods.get(project).getFirst();
+                    Set<String> calling = foundMethods.get(project).getSecond();
 
-                // IPL: Copy over post-refactoring binaries
-                File postDir = new File(RandoopGenerator.getTempDir(), "post");
-                RandoopGenerator.copyBinaries(project, postDir);
+                    // IPL: Copy over post-refactoring binaries
+                    File postDir = new File(RandoopGenerator.getTempDir(), "post");
+                    RandoopGenerator.copyBinaries(project, postDir);
 
-                // IPL: Parse the refactored compilation units to obtain the ASTs
-                ProjectUnits units;
-                try {
-                    units = parseCompilationUnits(JavaCore.create(project));
+                    // IPL: Parse the refactored compilation units to obtain the ASTs
+                    ProjectUnits units;
+                    try {
+                        units = parseCompilationUnits(JavaCore.create(project));
+                    }
+                    catch(JavaModelException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    // IPL: Throw out any impacted methods that changed signatures,
+                    // because those can't be tested
+                    try {
+                        impacted = MethodScanner.retainUnchangedMethods(impacted, units);
+                    }
+                    catch(Throwable e) {
+                        Log.error(RefactorExecution.class, "Failed to determine unchanged methods.", e);
+                    }
+
+                    // IPL: The methods to test are the union of the unchanged
+                    // impacted methods and the methods that call any impacted
+                    // methods.
+                    Set<String> methodsToTest = new HashSet<>(impacted);
+                    methodsToTest.addAll(calling);
+                    Log.info(RefactorExecution.class, "Found total of " + methodsToTest.size() + " method(s) suitable for testing.");
+                    // IPL: For debugging only
+                    //Log.info(RefactorExecution.class, "Methods to test: " + methodsToTest);
+
+                    Set<String> classesToTest = MethodScanner.extractClassNames(methodsToTest);
+                    // IPL: For debugging only
+                    //Log.info(RefactorExecution.class, "Classes to test: " + classesToTest);
                 }
-                catch(JavaModelException e) {
-                    throw new RuntimeException(e);
-                }
-
-                // IPL: Throw out any impacted methods that changed signatures
-                impacted = MethodScanner.retainUnchangedMethods(impacted, units);
-
-                // IPL: The methods to test are the union of the unchanged
-                // impacted methods and the methods that call any impacted
-                // methods.
-                Set<String> methodsToTest = new HashSet<>(impacted);
-                methodsToTest.addAll(calling);
-
-                Log.info(RefactorExecution.class, "Found total of " + methodsToTest.size() + " method(s) suitable for testing.");
-                // IPL: For debugging only
-                Log.info(RefactorExecution.class, "Methods to test: " + methodsToTest);
             }
 		}
 	}
