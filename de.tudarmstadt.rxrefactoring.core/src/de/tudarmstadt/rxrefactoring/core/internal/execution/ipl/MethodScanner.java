@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.ChildListPropertyDescriptor;
@@ -86,7 +87,7 @@ public class MethodScanner
             CompilationUnit cu = (CompilationUnit)unit.getRoot();
             for(Object objType : cu.types())
             {
-                TypeDeclaration type = (TypeDeclaration)objType;
+                AbstractTypeDeclaration type = (AbstractTypeDeclaration)objType;
                 if(impactedClasses.contains(type.resolveBinding().getBinaryName()))
                 {
                     // @formatter:off
