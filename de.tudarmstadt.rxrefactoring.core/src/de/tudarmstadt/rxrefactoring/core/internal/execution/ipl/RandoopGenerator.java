@@ -14,11 +14,14 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
@@ -99,37 +102,41 @@ public class RandoopGenerator
             Log.error(RandoopGenerator.class, "Failed to rebuild project.", e);
         }
 
-        IPackageFragmentRoot[] pkgs = new IPackageFragmentRoot[0];
+        Set<String> outputLocations = new HashSet<>();
+        String projectPath = project.getLocation().toOSString();
         IJavaProject jProj = JavaCore.create(project);
         try
         {
-            pkgs = jProj.getAllPackageFragmentRoots();
+            IClasspathEntry[] cp = jProj.getRawClasspath();
+            for(IClasspathEntry entry : cp)
+            {
+                if(entry.getContentKind() == IPackageFragmentRoot.K_SOURCE)
+                {
+                    IPath outputPath = entry.getOutputLocation();
+                    if(outputPath != null)
+                    {
+                        // getOutputLocation() prepends the name of the project
+                        // again, so remove it
+                        String outputLoc = outputPath.removeFirstSegments(1).toOSString();
+                        if(!outputLoc.trim().isEmpty()) // Poor man's isBlank()
+                        {
+                            outputLocations.add(outputLoc);
+                        }
+                    }
+                }
         }
         catch(JavaModelException e)
         {
             Log.error(RandoopGenerator.class, "Failed to retrieve list of project packages.", e);
         }
 
-        String projectPath = "";
-        String localPath = "";
-        if(pkgs.length >= 1)
-        {
-            projectPath = project.getLocation().toOSString();
-            try
-            {
-                // getOutputLocation() prepends the project name again, so remove it
-                localPath = jProj.getOutputLocation().removeFirstSegments(1).toOSString();
-            }
-            catch(JavaModelException e)
-            {
-                Log.error(RandoopGenerator.class, "Failed to retrieve output path for project.", e);
-            }
-        }
-
         // Copy the binaries over
         try
         {
-            Files.walkFileTree(Paths.get(projectPath, localPath), new CopyVisitor(Paths.get(dest.getAbsolutePath())));
+            for(String outputLoc : outputLocations)
+            {
+                Files.walkFileTree(Paths.get(projectPath, outputLoc), new CopyVisitor(Paths.get(dest.getAbsolutePath())));
+            }
         }
         catch(IOException e)
         {
