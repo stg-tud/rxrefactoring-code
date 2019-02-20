@@ -29,7 +29,6 @@ import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.collect.ImmutablePair;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.collect.Pair;
-import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 /**
  * The method scanner finds methods that are directly impacted by the
