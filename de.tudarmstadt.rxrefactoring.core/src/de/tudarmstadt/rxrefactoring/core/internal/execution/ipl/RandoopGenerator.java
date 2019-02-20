@@ -14,7 +14,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Calendar;
-import java.util.Comparator;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
@@ -36,7 +35,6 @@ public class RandoopGenerator
 {
     private static final String OMITMETHODS_FILE = "omitmethods.txt";
     private static final String CLASSLIST_FILE = "classlist.txt";
-    private static final String TIME = Calendar.getInstance().getTime().toString().replace(' ', '_').replace(':', '_');
 
     private static final String SHEBANG = "#!/bin/bash";
     // @formatter:off
@@ -68,18 +66,22 @@ public class RandoopGenerator
     private static final String ELSE = "else";
     private static final String ECHO_ALL_OK = "    echo -e \"${C_BLUE}==> ${C_GREEN}All tests ran OK. This refactoring is probably safe.${C_NC}\"";
 
+    private static File tempDir;
+
     public static File mkTempDir()
     {
-        File randoopTemp = new File("/tmp/randoop-gen-" + TIME);
-
-        // If it doesn't exist yet, create it and its subfolders
-        if(!randoopTemp.exists())
-        {
-            randoopTemp.mkdirs();
-            new File(randoopTemp, "pre").mkdirs();
-            new File(randoopTemp, "post").mkdirs();
-        }
+        String time = Calendar.getInstance().getTime().toString().replace(' ', '_').replace(':', '_');
+        File randoopTemp = new File("/tmp/randoop-gen-" + time);
+        tempDir = randoopTemp;
+        randoopTemp.mkdirs();
+        new File(randoopTemp, "pre").mkdirs();
+        new File(randoopTemp, "post").mkdirs();
         return randoopTemp;
+    }
+
+    public static File getTempDir()
+    {
+        return tempDir;
     }
 
     public static void copyBinaries(IProject project, File dest)

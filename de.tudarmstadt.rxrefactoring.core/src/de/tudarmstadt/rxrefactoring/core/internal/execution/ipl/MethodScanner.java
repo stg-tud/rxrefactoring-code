@@ -55,8 +55,9 @@ public class MethodScanner
     {
         Set<String> impacted = findImpactedMethods(units);
         Set<String> calling = findCallingMethods(units, impacted);
-        Log.info(MethodScanner.class, "Impacted Methods: " + impacted);
-        Log.info(MethodScanner.class, "Calling Methods: " + calling);
+        // For debugging only
+        //Log.info(MethodScanner.class, "Impacted Methods: " + impacted);
+        //Log.info(MethodScanner.class, "Calling Methods: " + calling);
         return new ImmutablePair<>(impacted, calling);
     }
 
@@ -97,9 +98,6 @@ public class MethodScanner
                 }
             }
         }
-
-        // TODO Remove again, only for debugging
-        Log.info(MethodScanner.class, "Unchanged Impacted Methods: " + ret);
         return ret;
     }
 

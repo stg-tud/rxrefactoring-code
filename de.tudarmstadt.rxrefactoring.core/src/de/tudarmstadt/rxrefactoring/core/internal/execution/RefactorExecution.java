@@ -6,6 +6,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -15,11 +16,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
-import org.eclipse.core.resources.IBuildConfiguration;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
@@ -54,11 +53,9 @@ import org.osgi.framework.Bundle;
 import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
-import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectStatus;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
-import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.JavaVisitor;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.MethodScanner;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.RandoopGenerator;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.collect.Pair;
@@ -229,7 +226,7 @@ public final class RefactorExecution implements Runnable {
                 Set<String> calling = foundMethods.get(project).getSecond();
 
                 // IPL: Copy over post-refactoring binaries
-                File postDir = new File(RandoopGenerator.mkTempDir().getAbsolutePath() + "/post");
+                File postDir = new File(RandoopGenerator.getTempDir(), "post");
                 RandoopGenerator.copyBinaries(project, postDir);
 
                 // IPL: Parse the refactored compilation units to obtain the ASTs
@@ -243,6 +240,16 @@ public final class RefactorExecution implements Runnable {
 
                 // IPL: Throw out any impacted methods that changed signatures
                 impacted = MethodScanner.retainUnchangedMethods(impacted, units);
+
+                // IPL: The methods to test are the union of the unchanged
+                // impacted methods and the methods that call any impacted
+                // methods.
+                Set<String> methodsToTest = new HashSet<>(impacted);
+                methodsToTest.addAll(calling);
+
+                Log.info(RefactorExecution.class, "Found total of " + methodsToTest.size() + " method(s) suitable for testing.");
+                // IPL: For debugging only
+                Log.info(RefactorExecution.class, "Methods to test: " + methodsToTest);
             }
 		}
 	}
@@ -394,7 +401,7 @@ public final class RefactorExecution implements Runnable {
 		foundMethods.put(project, MethodScanner.findMethods(units));
 
 		// IPL: Copy the pre-refactoring binaries over
-		File preDir = new File(RandoopGenerator.mkTempDir().getAbsolutePath() + "/pre");
+		File preDir = new File(RandoopGenerator.mkTempDir(), "pre");
 		RandoopGenerator.copyBinaries(project, preDir);
 
 		// The changes of the compilation units are applied
