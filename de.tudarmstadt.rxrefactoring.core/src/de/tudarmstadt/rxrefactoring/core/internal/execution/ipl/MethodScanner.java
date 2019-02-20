@@ -114,6 +114,44 @@ public class MethodScanner
     }
 
     /**
+     * Finds method signatures for all methods inside classes matching the
+     * specified class signatures.
+     * @param units The post-refactoring project units.
+     * @param classSignatures The class signatures for which to find the method
+     *        signatures.
+     * @return Method signatures for all methods inside classes matching the
+     *         specified class signatures.
+     */
+    public static Set<String> findAllMethods(ProjectUnits units, Set<String> classSignatures)
+    {
+        Set<String> ret = new HashSet<>();
+        for(IRewriteCompilationUnit unit : units)
+        {
+            CompilationUnit cu = (CompilationUnit)unit.getRoot();
+            for(Object objType : cu.types())
+            {
+                // We're only interested in type declarations:
+                // AnnotationTypeDeclaration can't declare regular methods
+                // and EnumDeclarations are not refactored (yet)
+                // TODO If EnumDeclarations ever become important, this will
+                // have to be extended
+                if(objType instanceof TypeDeclaration)
+                {
+                    TypeDeclaration type = (TypeDeclaration)objType;
+                    if(classSignatures.contains(buildSignatureForClass(type)))
+                    {
+                        for(MethodDeclaration decl : type.getMethods())
+                        {
+                            ret.add(buildSignatureForDeclaration(decl));
+                        }
+                    }
+                }
+            }
+        }
+        return ret;
+    }
+
+    /**
      * Extracts the class name, including the package, from the specified
      * signature. That is, if the signature is of the form
      * {@code my.package.MyClass.myMethod(...) -> V}, then this will return
@@ -197,6 +235,19 @@ public class MethodScanner
         // treated differently when generating tests.
         ret.removeIf(sig -> sig == null || impactedMethods.contains(sig));
         return ret;
+    }
+
+    /**
+     * Builds a class signature, consisting only of class name and package,
+     * for the specified type. This method acts as if
+     * {@code extractClassName(buildSignatureForDeclaration(...))} had been
+     * called on one of the specified type's methods.
+     * @param type The type to build a signature for.
+     * @return A string representing the built signature.
+     */
+    private static String buildSignatureForClass(TypeDeclaration type)
+    {
+        return type.resolveBinding().getBinaryName();
     }
 
     /**

@@ -257,9 +257,17 @@ public final class RefactorExecution implements Runnable {
                     // IPL: For debugging only
                     //Log.info(RefactorExecution.class, "Methods to test: " + methodsToTest);
 
+                    // IPL: Compute the set of classes that will be tested
                     Set<String> classesToTest = MethodScanner.extractClassNames(methodsToTest);
                     // IPL: For debugging only
                     //Log.info(RefactorExecution.class, "Classes to test: " + classesToTest);
+
+                    // IPL: Compute the set of methods that should NOT be tested
+                    Set<String> methodsToOmit = MethodScanner.findAllMethods(units, classesToTest);
+                    methodsToOmit.removeAll(methodsToTest);
+
+                    // IPL: Finally, create the output
+                    RandoopGenerator.createOutput(classesToTest, methodsToOmit);
                 }
             }
 		}
