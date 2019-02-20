@@ -21,6 +21,7 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.MethodReference;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
+import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
@@ -274,7 +275,19 @@ public class MethodScanner
                 .map(ITypeBinding::getBinaryName)
                 .collect(Collectors.joining(", "));
         // @formatter:on
-        String returnName = method.getReturnType2().resolveBinding().getBinaryName();
+
+        Type returnType = method.getReturnType2();
+        String returnName;
+        if(returnType != null)
+        {
+            returnName = returnType.resolveBinding().getBinaryName();
+        }
+        else
+        {
+            // Happens for constructors, just set the return type to their own
+            // type to mirror the Java bytecode names
+            returnName = className;
+        }
         return buildSignature(className, methodName, params, returnName);
     }
 
