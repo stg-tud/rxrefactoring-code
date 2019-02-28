@@ -122,6 +122,19 @@ public class RandoopGenerator
                     }
                 }
             }
+
+            // Check the default output as well
+            IPath defaultOutput = jProj.getOutputLocation();
+            if(defaultOutput != null)
+            {
+                // getOutputLocation() prepends the name of the project
+                // again, so remove it
+                String outputLoc = defaultOutput.removeFirstSegments(1).toOSString();
+                if(!outputLoc.trim().isEmpty()) // Poor man's isBlank()
+                {
+                    outputLocations.add(outputLoc);
+                }
+            }
         }
         catch(JavaModelException e)
         {
