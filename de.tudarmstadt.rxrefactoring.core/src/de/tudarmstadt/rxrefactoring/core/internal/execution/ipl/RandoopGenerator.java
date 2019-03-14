@@ -37,6 +37,7 @@ import de.tudarmstadt.rxrefactoring.core.utils.Log;
  */
 public class RandoopGenerator
 {
+    // Constants
     private static final String OMITMETHODS_FILE = "omitmethods.txt";
     private static final String CLASSLIST_FILE = "classlist.txt";
 
@@ -66,28 +67,49 @@ public class RandoopGenerator
     private static final String ELSE = "else";
     private static final String ECHO_ALL_OK = "    echo -e \"${C_BLUE}==> ${C_GREEN}All tests ran OK. This refactoring is probably safe.${C_NC}\"";
 
+    /**
+     * The randoop-gen temp directory. This is where the compiled binaries will
+     * be copied and where tests will be generated and run.
+     */
     private static File tempDir;
 
+    /**
+     * Sets {@link #tempDir} to a directory in /tmp, based on the current time
+     * and date. This should only be called once - calling it multiple times
+     * will fail if the calls occur in the same second.
+     * @return The new value of {@link #tempDir}.
+     */
     public static File mkTempDir()
     {
         String time = Calendar.getInstance().getTime().toString().replace(' ', '_').replace(':', '_');
-        File randoopTemp = new File("/tmp/randoop-gen-" + time);
-        tempDir = randoopTemp;
-        randoopTemp.mkdirs();
-        new File(randoopTemp, "libs").mkdirs();
-        new File(randoopTemp, "pre").mkdirs();
-        new File(randoopTemp, "post").mkdirs();
-        return randoopTemp;
+        tempDir = new File("/tmp/randoop-gen-" + time);
+        tempDir.mkdirs();
+        new File(tempDir, "libs").mkdirs();
+        new File(tempDir, "pre").mkdirs();
+        new File(tempDir, "post").mkdirs();
+        return tempDir;
     }
 
+    /**
+     * Returns the randoop-gen temp directory. This is where the compiled binaries will
+     * be copied and where tests will be generated and run.
+     * @return The randoop-gen temp directory.
+     */
     public static File getTempDir()
     {
         return tempDir;
     }
 
+    /**
+     * Builds the specified project and then copies binaries generated from it
+     * to the specified destination. This method takes build systems with
+     * multiple output locations (e.g. Maven) and other complexities into
+     * account.
+     * @param project The project to build and retrieve binaries from.
+     * @param dest The destination to copy the binaries to.
+     */
     public static void copyBinaries(IProject project, File dest)
     {
-        // TODO Copy libs over (randoop, junit, hamcrest, reactivex, reactive-streams)
         try
         {
             // Rebuild the project to make sure the binaries we'll copy are
@@ -155,6 +177,12 @@ public class RandoopGenerator
         }
     }
 
+    /**
+     * Generates the output files ({@code randoop.sh}, {@code classlist.txt} and
+     * {@code omitmethods.txt}) inside the temp directory.
+     * @param classesToTest The classes containing the methods that should be tested.
+     * @param methodsToOmit The methods that should NOT be tested.
+     */
     public static void createOutput(Set<String> classesToTest, Set<String> methodsToOmit)
     {
         // Create a shell file for running randoop
@@ -284,6 +312,15 @@ public class RandoopGenerator
         Log.info(RandoopGenerator.class, "Randoop configuration written to " + tempDir.getAbsolutePath());
     }
 
+    /**
+     * Converst the specified set of signatures into a set of regex strings
+     * suitable for passing to randoop's omitmethods parameter. This is
+     * accomplished by first truncating the signature to the first parantheses
+     * and then escaping the dots and parantheses inside the signature (since
+     * those have special meaning as regex characters).
+     * @param signatures The set of signatures to process.
+     * @return A set of regexes suitable for passing to randoop.
+     */
     public static Set<String> convertToRegexFormat(Set<String> signatures)
     {
         Set<String> ret = new HashSet<>();
@@ -297,11 +334,21 @@ public class RandoopGenerator
         return ret;
     }
 
+    /**
+     * A small FileVisitor used to recusively copy directories over.
+     * @author Nikolas Hanstein, Maximilian Kirschner
+     */
     private static class CopyVisitor extends SimpleFileVisitor<Path>
     {
+        /** The path to which the files should be copied. */
         private final Path target;
+        /** The path from which the files should be copied. */
         private Path source;
 
+        /**
+         * Constructs a new CopyVisitor with the specified target.
+         * @param target The path to which the files should be copied.
+         */
         public CopyVisitor(Path target)
         {
             this.target = target;
