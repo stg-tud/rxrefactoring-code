@@ -91,8 +91,8 @@ public class RandoopGenerator
     }
 
     /**
-     * Returns the randoop-gen temp directory. This is where the compiled binaries will
-     * be copied and where tests will be generated and run.
+     * Returns the randoop-gen temp directory. This is where the compiled
+     * binaries will be copied and where tests will be generated and run.
      * @return The randoop-gen temp directory.
      */
     public static File getTempDir()
@@ -180,7 +180,8 @@ public class RandoopGenerator
     /**
      * Generates the output files ({@code randoop.sh}, {@code classlist.txt} and
      * {@code omitmethods.txt}) inside the temp directory.
-     * @param classesToTest The classes containing the methods that should be tested.
+     * @param classesToTest The classes containing the methods that should be
+     *        tested.
      * @param methodsToOmit The methods that should NOT be tested.
      */
     public static void createOutput(Set<String> classesToTest, Set<String> methodsToOmit)

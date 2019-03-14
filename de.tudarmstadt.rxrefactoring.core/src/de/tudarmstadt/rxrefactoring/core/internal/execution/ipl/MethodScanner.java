@@ -227,7 +227,8 @@ public class MethodScanner
                         TypeDeclaration type = (TypeDeclaration)objType;
                         for(MethodDeclaration method : type.getMethods())
                         {
-                            // Find all nodes that have changes, and build signatures for them
+                            // Find all nodes that have changes, and build
+                            // signatures for them
                             List<ASTNode> nodes = new JavaVisitor(node -> nodeHasChanges(node, unit)).visitMethodDeclaration(method);
                             if(!nodes.isEmpty())
                             {
@@ -273,8 +274,8 @@ public class MethodScanner
     }
 
     /**
-     * Builds a class signature, consisting only of class name and package,
-     * for the specified type. This method acts as if
+     * Builds a class signature, consisting only of class name and package, for
+     * the specified type. This method acts as if
      * {@code extractClassName(buildSignatureForDeclaration(...))} had been
      * called on one of the specified type's methods.
      * @param type The type to build a signature for.
