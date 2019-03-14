@@ -253,6 +253,9 @@ public final class RefactorExecution implements Runnable {
                     // methods.
                     Set<String> methodsToTest = new HashSet<>(impacted);
                     methodsToTest.addAll(calling);
+                    // IPL: Throw out any inaccessible (i.e. non-public)
+                    // methods, since those can't be tested
+                    MethodScanner.removeInaccessibleMethods(methodsToTest, units);
                     Log.info(RefactorExecution.class, "Found total of " + methodsToTest.size() + " method(s) suitable for testing.");
                     // IPL: For debugging only
                     //Log.info(RefactorExecution.class, "Methods to test: " + methodsToTest);

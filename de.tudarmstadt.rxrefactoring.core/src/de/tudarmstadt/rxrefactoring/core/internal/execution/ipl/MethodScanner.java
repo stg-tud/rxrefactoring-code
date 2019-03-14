@@ -20,6 +20,7 @@ import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.MethodReference;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
 import org.eclipse.jdt.core.dom.Type;
@@ -149,6 +150,40 @@ public class MethodScanner
             }
         }
         return ret;
+    }
+
+    /**
+     * Removes all signatures of methods that are inaccessible (i.e. non-public)
+     * from the specified set of method signatures.
+     * @param methodSet The set of method signatures to remove from.
+     * @param units The affected project's units.
+     */
+    public static void removeInaccessibleMethods(Set<String> methodSet, ProjectUnits units)
+    {
+        for(IRewriteCompilationUnit unit : units)
+        {
+            CompilationUnit cu = (CompilationUnit)unit.getRoot();
+            for(Object objType : cu.types())
+            {
+                // We're only interested in type declarations:
+                // AnnotationTypeDeclaration can't declare regular methods
+                // and EnumDeclarations are not refactored (yet)
+                // TODO If EnumDeclarations ever become important, this will
+                // have to be extended
+                if(objType instanceof TypeDeclaration)
+                {
+                    TypeDeclaration type = (TypeDeclaration)objType;
+                    for(MethodDeclaration method : type.getMethods())
+                    {
+                        int mod = method.getModifiers();
+                        if(!Modifier.isPublic(mod))
+                        {
+                            methodSet.remove(buildSignatureForDeclaration(method));
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
