@@ -14,6 +14,7 @@
 			\item Windows is not supported, due to some hard-coded file paths
 			\item The tmp directory is used to save the project binaries, therefore a directory (/tmp/randoop-gen-<DATE>) is created
 			\item Refactor and generate tests only for one project at a time, all other projects have to be closed
+			\item Classes with global state (i.e. state that is preserved across methods) may cause problems with randoop's test generation.
 		\end{itemize}
 		Steps to perform manually:
 		\begin{enumerate}
