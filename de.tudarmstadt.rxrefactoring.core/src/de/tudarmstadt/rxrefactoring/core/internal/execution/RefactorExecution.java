@@ -5,8 +5,11 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -24,6 +27,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -33,6 +37,7 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
@@ -45,14 +50,15 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.osgi.framework.Bundle;
 
-import org.eclipse.core.runtime.Status;
-
 import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectStatus;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.MethodScanner;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.RandoopGenerator;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.collect.Pair;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 /**
@@ -68,8 +74,13 @@ public final class RefactorExecution implements Runnable {
 	 * given by the extension .
 	 */
 	private final IRefactorExtension extension;
-
 	
+    /**
+     * IPL: Mapping of projects to found methods that contains all impacted and
+     * changed methods for each project.
+     */
+	private final Map<IProject, Pair<Set<String>, Set<String>>> foundMethods = new HashMap<>();
+
 	public RefactorExecution(IRefactorExtension env) {
 		Objects.requireNonNull(env);
 		this.extension = env;
@@ -150,7 +161,7 @@ public final class RefactorExecution implements Runnable {
 
 							// Performs the refactoring by applying the workers of the extension.
 							Log.info(RefactorExecution.class, "Refactor units...");
-							doRefactorProject(units, changes, projectSummary);
+							doRefactorProject(units, changes, projectSummary, project);
 
 							
 							Log.info(RefactorExecution.class, "<<< Refactor project");
@@ -197,13 +208,76 @@ public final class RefactorExecution implements Runnable {
 		RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
 		
 		Shell shell = Display.getCurrent().getActiveShell();
-		
+
+		int result = IDialogConstants.CANCEL_ID;
 		try {
-			op.run(shell, "This is an dialog title!");
+			result = op.run(shell, "This is an dialog title!");
 		} catch (InterruptedException e) {
 			//operation was cancelled 
 			Log.info(RefactorExecution.class, "Operation was cancelled.");
-		}		
+		}
+
+		if(result == IDialogConstants.OK_ID) {
+		    // IPL: OK has been pressed, time to continue post-refactoring
+		    IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
+            IProject[] projects = workspace.getProjects();
+            for(IProject project : projects) {
+                if(project.isOpen()) {
+                    Set<String> impacted = foundMethods.get(project).getFirst();
+                    Set<String> calling = foundMethods.get(project).getSecond();
+
+                    // IPL: Copy over post-refactoring binaries
+                    File postDir = new File(RandoopGenerator.getTempDir(), "post");
+                    RandoopGenerator.copyBinaries(project, postDir);
+
+                    // IPL: Parse the refactored compilation units to obtain the ASTs
+                    ProjectUnits units;
+                    try {
+                        units = parseCompilationUnits(JavaCore.create(project));
+                    }
+                    catch(JavaModelException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    // IPL: Throw out any impacted methods that changed signatures,
+                    // because those can't be tested
+                    try {
+                        impacted = MethodScanner.retainUnchangedMethods(impacted, units);
+                    }
+                    catch(Throwable e) {
+                        Log.error(RefactorExecution.class, "Failed to determine unchanged methods.", e);
+                    }
+
+                    // IPL: The methods to test are the union of the unchanged
+                    // impacted methods and the methods that call any impacted
+                    // methods.
+                    Set<String> methodsToTest = new HashSet<>(impacted);
+                    methodsToTest.addAll(calling);
+                    // IPL: Throw out any inaccessible (i.e. non-public)
+                    // methods, since those can't be tested
+                    MethodScanner.removeInaccessibleMethods(methodsToTest, units);
+                    Log.info(RefactorExecution.class, "Found total of " + methodsToTest.size() + " method(s) suitable for testing.");
+                    // IPL: For debugging only
+                    //Log.info(RefactorExecution.class, "Methods to test: " + methodsToTest);
+
+                    // IPL: Compute the set of classes that will be tested
+                    Set<String> classesToTest = MethodScanner.extractClassNames(methodsToTest);
+                    // IPL: For debugging only
+                    //Log.info(RefactorExecution.class, "Classes to test: " + classesToTest);
+
+                    // IPL: Compute the set of methods that should NOT be tested
+                    Set<String> methodsToOmit = MethodScanner.findAllMethods(units, classesToTest);
+                    methodsToOmit.removeAll(methodsToTest);
+                    methodsToOmit = RandoopGenerator.convertToRegexFormat(methodsToOmit);
+                    // IPL: Disgusting hack, because Randoop LOVES calling
+                    // getClass() and comparing the result to null
+                    methodsToOmit.add("java\\.lang\\.Object\\.getClass\\(");
+
+                    // IPL: Finally, create the output
+                    RandoopGenerator.createOutput(classesToTest, methodsToOmit);
+                }
+            }
+		}
 	}
 	
 		
@@ -321,7 +395,6 @@ public final class RefactorExecution implements Runnable {
 								}
 							});
 						}
-
 					}
 				}
 			}
@@ -340,7 +413,7 @@ public final class RefactorExecution implements Runnable {
 
 	}
 
-	private void doRefactorProject(@NonNull ProjectUnits units, @NonNull CompositeChange changes, @NonNull ProjectSummary projectSummary)
+	private void doRefactorProject(@NonNull ProjectUnits units, @NonNull CompositeChange changes, @NonNull ProjectSummary projectSummary, IProject project)
 			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException, InterruptedException {
 
 		// Produce the worker tree
@@ -350,10 +423,15 @@ public final class RefactorExecution implements Runnable {
 		// The workers add their changes to the bundled compilation units
 		workerTree.run(extension.createExecutorService());
 
+		// IPL: Find the changing and calling methods
+		foundMethods.put(project, MethodScanner.findMethods(units));
+
+		// IPL: Copy the pre-refactoring binaries over
+		File preDir = new File(RandoopGenerator.mkTempDir(), "pre");
+		RandoopGenerator.copyBinaries(project, preDir);
+
 		// The changes of the compilation units are applied
 		Log.info(getClass(), "Write changes...");
 		units.addChangesTo(changes);
-
 	}
-
 }

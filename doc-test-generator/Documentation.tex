@@ -1,0 +1,41 @@
+\documentclass[accentcolor=tud9c, colorback]{tudreport}
+
+\usepackage{hyperref}
+\usepackage{graphicx}
+
+\title{Test-Generator for RxRefactor}
+\subtitle{IMPL Project: Nikolas Hanstein, Maximilian Kirschner}
+
+\begin{document}
+	\maketitle
+	\chapter{Usage Hints}
+		Important:
+		\begin{itemize}
+			\item Windows is not supported, due to some hard-coded file paths
+			\item The tmp directory is used to save the project binaries, therefore a directory (/tmp/randoop-gen-<DATE>) is created
+			\item Refactor and generate tests only for one project at a time, all other projects have to be closed
+			\item Classes with global state (i.e. state that is preserved across methods) may cause problems with randoop's test generation.
+		\end{itemize}
+		Steps to perform manually:
+		\begin{enumerate}
+			\item Use the Refactoring Tool as usual
+			\item Copy all project libaries, JUnit, Hamcrest, ReactiveX, Reactive-Streams and Randoop as jar-files to the a libs directory inside the created "randoop-gen" directory
+			\item Execute the generated bash script in the "randoop-gen" directory
+		\end{enumerate}
+		
+	\chapter{Flow Chart}
+		\includegraphics[height=\textheight-100pt]{Ablaufdiagramm.jpg}
+	\chapter{Code location}
+		Our code is located in the following three packages:
+		\begin{itemize}
+			\item \textit{\textbf{de.tudarmstadt.rxrefactoring.core.internal.execution.ipl}}\\
+				Main Part of our code: The JavaVisitor traverses Eclipse ASTs. The MethodScanner searches for impacted and calling methods. The Randoop Generator builds the project, copies the binaries and generates the bash script
+			\item \textit{\textbf{de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.collect}}\\
+				Collections we needed, basically a Pair Class.
+			\item \textit{\textbf{de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.filter}}\\
+				FilteredArrayList which is used in the JavaVisitor to collect the nodes, that match a given Filter.
+		\end{itemize}
+		Furthermore we added some code to \textit{de.tudarmstadt.rxrefactoring.core.internal.execution.RefactorExecution}, to obtain the ASTs, before and after refactoring. Everything that has to be executed before refactoring is added to \textit{doRefactorProject(...)}. Everything that has to be executed after the OK-Button has been clicked is added to \textit{run()}. 
+		
+		All changes in \textit{RefactorExecution} are marked with an inline comment beginning with "IPL".
+\end{document}

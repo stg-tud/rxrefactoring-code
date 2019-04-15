@@ -40,14 +40,14 @@ public class MethodInvocationVisitor extends ASTVisitor {
 		return false;
 	}
 
-	public Optional<Boolean> isExternalMethod() {
+	public boolean isExternalMethod() {
 		if (methodInvocation == null)
-			return Optional.empty();
+			return false;
 
-		return Optional.of(isExternalMethod);
+		return isExternalMethod;
 	}
 	
-	public Boolean shouldRefactor() {
+	public boolean shouldRefactor() {
 		if (methodInvocation == null)
 			return false;
 
