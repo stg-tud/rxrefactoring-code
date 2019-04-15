@@ -106,6 +106,7 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 
 	@Override
 	public @NonNull ASTNode getRoot() {
+
 		return rootNode;
 	}
 
