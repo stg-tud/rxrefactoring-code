@@ -5,6 +5,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.swt.widgets.Shell;
 
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RefactorExecution;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.RefactorExecutionWithTesting;
 
 /**
  * Starts the refactoring when the button is clicked by invoking a
@@ -19,7 +20,7 @@ public abstract class RefactoringE4Handler {
 	 */
 	@Execute
 	public final void execute(Shell shell) {
-		RefactorExecution app = new RefactorExecution(createExtension());
+		RefactorExecution app = new RefactorExecutionWithTesting(createExtension());
 		app.run();
 	}
 
