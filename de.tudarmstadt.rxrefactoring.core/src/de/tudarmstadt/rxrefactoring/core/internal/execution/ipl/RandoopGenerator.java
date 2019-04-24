@@ -14,6 +14,9 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
+import java.sql.Date;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Set;
@@ -66,12 +69,14 @@ public class RandoopGenerator
     private static final String ECHO_PRINT_ERROR = "    echo -e \"${C_BLUE}==> ${C_RED}Error: One or more tests failed! This refactoring may not be safe.${C_NC}\"";
     private static final String ELSE = "else";
     private static final String ECHO_ALL_OK = "    echo -e \"${C_BLUE}==> ${C_GREEN}All tests ran OK. This refactoring is probably safe.${C_NC}\"";
+   
+   
 
     /**
      * The randoop-gen temp directory. This is where the compiled binaries will
      * be copied and where tests will be generated and run.
      */
-    private static File tempDir;
+    private File tempDir;
 
     /**
      * Sets {@link #tempDir} to a directory in /tmp, based on the current time
@@ -79,9 +84,10 @@ public class RandoopGenerator
      * will fail if the calls occur in the same second.
      * @return The new value of {@link #tempDir}.
      */
-    public static File mkTempDir()
-    {
-        String time = Calendar.getInstance().getTime().toString().replace(' ', '_').replace(':', '_');
+    public File mkTempDir() {
+    	
+    	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS");
+    	String time = sdf.format(Date.from(Instant.now()));
         tempDir = new File("/tmp/randoop-gen-" + time);
         tempDir.mkdirs();
         new File(tempDir, "libs").mkdirs();
@@ -95,7 +101,7 @@ public class RandoopGenerator
      * binaries will be copied and where tests will be generated and run.
      * @return The randoop-gen temp directory.
      */
-    public static File getTempDir()
+    public File getTempDir()
     {
         return tempDir;
     }
@@ -184,8 +190,12 @@ public class RandoopGenerator
      *        tested.
      * @param methodsToOmit The methods that should NOT be tested.
      */
-    public static void createOutput(Set<String> classesToTest, Set<String> methodsToOmit)
+    public void createOutput(Set<String> classesToTest, Set<String> methodsToOmit)
     {
+    	
+       
+    	
+    	
         // Create a shell file for running randoop
         File randoopSh = new File(tempDir, "randoop.sh");
         try
@@ -193,10 +203,12 @@ public class RandoopGenerator
             randoopSh.createNewFile();
             try(OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(randoopSh), StandardCharsets.UTF_8.newEncoder()); BufferedWriter out = new BufferedWriter(writer))
             {
+            	
+            	//Shebang
                 out.write(SHEBANG);
                 out.newLine();
                 out.newLine();
-
+                
                 for(String color : COLORS)
                 {
                     out.write(color);
@@ -219,6 +231,8 @@ public class RandoopGenerator
                 out.newLine();
 
                 out.write(ECHO_JAVAC);
+                out.newLine();
+                out.write("mkdir tests/bin");
                 out.newLine();
                 out.write(COMMAND_JAVAC);
                 out.newLine();

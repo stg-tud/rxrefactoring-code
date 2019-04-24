@@ -80,12 +80,22 @@ public final class RefactorExecution implements Runnable {
      * changed methods for each project.
      */
 	private final Map<IProject, Pair<Set<String>, Set<String>>> foundMethods = new HashMap<>();
+	
+	private final Map<IProject, RandoopGenerator> generators = new HashMap<>();
 
 	public RefactorExecution(IRefactorExtension env) {
 		Objects.requireNonNull(env);
 		this.extension = env;
 	}
 
+	private static boolean considerProject(IProject project) {
+    	try {
+    		return project.isOpen() && project.hasNature(JavaCore.NATURE_ID);            		
+    	} catch (CoreException e) {
+    		return false;
+    	}
+	}
+	
 	
 	private Refactoring createRefactoring() {
 		return new Refactoring() {
@@ -139,7 +149,7 @@ public final class RefactorExecution implements Runnable {
 						Objects.requireNonNull(project);
 						
 						// Check whether the project is open and if it is a Java project
-						if (project.isOpen() && project.hasNature(JavaCore.NATURE_ID)) {
+						if (considerProject(project)) {
 							// Reports the project as completed. In case of an error this status can get changed during execution.
 							projectSummary.reportStatus(ProjectStatus.COMPLETED);
 							
@@ -197,6 +207,8 @@ public final class RefactorExecution implements Runnable {
 		};
 	}
 	
+	
+	
 	public void run() {
 		Refactoring refactoring = createRefactoring();
 		RefactoringWizard wizard = new RefactoringWizard(refactoring, RefactoringWizard.WIZARD_BASED_USER_INTERFACE) {			
@@ -222,12 +234,21 @@ public final class RefactorExecution implements Runnable {
 		    IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
             IProject[] projects = workspace.getProjects();
             for(IProject project : projects) {
-                if(project.isOpen()) {
+            	
+            	Objects.requireNonNull(project);     
+            	            	
+                if(considerProject(project)) {
+                	                	
+                	Objects.requireNonNull(foundMethods);
+                	Objects.requireNonNull(foundMethods.get(project));
+                	
                     Set<String> impacted = foundMethods.get(project).getFirst();
                     Set<String> calling = foundMethods.get(project).getSecond();
+                    
+                    RandoopGenerator rgen = generators.get(project);
 
                     // IPL: Copy over post-refactoring binaries
-                    File postDir = new File(RandoopGenerator.getTempDir(), "post");
+                    File postDir = new File(rgen.getTempDir(), "post");
                     RandoopGenerator.copyBinaries(project, postDir);
 
                     // IPL: Parse the refactored compilation units to obtain the ASTs
@@ -274,7 +295,7 @@ public final class RefactorExecution implements Runnable {
                     methodsToOmit.add("java\\.lang\\.Object\\.getClass\\(");
 
                     // IPL: Finally, create the output
-                    RandoopGenerator.createOutput(classesToTest, methodsToOmit);
+                    rgen.createOutput(classesToTest, methodsToOmit);
                 }
             }
 		}
@@ -423,11 +444,13 @@ public final class RefactorExecution implements Runnable {
 		// The workers add their changes to the bundled compilation units
 		workerTree.run(extension.createExecutorService());
 
+			
 		// IPL: Find the changing and calling methods
 		foundMethods.put(project, MethodScanner.findMethods(units));
-
 		// IPL: Copy the pre-refactoring binaries over
-		File preDir = new File(RandoopGenerator.mkTempDir(), "pre");
+		RandoopGenerator rgen = new RandoopGenerator();
+		generators.put(project, rgen);	
+		File preDir = new File(rgen.mkTempDir(), "pre");
 		RandoopGenerator.copyBinaries(project, preDir);
 
 		// The changes of the compilation units are applied
