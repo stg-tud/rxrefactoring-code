@@ -44,7 +44,7 @@ public class RefactorExecutionWithTesting extends RefactorExecution {
 		super.doRefactorProject(units, changes, projectSummary, project);
 		
 		Log.info(RefactorExecutionWithTesting.class, "Scan methods for testing...");
-		
+	
 		// IPL: Find the changing and calling methods
 		foundMethods.put(project, MethodScanner.findMethods(units));
 		// IPL: Copy the pre-refactoring binaries over
@@ -92,7 +92,7 @@ public class RefactorExecutionWithTesting extends RefactorExecution {
                     impacted = MethodScanner.retainUnchangedMethods(impacted, units);
                 }
                 catch(Throwable e) {
-                    Log.error(RefactorExecution.class, "Failed to determine unchanged methods.", e);
+                    Log.error(RefactorExecutionWithTesting.class, "Failed to determine unchanged methods.", e);
                 }
 
                 // IPL: The methods to test are the union of the unchanged
@@ -103,7 +103,8 @@ public class RefactorExecutionWithTesting extends RefactorExecution {
                 // IPL: Throw out any inaccessible (i.e. non-public)
                 // methods, since those can't be tested
                 MethodScanner.removeInaccessibleMethods(methodsToTest, units);
-                Log.info(RefactorExecution.class, "Found total of " + methodsToTest.size() + " method(s) suitable for testing.");
+                Log.info(RefactorExecutionWithTesting.class, "Found total of " + methodsToTest.size() + " method(s) suitable for testing.");
+                Log.info(RefactorExecutionWithTesting.class, methodsToTest);
                 // IPL: For debugging only
                 //Log.info(RefactorExecution.class, "Methods to test: " + methodsToTest);
 

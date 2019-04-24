@@ -23,6 +23,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
@@ -81,7 +82,7 @@ public class RandoopGenerator {
 	}
 	
 	private File getLibDir() {
-		return new File(tempDir, "lib");
+		return new File(tempDir, "libs");
 	}
 	
 
@@ -123,6 +124,18 @@ public class RandoopGenerator {
 		copyBinaries(getPostDir());
 	}
 	
+	
+	private void copyLibraries(File destination) {
+		String projectPath = project.getLocation().toOSString();
+		IJavaProject jProj = JavaCore.create(project);
+		
+//		IClasspathEntry[] cp = jProj.getRawClasspath();
+		
+		
+//		org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER
+		
+	}
+	
 	/**
 	 * Builds the specified project and then copies binaries generated from it to
 	 * the specified destination. This method takes build systems with multiple
@@ -146,6 +159,15 @@ public class RandoopGenerator {
 		try {
 			IClasspathEntry[] cp = jProj.getRawClasspath();
 			for (IClasspathEntry entry : cp) {
+				
+				
+				if (entry instanceof IClasspathContainer) {
+					IClasspathContainer container = (IClasspathContainer) entry;
+					IClasspathEntry[] entries = container.getClasspathEntries();
+					System.out.println("oof");
+				}
+				
+				
 				if (entry.getContentKind() == IPackageFragmentRoot.K_SOURCE) {
 					IPath outputPath = entry.getOutputLocation();
 					if (outputPath != null) {
