@@ -100,9 +100,7 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 			@Nullable SubclassInstantiationCollector input, @NonNull WorkerSummary summary) throws Exception {
 
 		SetMultimap<Expression, Use> exprUses = HashMultimap.create();
-		input.analysis.values().forEach(useDef -> {
-			exprUses.putAll(useDef.asMap());
-		});
+		input.analysis.values().forEach(useDef -> exprUses.putAll(useDef.asMap()));
 		
 		classInfo = input.collector.classInfo;
 		
