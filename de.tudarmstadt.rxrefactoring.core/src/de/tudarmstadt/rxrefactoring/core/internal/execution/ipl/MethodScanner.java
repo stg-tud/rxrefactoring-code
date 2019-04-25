@@ -6,8 +6,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
@@ -29,6 +31,11 @@ import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 import com.google.common.collect.ImmutableSet.Builder;
 
@@ -36,6 +43,7 @@ import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.collect.ImmutablePair;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.collect.Pair;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 
 /**
  * The method scanner finds methods that are directly impacted by the
@@ -50,8 +58,13 @@ public class MethodScanner {
 	public static final String MISSING_SIGNATURE = "Hier könnte Ihre Werbung stehen!";
 	
 	
-	private Set<String> impactedMethods = Sets.newHashSet();
-	private Set<String> callingMethods = Sets.newHashSet();
+	private Map<MethodDeclaration, IRewriteCompilationUnit> impactedMethods = Maps.newHashMap();
+	private Set<MethodDeclaration> callingMethods = Sets.newHashSet();
+	
+	private Set<AbstractTypeDeclaration> impactedTypes = Sets.newHashSet();
+	
+	private List<ProjectUnits> scannedUnits = Lists.newLinkedList(); 
+	private List<ProjectUnits> refactoredUnits = Lists.newLinkedList();
 	
 	
 	/**
@@ -64,50 +77,87 @@ public class MethodScanner {
 	 * @return A pair of impacted methods and calling methods.
 	 */
 	public void scan(ProjectUnits units) {
+		Objects.requireNonNull(units);
+		
+		//Add the scanned unit
+		scannedUnits.add(units);
 			
-		ImmutableSet<String> impacted = findImpactedMethods(units);
+		//Add impacted classes and methods
+		ImmutableSet<MethodDeclaration> impacted = findImpactedMethods(units);
 		impactedMethods.addAll(impacted);
 		
-		ImmutableSet<String> calling = findCallingMethods(units, impacted);
+		impacted.stream()
+			.flatMap(md -> ASTNodes.findParent(md, AbstractTypeDeclaration.class).stream())
+			.forEach(td -> impactedTypes.add(td));
+		
+		//Add methods that are calling impacted methods
+		ImmutableSet<MethodDeclaration> calling = findCallingMethods(units, impacted);
 		callingMethods.addAll(calling);
+		
 		// For debugging only
 		// Log.info(MethodScanner.class, "Impacted Methods: " + impacted);
-		// Log.info(MethodScanner.class, "Calling Methods: " + calling);
-		
+		// Log.info(MethodScanner.class, "Calling Methods: " + calling);		
+	}
+	
+	public void addRefactoredUnit(ProjectUnits unit) {
+		refactoredUnits.add(unit);
 	}
 
 	/**
 	 * Retains only methods whose signatures have not changed after the refactoring.
 	 * 
-	 * @param impactedMethods The set of impacted methods to investigate.
-	 * @param units           The affected project's units.
+	 * @param units           The affected project's units after the refactoring.
 	 * @return A subset of {@code impactedMethods}, containing only those impacted
 	 *         methods whose signature did not change.
 	 */
-	public static Set<String> retainUnchangedMethods(Set<String> impactedMethods, ProjectUnits units) {
-		// Optimization: Look only at classes that contain impacted methods
-		// @formatter:off
-		Set<String> impactedClasses = impactedMethods.stream().map(MethodScanner::extractClassName)
-				.collect(Collectors.toSet());
-
-		Set<String> ret = new HashSet<>();
-		JavaVisitor visitor = new JavaVisitor(node -> node instanceof MethodDeclaration
-				&& impactedMethods.contains(buildSignatureForDeclaration((MethodDeclaration) node)));
-		// @formatter:on
-		for (IRewriteCompilationUnit unit : units) {
-			CompilationUnit cu = (CompilationUnit) unit.getRoot();
-			for (Object objType : cu.types()) {
-				AbstractTypeDeclaration type = (AbstractTypeDeclaration) objType;
-				if (impactedClasses.contains(type.resolveBinding().getBinaryName())) {
-					// @formatter:off
-					ret.addAll(visitor.visitCompilationUnit(cu).stream().map(node -> (MethodDeclaration) node)
-							.map(MethodScanner::buildSignatureForDeclaration).collect(Collectors.toSet()));
-					// @formatter:on
-				}
-			}
-		}
-		return ret;
+//	public void retainUnchangedMethods(ProjectUnits units) {
+//		// Optimization: Look only at classes that contain impacted methods
+//		
+//		Builder<MethodDeclaration> builder = ImmutableSet.builder();
+//		
+//		JavaVisitor visitor = new JavaVisitor(node -> node instanceof MethodDeclaration && impactedMethods.contains(node));
+//		
+//		for (IRewriteCompilationUnit unit : units) {
+//			CompilationUnit cu = (CompilationUnit) unit.getRoot();
+//			
+//			for (Object objType : cu.types()) {
+//				AbstractTypeDeclaration type = (AbstractTypeDeclaration) objType;
+//				
+//				if (impactedTypes.stream().anyMatch().contains(type)) {
+//					// @formatter:off
+//					builder.addAll(
+//							(List) visitor.visitCompilationUnit(cu)
+////							visitor.visitCompilationUnit(cu).stream()
+////							.map(node -> (MethodDeclaration) node)
+////							.map(MethodScanner::buildSignatureForDeclaration)
+////							.collect(Collectors.toSet())
+//					);
+//					// @formatter:on
+//				}
+//			}
+//		}
+//		
+//		ImmutableSet<MethodDeclaration> retainedMethods = builder.build();
+//		
+//		impactedMethods.removeIf(s -> retainedMethods.contains(s));		
+//	}
+	
+	public ImmutableSet<MethodDeclaration> getImpactedMethods() {
+		Builder<MethodDeclaration> builder = ImmutableSet.builder();
+		
+		Set<MethodDeclaration> publicImpacted = impactedMethods.stream()
+			.filter(mthd -> Modifier.isPublic(mthd.getModifiers()))
+			.filter(mthd -> methodHasChangedSignature(method, rewriter))
+			.collect(Collectors.toSet());
+		
+		
+		
+		
+		
+		
+		return builder.build();		
 	}
+	
 
 	/**
 	 * Extracts the class names, including the packages, from the specified
@@ -142,6 +192,7 @@ public class MethodScanner {
 				// have to be extended
 				if (objType instanceof TypeDeclaration) {
 					TypeDeclaration type = (TypeDeclaration) objType;
+					
 					if (classSignatures.contains(buildSignatureForClass(type))) {
 						for (MethodDeclaration decl : type.getMethods()) {
 							ret.add(buildSignatureForDeclaration(decl));
@@ -203,11 +254,12 @@ public class MethodScanner {
 	 * @param units The project compilation units to work on.
 	 * @return A set of all impacted methods.
 	 */
-	private static ImmutableSet<String> findImpactedMethods(ProjectUnits units) {
-		Builder<String> builder = ImmutableSet.builder();
+	private static ImmutableSet<MethodDeclaration> findImpactedMethods(ProjectUnits units) {				
+		Builder<MethodDeclaration> builder = ImmutableSet.builder();
 		
 		for (IRewriteCompilationUnit unit : units) {
 			if (unit.hasChanges()) {
+								
 				CompilationUnit cu = (CompilationUnit) unit.getRoot();
 				for (Object objType : cu.types()) {
 					// We're only interested in type declarations:
@@ -217,14 +269,9 @@ public class MethodScanner {
 					// have to be extended
 					if (objType instanceof TypeDeclaration) {
 						TypeDeclaration type = (TypeDeclaration) objType;
-						for (MethodDeclaration method : type.getMethods()) {
-							// Find all nodes that have changes, and build
-							// signatures for them
-							List<ASTNode> nodes = new JavaVisitor(node -> nodeHasChanges(node, unit))
-									.visitMethodDeclaration(method);
-							if (!nodes.isEmpty()) {
-								builder.add(buildSignatureForDeclaration(method));
-							}
+						for (MethodDeclaration method : type.getMethods()) {							
+							if (ASTNodes.containsNode(method, node -> nodeHasChanges(node, unit.writer()))) 
+								builder.add(method);
 						}
 					}
 				}
@@ -242,19 +289,20 @@ public class MethodScanner {
 	 *                        refactoring.
 	 * @return A set of all calling methods.
 	 */
-	private static ImmutableSet<String> findCallingMethods(ProjectUnits units, ImmutableSet<String> impacted) {
-		Builder<String> builder = ImmutableSet.builder();
+	private static ImmutableSet<MethodDeclaration> findCallingMethods(ProjectUnits units, ImmutableSet<MethodDeclaration> impacted) {
+		Builder<MethodDeclaration> builder = ImmutableSet.builder();
 		
-		JavaVisitor visitor = new JavaVisitor(node -> impacted.contains(buildSignatureForCalled(node)));
 		for (IRewriteCompilationUnit unit : units) {
-			CompilationUnit cu = (CompilationUnit) unit.getRoot();
-			List<ASTNode> nodes = visitor.visitCompilationUnit(cu);
+			CompilationUnit cu = (CompilationUnit) unit.getRoot();		
+			
+			Multiset<ASTNode> nodes = ASTNodes.findNodes(cu, node -> impacted.contains(node));
 			// @formatter:off
 			builder.addAll(
-					nodes.stream()
-					.map(MethodScanner::buildSignatureForCallee)
-					.filter(sig -> sig == null || impacted.contains(sig))
-					.collect(Collectors.toList())
+					(List) nodes
+//					nodes.stream()
+//					.map(MethodScanner::buildSignatureForCallee)
+//					.filter(sig -> sig == null || impacted.contains(sig))
+//					.collect(Collectors.toList())
 			);
 			// @formatter:on
 		}
@@ -401,6 +449,18 @@ public class MethodScanner {
 	private static String buildSignature(String className, String methodName, String params, String returnName) {
 		return className + "." + methodName + "(" + params + ") -> " + returnName;
 	}
+	
+	private static boolean methodHasChangedSignature(MethodDeclaration method, ASTRewrite rewriter) {
+		
+		java.util.function.Function<ASTNode, Boolean> hasChanges = node -> nodeHasChanges(node, rewriter);
+		
+		boolean hasSignatureChanged = 
+			ASTNodes.containsNode(method.getName(), hasChanges) 
+			|| ASTNodes.containsNode(method.getReturnType2(), hasChanges)
+			|| method.parameters().stream().anyMatch(par -> ASTNodes.containsNode((ASTNode) par, hasChanges));
+		
+		return hasSignatureChanged;
+	}
 
 	/**
 	 * Determines whether or not the specified AST node has pending changes
@@ -416,8 +476,8 @@ public class MethodScanner {
 	 * @return {@code true} if the specified node has pending changes.
 	 */
 	@SuppressWarnings("unchecked")
-	private static boolean nodeHasChanges(ASTNode node, IRewriteCompilationUnit root) {
-		ASTRewrite rewriter = root.writer();
+	private static boolean nodeHasChanges(ASTNode node, ASTRewrite rewriter) {
+
 		StructuralPropertyDescriptor spd = node.getLocationInParent();
 		if (spd.isChildListProperty()) {
 			ListRewrite lw = rewriter.getListRewrite(node.getParent(),
@@ -435,7 +495,7 @@ public class MethodScanner {
 				}
 			}
 		} else {
-			if (rewriter.get(node.getParent(), node.getLocationInParent()) != node) {
+			if (rewriter.get(node.getParent(), spd) != node) {
 				return true;
 			}
 		}

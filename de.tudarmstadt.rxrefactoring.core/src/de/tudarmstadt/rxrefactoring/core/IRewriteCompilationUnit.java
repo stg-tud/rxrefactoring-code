@@ -279,7 +279,7 @@ public interface IRewriteCompilationUnit extends ICompilationUnit {
 	 * @see IRewriteCompilationUnit#getRewrittenNode(ASTNode)
 	 */
 	@Beta
-	default public ASTNode getRewrittenNode(ASTNode node, int index) {
+	default public ASTNode getRewrittenNode(ASTNode node, int index) {				
 		Objects.requireNonNull(node, "node can not be null.");
 
 		StructuralPropertyDescriptor descriptor = Objects.requireNonNull(node.getLocationInParent());
