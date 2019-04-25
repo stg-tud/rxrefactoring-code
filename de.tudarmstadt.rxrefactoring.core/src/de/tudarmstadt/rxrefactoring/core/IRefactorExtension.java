@@ -31,7 +31,7 @@ public interface IRefactorExtension {
 	public @NonNull String getDescription();
 
 	/**
-	 * Includes all workers that should be used for this refactoring in the given
+	 * Includes all workers that are used for this refactoring in the given
 	 * worker tree. The worker tree models the dependency between the workers, i.e.
 	 * a worker can depend on the result of another worker.
 	 * 

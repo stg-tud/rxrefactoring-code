@@ -25,12 +25,11 @@ public abstract class RefactoringE4Handler {
 	}
 
 	/**
-	 * Creates a new refactoring that should be used to run the refactoring
+	 * Creates a new refactoring that is used to run the refactoring
 	 * execution. <br>
 	 * <br>
-	 * The same class will be used to refactor the whole workspace. However, there
-	 * will be a call to
-	 * {@link IRefactorExtension#addWorkersTo(de.tudarmstadt.rxrefactoring.core.workers.WorkerTree)}
+	 * The same class is used to refactor the whole workspace. However, there
+	 * will be a call to {@link IRefactorExtension#addWorkersTo(de.tudarmstadt.rxrefactoring.core.workers.WorkerTree)}
 	 * for each project in the workspace.
 	 * 
 	 * @return A non-null refactoring.

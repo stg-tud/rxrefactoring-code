@@ -63,9 +63,7 @@ public class RandoopGenerator {
 	private static final String ELSE = "else";
 	private static final String ECHO_ALL_OK = "    echo -e \"${C_BLUE}==> ${C_GREEN}All tests ran OK. This refactoring is probably safe.${C_NC}\"";
 
-	
-	
-	private final IProject project; 
+
 	
 	/**
 	 * The randoop-gen temp directory. This is where the compiled binaries will be
@@ -84,12 +82,8 @@ public class RandoopGenerator {
 	private File getLibDir() {
 		return new File(tempDir, "libs");
 	}
-	
-
-	
-	public RandoopGenerator(IProject project) {
-		this.project = project;
 		
+	public RandoopGenerator() {		
 		/**
 		 * Sets {@link #tempDir} to a directory in /tmp, based on the current time and
 		 * date. This should only be called once - calling it multiple times will fail
@@ -116,16 +110,16 @@ public class RandoopGenerator {
 		return tempDir;
 	}
 
-	public void copyBinariesToPre() {
-		copyBinaries(getPreDir());
+	public void copyProjectBinariesToPre(IProject project) {
+		copyBinaries(project, getPreDir());
 	}
 	
-	public void copyBinariesToPost() {
-		copyBinaries(getPostDir());
+	public void copyProjectBinariesToPost(IProject project) {
+		copyBinaries(project, getPostDir());
 	}
 	
 	
-	private void copyLibraries(File destination) {
+	private void copyLibraries(IProject project, File destination) {
 		String projectPath = project.getLocation().toOSString();
 		IJavaProject jProj = JavaCore.create(project);
 		
@@ -144,7 +138,7 @@ public class RandoopGenerator {
 	 * @param project The project to build and retrieve binaries from.
 	 * @param dest    The destination to copy the binaries to.
 	 */
-	private void copyBinaries(File destination) {
+	private void copyBinaries(IProject project, File destination) {
 		try {
 			// Rebuild the project to make sure the binaries we'll copy are
 			// up-to-date
@@ -161,11 +155,11 @@ public class RandoopGenerator {
 			for (IClasspathEntry entry : cp) {
 				
 				
-				if (entry instanceof IClasspathContainer) {
-					IClasspathContainer container = (IClasspathContainer) entry;
-					IClasspathEntry[] entries = container.getClasspathEntries();
-					System.out.println("oof");
-				}
+//				if (entry instanceof IClasspathContainer) {
+//					IClasspathContainer container = (IClasspathContainer) entry;
+//					IClasspathEntry[] entries = container.getClasspathEntries();
+//					System.out.println("oof");
+//				}
 				
 				
 				if (entry.getContentKind() == IPackageFragmentRoot.K_SOURCE) {

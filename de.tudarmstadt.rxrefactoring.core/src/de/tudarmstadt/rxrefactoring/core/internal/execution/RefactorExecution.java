@@ -5,11 +5,9 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -56,9 +54,6 @@ import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectStatus;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
-import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.MethodScanner;
-import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.RandoopGenerator;
-import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.collect.Pair;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 /**
@@ -106,15 +101,16 @@ public class RefactorExecution implements Runnable {
 
 			@Override
 			public Change createChange(IProgressMonitor monitor) throws CoreException, OperationCanceledException {
-				
+								
 				//Retrieve projects in the workspace
-				IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-				IProject[] projects = workspaceRoot.getProjects();
-				
+				IProject[] projects = getWorkspaceProjects();
 				
 				monitor.beginTask(extension.getDescription(), projects.length);
+							
 				
-
+				preRefactor(projects);
+				
+				
 				// Gathers information about the refactoring and presents it to the user.
 				RefactorSummary summary = new RefactorSummary(extension.getName());
 				
@@ -158,6 +154,8 @@ public class RefactorExecution implements Runnable {
 							Log.info(RefactorExecution.class, "Refactor units...");
 							doRefactorProject(units, changes, projectSummary, project);
 
+							//Call template method
+							onProjectFinished(project, javaProject, units);
 							
 							Log.info(RefactorExecution.class, "<<< Refactor project");
 
@@ -214,15 +212,30 @@ public class RefactorExecution implements Runnable {
 			Log.info(RefactorExecution.class, "Operation was cancelled.");
 		}
 
-		if(result == IDialogConstants.OK_ID) {
+		if (result == IDialogConstants.OK_ID) {
 		    postRefactor();
 		}
 	}
 	
 	
+	protected IProject[] getWorkspaceProjects() {
+		IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
+		return workspaceRoot.getProjects();
+	}
+	
+	protected void preRefactor(IProject[] projects) {
+		//This method is to be overwritten by subclasses.
+	}
+	
 	protected void postRefactor() {
 		//This method is to be overwritten by subclasses.
 	}
+	
+	protected void onProjectFinished(IProject project, IJavaProject jproject, ProjectUnits units) {
+		//This method is to be overwritten by subclasses.
+	}
+	
+	
 		
 
 	// TODO: What about exceptions?
@@ -240,7 +253,7 @@ public class RefactorExecution implements Runnable {
 		// Produce the complete resource path
 		// Retrieve the location of the plugin eclipse project.
 		Bundle bundle = Platform.getBundle(extension.getPlugInId());
-		Objects.requireNonNull(bundle, "OSGI Bundle could not be found. Is " + extension.getPlugInId() + " the correct plugin id?");
+		Objects.requireNonNull(bundle, "OSGI Bundle can not be found. Is " + extension.getPlugInId() + " the correct plugin id?");
 		
 		URL url = FileLocator.resolve(bundle.getEntry("/"));
 		File sourceDir = Paths.get(url.toURI()).resolve(localResourcePath.toOSString()).toFile(); // This is pretty
@@ -358,7 +371,7 @@ public class RefactorExecution implements Runnable {
 	}
 	
 
-	protected void doRefactorProject(@NonNull ProjectUnits units, @NonNull CompositeChange changes, @NonNull ProjectSummary projectSummary, IProject project)
+	private void doRefactorProject(@NonNull ProjectUnits units, @NonNull CompositeChange changes, @NonNull ProjectSummary projectSummary, IProject project)
 			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException, InterruptedException {
 
 		// Produce the worker tree
@@ -370,7 +383,7 @@ public class RefactorExecution implements Runnable {
 
 		// The changes of the compilation units are applied
 		Log.info(getClass(), "Write changes...");
-		units.addChangesTo(changes);		
+		units.addChangesTo(changes);	
 	}
 	
 	

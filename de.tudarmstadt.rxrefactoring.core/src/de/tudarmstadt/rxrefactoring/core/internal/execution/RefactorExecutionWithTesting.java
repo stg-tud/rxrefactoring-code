@@ -9,16 +9,11 @@ import java.util.Set;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.ltk.core.refactoring.CompositeChange;
-import org.eclipse.text.edits.MalformedTreeException;
 
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
-import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.MethodScanner;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.RandoopGenerator;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.collect.Pair;
@@ -30,38 +25,42 @@ public class RefactorExecutionWithTesting extends RefactorExecution {
      * IPL: Mapping of projects to found methods that contains all impacted and
      * changed methods for each project.
      */
-	private final Map<IProject, Pair<Set<String>, Set<String>>> foundMethods = new HashMap<>();
+//	private final Map<IProject, Pair<Set<String>, Set<String>>> foundMethods = new HashMap<>();
 	
-	private final Map<IProject, RandoopGenerator> generators = new HashMap<>();
+	private final RandoopGenerator rgen = new RandoopGenerator();
+	private final MethodScanner scanner = new MethodScanner();
 	
 	
 	public RefactorExecutionWithTesting(IRefactorExtension env) {
 		super(env);		
 	}
 	
-	protected void doRefactorProject(@NonNull ProjectUnits units, @NonNull CompositeChange changes, @NonNull ProjectSummary projectSummary, IProject project)
-			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException, InterruptedException {
-		super.doRefactorProject(units, changes, projectSummary, project);
+	@Override
+	protected void preRefactor(IProject[] projects) {
+		super.preRefactor(projects);
+	}
+	
+	@Override	
+	protected void onProjectFinished(IProject project, IJavaProject jproject, ProjectUnits units) {
+		super.onProjectFinished(project, jproject, units);
 		
 		Log.info(RefactorExecutionWithTesting.class, "Scan methods for testing...");
 	
 		// IPL: Find the changing and calling methods
-		foundMethods.put(project, MethodScanner.findMethods(units));
+		scanner.scan(units);
 		// IPL: Copy the pre-refactoring binaries over
-		RandoopGenerator rgen = new RandoopGenerator(project);
-		generators.put(project, rgen);	
-		rgen.copyBinariesToPre();
+		rgen.copyProjectBinariesToPre(project);
 	}
 	
+	@Override
 	protected void postRefactor() {
+		super.postRefactor();
 		
 		// IPL: OK has been pressed, time to continue post-refactoring
-	    IWorkspaceRoot workspace = ResourcesPlugin.getWorkspace().getRoot();
-        IProject[] projects = workspace.getProjects();
+        IProject[] projects = getWorkspaceProjects();
+        
         for(IProject project : projects) {
-        	
-        	Objects.requireNonNull(project);     
-        	            	
+        	        	            	
             if(considerProject(project)) {
             	    
             	Log.info(getClass(), "Create Randoop specification for " + project.getName() + "...");
@@ -72,10 +71,8 @@ public class RefactorExecutionWithTesting extends RefactorExecution {
                 Set<String> impacted = foundMethods.get(project).getFirst();
                 Set<String> calling = foundMethods.get(project).getSecond();
                 
-                RandoopGenerator rgen = generators.get(project);
-
                 // IPL: Copy over post-refactoring binaries
-                rgen.copyBinariesToPost();
+                rgen.copyProjectBinariesToPost(project);
 
                 // IPL: Parse the refactored compilation units to obtain the ASTs
                 ProjectUnits units;
@@ -93,8 +90,9 @@ public class RefactorExecutionWithTesting extends RefactorExecution {
                 }
                 catch(Throwable e) {
                     Log.error(RefactorExecutionWithTesting.class, "Failed to determine unchanged methods.", e);
-                }
-
+                }                        
+                
+                
                 // IPL: The methods to test are the union of the unchanged
                 // impacted methods and the methods that call any impacted
                 // methods.

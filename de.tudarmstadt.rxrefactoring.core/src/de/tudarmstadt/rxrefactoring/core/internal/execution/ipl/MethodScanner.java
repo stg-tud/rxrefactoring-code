@@ -28,6 +28,10 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet.Builder;
+
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.collect.ImmutablePair;
@@ -44,7 +48,12 @@ public class MethodScanner {
 	 * The string used for signatures that could not be created due to errors.
 	 */
 	public static final String MISSING_SIGNATURE = "Hier könnte Ihre Werbung stehen!";
-
+	
+	
+	private Set<String> impactedMethods = Sets.newHashSet();
+	private Set<String> callingMethods = Sets.newHashSet();
+	
+	
 	/**
 	 * Find both {@link #findImpactedMethods(ProjectUnits) impacted} and
 	 * {@link #findCallingMethods(ProjectUnits, Set) calling} methods, i.e. methods
@@ -54,13 +63,17 @@ public class MethodScanner {
 	 * @param units The project compilation units to work on.
 	 * @return A pair of impacted methods and calling methods.
 	 */
-	public static Pair<Set<String>, Set<String>> findMethods(ProjectUnits units) {
-		Set<String> impacted = findImpactedMethods(units);
-		Set<String> calling = findCallingMethods(units, impacted);
+	public void scan(ProjectUnits units) {
+			
+		ImmutableSet<String> impacted = findImpactedMethods(units);
+		impactedMethods.addAll(impacted);
+		
+		ImmutableSet<String> calling = findCallingMethods(units, impacted);
+		callingMethods.addAll(calling);
 		// For debugging only
 		// Log.info(MethodScanner.class, "Impacted Methods: " + impacted);
 		// Log.info(MethodScanner.class, "Calling Methods: " + calling);
-		return new ImmutablePair<>(impacted, calling);
+		
 	}
 
 	/**
@@ -190,8 +203,9 @@ public class MethodScanner {
 	 * @param units The project compilation units to work on.
 	 * @return A set of all impacted methods.
 	 */
-	private static Set<String> findImpactedMethods(ProjectUnits units) {
-		Set<String> ret = new HashSet<>();
+	private static ImmutableSet<String> findImpactedMethods(ProjectUnits units) {
+		Builder<String> builder = ImmutableSet.builder();
+		
 		for (IRewriteCompilationUnit unit : units) {
 			if (unit.hasChanges()) {
 				CompilationUnit cu = (CompilationUnit) unit.getRoot();
@@ -209,32 +223,39 @@ public class MethodScanner {
 							List<ASTNode> nodes = new JavaVisitor(node -> nodeHasChanges(node, unit))
 									.visitMethodDeclaration(method);
 							if (!nodes.isEmpty()) {
-								ret.add(buildSignatureForDeclaration(method));
+								builder.add(buildSignatureForDeclaration(method));
 							}
 						}
 					}
 				}
 			}
 		}
-		return ret;
+		
+		return builder.build();
 	}
 
 	/**
 	 * Finds methods that directly call impacted methods.
 	 * 
 	 * @param units           The project compilation units to work on.
-	 * @param impactedMethods The methods that have been impacted by the
+	 * @param impacted The methods that have been impacted by the
 	 *                        refactoring.
 	 * @return A set of all calling methods.
 	 */
-	private static Set<String> findCallingMethods(ProjectUnits units, Set<String> impactedMethods) {
-		Set<String> ret = new HashSet<>();
-		JavaVisitor visitor = new JavaVisitor(node -> impactedMethods.contains(buildSignatureForCalled(node)));
+	private static ImmutableSet<String> findCallingMethods(ProjectUnits units, ImmutableSet<String> impacted) {
+		Builder<String> builder = ImmutableSet.builder();
+		
+		JavaVisitor visitor = new JavaVisitor(node -> impacted.contains(buildSignatureForCalled(node)));
 		for (IRewriteCompilationUnit unit : units) {
 			CompilationUnit cu = (CompilationUnit) unit.getRoot();
 			List<ASTNode> nodes = visitor.visitCompilationUnit(cu);
 			// @formatter:off
-			ret.addAll(nodes.stream().map(MethodScanner::buildSignatureForCallee).collect(Collectors.toList()));
+			builder.addAll(
+					nodes.stream()
+					.map(MethodScanner::buildSignatureForCallee)
+					.filter(sig -> sig == null || impacted.contains(sig))
+					.collect(Collectors.toList())
+			);
 			// @formatter:on
 		}
 
@@ -243,8 +264,8 @@ public class MethodScanner {
 		// also remove calling methods that are also impacted
 		// methods, since impacted methods will have to be
 		// treated differently when generating tests.
-		ret.removeIf(sig -> sig == null || impactedMethods.contains(sig));
-		return ret;
+				
+		return builder.build();
 	}
 
 	/**
