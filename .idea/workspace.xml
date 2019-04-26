@@ -2,23 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5a548c55-1ddc-4215-bbca-e80155bfcf47" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/RxRefactoringTestsTemplate/.settings/org.eclipse.jdt.core.prefs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/RxRefactoringTestsTemplate/RxRefactoringTestsTemplate.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/RxRefactoringTestsTemplate/resources/android.test.app/RxRefactoringAndroidApp/.settings/org.eclipse.jdt.core.prefs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/RxRefactoringTestsTemplate/resources/android.test.app/RxRefactoringAndroidApp/bin/AndroidManifest.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/RxRefactoringTestsTemplate/resources/android.test.app/RxRefactoringAndroidApp/bin/jarlist.cache" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/RxRefactoringTestsTemplate/resources/java.test.app/RxRefactoringJavaApp/.settings/org.eclipse.jdt.core.prefs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/.settings/org.eclipse.jdt.core.prefs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.ext.akkafuture/.settings/org.eclipse.jdt.core.prefs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.ext.asynctask/.settings/org.eclipse.jdt.core.prefs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.ext.futurereactive/.settings/org.eclipse.jdt.core.prefs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.ext.javafuture/.settings/org.eclipse.jdt.core.prefs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.ext.swingworker/.settings/org.eclipse.jdt.core.prefs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.ext.swingworker/hs_err_pid14496.log" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.ext.template/.settings/org.eclipse.jdt.core.prefs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/swing-worker-rx/.settings/org.eclipse.jdt.core.prefs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/IWorker.java" beforeDir="false" afterPath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/IWorker.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/RefactorExecutionWithTesting.java" beforeDir="false" afterPath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/RefactorExecutionWithTesting.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/MethodScanner.java" beforeDir="false" afterPath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/MethodScanner.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/RandoopGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/RandoopGenerator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.ext.javafuture/src/de/tudarmstadt/rxrefactoring/ext/javafuture/workers/future/MethodDeclarationWorker.java" beforeDir="false" afterPath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.ext.javafuture/src/de/tudarmstadt/rxrefactoring/ext/javafuture/workers/future/MethodDeclarationWorker.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/bin/" />
@@ -36,61 +25,99 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="DefaultGradleProjectSettings">
-    <option name="testRunner" value="GRADLE" />
-    <option name="delegatedBuild" value="true" />
+    <option name="isMigrated" value="true" />
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/MethodScanner.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1050">
-              <caret line="95" column="73" selection-start-line="95" selection-start-column="73" selection-end-line="95" selection-end-column="73" />
+            <state relative-caret-position="720">
+              <caret line="446" column="58" selection-start-line="446" selection-start-column="58" selection-end-line="446" selection-end-column="58" />
+              <folding>
+                <element signature="e#3009#3010#0" expanded="true" />
+                <element signature="e#3042#3043#0" expanded="true" />
+                <element signature="e#4100#4101#0" expanded="true" />
+                <element signature="e#4130#4131#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/NullWorker.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="60">
+              <caret line="6" column="6" selection-start-line="6" selection-start-column="6" selection-end-line="6" selection-end-column="6" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/WorkerTree.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="225">
+              <caret line="86" column="8" selection-start-line="86" selection-start-column="8" selection-end-line="86" selection-end-column="8" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/IWorker.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="210">
+              <caret line="20" column="7" selection-start-line="20" selection-start-column="7" selection-end-line="20" selection-end-column="7" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/.gitignore">
+        <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/RefactorExecutionWithTesting.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="989">
-              <caret line="147" column="5" selection-start-line="147" selection-start-column="5" selection-end-line="147" selection-end-column="5" />
+            <state relative-caret-position="585">
+              <caret line="110" column="76" selection-start-line="110" selection-start-column="76" selection-end-line="110" selection-end-column="76" />
+              <folding>
+                <element signature="e#1390#1391#0" expanded="true" />
+                <element signature="e#1407#1408#0" expanded="true" />
+                <element signature="e#1470#1471#0" expanded="true" />
+                <element signature="e#1504#1505#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="jrt:///usr/lib/jvm/java-11-openjdk-amd64!/java.base/java/lang/System.class">
+        <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/RandoopGenerator.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1695">
-              <caret line="168" column="29" selection-start-line="168" selection-start-column="29" selection-end-line="168" selection-end-column="29" />
+            <state relative-caret-position="540">
+              <caret line="388" selection-start-line="388" selection-end-line="388" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="jar://$USER_HOME$/.local/share/eclipse/ide/eclipse/plugins/org.eclipse.jdt.core_3.17.0.v20190306-2240.jar!/org/eclipse/jdt/core/dom/ASTVisitor.class">
+        <entry file="jar:///usr/lib/jvm/java-8-openjdk-amd64/jre/lib/rt.jar!/java/lang/StringBuilder.class">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="395">
+              <caret line="112" column="25" selection-start-line="112" selection-start-column="25" selection-end-line="112" selection-end-column="25" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="jar://$USER_HOME$/.local/share/eclipse/ide/eclipse/plugins/org.eclipse.jdt.core_3.17.0.v20190306-2240.jar!/org/eclipse/jdt/core/dom/IMethodBinding.class">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="135">
+              <caret line="12" column="11" selection-start-line="12" selection-start-column="11" selection-end-line="12" selection-end-column="11" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="jar://$USER_HOME$/.local/share/eclipse/ide/eclipse/plugins/org.eclipse.jdt.core_3.17.0.v20190306-2240.jar!/org/eclipse/jdt/core/dom/ITypeBinding.class">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="105">
               <caret line="10" column="11" selection-start-line="10" selection-start-column="11" selection-end-line="10" selection-end-column="11" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="jar://$USER_HOME$/.local/share/eclipse/ide/eclipse/plugins/org.eclipse.jdt.core_3.17.0.v20190306-2240.jar!/org/eclipse/jdt/core/dom/MethodRef.class">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="90">
-              <caret line="11" column="13" selection-start-line="11" selection-start-column="13" selection-end-line="11" selection-end-column="13" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="jar://$USER_HOME$/.local/share/eclipse/ide/eclipse/plugins/com.google.guava_21.0.0.v20170206-1425.jar!/com/google/common/collect/ImmutableMap.class">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="4230">
-              <caret line="356" column="42" selection-start-line="356" selection-start-column="42" selection-end-line="356" selection-end-column="42" />
             </state>
           </provider>
         </entry>
@@ -104,33 +131,6 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="jar://$USER_HOME$/.local/share/eclipse/ide/eclipse/plugins/com.google.guava_21.0.0.v20170206-1425.jar!/com/google/common/collect/Multiset.class">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="105">
-              <caret line="21" column="41" selection-start-line="21" selection-start-column="41" selection-end-line="21" selection-end-column="41" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="jrt:///usr/lib/jvm/java-11-openjdk-amd64!/java.base/java/util/Collection.class">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="90">
-              <caret line="12" column="17" selection-start-line="12" selection-start-column="17" selection-end-line="12" selection-end-column="17" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="jar://$USER_HOME$/.local/share/eclipse/ide/eclipse/plugins/org.eclipse.jdt.core_3.17.0.v20190306-2240.jar!/org/eclipse/jdt/core/dom/MethodReference.class">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="315">
-              <caret line="31" column="26" selection-start-line="31" selection-start-column="26" selection-end-line="31" selection-end-column="26" />
-            </state>
-          </provider>
-        </entry>
-      </file>
     </leaf>
   </component>
   <component name="Git.Settings">
@@ -140,9 +140,11 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/utils/ASTNodes.java" />
-        <option value="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/RefactorExecutionWithTesting.java" />
-        <option value="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/MethodScanner.java" />
         <option value="$PROJECT_DIR$/.gitignore" />
+        <option value="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/IWorker.java" />
+        <option value="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/MethodScanner.java" />
+        <option value="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/RandoopGenerator.java" />
+        <option value="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/RefactorExecutionWithTesting.java" />
       </list>
     </option>
   </component>
@@ -346,7 +348,7 @@
       <window_info id="UI Designer" order="3" />
       <window_info id="Favorites" order="4" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32964426" />
       <window_info anchor="bottom" id="Run" order="2" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
@@ -374,22 +376,8 @@
     </option>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/RandoopGenerator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="150">
-          <caret line="40" column="13" selection-start-line="40" selection-start-column="13" selection-end-line="40" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/de.tudarmstadt.rxrefactoring.core.iml">
       <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/RefactorExecution.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-3840">
-          <caret line="64" column="13" selection-start-line="64" selection-start-column="13" selection-end-line="64" selection-end-column="13" />
-        </state>
-      </provider>
     </entry>
     <entry file="jrt:///usr/lib/jvm/java-11-openjdk-amd64!/java.base/java/util/Set.class">
       <provider selected="true" editor-type-id="text-editor">
@@ -423,20 +411,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/MethodScanner.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1050">
-          <caret line="95" column="73" selection-start-line="95" selection-start-column="73" selection-end-line="95" selection-end-column="73" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/RefactorExecutionWithTesting.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="405">
-          <caret line="48" column="53" selection-start-line="48" selection-start-column="53" selection-end-line="48" selection-end-column="53" />
-        </state>
-      </provider>
-    </entry>
     <entry file="jrt:///usr/lib/jvm/java-11-openjdk-amd64!/java.base/java/lang/System.class">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1695">
@@ -465,13 +439,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/utils/ASTNodes.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="390">
-          <caret line="38" column="59" selection-start-line="38" selection-start-column="59" selection-end-line="38" selection-end-column="59" />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://$USER_HOME$/.local/share/eclipse/ide/eclipse/plugins/com.google.guava_21.0.0.v20170206-1425.jar!/com/google/common/collect/Multiset.class">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="105">
@@ -495,8 +462,118 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/.gitignore">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="989">
-          <caret line="147" column="5" selection-start-line="147" selection-start-column="5" selection-end-line="147" selection-end-column="5" />
+        <state relative-caret-position="719">
+          <caret line="126" column="18" selection-start-line="126" selection-start-column="18" selection-end-line="126" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/RefactorExecution.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="413">
+          <caret line="318" column="74" selection-start-line="318" selection-start-column="74" selection-end-line="318" selection-end-column="74" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$USER_HOME$/.local/share/eclipse/ide/eclipse/plugins/com.google.guava_21.0.0.v20170206-1425.jar!/com/google/common/collect/ImmutableSet.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="413">
+          <caret line="227" column="24" selection-start-line="227" selection-start-column="24" selection-end-line="227" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///usr/lib/jvm/java-8-openjdk-amd64/jre/lib/rt.jar!/java/util/stream/Collector.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="17" column="17" selection-start-line="17" selection-start-column="17" selection-end-line="17" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///usr/lib/jvm/java-8-openjdk-amd64/jre/lib/rt.jar!/java/util/stream/Collectors.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="383">
+          <caret line="76" column="5" selection-start-line="76" selection-start-column="5" selection-end-line="76" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/utils/ASTNodes.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="390">
+          <caret line="38" column="59" selection-start-line="38" selection-start-column="59" selection-end-line="38" selection-end-column="59" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/NullWorker.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="60">
+          <caret line="6" column="6" selection-start-line="6" selection-start-column="6" selection-end-line="6" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/IWorker.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="20" column="7" selection-start-line="20" selection-start-column="7" selection-end-line="20" selection-end-column="7" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$USER_HOME$/.local/share/eclipse/ide/eclipse/plugins/org.eclipse.jdt.core_3.17.0.v20190306-2240.jar!/org/eclipse/jdt/core/dom/ITypeBinding.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="105">
+          <caret line="10" column="11" selection-start-line="10" selection-start-column="11" selection-end-line="10" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$USER_HOME$/.local/share/eclipse/ide/eclipse/plugins/org.eclipse.jdt.core_3.17.0.v20190306-2240.jar!/org/eclipse/jdt/core/dom/IMethodBinding.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="135">
+          <caret line="12" column="11" selection-start-line="12" selection-start-column="11" selection-end-line="12" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/MethodScanner.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="720">
+          <caret line="446" column="58" selection-start-line="446" selection-start-column="58" selection-end-line="446" selection-end-column="58" />
+          <folding>
+            <element signature="e#3009#3010#0" expanded="true" />
+            <element signature="e#3042#3043#0" expanded="true" />
+            <element signature="e#4100#4101#0" expanded="true" />
+            <element signature="e#4130#4131#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///usr/lib/jvm/java-8-openjdk-amd64/jre/lib/rt.jar!/java/lang/StringBuilder.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="395">
+          <caret line="112" column="25" selection-start-line="112" selection-start-column="25" selection-end-line="112" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/RandoopGenerator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="540">
+          <caret line="388" selection-start-line="388" selection-end-line="388" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/WorkerTree.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="225">
+          <caret line="86" column="8" selection-start-line="86" selection-start-column="8" selection-end-line="86" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/RefactorExecutionWithTesting.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="585">
+          <caret line="110" column="76" selection-start-line="110" selection-start-column="76" selection-end-line="110" selection-end-column="76" />
+          <folding>
+            <element signature="e#1390#1391#0" expanded="true" />
+            <element signature="e#1407#1408#0" expanded="true" />
+            <element signature="e#1470#1471#0" expanded="true" />
+            <element signature="e#1504#1505#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

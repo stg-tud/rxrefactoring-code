@@ -6,6 +6,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
 
+@FunctionalInterface
 public interface IWorker<Input, Output> {
 
 	@SuppressWarnings("null")

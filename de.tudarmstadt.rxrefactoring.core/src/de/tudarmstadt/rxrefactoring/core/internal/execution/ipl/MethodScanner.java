@@ -2,7 +2,6 @@ package de.tudarmstadt.rxrefactoring.core.internal.execution.ipl;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import org.eclipse.jdt.core.dom.*;
@@ -13,17 +12,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
-import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.collect.ImmutablePair;
-import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.collect.Pair;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
-import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 
 /**
  * The method scanner finds methods that are directly impacted by the
@@ -38,15 +30,15 @@ public class MethodScanner {
 	public static final String MISSING_SIGNATURE = "Hier könnte Ihre Werbung stehen!";
 	
 	
-	private Map<MethodDeclaration, IRewriteCompilationUnit> impactedMethods = Maps.newHashMap();
+	private Map<MethodDeclaration, IRewriteCompilationUnit> refactoredMethods = Maps.newHashMap();
 	private Map<MethodDeclaration, IRewriteCompilationUnit> callingMethods = Maps.newHashMap();
 	
 //	private Set<AbstractTypeDeclaration> impactedTypes = Sets.newHashSet();
 	
 	private List<ProjectUnits> scannedUnits = Lists.newLinkedList(); 
 	private List<ProjectUnits> refactoredUnits = Lists.newLinkedList();
-	
-	
+
+
 	/**
 	 * Find both {@link #findImpactedMethods(ProjectUnits) impacted} and
 	 * {@link #findCallingMethods(ProjectUnits) calling} methods, i.e. methods
@@ -63,7 +55,7 @@ public class MethodScanner {
 		scannedUnits.add(units);
 			
 		//Add impacted classes and methods
-		impactedMethods.putAll(findImpactedMethods(units));
+		refactoredMethods.putAll(findImpactedMethods(units));
 		
 //		impacted.stream()
 //			.flatMap(md -> ASTNodes.findParent(md, AbstractTypeDeclaration.class).stream())
@@ -73,34 +65,34 @@ public class MethodScanner {
 		callingMethods.putAll(findCallingMethods(units));
 		
 //		 For debugging only
-		 Log.info(MethodScanner.class, "Impacted Methods: " + impactedMethods);
+		 Log.info(MethodScanner.class, "Impacted Methods: " + refactoredMethods);
 		 Log.info(MethodScanner.class, "Calling Methods: " + callingMethods);
 	}
 	
-	public void addRefactoredUnit(ProjectUnits unit) {
-		refactoredUnits.add(unit);
+	public void addRefactoredUnit(ProjectUnits units) {
+		refactoredUnits.add(units);
 	}
 
 //	/**
 //	 * Retains only methods whose signatures have not changed after the refactoring.
 //	 *
 //	 * @param units           The affected project's units after the refactoring.
-//	 * @return A subset of {@code impactedMethods}, containing only those impacted
+//	 * @return A subset of {@code refactoredMethods}, containing only those impacted
 //	 *         methods whose signature did not change.
 //	 */
 //	public void retainUnchangedMethods(ProjectUnits units) {
 //		// Optimization: Look only at classes that contain impacted methods
-//		
+//
 //		Builder<MethodDeclaration> builder = ImmutableSet.builder();
-//		
-//		JavaVisitor visitor = new JavaVisitor(node -> node instanceof MethodDeclaration && impactedMethods.contains(node));
-//		
+//
+//		JavaVisitor visitor = new JavaVisitor(node -> node instanceof MethodDeclaration && refactoredMethods.contains(node));
+//
 //		for (IRewriteCompilationUnit unit : units) {
 //			CompilationUnit cu = (CompilationUnit) unit.getRoot();
-//			
+//
 //			for (Object objType : cu.types()) {
 //				AbstractTypeDeclaration type = (AbstractTypeDeclaration) objType;
-//				
+//
 //				if (impactedTypes.stream().anyMatch().contains(type)) {
 //					// @formatter:off
 //					builder.addAll(
@@ -114,28 +106,79 @@ public class MethodScanner {
 //				}
 //			}
 //		}
-//		
+//
 //		ImmutableSet<MethodDeclaration> retainedMethods = builder.build();
-//		
-//		impactedMethods.removeIf(s -> retainedMethods.contains(s));		
+//
+//		refactoredMethods.removeIf(s -> retainedMethods.contains(s));
 //	}
-	
-	public ImmutableSet<MethodDeclaration> getImpactedMethods() {
-		ImmutableSet.Builder<MethodDeclaration> builder = ImmutableSet.builder();
-		
-		Set<MethodDeclaration> publicImpacted = impactedMethods.entrySet().stream()
-			.filter(entry -> Modifier.isPublic(entry.getKey().getModifiers()))
-			.filter(entry -> methodHasChangedSignature(entry.getKey(), entry.getValue().writer()))
-			.map(entry -> entry.getKey())
-			.collect(Collectors.toSet());	
-		
-		
-		
-		
-		
-		return builder.build();		
+
+
+
+
+	public ScanResult getResult() {
+		return new ScanResult();
 	}
-	
+
+
+	public class ScanResult {
+
+		private ImmutableSet<MethodDeclaration> testMethods = null;
+		private ImmutableSet<TypeDeclaration> testClasses = null;
+
+
+		public ImmutableSet<MethodDeclaration> getTestMethods() {
+			if (testMethods != null) return testMethods;
+
+			ImmutableSet.Builder<MethodDeclaration> builder = ImmutableSet.builder();
+
+			builder.addAll(refactoredMethods.entrySet().stream()
+				.filter(entry -> Modifier.isPublic(entry.getKey().getModifiers()))
+				.filter(entry -> !methodHasChangedSignature(entry.getKey(), entry.getValue().writer()))
+				.map(entry -> entry.getKey())
+				.collect(Collectors.toSet())
+			);
+
+			builder.addAll(callingMethods.entrySet().stream()
+				.filter(entry -> Modifier.isPublic(entry.getKey().getModifiers()))
+				.filter(entry -> !methodHasChangedSignature(entry.getKey(), entry.getValue().writer()))
+				.map(entry -> entry.getKey())
+				.collect(Collectors.toSet())
+			);
+
+			testMethods = builder.build();
+			return testMethods;
+		}
+
+
+		public ImmutableSet<TypeDeclaration> getTestClasses() {
+			if (testClasses != null) return testClasses;
+
+			ImmutableSet.Builder<TypeDeclaration> builder = ImmutableSet.builder();
+
+			for (MethodDeclaration testMethod : getTestMethods()) {
+				ASTNode parent = testMethod.getParent();
+
+				if (parent instanceof TypeDeclaration)
+					builder.add((TypeDeclaration) parent);
+				else
+					throw new IllegalStateException("cannot refactor method in non-class.");
+			}
+
+			return builder.build();
+		}
+
+		public Set<MethodDeclaration> getOmmittedMethodsIn(TypeDeclaration decl) {
+			return Arrays.stream(decl.getMethods())
+				.filter(mthd -> !getTestMethods().contains(mthd))
+				.collect(Collectors.toSet());
+		}
+
+		public  Set<MethodDeclaration> getOmmittedMethods() {
+			return getTestClasses().stream()
+				.flatMap(cls -> getOmmittedMethodsIn(cls).stream())
+				.collect(Collectors.toSet());
+		}
+	}
 
 	/**
 	 * Extracts the class names, including the packages, from the specified
@@ -269,7 +312,7 @@ public class MethodScanner {
 		ImmutableMap.Builder<MethodDeclaration, IRewriteCompilationUnit> builder = ImmutableMap.builder();
 
 		Map<IMethodBinding, MethodDeclaration> impactedBindings = Maps.newHashMap();
-		impactedMethods.keySet().forEach(mthd -> {
+		refactoredMethods.keySet().forEach(mthd -> {
 			IMethodBinding binding = mthd.resolveBinding();
 			if (binding != null) impactedBindings.put(binding, mthd);
 		});

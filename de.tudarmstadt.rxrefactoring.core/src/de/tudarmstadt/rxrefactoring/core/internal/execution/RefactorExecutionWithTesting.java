@@ -18,6 +18,8 @@ import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.MethodScanner;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.RandoopGenerator;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.collect.Pair;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 public class RefactorExecutionWithTesting extends RefactorExecution {
 
@@ -63,60 +65,81 @@ public class RefactorExecutionWithTesting extends RefactorExecution {
 		for (IProject project : projects) {
 
 			if (considerProject(project)) {
+				Log.info(getClass(), "Create Randoop specification for " + project.getName() + "...");
 
-//				Log.info(getClass(), "Create Randoop specification for " + project.getName() + "...");
-//
-//				// IPL: Copy over post-refactoring binaries
-//				rgen.copyProjectBinariesToPost(project);
-//
-//				// IPL: Parse the refactored compilation units to obtain the ASTs
-//				ProjectUnits units;
-//				try {
-//					units = parseCompilationUnits(JavaCore.create(project));
-//				} catch (JavaModelException e) {
-//					throw new RuntimeException(e);
-//				}
-//
-//				// IPL: Throw out any impacted methods that changed signatures,
-//				// because those can't be tested
+				// IPL: Copy over post-refactoring binaries
+				rgen.copyProjectBinariesToPost(project);
+
+				// IPL: Parse the refactored compilation units to obtain the ASTs
+				try {
+					ProjectUnits units = parseCompilationUnits(JavaCore.create(project));
+					scanner.addRefactoredUnit(units);
+				} catch (JavaModelException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		}
+		
+		
+		
+
+
+
+		// IPL: Throw out any impacted methods that changed signatures,
+		// because those can't be tested
 //				try {
 //					impacted = MethodScanner.retainUnchangedMethods(impacted, units);
 //				} catch (Throwable e) {
 //					Log.error(RefactorExecutionWithTesting.class, "Failed to determine unchanged methods.", e);
 //				}
+
+		// IPL: The methods to test are the union of the unchanged
+		// impacted methods and the methods that call any impacted
+		// methods.
+
+		MethodScanner.ScanResult result = scanner.getResult();
+
+		Set<MethodDeclaration> impacted = result.getTestMethods();
+		System.out.println("### IMPACTED METHODS = " + impacted + " ###");
+
+		Set<TypeDeclaration> impactedClasses = result.getTestClasses();
+		System.out.println("### IMPACTED CLASSES = " + impactedClasses + " ###");
+
+		Set<MethodDeclaration> ommitted = result.getOmmittedMethods();
+		System.out.println("### OMMITTED METHODS = " + ommitted + " ###");
+		
+		rgen.writeFiles(result.getTestClasses(), result.getOmmittedMethods());
+		
+
+//		Set<String> methodsToTest = new HashSet<>(impacted);
+//		methodsToTest.addAll(calling);
+//		// IPL: Throw out any inaccessible (i.e. non-public)
+//		// methods, since those can't be tested
+//		MethodScanner.removeInaccessibleMethods(methodsToTest, units);
 //
-//				// IPL: The methods to test are the union of the unchanged
-//				// impacted methods and the methods that call any impacted
-//				// methods.
-//				Set<String> methodsToTest = new HashSet<>(impacted);
-//				methodsToTest.addAll(calling);
-//				// IPL: Throw out any inaccessible (i.e. non-public)
-//				// methods, since those can't be tested
-//				MethodScanner.removeInaccessibleMethods(methodsToTest, units);
+//		Log.info(RefactorExecutionWithTesting.class,
+//				"Found total of " + methodsToTest.size() + " method(s) suitable for testing.");
+//		Log.info(RefactorExecutionWithTesting.class, methodsToTest);
+//		// IPL: For debugging only
+//		// Log.info(RefactorExecution.class, "Methods to test: " + methodsToTest);
 //
-//				Log.info(RefactorExecutionWithTesting.class,
-//						"Found total of " + methodsToTest.size() + " method(s) suitable for testing.");
-//				Log.info(RefactorExecutionWithTesting.class, methodsToTest);
-//				// IPL: For debugging only
-//				// Log.info(RefactorExecution.class, "Methods to test: " + methodsToTest);
+//		// IPL: Compute the set of classes that will be tested
+//		Set<String> classesToTest = MethodScanner.extractClassNames(methodsToTest);
+//		// IPL: For debugging only
+//		// Log.info(RefactorExecution.class, "Classes to test: " + classesToTest);
 //
-//				// IPL: Compute the set of classes that will be tested
-//				Set<String> classesToTest = MethodScanner.extractClassNames(methodsToTest);
-//				// IPL: For debugging only
-//				// Log.info(RefactorExecution.class, "Classes to test: " + classesToTest);
+//		// IPL: Compute the set of methods that should NOT be tested
+//		Set<String> methodsToOmit = MethodScanner.findAllMethods(units, classesToTest);
+//		methodsToOmit.removeAll(methodsToTest);
+//		methodsToOmit = RandoopGenerator.convertToRegexFormat(methodsToOmit);
+//		// IPL: Disgusting hack, because Randoop LOVES calling
+//		// getClass() and comparing the result to null
+//		methodsToOmit.add("java\\.lang\\.Object\\.getClass\\(");
 //
-//				// IPL: Compute the set of methods that should NOT be tested
-//				Set<String> methodsToOmit = MethodScanner.findAllMethods(units, classesToTest);
-//				methodsToOmit.removeAll(methodsToTest);
-//				methodsToOmit = RandoopGenerator.convertToRegexFormat(methodsToOmit);
-//				// IPL: Disgusting hack, because Randoop LOVES calling
-//				// getClass() and comparing the result to null
-//				methodsToOmit.add("java\\.lang\\.Object\\.getClass\\(");
-//
-//				// IPL: Finally, create the output
-//				rgen.createOutput(classesToTest, methodsToOmit);
-			}
-		}
+//		// IPL: Finally, create the output
+//		rgen.createOutput(classesToTest, methodsToOmit);
+
+
 
 	}
 

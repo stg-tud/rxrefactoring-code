@@ -66,8 +66,7 @@ public class MethodDeclarationWorker extends AbstractFutureWorker<MethodDeclarat
 				}
 				
 			}
-		}
-		
+		}		
 	}
 
 	private void replaceReturnType(IRewriteCompilationUnit unit, MethodDeclaration methodDeclaration) {

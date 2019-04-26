@@ -17,7 +17,9 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
@@ -31,6 +33,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import org.eclipse.jdt.core.dom.*;
 
 /**
  * This class is responsible for setting up the test environment (e.g. creating
@@ -136,7 +139,7 @@ public class RandoopGenerator {
 	 * output locations (e.g. Maven) and other complexities into account.
 	 * 
 	 * @param project The project to build and retrieve binaries from.
-	 * @param dest    The destination to copy the binaries to.
+	 * @param destination    The destination to copy the binaries to.
 	 */
 	private void copyBinaries(IProject project, File destination) {
 		try {
@@ -208,11 +211,11 @@ public class RandoopGenerator {
 	 * Generates the output files ({@code randoop.sh}, {@code classlist.txt} and
 	 * {@code omitmethods.txt}) inside the temp directory.
 	 * 
-	 * @param classesToTest The classes containing the methods that should be
+	 * @param testClasses The classes containing the methods that should be
 	 *                      tested.
-	 * @param methodsToOmit The methods that should NOT be tested.
+	 * @param ommittedMethods The methods that should NOT be tested.
 	 */
-	public void createOutput(Set<String> classesToTest, Set<String> methodsToOmit) {
+	public void writeFiles(Set<TypeDeclaration> testClasses, Set<MethodDeclaration> ommittedMethods) {
 
 		// Create a shell file for running randoop
 		File randoopSh = new File(tempDir, "randoop.sh");
@@ -303,8 +306,8 @@ public class RandoopGenerator {
 			classListFile.createNewFile();
 			try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(classListFile),
 					StandardCharsets.UTF_8.newEncoder()); BufferedWriter out = new BufferedWriter(writer)) {
-				for (String line : classesToTest) {
-					out.write(line);
+				for (TypeDeclaration cls : testClasses) {
+					out.write(convertClassSignature(cls));
 					out.newLine();
 				}
 			}
@@ -316,13 +319,22 @@ public class RandoopGenerator {
 		File omitMethodsFile = new File(tempDir, OMITMETHODS_FILE);
 		try {
 			omitMethodsFile.createNewFile();
+
 			try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(omitMethodsFile),
 					StandardCharsets.UTF_8.newEncoder()); BufferedWriter out = new BufferedWriter(writer)) {
-				for (String line : methodsToOmit) {
-					out.write(line);
+
+				for (MethodDeclaration mthd : ommittedMethods) {
+					out.write(convertMethodSignature(mthd));
 					out.newLine();
 				}
+
+				//Add .getClass to ommitted methods
+				out.write("java\\.lang\\.Object\\.getClass\\(");
+				out.newLine();
 			}
+
+
+
 		} catch (IOException e) {
 			Log.error(RandoopGenerator.class, "Failed to write " + omitMethodsFile.getAbsolutePath(), e);
 		}
@@ -346,10 +358,42 @@ public class RandoopGenerator {
 			// We keep the last '(', because otherwise multiple unrelated
 			// methods may be matched by the regex (e.g. testA and testAB)
 			String temp = sig.substring(0, sig.indexOf('(') + 1);
-			ret.add(temp.replace(".", "\\.").replace("(", "\\("));
 		}
 		return ret;
 	}
+
+	private static String convertClassSignature(TypeDeclaration type) {
+		return type.getName().getFullyQualifiedName();//.resolveBinding().getBinaryName();
+	}
+
+	private static String convertMethodSignature(MethodDeclaration method) {
+
+		ITypeBinding classBinding;
+		ASTNode parent = method.getParent();
+		if (parent instanceof AnnotationTypeDeclaration) {
+			classBinding = ((AnnotationTypeDeclaration) parent).resolveBinding();
+		} else if (parent instanceof AnonymousClassDeclaration) {
+			classBinding = ((AnonymousClassDeclaration) parent).resolveBinding();
+		} else if (parent instanceof EnumDeclaration) {
+			classBinding = ((EnumDeclaration) parent).resolveBinding();
+		} else if (parent instanceof TypeDeclaration) {
+			classBinding = ((TypeDeclaration) parent).resolveBinding();
+		} else {
+			throw new RuntimeException("Found naughty method declaration hiding somewhere it doesn't belong ("
+				+ parent.getClass().getName() + ").");
+		}
+
+		String className = classBinding.getBinaryName();
+		String methodName = method.resolveBinding().getName();
+
+
+		String fullyQualifiedName = className + "." + methodName;
+		fullyQualifiedName = fullyQualifiedName.replace(".", "\\.");
+		fullyQualifiedName += "\\(";
+
+		return fullyQualifiedName;
+	}
+
 
 	/**
 	 * A small FileVisitor used to recusively copy directories over.
