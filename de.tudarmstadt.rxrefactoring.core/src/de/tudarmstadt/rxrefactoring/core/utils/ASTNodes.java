@@ -2,6 +2,7 @@ package de.tudarmstadt.rxrefactoring.core.utils;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -116,6 +117,8 @@ public final class ASTNodes {
 		
 		return result;
 	}
+
+
 	
 	/**
 	 * Retrieves the first encountered node from the given AST that fulfills the given predicate.
