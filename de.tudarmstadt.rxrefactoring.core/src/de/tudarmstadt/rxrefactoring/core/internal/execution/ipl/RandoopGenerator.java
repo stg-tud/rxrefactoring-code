@@ -363,7 +363,7 @@ public class RandoopGenerator {
 	}
 
 	private static String convertClassSignature(TypeDeclaration type) {
-		return type.getName().getFullyQualifiedName();//.resolveBinding().getBinaryName();
+		return type.resolveBinding().getBinaryName();
 	}
 
 	private static String convertMethodSignature(MethodDeclaration method) {

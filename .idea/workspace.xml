@@ -2,12 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5a548c55-1ddc-4215-bbca-e80155bfcf47" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/IWorker.java" beforeDir="false" afterPath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/IWorker.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/RefactorExecutionWithTesting.java" beforeDir="false" afterPath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/RefactorExecutionWithTesting.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/MethodScanner.java" beforeDir="false" afterPath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/MethodScanner.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/RandoopGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/RandoopGenerator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.ext.javafuture/src/de/tudarmstadt/rxrefactoring/ext/javafuture/workers/future/MethodDeclarationWorker.java" beforeDir="false" afterPath="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.ext.javafuture/src/de/tudarmstadt/rxrefactoring/ext/javafuture/workers/future/MethodDeclarationWorker.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/bin/" />
@@ -71,7 +66,7 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/RefactorExecutionWithTesting.java">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="585">
@@ -86,11 +81,15 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/RandoopGenerator.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="540">
-              <caret line="388" selection-start-line="388" selection-end-line="388" />
+            <state relative-caret-position="511">
+              <caret line="365" column="30" selection-start-line="365" selection-start-column="30" selection-end-line="365" selection-end-column="30" />
+              <folding>
+                <element signature="e#12563#12564#0" expanded="true" />
+                <element signature="e#12614#12615#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -143,16 +142,15 @@
         <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/IWorker.java" />
         <option value="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/MethodScanner.java" />
-        <option value="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/RandoopGenerator.java" />
         <option value="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/RefactorExecutionWithTesting.java" />
+        <option value="$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/RandoopGenerator.java" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="1920" />
     <option name="y" value="-1" />
-    <option name="width" value="2560" />
-    <option name="height" value="1413" />
+    <option name="width" value="1920" />
+    <option name="height" value="1080" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -339,10 +337,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1920" y="-1" width="2560" height="1413" extended-state="6" />
+    <frame x="0" y="-1" width="1920" height="1053" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25179" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.33778015" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Designer" order="2" />
       <window_info id="UI Designer" order="3" />
@@ -550,13 +548,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/RandoopGenerator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="540">
-          <caret line="388" selection-start-line="388" selection-end-line="388" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/WorkerTree.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="225">
@@ -573,6 +564,17 @@
             <element signature="e#1407#1408#0" expanded="true" />
             <element signature="e#1470#1471#0" expanded="true" />
             <element signature="e#1504#1505#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/de.tudarmstadt.rxrefactoring.core/src/de/tudarmstadt/rxrefactoring/core/internal/execution/ipl/RandoopGenerator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="511">
+          <caret line="365" column="30" selection-start-line="365" selection-start-column="30" selection-end-line="365" selection-end-column="30" />
+          <folding>
+            <element signature="e#12563#12564#0" expanded="true" />
+            <element signature="e#12614#12615#0" expanded="true" />
           </folding>
         </state>
       </provider>
