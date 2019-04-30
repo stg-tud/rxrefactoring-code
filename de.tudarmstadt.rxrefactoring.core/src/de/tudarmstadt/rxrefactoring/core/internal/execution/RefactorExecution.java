@@ -275,6 +275,7 @@ public class RefactorExecution implements Runnable {
 		// Refresh project to include new files
 		project.refreshLocal(IResource.DEPTH_INFINITE, null);
 
+
 		// Add newly moved libraries to the classpath
 		IClasspathEntry[] oldEntries = javaProject.getRawClasspath();
 		// TODO: Differentiate between sources and classes
@@ -296,8 +297,8 @@ public class RefactorExecution implements Runnable {
 				continue;
 			} else {
 				// TODO: Why is the library already added to the class path?
-				// classPathEntries.add(0,
-				// JavaCore.newLibraryEntry(destPath.append(destFile.getName()), null, null));
+				classPathEntries.add(0,
+				JavaCore.newLibraryEntry(destPath.append(destFile.getName()), null, null));
 			}
 
 			// String ap = libs.getAbsolutePath() + File.separator + lib;
