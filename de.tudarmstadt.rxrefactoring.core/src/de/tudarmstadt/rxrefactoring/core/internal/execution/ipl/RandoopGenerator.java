@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -18,13 +20,16 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
@@ -34,6 +39,7 @@ import org.eclipse.jdt.core.JavaModelException;
 
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import org.eclipse.jdt.core.dom.*;
+import org.osgi.framework.Bundle;
 
 /**
  * This class is responsible for setting up the test environment (e.g. creating
@@ -120,17 +126,41 @@ public class RandoopGenerator {
 	public void copyProjectBinariesToPost(IProject project) {
 		copyBinaries(project, getPostDir());
 	}
+
+	public void copyRandoopLibraries() {
+		copyLibraries(getLibDir());
+	}
+
 	
-	
-	private void copyLibraries(IProject project, File destination) {
-		String projectPath = project.getLocation().toOSString();
-		IJavaProject jProj = JavaCore.create(project);
-		
-//		IClasspathEntry[] cp = jProj.getRawClasspath();
-		
-		
-//		org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER
-		
+	private void copyLibraries(File destination) {
+
+
+
+
+
+		try {
+			Log.info(RandoopGenerator.class, "project path = " + Paths.get(".").toAbsolutePath());
+
+
+			Bundle bundle = Platform.getBundle("de.tudarmstadt.rxrefactoring.core");
+			Objects.requireNonNull(bundle, "bundle not found.");
+
+			URL url = FileLocator.resolve(bundle.getEntry("/"));
+			Path libPath = Paths.get(url.toURI()).resolve("randoop-libs");
+
+			Files.walkFileTree(
+				libPath, new CopyVisitor(destination.toPath())
+			);
+
+			Log.info(RandoopGenerator.class, "library path = " + libPath.toAbsolutePath());
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			Log.error(RandoopGenerator.class, "Failed to copy libraries");
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+
 	}
 	
 	/**

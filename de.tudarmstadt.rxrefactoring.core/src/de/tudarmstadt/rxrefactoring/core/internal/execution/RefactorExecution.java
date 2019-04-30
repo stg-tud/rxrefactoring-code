@@ -256,10 +256,7 @@ public class RefactorExecution implements Runnable {
 		Objects.requireNonNull(bundle, "OSGI Bundle can not be found. Is " + extension.getPlugInId() + " the correct plugin id?");
 		
 		URL url = FileLocator.resolve(bundle.getEntry("/"));
-		File sourceDir = Paths.get(url.toURI()).resolve(localResourcePath.toOSString()).toFile(); // This is pretty
-																									// ugly. Is there a
-																									// better way to do
-																									// it?
+		File sourceDir = Paths.get(url.toURI()).resolve(localResourcePath.toOSString()).toFile();
 
 		// Produces the library path inside the project
 		IPath destPath = project.getLocation().append(localDestPath);

@@ -64,9 +64,9 @@ public class MethodScanner {
 		//Add methods that are calling impacted methods
 		callingMethods.putAll(findCallingMethods(units));
 		
-//		 For debugging only
-		 Log.info(MethodScanner.class, "Impacted Methods: " + refactoredMethods);
-		 Log.info(MethodScanner.class, "Calling Methods: " + callingMethods);
+////		 For debugging only
+//		 Log.info(MethodScanner.class, "Impacted Methods: " + refactoredMethods);
+//		 Log.info(MethodScanner.class, "Calling Methods: " + callingMethods);
 	}
 	
 	public void addRefactoredUnit(ProjectUnits units) {

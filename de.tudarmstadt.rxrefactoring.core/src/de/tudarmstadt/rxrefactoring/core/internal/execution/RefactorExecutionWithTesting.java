@@ -59,6 +59,8 @@ public class RefactorExecutionWithTesting extends RefactorExecution {
 	protected void postRefactor() {
 		super.postRefactor();
 
+		Log.info(RefactorExecutionWithTesting.class, "###  ###");
+
 		// IPL: OK has been pressed, time to continue post-refactoring
 		IProject[] projects = getWorkspaceProjects();
 
@@ -79,10 +81,8 @@ public class RefactorExecutionWithTesting extends RefactorExecution {
 				}
 			}
 		}
-		
-		
-		
 
+		rgen.copyRandoopLibraries();
 
 
 		// IPL: Throw out any impacted methods that changed signatures,
@@ -98,18 +98,7 @@ public class RefactorExecutionWithTesting extends RefactorExecution {
 		// methods.
 
 		MethodScanner.ScanResult result = scanner.getResult();
-
-		Set<MethodDeclaration> impacted = result.getTestMethods();
-		System.out.println("### IMPACTED METHODS = " + impacted + " ###");
-
-		Set<TypeDeclaration> impactedClasses = result.getTestClasses();
-		System.out.println("### IMPACTED CLASSES = " + impactedClasses + " ###");
-
-		Set<MethodDeclaration> ommitted = result.getOmmittedMethods();
-		System.out.println("### OMMITTED METHODS = " + ommitted + " ###");
-		
 		rgen.writeFiles(result.getTestClasses(), result.getOmmittedMethods());
-		
 
 //		Set<String> methodsToTest = new HashSet<>(impacted);
 //		methodsToTest.addAll(calling);
