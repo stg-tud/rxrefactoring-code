@@ -1,11 +1,8 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
+import com.google.common.collect.Lists;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ArrayCreation;
@@ -36,11 +33,11 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.VisitorNodes;
 public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 	private final String classBinaryName;
 	
-	Multimap<ASTNode, Use> instantiationUses;
-	Set<IVariableBinding> bindings;
-	Multimap<ASTNode, ASTNode> collectionInstantiations;
-	Multimap<ASTNode, MethodInvocation> collectionGetters;
-	Multimap<MethodDeclaration, ASTNode> methodDecl;
+	private final Multimap<ASTNode, Use> instantiationUses;
+	private final Set<IVariableBinding> bindings;
+	private final Multimap<ASTNode, ASTNode> collectionInstantiations;
+	private final Multimap<ASTNode, MethodInvocation> collectionGetters;
+	private final Multimap<MethodDeclaration, ASTNode> methodDecl;
 
 	private final List<TypeDeclaration> typeDeclarations;
 	private final List<FieldDeclaration> fieldDeclarations;
@@ -56,16 +53,16 @@ public class FutureVisitor3 extends ASTVisitor implements VisitorNodes {
 	public FutureVisitor3(ClassInfo classInfo, PreconditionWorker input) {
 		this.classBinaryName = classInfo.getBinaryName();
 
-		typeDeclarations = new ArrayList<>();
-		assignments = new ArrayList<>();
-		fieldDeclarations = new ArrayList<>();
-		methodInvocations = new ArrayList<>();
-		varDeclStatements = new ArrayList<>();
-		simpleNames = new ArrayList<>();
-		classInstanceCreations = new ArrayList<>();
-		singleVarDeclarations = new ArrayList<>();
-		methodDeclarations = new ArrayList<>();
-		returnStatements = new ArrayList<>();
+		typeDeclarations = Lists.newLinkedList();
+		assignments = Lists.newLinkedList();
+		fieldDeclarations = Lists.newLinkedList();
+		methodInvocations = Lists.newLinkedList();
+		varDeclStatements = Lists.newLinkedList();
+		simpleNames = Lists.newLinkedList();
+		classInstanceCreations = Lists.newLinkedList();
+		singleVarDeclarations = Lists.newLinkedList();
+		methodDeclarations = Lists.newLinkedList();
+		returnStatements = Lists.newLinkedList();
 		
 		instantiationUses = input.instantiationUses;
 		bindings = input.bindings;

@@ -35,8 +35,8 @@ public class MethodScanner {
 	
 //	private Set<AbstractTypeDeclaration> impactedTypes = Sets.newHashSet();
 	
-	private List<ProjectUnits> scannedUnits = Lists.newLinkedList(); 
-	private List<ProjectUnits> refactoredUnits = Lists.newLinkedList();
+//	private List<ProjectUnits> scannedUnits = Lists.newLinkedList();
+//	private List<ProjectUnits> refactoredUnits = Lists.newLinkedList();
 
 
 	/**
@@ -52,66 +52,19 @@ public class MethodScanner {
 		Objects.requireNonNull(units);
 		
 		//Add the scanned unit
-		scannedUnits.add(units);
+//		scannedUnits.add(units);
 			
 		//Add impacted classes and methods
 		refactoredMethods.putAll(findImpactedMethods(units));
 		
-//		impacted.stream()
-//			.flatMap(md -> ASTNodes.findParent(md, AbstractTypeDeclaration.class).stream())
-//			.forEach(td -> impactedTypes.add(td));
-		
 		//Add methods that are calling impacted methods
 		callingMethods.putAll(findCallingMethods(units));
 		
-////		 For debugging only
-//		 Log.info(MethodScanner.class, "Impacted Methods: " + refactoredMethods);
-//		 Log.info(MethodScanner.class, "Calling Methods: " + callingMethods);
 	}
 	
-	public void addRefactoredUnit(ProjectUnits units) {
-		refactoredUnits.add(units);
-	}
-
-//	/**
-//	 * Retains only methods whose signatures have not changed after the refactoring.
-//	 *
-//	 * @param units           The affected project's units after the refactoring.
-//	 * @return A subset of {@code refactoredMethods}, containing only those impacted
-//	 *         methods whose signature did not change.
-//	 */
-//	public void retainUnchangedMethods(ProjectUnits units) {
-//		// Optimization: Look only at classes that contain impacted methods
-//
-//		Builder<MethodDeclaration> builder = ImmutableSet.builder();
-//
-//		JavaVisitor visitor = new JavaVisitor(node -> node instanceof MethodDeclaration && refactoredMethods.contains(node));
-//
-//		for (IRewriteCompilationUnit unit : units) {
-//			CompilationUnit cu = (CompilationUnit) unit.getRoot();
-//
-//			for (Object objType : cu.types()) {
-//				AbstractTypeDeclaration type = (AbstractTypeDeclaration) objType;
-//
-//				if (impactedTypes.stream().anyMatch().contains(type)) {
-//					// @formatter:off
-//					builder.addAll(
-//							(List) visitor.visitCompilationUnit(cu)
-////							visitor.visitCompilationUnit(cu).stream()
-////							.map(node -> (MethodDeclaration) node)
-////							.map(MethodScanner::buildSignatureForDeclaration)
-////							.collect(Collectors.toSet())
-//					);
-//					// @formatter:on
-//				}
-//			}
-//		}
-//
-//		ImmutableSet<MethodDeclaration> retainedMethods = builder.build();
-//
-//		refactoredMethods.removeIf(s -> retainedMethods.contains(s));
+//	public void addRefactoredUnit(ProjectUnits units) {
+//		refactoredUnits.add(units);
 //	}
-
 
 
 
@@ -180,93 +133,8 @@ public class MethodScanner {
 		}
 	}
 
-	/**
-	 * Extracts the class names, including the packages, from the specified
-	 * signatures. See {@link #extractClassName(String)} for more information.
-	 * 
-	 * @param signatures The signatures to extract the class names from.
-	 * @return A set containing all extracted class names.
-	 */
-	public static Set<String> extractClassNames(Set<String> signatures) {
-		return signatures.stream().map(MethodScanner::extractClassName).collect(Collectors.toSet());
-	}
 
-	/**
-	 * Finds method signatures for all methods inside classes matching the specified
-	 * class signatures.
-	 * 
-	 * @param units           The post-refactoring project units.
-	 * @param classSignatures The class signatures for which to find the method
-	 *                        signatures.
-	 * @return Method signatures for all methods inside classes matching the
-	 *         specified class signatures.
-	 */
-	public static Set<String> findAllMethods(ProjectUnits units, Set<String> classSignatures) {
-		Set<String> ret = new HashSet<>();
-		for (IRewriteCompilationUnit unit : units) {
-			CompilationUnit cu = (CompilationUnit) unit.getRoot();
-			for (Object objType : cu.types()) {
-				// We're only interested in type declarations:
-				// AnnotationTypeDeclaration can't declare regular methods
-				// and EnumDeclarations are not refactored (yet)
-				// TODO If EnumDeclarations ever become important, this will
-				// have to be extended
-				if (objType instanceof TypeDeclaration) {
-					TypeDeclaration type = (TypeDeclaration) objType;
-					
-					if (classSignatures.contains(buildSignatureForClass(type))) {
-						for (MethodDeclaration decl : type.getMethods()) {
-							ret.add(buildSignatureForDeclaration(decl));
-						}
-					}
-				}
-			}
-		}
-		return ret;
-	}
 
-	/**
-	 * Removes all signatures of methods that are inaccessible (i.e. non-public)
-	 * from the specified set of method signatures.
-	 * 
-	 * @param methodSet The set of method signatures to remove from.
-	 * @param units     The affected project's units.
-	 */
-	public static void removeInaccessibleMethods(Set<String> methodSet, ProjectUnits units) {
-		for (IRewriteCompilationUnit unit : units) {
-			CompilationUnit cu = (CompilationUnit) unit.getRoot();
-			for (Object objType : cu.types()) {
-				// We're only interested in type declarations:
-				// AnnotationTypeDeclaration can't declare regular methods
-				// and EnumDeclarations are not refactored (yet)
-				// TODO If EnumDeclarations ever become important, this will
-				// have to be extended
-				if (objType instanceof TypeDeclaration) {
-					TypeDeclaration type = (TypeDeclaration) objType;
-					for (MethodDeclaration method : type.getMethods()) {
-						int mod = method.getModifiers();
-						if (!Modifier.isPublic(mod)) {
-							methodSet.remove(buildSignatureForDeclaration(method));
-						}
-					}
-				}
-			}
-		}
-	}
-
-	/**
-	 * Extracts the class name, including the package, from the specified signature.
-	 * That is, if the signature is of the form
-	 * {@code my.package.MyClass.myMethod(...) -> V}, then this will return
-	 * {@code my.package.MyClass}.
-	 * 
-	 * @param signature The signature to extract the class name from.
-	 * @return The class name and package extracted from the specified signature.
-	 */
-	private static String extractClassName(String signature) {
-		String classAndMethod = signature.substring(0, signature.indexOf('('));
-		return classAndMethod.substring(0, classAndMethod.lastIndexOf('.'));
-	}
 
 	/**
 	 * Finds methods that are directly impacted by the refactoring, i.e. ones that
@@ -344,150 +212,14 @@ public class MethodScanner {
 		return builder.build();
 	}
 
-	/**
-	 * Builds a class signature, consisting only of class name and package, for the
-	 * specified type. This method acts as if
-	 * {@code extractClassName(buildSignatureForDeclaration(...))} had been called
-	 * on one of the specified type's methods.
-	 * 
-	 * @param type The type to build a signature for.
-	 * @return A string representing the built signature.
-	 */
-	private static String buildSignatureForClass(TypeDeclaration type) {
-		return type.resolveBinding().getBinaryName();
-	}
 
-	/**
-	 * Builds a method signature for the method called by the specified AST node.
-	 * Note that this only works for AST nodes of the type {@link MethodInvocation}
-	 * or {@link MethodReference}. See
-	 * {@link #buildSignature(String, String, String, String)} for the format of
-	 * these signatures.
-	 * 
-	 * @param node The node to build a signature for.
-	 * @return A string representing the built signature.
-	 */
-	private static String buildSignatureForCalled(ASTNode node) {
-		IMethodBinding binding;
-		if (node instanceof MethodInvocation) {
-			MethodInvocation invocation = (MethodInvocation) node;
-			binding = invocation.resolveMethodBinding();
-		} else if (node instanceof MethodReference) {
-			MethodReference reference = (MethodReference) node;
-			binding = reference.resolveMethodBinding();
-		} else {
-			return null;
-		}
-
-		// Occurs if the binding cannot be resolved
-		if (binding == null) {
-			return null;
-		}
-		binding = binding.getMethodDeclaration();
-
-		String className = binding.getDeclaringClass().getBinaryName();
-		String methodName = binding.getName();
-		String params = Arrays.stream(binding.getParameterTypes()).map(t -> t.getBinaryName())
-				.collect(Collectors.joining(", "));
-		String returnName = binding.getReturnType().getBinaryName();
-		return buildSignature(className, methodName, params, returnName);
-	}
-
-	/**
-	 * Builds a method signature for the method declaration that contains the
-	 * specified AST node. Note that this only works for AST nodes of the type
-	 * {@link MethodInvocation} or {@link MethodReference}. See
-	 * {@link #buildSignature(String, String, String, String)} for the format of
-	 * these signatures.
-	 * 
-	 * @param node The node to build a signature for.
-	 * @return A string representing the built signature.
-	 */
-	private static String buildSignatureForCallee(ASTNode node) {
-		ASTNode parent = node;
-		while (!(parent instanceof MethodDeclaration)) {
-			if (parent == null) {
-				return MISSING_SIGNATURE;
-			}
-			parent = parent.getParent();
-		}
-		return buildSignatureForDeclaration((MethodDeclaration) parent);
-	}
-
-	/**
-	 * Builds a method signature for the specified method declaration. See
-	 * {@link #buildSignature(String, String, String, String)} for the format of
-	 * these signatures.
-	 * 
-	 * @param method The method declaration to build a signature for.
-	 * @return A string representing the built signature.
-	 */
-	private static String buildSignatureForDeclaration(MethodDeclaration method) {
-		ITypeBinding classBinding;
-		ASTNode parent = method.getParent();
-		if (parent instanceof AnnotationTypeDeclaration) {
-			classBinding = ((AnnotationTypeDeclaration) parent).resolveBinding();
-		} else if (parent instanceof AnonymousClassDeclaration) {
-			classBinding = ((AnonymousClassDeclaration) parent).resolveBinding();
-		} else if (parent instanceof EnumDeclaration) {
-			classBinding = ((EnumDeclaration) parent).resolveBinding();
-		} else if (parent instanceof TypeDeclaration) {
-			classBinding = ((TypeDeclaration) parent).resolveBinding();
-		} else {
-			throw new RuntimeException("Found naughty method declaration hiding somewhere it doesn't belong ("
-					+ parent.getClass().getName() + ").");
-		}
-		String className = classBinding.getBinaryName();
-
-		String methodName = method.getName().getFullyQualifiedName();
-		@SuppressWarnings("unchecked")
-		List<SingleVariableDeclaration> objParams = method.parameters();
-		// @formatter:off
-		String params = objParams.stream().map(SingleVariableDeclaration::resolveBinding).map(IVariableBinding::getType)
-				.map(ITypeBinding::getBinaryName).collect(Collectors.joining(", "));
-		// @formatter:on
-
-		Type returnType = method.getReturnType2();
-		String returnName;
-		if (returnType != null) {
-			returnName = returnType.resolveBinding().getBinaryName();
-		} else {
-			// Happens for constructors, just set the return type to their own
-			// type to mirror the Java bytecode names
-			returnName = className;
-		}
-		return buildSignature(className, methodName, params, returnName);
-	}
-
-	/**
-	 * Builds a signature based on the specified method properties. These signatures
-	 * are of the form
-	 * {@code my.package.MyClass.myMethod(my.package.MyParameterClass) :
-	 * my.package.MyReturnTypeClass}.
-	 * 
-	 * @param className  The name of the class from which the method comes,
-	 *                   including the package.
-	 * @param methodName The name of the method itself.
-	 * @param params     The names of the classes of the parameters of this method,
-	 *                   including the packages, separated by commas and spaces.
-	 * @param returnName The name of the type of class which this method returns,
-	 *                   including the package.
-	 * @return A signature for the specified properties.
-	 */
-	private static String buildSignature(String className, String methodName, String params, String returnName) {
-		return className + "." + methodName + "(" + params + ") -> " + returnName;
-	}
-	
 	private static boolean methodHasChangedSignature(MethodDeclaration method, ASTRewrite rewriter) {
 		
 		java.util.function.Function<ASTNode, Boolean> hasChanges = node -> nodeHasChanges(node, rewriter);
-		
-		boolean hasSignatureChanged = 
-			ASTNodes.containsNode(method.getName(), hasChanges) 
-			|| ASTNodes.containsNode(method.getReturnType2(), hasChanges)
-			|| method.parameters().stream().anyMatch(par -> ASTNodes.containsNode((ASTNode) par, hasChanges));
-		
-		return hasSignatureChanged;
+
+		return ASTNodes.containsNode(method.getName(), hasChanges)
+		|| ASTNodes.containsNode(method.getReturnType2(), hasChanges)
+		|| method.parameters().stream().anyMatch(par -> ASTNodes.containsNode((ASTNode) par, hasChanges));
 	}
 
 	/**

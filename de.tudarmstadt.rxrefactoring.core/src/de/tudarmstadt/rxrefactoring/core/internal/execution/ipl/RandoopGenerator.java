@@ -58,7 +58,7 @@ public class RandoopGenerator {
 			"C_RED='\\033[1;31m'", "C_YELLOW='\\033[1;33m'", "C_NC='\\033[0m'" };
 	// @formatter:on
 	private static final String ECHO_RUN_RANDOOP = "echo -e \"${C_BLUE}==> ${C_YELLOW}Running randoop on pre-refactoring binaries${C_NC}\"";
-	private static final String COMMAND_RUN_RANDOOP = "java -classpath \"pre:libs/*\" randoop.main.Main gentests --classlist=classlist.txt --omitmethods-file=omitmethods.txt --no-error-revealing-tests=true --junit-output-dir=tests/src --time-limit=10";
+	private static final String COMMAND_RUN_RANDOOP = "java -classpath \"pre:libs/*\" randoop.main.Main gentests --classlist=classlist.txt --omitmethods-file=omitmethods.txt --no-error-revealing-tests=true --junit-output-dir=tests/src --time-limit=10 --flaky-test-behavior=DISCARD";
 	private static final String IF_CHECK_RETURN_CODE = "if [ ! $? -eq 0 ]";
 	private static final String THEN = "then";
 	private static final String EXIT_ERROR = "    exit 1";
@@ -102,7 +102,7 @@ public class RandoopGenerator {
 		String time = sdf.format(java.util.Date.from(Instant.now()));
 		tempDir = new File("/tmp/randoop-gen-" + time);
 		tempDir.mkdirs();
-		
+
 		getPreDir().mkdirs();
 		getPostDir().mkdirs();
 		getLibDir().mkdirs();
@@ -133,15 +133,7 @@ public class RandoopGenerator {
 
 	
 	private void copyLibraries(File destination) {
-
-
-
-
-
 		try {
-			Log.info(RandoopGenerator.class, "project path = " + Paths.get(".").toAbsolutePath());
-
-
 			Bundle bundle = Platform.getBundle("de.tudarmstadt.rxrefactoring.core");
 			Objects.requireNonNull(bundle, "bundle not found.");
 
@@ -188,12 +180,7 @@ public class RandoopGenerator {
 			for (IClasspathEntry entry : cp) {
 				
 				
-//				if (entry instanceof IClasspathContainer) {
-//					IClasspathContainer container = (IClasspathContainer) entry;
-//					IClasspathEntry[] entries = container.getClasspathEntries();
-//					System.out.println("oof");
-//				}
-				
+
 				
 				if (entry.getContentKind() == IPackageFragmentRoot.K_SOURCE) {
 					IPath outputPath = entry.getOutputLocation();
@@ -372,29 +359,11 @@ public class RandoopGenerator {
 		Log.info(RandoopGenerator.class, "Randoop configuration written to " + tempDir.getAbsolutePath());
 	}
 
-	/**
-	 * Converts the specified set of signatures into a set of regex strings suitable
-	 * for passing to randoop's omitmethods parameter. This is accomplished by first
-	 * truncating the signature to the first parantheses and then escaping the dots
-	 * and parantheses inside the signature (since those have special meaning as
-	 * regex characters).
-	 * 
-	 * @param signatures The set of signatures to process.
-	 * @return A set of regexes suitable for passing to randoop.
-	 */
-	public static Set<String> convertToRegexFormat(Set<String> signatures) {
-		Set<String> ret = new HashSet<>();
-		for (String sig : signatures) {
-			// We keep the last '(', because otherwise multiple unrelated
-			// methods may be matched by the regex (e.g. testA and testAB)
-			String temp = sig.substring(0, sig.indexOf('(') + 1);
-		}
-		return ret;
-	}
 
 	private static String convertClassSignature(TypeDeclaration type) {
 		return type.resolveBinding().getBinaryName();
 	}
+
 
 	private static String convertMethodSignature(MethodDeclaration method) {
 

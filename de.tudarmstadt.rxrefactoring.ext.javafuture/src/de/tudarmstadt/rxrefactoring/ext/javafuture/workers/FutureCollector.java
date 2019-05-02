@@ -70,7 +70,9 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 	public FutureCollector refactor(IProjectUnits units, PreconditionWorker input, WorkerSummary summary) throws Exception {
 		this.collectionGetters = input.collectionGetters;
 		this.methodDeclarationReturns = input.methodDeclarations;
-		//this.methodDeclarationParams = input.methodDeclarationParams;
+
+		groups.putIfAbsent("future", new CollectorGroup());
+		groups.putIfAbsent("collection", new CollectorGroup());
 		
 		for (IRewriteCompilationUnit unit : units) {
 			// Collect the data
@@ -79,18 +81,10 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 				FutureCollectionVisitor2 collectionDiscoveringVisitor = new FutureCollectionVisitor2(ClassInfos.Future.getBinaryName(), input);
 
 				unit.accept(discoveringVisitor);
-
 				add("future", unit, discoveringVisitor);
 				
-				//TODO remove for now
 				unit.accept(collectionDiscoveringVisitor);
 				add("collection", unit, collectionDiscoveringVisitor);
-			}
-
-			if (options.contains(RefactoringOptions.FUTURETASK)) {
-				FutureVisitor futureTaskDiscoveringVisitor = new FutureVisitor(ClassInfos.FutureTask);
-				unit.accept(futureTaskDiscoveringVisitor);
-				add("futuretask", unit, futureTaskDiscoveringVisitor);
 			}
 		}
 
@@ -102,11 +96,7 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 	public void add(String group, IRewriteCompilationUnit cu, VisitorNodes subclasses) {
 
 		// Create group if it doesn't exist yet
-		if (!groups.containsKey(group))
-			groups.put(group, new CollectorGroup());
-
 		CollectorGroup collectorGroup = groups.get(group);
-
 		collectorGroup.add(cu, subclasses);
 
 		//addPureInformation(cu, subclasses.getParentMethods(), subclasses.getIsMethodPures());

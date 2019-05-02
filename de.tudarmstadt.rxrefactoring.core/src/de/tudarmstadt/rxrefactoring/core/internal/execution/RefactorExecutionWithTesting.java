@@ -45,9 +45,6 @@ public class RefactorExecutionWithTesting extends RefactorExecution {
 	protected void onProjectFinished(IProject project, IJavaProject jproject, ProjectUnits units) {
 		super.onProjectFinished(project, jproject, units);
 
-		Log.info(RefactorExecutionWithTesting.class, "Scan methods for testing...");
-
-
 		// IPL: Find the changing and calling methods
 		Log.info(RefactorExecutionWithTesting.class, "Scan " + project.getName());
 		scanner.scan(units);
@@ -59,7 +56,7 @@ public class RefactorExecutionWithTesting extends RefactorExecution {
 	protected void postRefactor() {
 		super.postRefactor();
 
-		Log.info(RefactorExecutionWithTesting.class, "###  ###");
+		rgen.copyRandoopLibraries();
 
 		// IPL: OK has been pressed, time to continue post-refactoring
 		IProject[] projects = getWorkspaceProjects();
@@ -73,63 +70,19 @@ public class RefactorExecutionWithTesting extends RefactorExecution {
 				rgen.copyProjectBinariesToPost(project);
 
 				// IPL: Parse the refactored compilation units to obtain the ASTs
-				try {
-					ProjectUnits units = parseCompilationUnits(JavaCore.create(project));
-					scanner.addRefactoredUnit(units);
-				} catch (JavaModelException e) {
-					throw new RuntimeException(e);
-				}
+//				try {
+//					ProjectUnits units = parseCompilationUnits(JavaCore.create(project));
+//					scanner.addRefactoredUnit(units);
+//				} catch (JavaModelException e) {
+//					throw new RuntimeException(e);
+//				}
 			}
 		}
 
-		rgen.copyRandoopLibraries();
-
-
-		// IPL: Throw out any impacted methods that changed signatures,
-		// because those can't be tested
-//				try {
-//					impacted = MethodScanner.retainUnchangedMethods(impacted, units);
-//				} catch (Throwable e) {
-//					Log.error(RefactorExecutionWithTesting.class, "Failed to determine unchanged methods.", e);
-//				}
-
-		// IPL: The methods to test are the union of the unchanged
-		// impacted methods and the methods that call any impacted
-		// methods.
-
 		MethodScanner.ScanResult result = scanner.getResult();
 		rgen.writeFiles(result.getTestClasses(), result.getOmmittedMethods());
-
-//		Set<String> methodsToTest = new HashSet<>(impacted);
-//		methodsToTest.addAll(calling);
-//		// IPL: Throw out any inaccessible (i.e. non-public)
-//		// methods, since those can't be tested
-//		MethodScanner.removeInaccessibleMethods(methodsToTest, units);
-//
-//		Log.info(RefactorExecutionWithTesting.class,
-//				"Found total of " + methodsToTest.size() + " method(s) suitable for testing.");
-//		Log.info(RefactorExecutionWithTesting.class, methodsToTest);
-//		// IPL: For debugging only
-//		// Log.info(RefactorExecution.class, "Methods to test: " + methodsToTest);
-//
-//		// IPL: Compute the set of classes that will be tested
-//		Set<String> classesToTest = MethodScanner.extractClassNames(methodsToTest);
-//		// IPL: For debugging only
-//		// Log.info(RefactorExecution.class, "Classes to test: " + classesToTest);
-//
-//		// IPL: Compute the set of methods that should NOT be tested
-//		Set<String> methodsToOmit = MethodScanner.findAllMethods(units, classesToTest);
-//		methodsToOmit.removeAll(methodsToTest);
-//		methodsToOmit = RandoopGenerator.convertToRegexFormat(methodsToOmit);
-//		// IPL: Disgusting hack, because Randoop LOVES calling
-//		// getClass() and comparing the result to null
-//		methodsToOmit.add("java\\.lang\\.Object\\.getClass\\(");
-//
-//		// IPL: Finally, create the output
-//		rgen.createOutput(classesToTest, methodsToOmit);
-
-
-
+		
+		Log.info(RefactorExecutionWithTesting.class, "Created Randoop tests in " + rgen.getTempDir());
 	}
 
 }

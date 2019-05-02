@@ -215,6 +215,8 @@ public class RefactorExecution implements Runnable {
 		if (result == IDialogConstants.OK_ID) {
 		    postRefactor();
 		}
+		
+		Log.info(RefactorExecution.class, "Done.");
 	}
 	
 	
@@ -309,7 +311,12 @@ public class RefactorExecution implements Runnable {
 
 		}
 
-		javaProject.setRawClasspath(classPathEntries.toArray(new IClasspathEntry[classPathEntries.size()]), null);
+		try {
+			javaProject.setRawClasspath(classPathEntries.toArray(new IClasspathEntry[classPathEntries.size()]), null);
+		} catch (JavaModelException e) {
+			Log.error(RefactorExecution.class, "Classpath was not set correctly, reason: " + e.getMessage());
+		}
+		
 	}
 
 
