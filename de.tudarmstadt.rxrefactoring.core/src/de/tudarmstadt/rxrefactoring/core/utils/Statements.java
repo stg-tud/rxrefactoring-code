@@ -1,7 +1,5 @@
 package de.tudarmstadt.rxrefactoring.core.utils;
 
-import java.util.Optional;
-
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ASTNode;

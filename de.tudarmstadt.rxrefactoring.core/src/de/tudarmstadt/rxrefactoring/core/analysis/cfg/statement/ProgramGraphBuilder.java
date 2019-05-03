@@ -2,7 +2,6 @@ package de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -31,14 +30,12 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.ObjectArrays;
 import com.google.common.collect.Sets;
 
-import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IControlFlowGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IEdge;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.expression.ExceptionIdentifier;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.expression.ExpressionGraph;

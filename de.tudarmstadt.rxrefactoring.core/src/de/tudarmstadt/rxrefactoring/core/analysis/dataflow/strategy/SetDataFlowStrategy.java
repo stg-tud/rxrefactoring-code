@@ -1,6 +1,5 @@
 package de.tudarmstadt.rxrefactoring.core.analysis.dataflow.strategy;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 

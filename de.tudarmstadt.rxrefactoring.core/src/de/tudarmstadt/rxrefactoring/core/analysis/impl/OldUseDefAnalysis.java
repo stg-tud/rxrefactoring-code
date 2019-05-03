@@ -1,15 +1,10 @@
 package de.tudarmstadt.rxrefactoring.core.analysis.impl;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.Sets;
-import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
-import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.strategy.IDataFlowStrategy;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.Predicate;
+
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Expression;
@@ -18,6 +13,14 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
+
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.Sets;
+
+import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
+import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.strategy.IDataFlowStrategy;
 
 /**
  * Returns a Map of 'defs' and 'uses' instead of only def-multimaps.

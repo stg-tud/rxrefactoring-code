@@ -1,14 +1,11 @@
 package de.tudarmstadt.rxrefactoring.core.analysis.cfg.expression;
 
-import java.util.Map;
 import java.util.Objects;
 
 import org.eclipse.jdt.core.dom.Expression;
 import org.jgrapht.graph.AbstractBaseGraph;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IControlFlowGraph;

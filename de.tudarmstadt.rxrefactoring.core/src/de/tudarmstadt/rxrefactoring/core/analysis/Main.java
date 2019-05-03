@@ -1,7 +1,5 @@
 package de.tudarmstadt.rxrefactoring.core.analysis;
 
-import java.util.Set;
-
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
@@ -14,8 +12,6 @@ import de.tudarmstadt.rxrefactoring.core.analysis.cfg.expression.ExpressionGraph
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement.ProgramGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.NotConvergingException;
-import de.tudarmstadt.rxrefactoring.core.analysis.impl.VariableNameAnalysis;
-import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.ReachingDefinition;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.ReachingDefinitionsAnalysis;
 
 public final class Main {

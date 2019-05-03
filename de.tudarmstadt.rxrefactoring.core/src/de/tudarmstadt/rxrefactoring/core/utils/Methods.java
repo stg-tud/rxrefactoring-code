@@ -1,6 +1,5 @@
 package de.tudarmstadt.rxrefactoring.core.utils;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -14,7 +13,6 @@ import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.Name;
-import org.eclipse.jdt.core.dom.SimpleName;
 
 public final class Methods {
 	

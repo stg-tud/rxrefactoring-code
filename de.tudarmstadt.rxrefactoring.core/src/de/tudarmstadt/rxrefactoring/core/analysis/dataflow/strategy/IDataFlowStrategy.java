@@ -1,7 +1,5 @@
 package de.tudarmstadt.rxrefactoring.core.analysis.dataflow.strategy;
 
-import java.util.Collection;
-
 import org.eclipse.jdt.annotation.NonNull;
 
 public interface IDataFlowStrategy<Vertex, Result> {

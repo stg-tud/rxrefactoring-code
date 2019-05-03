@@ -1,16 +1,28 @@
 package de.tudarmstadt.rxrefactoring.core.internal.execution.ipl;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import de.tudarmstadt.rxrefactoring.core.utils.Log;
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.ChildListPropertyDescriptor;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
@@ -33,11 +45,6 @@ public class MethodScanner {
 	private Map<MethodDeclaration, IRewriteCompilationUnit> refactoredMethods = Maps.newHashMap();
 	private Map<MethodDeclaration, IRewriteCompilationUnit> callingMethods = Maps.newHashMap();
 	
-//	private Set<AbstractTypeDeclaration> impactedTypes = Sets.newHashSet();
-	
-//	private List<ProjectUnits> scannedUnits = Lists.newLinkedList();
-//	private List<ProjectUnits> refactoredUnits = Lists.newLinkedList();
-
 
 	/**
 	 * Find both {@link #findImpactedMethods(ProjectUnits) impacted} and
@@ -51,22 +58,13 @@ public class MethodScanner {
 	public void scan(ProjectUnits units) {
 		Objects.requireNonNull(units);
 		
-		//Add the scanned unit
-//		scannedUnits.add(units);
-			
 		//Add impacted classes and methods
 		refactoredMethods.putAll(findImpactedMethods(units));
-		
 		//Add methods that are calling impacted methods
 		callingMethods.putAll(findCallingMethods(units));
 		
 	}
 	
-//	public void addRefactoredUnit(ProjectUnits units) {
-//		refactoredUnits.add(units);
-//	}
-
-
 
 	public ScanResult getResult() {
 		return new ScanResult();

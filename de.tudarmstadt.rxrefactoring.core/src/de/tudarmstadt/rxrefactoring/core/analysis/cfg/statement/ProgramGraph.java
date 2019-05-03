@@ -1,7 +1,6 @@
 package de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement;
 
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Statement;

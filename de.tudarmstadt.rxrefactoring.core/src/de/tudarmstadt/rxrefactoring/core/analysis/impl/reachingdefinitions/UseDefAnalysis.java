@@ -1,16 +1,5 @@
 package de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions;
 
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IControlFlowGraph;
-import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
-import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.NotConvergingException;
-import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.strategy.IDataFlowStrategy;
-import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use;
-import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use.Kind;
-import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
-import de.tudarmstadt.rxrefactoring.core.utils.Expressions;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,6 +26,18 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
+
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+
+import de.tudarmstadt.rxrefactoring.core.analysis.cfg.IControlFlowGraph;
+import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
+import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.NotConvergingException;
+import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.strategy.IDataFlowStrategy;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use;
+import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use.Kind;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.Expressions;
 
 public final class UseDefAnalysis extends DataFlowAnalysis<ASTNode, UseDef> {
 

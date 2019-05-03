@@ -15,8 +15,6 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.eclipse.text.edits.MalformedTreeException;
 
-import com.google.common.collect.Sets;
-
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
