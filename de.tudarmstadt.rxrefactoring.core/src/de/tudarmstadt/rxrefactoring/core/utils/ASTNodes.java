@@ -157,4 +157,7 @@ public final class ASTNodes {
 	public static boolean containsNode(@NonNull ASTNode root, @NonNull Function<ASTNode, Boolean> predicate) {
 		return findNode(root, predicate).isPresent();
 	}
+
+
+
 }

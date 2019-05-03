@@ -2,18 +2,14 @@ package de.tudarmstadt.rxrefactoring.core.utils;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.Block;
-import org.eclipse.jdt.core.dom.DoStatement;
-import org.eclipse.jdt.core.dom.EnhancedForStatement;
-import org.eclipse.jdt.core.dom.ForStatement;
-import org.eclipse.jdt.core.dom.LabeledStatement;
-import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.Statement;
-import org.eclipse.jdt.core.dom.WhileStatement;
+import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 
 public final class Statements {
@@ -101,6 +97,54 @@ public final class Statements {
 			
 		}
 	}
+
+	public static void removeExceptionFromEnclosingTry(@NonNull IRewriteCompilationUnit unit, 
+			ASTNode child, String exceptionType) {
+		synchronized (unit) {
+			ASTNodes.findParent(child, TryStatement.class).ifPresent( tryStatement -> {
+				List<CatchClause> catchClauses = tryStatement.catchClauses();
+
+				for (CatchClause cc : catchClauses) {
+					Type exType = cc.getException().getType();
+
+					if (Types.isTypeOf(exType.resolveBinding(), exceptionType)) {
+						unit.remove(cc);
+					}					
+				}			
+			});
+		}
+
+	}
+
+
+
+//	public static void removeTryStatement(IRewriteCompilationUnit unit, MethodInvocation mi) {
+//
+//		if (tryStatement.isPresent()) {
+//			Optional<Block> block = ASTNodes.findParent(tryStatement.get(), Block.class);
+//			if (block.isPresent()) {
+//				List statementsTry = tryStatement.get().getBody().statements();
+//				List statementsParent = block.get().statements();
+//				Block newBlock = unit.getAST().newBlock();
+//				ListRewrite rewrite = unit.getListRewrite(newBlock, Block.STATEMENTS_PROPERTY);
+//				List<Statement> combinedStatements = new ArrayList<Statement>();
+//				for (Object o : statementsParent) {
+//					if (((Statement)o).equals(tryStatement.get())) {
+//						for (Object t : statementsTry)
+//							combinedStatements.add((Statement)t);
+//					} else
+//						combinedStatements.add((Statement)o);
+//				}
+//				Statement currentStatement = (Statement) combinedStatements.get(0);
+//				rewrite.insertFirst(currentStatement, null);
+//				for(int i=1; i<combinedStatements.size(); i++) {
+//					rewrite.insertAfter(combinedStatements.get(i), currentStatement, null);
+//					currentStatement = combinedStatements.get(i);
+//				}
+//				unit.replace(block.get(), newBlock);
+//			}
+//		}
+//	}
 	
 	
 }

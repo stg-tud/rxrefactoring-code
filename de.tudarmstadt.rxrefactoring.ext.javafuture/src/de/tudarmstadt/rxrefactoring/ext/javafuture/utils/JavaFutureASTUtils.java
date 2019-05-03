@@ -93,31 +93,12 @@ public class JavaFutureASTUtils {
 		unit.replace(oldNode, singleMethod);
 	}
 
-	public static void replaceWithBlockingGet(IRewriteCompilationUnit unit, MethodInvocation oldNode,
-			String callerName) {
-		AST ast = unit.getAST();
 
-		MethodInvocation blockingSingle = ast.newMethodInvocation();
-		blockingSingle.setName(ast.newSimpleName("blockingSingle"));
-
-		Expression old = oldNode.getExpression();
-		if (old instanceof ArrayAccess) {
-
-			ArrayAccess clone = ast.newArrayAccess();
-			clone.setArray(ast.newSimpleName(callerName));
-			clone.setIndex(unit.copyNode(((ArrayAccess) old).getIndex()));
-
-			blockingSingle.setExpression(clone);
-		} else {
-			blockingSingle.setExpression(ast.newSimpleName(callerName));
-		}
-
-		unit.replace(oldNode, blockingSingle);
-		removeTryStatement(unit, oldNode);
-
-	}
-	
 	public static void replaceWithBlockingGet(IRewriteCompilationUnit unit, MethodInvocation oldNode) {
+		Statements.removeExceptionFromEnclosingTry(unit, oldNode, "java.util.concurrent.ExecutionException");
+		Statements.removeExceptionFromEnclosingTry(unit, oldNode, "java.util.concurrent.TimeoutException");
+		Statements.removeExceptionFromEnclosingTry(unit, oldNode, "java.lang.InterruptedException");
+
 		AST ast = unit.getAST();
 		MethodInvocation blockingSingle = ast.newMethodInvocation();
 		blockingSingle.setName(ast.newSimpleName("blockingSingle"));
@@ -126,12 +107,42 @@ public class JavaFutureASTUtils {
 		Expression clone = unit.copyNode(old);
 		
 		blockingSingle.setExpression(clone);
+
 		unit.replace(oldNode, blockingSingle);
-//		removeTryStatement(unit, oldNode);
 	}
 
 	public static void removeTryStatement(IRewriteCompilationUnit unit, MethodInvocation mi) {
 		Optional<TryStatement> tryStatement = ASTNodes.findParent(mi, TryStatement.class);
+		if (tryStatement.isPresent()) {
+			Optional<Block> block = ASTNodes.findParent(tryStatement.get(), Block.class);
+			if (block.isPresent()) {
+				List statementsTry = tryStatement.get().getBody().statements();
+				List statementsParent = block.get().statements();
+				Block newBlock = unit.getAST().newBlock();
+				ListRewrite rewrite = unit.getListRewrite(newBlock, Block.STATEMENTS_PROPERTY);
+				List<Statement> combinedStatements = new ArrayList<Statement>();
+				for (Object o : statementsParent) {
+					if (((Statement)o).equals(tryStatement.get())) {
+						for (Object t : statementsTry)
+							combinedStatements.add((Statement)t);
+					} else
+						combinedStatements.add((Statement)o);
+				}
+				Statement currentStatement = (Statement) combinedStatements.get(0);
+				rewrite.insertFirst(currentStatement, null);
+				for(int i=1; i<combinedStatements.size(); i++) {
+					rewrite.insertAfter(combinedStatements.get(i), currentStatement, null);
+					currentStatement = combinedStatements.get(i);
+				}
+				unit.replace(block.get(), newBlock);
+			}
+		}
+	}
+	
+	
+	public static void removeException(IRewriteCompilationUnit unit, ASTNode node) {
+		Optional<TryStatement> tryStatement = ASTNodes.findParent(node, TryStatement.class);
+		
 		if (tryStatement.isPresent()) {
 			Optional<Block> block = ASTNodes.findParent(tryStatement.get(), Block.class);
 			if (block.isPresent()) {

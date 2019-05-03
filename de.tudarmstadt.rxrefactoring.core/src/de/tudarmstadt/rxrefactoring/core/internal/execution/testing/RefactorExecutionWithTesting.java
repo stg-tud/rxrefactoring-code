@@ -1,11 +1,11 @@
-package de.tudarmstadt.rxrefactoring.core.internal.execution;
+package de.tudarmstadt.rxrefactoring.core.internal.execution.testing;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IJavaProject;
 
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
-import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.MethodScanner;
-import de.tudarmstadt.rxrefactoring.core.internal.execution.ipl.RandoopGenerator;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.RefactorExecution;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 public class RefactorExecutionWithTesting extends RefactorExecution {

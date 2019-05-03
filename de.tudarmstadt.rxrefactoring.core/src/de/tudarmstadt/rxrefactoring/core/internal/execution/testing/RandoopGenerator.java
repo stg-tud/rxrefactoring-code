@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core.internal.execution.ipl;
+package de.tudarmstadt.rxrefactoring.core.internal.execution.testing;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -50,7 +50,7 @@ import de.tudarmstadt.rxrefactoring.core.utils.Log;
  * 
  * @author Nikolas Hanstein, Maximilian Kirschner
  */
-public class RandoopGenerator {
+class RandoopGenerator {
 	// Constants
 	private static final String OMITMETHODS_FILE = "omitmethods.txt";
 	private static final String CLASSLIST_FILE = "classlist.txt";

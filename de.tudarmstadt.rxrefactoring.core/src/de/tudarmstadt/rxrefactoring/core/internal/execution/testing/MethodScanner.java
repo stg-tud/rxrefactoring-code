@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core.internal.execution.ipl;
+package de.tudarmstadt.rxrefactoring.core.internal.execution.testing;
 
 import java.util.Arrays;
 import java.util.List;
@@ -35,7 +35,7 @@ import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
  * 
  * @author Nikolas Hanstein, Maximilian Kirschner
  */
-public class MethodScanner {
+class MethodScanner {
 	/**
 	 * The string used for signatures that could not be created due to errors.
 	 */
