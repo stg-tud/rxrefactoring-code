@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core.internal.execution.testing;
+package de.tudarmstadt.rxrefactoring.core.internal.testing;
 
 import java.io.BufferedWriter;
 import java.io.File;

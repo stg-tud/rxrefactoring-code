@@ -20,8 +20,8 @@ public class SwingWorkerInfo {
 	private static final Map<String, String> publicMethodsMap = new HashMap<String, String>() {
 		{
 			put("addPropertyChangeListener", "addPropertyChangeListener");
-			put("cancel", "cancelObservable");
-			put("execute", "executeObservable");
+			put("cancel", "cancel");
+			put("execute", "execute");
 			put("firePropertyChange", "firePropertyChange");
 			put("get", "get");
 			put("getProgress", "getProgress");

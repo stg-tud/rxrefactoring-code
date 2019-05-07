@@ -1,0 +1,4 @@
+de/tudarmstadt/stg/rx/swingworker/SWPackage.java
+de/tudarmstadt/stg/rx/swingworker/SWEmitter.java
+de/tudarmstadt/stg/rx/swingworker/RxSwingWorkerAPI.java
+de/tudarmstadt/stg/rx/swingworker/SWSubscriber.java

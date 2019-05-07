@@ -59,7 +59,7 @@ public class FieldDeclarationWorker extends GeneralWorker<TypeOutput, Void> {
 			if (type instanceof ParameterizedType) {
 				type = ((ParameterizedType) type).getType();
 			}
-			if (Types.isTypeOf(type.resolveBinding(), SwingWorkerInfo.getBinaryName())) {
+			if (Types.isExactTypeOf(type.resolveBinding(), true, SwingWorkerInfo.getBinaryName())) {
 				SimpleType newType = SwingWorkerASTUtils.newSimpleType(ast, "SWSubscriber");
 				synchronized (icu) {
 					icu.replace(type, newType);

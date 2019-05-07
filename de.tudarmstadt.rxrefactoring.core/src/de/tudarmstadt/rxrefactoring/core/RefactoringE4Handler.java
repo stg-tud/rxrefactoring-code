@@ -5,7 +5,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.swt.widgets.Shell;
 
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RefactorExecution;
-import de.tudarmstadt.rxrefactoring.core.internal.execution.testing.RefactorExecutionWithTesting;
+import de.tudarmstadt.rxrefactoring.core.internal.testing.RefactorExecutionWithTesting;
 
 /**
  * Starts the refactoring when the button is clicked by invoking a

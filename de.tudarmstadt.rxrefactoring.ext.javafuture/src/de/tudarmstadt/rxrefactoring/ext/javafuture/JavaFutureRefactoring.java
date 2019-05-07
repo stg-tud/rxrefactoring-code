@@ -37,16 +37,6 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 	}
 
 	@Override
-	public IPath getResourceDir() {
-		return new Path("resources/");
-	}
-
-	@Override
-	public IPath getDestinationDir() {
-		return new Path("./libs/");
-	}
-
-	@Override
 	public @NonNull String getName() {
 		return "Future and FutureTask to Observable";
 	}
@@ -54,6 +44,16 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 	@Override
 	public @NonNull String getDescription() {
 		return "Refactor Future and FutureTask to Observables...";
+	}
+	
+	@Override
+	public IPath getResourceDir() {
+		return new Path("resources/");
+	}
+
+	@Override
+	public IPath getDestinationDir() {
+		return new Path("./libs/");
 	}
 
 	@Override

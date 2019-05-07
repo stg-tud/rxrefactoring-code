@@ -78,6 +78,7 @@ public class MethodInvocationWorker implements IWorker<TypeOutput, Void> {
 
 		SimpleName newMethod = SwingWorkerASTUtils.newSimpleName(ast, newMethodName);
 
+
 		synchronized (unit) {
 			unit.replace(methodSimpleName, newMethod);
 		}

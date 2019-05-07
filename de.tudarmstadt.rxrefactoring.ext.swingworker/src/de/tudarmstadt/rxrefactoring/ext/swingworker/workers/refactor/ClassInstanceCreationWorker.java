@@ -53,8 +53,7 @@ public class ClassInstanceCreationWorker extends GeneralWorker<TypeOutput, Void>
 
 		RefactorInfo info = input.info;
 
-		for (Map.Entry<IRewriteCompilationUnit, ClassInstanceCreation> entry : input.collector.getClassInstanceMap()
-				.entries()) {
+		for (Map.Entry<IRewriteCompilationUnit, ClassInstanceCreation> entry : input.collector.getClassInstanceMap().entries()) {
 
 			IRewriteCompilationUnit unit = entry.getKey();
 			ClassInstanceCreation classInstanceCreation = entry.getValue();
@@ -95,39 +94,39 @@ public class ClassInstanceCreationWorker extends GeneralWorker<TypeOutput, Void>
 	private void refactorClassInstanceCreation(IRewriteCompilationUnit icu, SwingWorkerWrapper refactoringVisitor,
 			ClassInstanceCreation classInstanceCreation) {
 		// Check if the class instance creation corresponds to a subclass of SwingWorker
-		Optional<MethodInvocation> methodInvocation = ASTNodes.findParent(classInstanceCreation,
-				MethodInvocation.class);
-		if (methodInvocation.isPresent() && methodInvocation.get().getExpression() instanceof ClassInstanceCreation) {
-			if (Types.isTypeOf(classInstanceCreation.resolveTypeBinding(), SwingWorkerInfo.getBinaryName())) {
+//		Optional<MethodInvocation> methodInvocation = ASTNodes.findParent(classInstanceCreation,
+//				MethodInvocation.class);
+//		if (methodInvocation.isPresent() && methodInvocation.get().getExpression() instanceof ClassInstanceCreation) {
+//			if (Types.isTypeOf(classInstanceCreation.resolveTypeBinding(), SwingWorkerInfo.getBinaryName())) {
 				/*
 				 * Abstract class : For anonymous swingworker classes, we need to replace
 				 * doInBackground method name with getRxObservable Scenario:
 				 * 37--KolakCC--lol-jclient : ProfileController.java StoreController.java
 				 */
-				if (classInstanceCreation.getAnonymousClassDeclaration() != null) {
-					List childlist = classInstanceCreation.getAnonymousClassDeclaration().bodyDeclarations();
-					for (int k = 0; k < childlist.size(); k++) {
-						if (childlist.get(k) instanceof MethodDeclaration) {
-							MethodDeclaration mdInner = (MethodDeclaration) childlist.get(k);
-							if (mdInner.getName() != null
-									&& mdInner.getName().getIdentifier().equals("doInBackground")) {
-								synchronized (icu) {
-									icu.replace(mdInner.getName(),
-											SwingWorkerASTUtils.newSimpleName(icu.getAST(), "getRxObservable"));
-								}
-							}
-						}
-					}
-				}
-				// Refactor only the method name
-				SimpleName methodInvocationName = methodInvocation.get().getName();
-				String newMethodName = RefactoringUtils.getNewMethodName(methodInvocationName.getIdentifier());
-				synchronized (icu) {
-					icu.replace(methodInvocationName, SwingWorkerASTUtils.newSimpleName(icu.getAST(), newMethodName));
-				}
-				return;
-			}
-		}
+//				if (classInstanceCreation.getAnonymousClassDeclaration() != null) {
+//					List childlist = classInstanceCreation.getAnonymousClassDeclaration().bodyDeclarations();
+//					for (int k = 0; k < childlist.size(); k++) {
+//						if (childlist.get(k) instanceof MethodDeclaration) {
+//							MethodDeclaration mdInner = (MethodDeclaration) childlist.get(k);
+//							if (mdInner.getName() != null
+//									&& mdInner.getName().getIdentifier().equals("doInBackground")) {
+//								synchronized (icu) {
+//									icu.replace(mdInner.getName(),
+//											SwingWorkerASTUtils.newSimpleName(icu.getAST(), "getRxObservable"));
+//								}
+//							}
+//						}
+//					}
+//				}
+//				// Refactor only the method name
+//				SimpleName methodInvocationName = methodInvocation.get().getName();
+//				String newMethodName = RefactoringUtils.getNewMethodName(methodInvocationName.getIdentifier());
+//				synchronized (icu) {
+//					icu.replace(methodInvocationName, SwingWorkerASTUtils.newSimpleName(icu.getAST(), newMethodName));
+//				}
+//				return;
+//			}
+//		}
 
 		removeSuperInvocations(refactoringVisitor);
 		updateImports(icu);

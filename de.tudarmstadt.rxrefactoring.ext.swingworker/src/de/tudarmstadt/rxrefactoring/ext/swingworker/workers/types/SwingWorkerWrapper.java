@@ -44,9 +44,7 @@ public class SwingWorkerWrapper extends ASTVisitor {
 	private static final String DO_IN_BACKGROUND = "doInBackground";
 	private static final String DONE = "done";
 	private static final String PROCESS = "process";
-	// private Class subscriberClass = Subscriber.class;
-	// private final Map<String, Method> methodsOfSubscriber = new HashMap<String,
-	// Method>();
+
 	private Block doInBackgroundBlock;
 	private Block doneBlock;
 	private Block processBlock;

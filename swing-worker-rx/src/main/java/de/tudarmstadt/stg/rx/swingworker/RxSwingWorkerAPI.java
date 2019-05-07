@@ -16,9 +16,9 @@ interface RxSwingWorkerAPI<ReturnType>
 {
 	void addPropertyChangeListener( PropertyChangeListener listener );
 
-	boolean cancelObservable(boolean mayInterruptIfRunning );
+	boolean cancel(boolean mayInterruptIfRunning );
 
-	void executeObservable();
+	void execute();
 
 	void firePropertyChange( String propertyName, Object oldValue, Object newValue );
 

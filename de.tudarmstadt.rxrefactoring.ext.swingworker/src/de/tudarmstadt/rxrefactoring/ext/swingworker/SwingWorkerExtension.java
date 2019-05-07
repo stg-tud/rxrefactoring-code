@@ -8,6 +8,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.annotation.NonNull;
 import org.osgi.framework.Bundle;
@@ -39,12 +41,22 @@ public class SwingWorkerExtension implements IRefactorExtension {
 
 	@Override
 	public @NonNull String getName() {
-		return "SwingWorker to rx.Observable";
+		return "SwingWorker to Observable";
 	}
 
 	@Override
 	public @NonNull String getDescription() {
 		return "Refactor SwingWorker to Observable";
+	}
+	
+	@Override
+	public IPath getResourceDir() {
+		return new Path("resources/");
+	}
+
+	@Override
+	public IPath getDestinationDir() {
+		return new Path("./libs/");
 	}
 
 	@Override

@@ -1,13 +1,9 @@
-package de.tudarmstadt.rxrefactoring.core.internal.execution.testing;
+package de.tudarmstadt.rxrefactoring.core.internal.testing;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ChildListPropertyDescriptor;
@@ -112,7 +108,7 @@ class MethodScanner {
 				if (parent instanceof TypeDeclaration)
 					builder.add((TypeDeclaration) parent);
 				else
-					throw new IllegalStateException("cannot refactor method in non-class.");
+					Log.error(MethodScanner.class, "cannot test refactored method of non-class [" + parent + "]:\n" + testMethod);
 			}
 
 			return builder.build();
@@ -174,8 +170,8 @@ class MethodScanner {
 	 * @param units           The project compilation units to work on.
 	 * @return A set of all calling methods.
 	 */
-	private ImmutableMap<MethodDeclaration, IRewriteCompilationUnit> findCallingMethods(ProjectUnits units) {
-		ImmutableMap.Builder<MethodDeclaration, IRewriteCompilationUnit> builder = ImmutableMap.builder();
+	private Map<MethodDeclaration, IRewriteCompilationUnit> findCallingMethods(ProjectUnits units) {
+		Map<MethodDeclaration, IRewriteCompilationUnit> methods = Maps.newHashMap();
 
 		Map<IMethodBinding, MethodDeclaration> impactedBindings = Maps.newHashMap();
 		refactoredMethods.keySet().forEach(mthd -> {
@@ -194,20 +190,16 @@ class MethodScanner {
 					MethodDeclaration impactedMethod = impactedBindings.get(binding);
 					if (impactedMethod != null)	{
 						Optional<MethodDeclaration> parentMthd = ASTNodes.findParent(node, MethodDeclaration.class);
-						parentMthd.ifPresent(mthd -> builder.put(mthd, unit));
+						parentMthd.ifPresent(mthd -> methods.put(mthd, unit));
+
 					}
 					return true;
 				}
 			});
 		}
 
-		// No need to keep nulls, they indicate that the
-		// method binding could not be resolved. We should
-		// also remove calling methods that are also impacted
-		// methods, since impacted methods will have to be
-		// treated differently when generating tests.
-				
-		return builder.build();
+		//We can not use immutablemap builders here because methods can potenially be added more than once (if they appear twice in a project)
+		return Collections.unmodifiableMap(methods);
 	}
 
 

@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.Block;
@@ -39,7 +40,8 @@ public abstract class GeneralWorker<In, Out> implements IWorker<In, Out> {
 
 	protected void updateImports(IRewriteCompilationUnit unit) {
 		synchronized (unit) {
-			unit.addImport("rx.Emitter");
+			unit.addImport("io.reactivex.Emitter");
+			unit.addImport("io.reactivex.Observable");
 			unit.addImport("de.tudarmstadt.stg.rx.swingworker.SWEmitter");
 			unit.addImport("de.tudarmstadt.stg.rx.swingworker.SWSubscriber");
 			unit.addImport("de.tudarmstadt.stg.rx.swingworker.SWPackage");
@@ -183,65 +185,64 @@ public abstract class GeneralWorker<In, Out> implements IWorker<In, Out> {
 		return model;
 	}
 
-	private String specifyClassOfKeywordThis(String block, String replacement) {
-		if (!EMPTY.equals(replacement)) {
-			replacement = replacement + "." + KEYWORD_THIS_WITH_DOT;
-		}
-		StringBuilder sb = new StringBuilder(block);
-		List<Integer> indexes = new ArrayList<>();
-		int startIndex = 0;
-		while (true) {
-			int i = block.indexOf(KEYWORD_THIS_WITH_DOT, startIndex);
-			if (i == -1) {
-				break;
-			}
-			indexes.add(i);
-			startIndex = i + KEYWORD_THIS_WITH_DOT.length();
-		}
+	private String specifyClassOfKeywordThis(String block, String className) {
+		String replaceString = className.isEmpty() ? "this" : className + ".this";
+		return block.replaceAll("\\bthis\\b", replaceString);
 
-		int adjustmentFactor = 0;
-		for (Integer index : indexes) {
-			int newIndex = index + adjustmentFactor;
-			if (index == 0 || (index > 0 && block.charAt(index - 1) != '_' && block.charAt(index - 1) != '.'
-					&& block.charAt(index - 1) != '$'
-					&& (block.charAt(index - 1) < 'a' || block.charAt(index - 1) > 'Z'))) {
-				sb.replace(newIndex, newIndex + KEYWORD_THIS_WITH_DOT.length(), replacement);
-				adjustmentFactor += replacement.length() - KEYWORD_THIS_WITH_DOT.length();
-			}
-		}
-		/*
-		 * While refactoring doInBackground blocks, only this.methodname should be
-		 * applied for protected methods which are present in swingworker api like
-		 * publish(), process() etc. Right now only one case is discovered for publish
-		 * method. Scenario: 37--KolakCC--lol-jclient : ChampionsPanel.java
-		 */
-		String doInBgBlockString = "";
-		if (sb.toString().contains(KEYWORD_THIS_WITH_DOT + "publish(")) {
-			doInBgBlockString = sb.toString().replaceAll(replacement + "publish", KEYWORD_THIS_WITH_DOT + "publish");
-			return doInBgBlockString;
-		}
-		/*
-		 * Scenario: 59--locked-fg--JFeatureLib : ThreadWrapper.java Some cases where
-		 * statements like addPropertyChangeListener(this)(from doInbackground()) method
-		 * might come under SWEmitter class. This will show error and hence
-		 * addPropertyChangeListener(classname.this) needs to be applied.
-		 */
-		else if (sb.toString() != null && sb.toString().contains("descriptor.addPropertyChangeListener(this);")
-				&& replacement.contains("ThreadWrapper")) {
-			doInBgBlockString = sb.toString().replace("descriptor.addPropertyChangeListener(this)",
-					"descriptor.addPropertyChangeListener(ThreadWrapper.this)");
-			return doInBgBlockString;
-		}
-		/*
-		 * Scenario: 43--kparal--esmska : UpdateInstaller.java Statements like
-		 * dl.execute() needs to be replaced with dl.executeObservable()
-		 */
-		else if (sb.toString() != null && sb.toString().contains("dl.execute") && replacement.contains("Downloader")) {
-			doInBgBlockString = sb.toString().replaceAll("dl.execute", "dl.executeObservable");
-			return doInBgBlockString;
-		} else {
-			return sb.toString();
-		}
-
+//		StringBuilder sb = new StringBuilder(block);
+//		List<Integer> indexes = new ArrayList<>();
+//		int startIndex = 0;
+//		while (true) {
+//			int i = block.indexOf(KEYWORD_THIS_WITH_DOT, startIndex);
+//			if (i == -1) {
+//				break;
+//			}
+//			indexes.add(i);
+//			startIndex = i + KEYWORD_THIS_WITH_DOT.length();
+//		}
+//
+//		int adjustmentFactor = 0;
+//		for (Integer index : indexes) {
+//			int newIndex = index + adjustmentFactor;
+//			if (index == 0 || (index > 0 && block.charAt(index - 1) != '_' && block.charAt(index - 1) != '.'
+//					&& block.charAt(index - 1) != '$'
+//					&& (block.charAt(index - 1) < 'a' || block.charAt(index - 1) > 'Z'))) {
+//				sb.replace(newIndex, newIndex + KEYWORD_THIS_WITH_DOT.length(), className);
+//				adjustmentFactor += className.length() - KEYWORD_THIS_WITH_DOT.length();
+//			}
+//		}
+//		/*
+//		 * While refactoring doInBackground blocks, only this.methodname should be
+//		 * applied for protected methods which are present in swingworker api like
+//		 * publish(), process() etc. Right now only one case is discovered for publish
+//		 * method. Scenario: 37--KolakCC--lol-jclient : ChampionsPanel.java
+//		 */
+//		String doInBgBlockString = "";
+//		if (sb.toString().contains(KEYWORD_THIS_WITH_DOT + "publish(")) {
+//			doInBgBlockString = sb.toString().replaceAll(className + "publish", KEYWORD_THIS_WITH_DOT + "publish");
+//			return doInBgBlockString;
+//		}
+//		/*
+//		 * Scenario: 59--locked-fg--JFeatureLib : ThreadWrapper.java Some cases where
+//		 * statements like addPropertyChangeListener(this)(from doInbackground()) method
+//		 * might come under SWEmitter class. This will show error and hence
+//		 * addPropertyChangeListener(classname.this) needs to be applied.
+//		 */
+//		else if (sb.toString() != null && sb.toString().contains("descriptor.addPropertyChangeListener(this);")
+//				&& className.contains("ThreadWrapper")) {
+//			doInBgBlockString = sb.toString().replace("descriptor.addPropertyChangeListener(this)",
+//					"descriptor.addPropertyChangeListener(ThreadWrapper.this)");
+//			return doInBgBlockString;
+//		}
+//		/*
+//		 * Scenario: 43--kparal--esmska : UpdateInstaller.java Statements like
+//		 * dl.execute() needs to be replaced with dl.executeObservable()
+//		 */
+//		else if (sb.toString() != null && sb.toString().contains("dl.execute") && className.contains("Downloader")) {
+//			doInBgBlockString = sb.toString().replaceAll("dl.execute", "dl.executeObservable");
+//			return doInBgBlockString;
+//		} else {
+//			return sb.toString();
+//		}
 	}
 }

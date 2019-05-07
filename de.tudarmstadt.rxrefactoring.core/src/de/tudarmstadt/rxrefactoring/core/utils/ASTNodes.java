@@ -130,8 +130,9 @@ public final class ASTNodes {
 	 *         an empty Optional if no node has been found.
 	 */
 	@SuppressWarnings("null")
-	public static @NonNull Optional<ASTNode> findNode(@NonNull ASTNode root, @NonNull Function<ASTNode, Boolean> predicate) {
-		Objects.requireNonNull(root, "argument 'root' was null.");
+	public static @NonNull Optional<ASTNode> findNode(ASTNode root, @NonNull Function<ASTNode, Boolean> predicate) {
+		if (root == null) return Optional.empty();
+		
 		Objects.requireNonNull(predicate, "argument 'predicate' was null.");
 				
 		ASTNode[] result = new ASTNode[1];

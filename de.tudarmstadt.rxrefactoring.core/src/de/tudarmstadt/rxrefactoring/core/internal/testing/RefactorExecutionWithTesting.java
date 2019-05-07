@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core.internal.execution.testing;
+package de.tudarmstadt.rxrefactoring.core.internal.testing;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IJavaProject;

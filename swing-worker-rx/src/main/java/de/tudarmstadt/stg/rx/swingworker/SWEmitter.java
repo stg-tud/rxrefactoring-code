@@ -1,12 +1,11 @@
 package de.tudarmstadt.stg.rx.swingworker;
 
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.swing.*;
-
-import rx.Emitter;
-import rx.functions.Action1;
 
 /**
  * Description: This class should be use to create an observable.
@@ -15,11 +14,13 @@ import rx.functions.Action1;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/02/2016
  */
-public abstract class SWEmitter<ReturnType, ProcessType> implements Action1<Emitter<SWPackage<ReturnType, ProcessType>>>
+public abstract class SWEmitter<ReturnType, ProcessType> implements ObservableOnSubscribe<SWPackage<ReturnType, ProcessType>>
 {
-	private Emitter<? super SWPackage<ReturnType, ProcessType>> emitter;
+	private ObservableEmitter<? super SWPackage<ReturnType, ProcessType>> emitter;
 	private AtomicBoolean running = new AtomicBoolean( false );
 	private ReentrantLock processingLock;
+
+
 
 	/**
 	 * Manages the workflow of a SwingWorker by setting up the data
@@ -31,8 +32,10 @@ public abstract class SWEmitter<ReturnType, ProcessType> implements Action1<Emit
 	 *            emitter
 	 */
 	@Override
-	public final void call( Emitter<SWPackage<ReturnType, ProcessType>> emitter )
+	public final void subscribe( ObservableEmitter<SWPackage<ReturnType, ProcessType>> emitter )
 	{
+
+
 
 		if ( running.get() )
 		{
@@ -47,7 +50,7 @@ public abstract class SWEmitter<ReturnType, ProcessType> implements Action1<Emit
 			this.emitter.onNext( createPackage() );
 			ReturnType asyncResult = doInBackground();
 			this.emitter.onNext( createPackage().setResult( asyncResult ) );
-			this.emitter.onCompleted();
+			this.emitter.onComplete();
 		}
 		catch ( Exception throwable )
 		{
@@ -59,14 +62,6 @@ public abstract class SWEmitter<ReturnType, ProcessType> implements Action1<Emit
 		}
 	}
 
-	/**
-	 * To be implemented by subclasses. This method corresponds to
-	 * the {@link SwingWorker#doInBackground()} method.
-	 * 
-	 * @return the result of the asynchronous operation
-	 * @throws Exception
-	 *             a general exception that could be thrown
-	 */
 	protected abstract ReturnType doInBackground() throws Exception;
 
 	/**

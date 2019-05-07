@@ -200,7 +200,11 @@ public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void>
 	}
 
 	private String cleanBlock(Block block) {	
-		return RefactoringUtils.cleanSwingWorkerName(block.toString());
+		if (block != null)
+			return RefactoringUtils.cleanSwingWorkerName(block.toString());
+		else 
+			return null;
+		
 	}
 
 }

@@ -11,18 +11,18 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.swing.*;
+import javax.swing.SwingWorker;
 
-import de.tudarmstadt.stg.rx.swingworker.*;
-import rx.Emitter;
-import rx.Observable;
-import rx.Scheduler;
-import rx.Subscriber;
-import rx.Subscription;
-import rx.functions.Action1;
-import rx.observables.ConnectableObservable;
-import rx.schedulers.Schedulers;
-import rx.subjects.ReplaySubject;
+import io.reactivex.Observable;
+import io.reactivex.Scheduler;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.observables.ConnectableObservable;
+import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.ReplaySubject;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+
 
 /**
  * Description: This class replaces the {@link SwingWorker}. All methods
@@ -32,18 +32,17 @@ import rx.subjects.ReplaySubject;
  * Author: Grebiel Jose Ifill Brito<br>
  * Created: 12/01/2016
  */
-public abstract class SWSubscriber<ResultType, ProcessType>
-		extends Subscriber<SWPackage<ResultType, ProcessType>>
-		implements RxSwingWorkerAPI<ResultType>
+public class SWSubscriber<ResultType, ProcessType>	implements Subscriber<SWPackage<ResultType, ProcessType>>,
+	RxSwingWorkerAPI<ResultType>,
+	Consumer<SWPackage<ResultType, ProcessType>>
 {
 
-	
-	
+
 	private ConnectableObservable<SWPackage<ResultType, ProcessType>> observable;
 	private ReplaySubject<SWPackage<ResultType, ProcessType>> outgoingObservable;
 	
 	
-	private Subscription subscription;
+	private Disposable subscription;
 	private ResultType asyncResult;
 	private PropertyChangeSupport propertyChangeSupport;
 	private AtomicInteger progress;
@@ -62,7 +61,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 		this.propertyChangeSupport = new PropertyChangeSupport( this );
 		setObservable(observable);
 		initialize();
-		
+
 	}
 
 	/**
@@ -109,26 +108,23 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	 * </ol>
 	 * <p>
 	 * The {@link CountDownLatch}
-	 * is initially set to one. When {@link this#onCompleted()} is
+	 * is initially set to one. When {@link} is
 	 * invoked the {@link CountDownLatch} is set to 0 to indicate
 	 * that a result is present. This is important for {@link this#get()}
 	 * and {@link this#get(long, TimeUnit)}
 	 */
 	@Override
-	public final void onStart()
-	{
+	public final void onSubscribe(Subscription s) {
 		initialize();
 		this.countDownLatch = new CountDownLatch( 1 );
 		setState( SwingWorker.StateValue.STARTED );
 	}
 
-	/**
-	 * Used to process that items after a
-	 * {@link SwingWorker#publish(Object[])} has been invoked.
-	 *
-	 * @param swPackage
-	 *            Data transfer object for chunks and asyncResult
-	 */
+	@Override
+	public void accept(SWPackage<ResultType, ProcessType> swPackage) throws Exception {
+		onNext(swPackage);
+	}
+
 	@Override
 	public final void onNext( SWPackage<ResultType, ProcessType> swPackage )
 	{
@@ -152,7 +148,7 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	 * {@link SwingWorker.StateValue#DONE}.
 	 */
 	@Override
-	public final void onCompleted()
+	public final void onComplete()
 	{
 		countDownLatch.countDown();
 		done();
@@ -165,14 +161,8 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 
 	}
 
-	/**
-	 * Executes the asynchronous task in {@link Schedulers#computation()}
-	 * as long as the {@link this#observable} is not subscribed. Otherwise the
-	 * invocation to this method is ignored. The operation is
-	 * observed in {@link SwingScheduler#getInstance()}
-	 */
 	@Override
-	public final void executeObservable()
+	public final void execute()
 	{
 		if ( !isSubscribed() )
 		{
@@ -181,18 +171,6 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 		}
 	}
 
-	/**
-	 * The given connectable observable is connected if no subcription is already running.
-	 * {@link Observable#subscribeOn(Scheduler)} and {@link Observable#observeOn(Scheduler)}
-	 * must be already defined in the connectable observable.
-	 * 
-	 * @param connectableObservable
-	 *            connectable observable. Make sure to use the same
-	 *            observable object created with
-	 *            {@link Observable#fromEmitter(Action1, Emitter.BackpressureMode)}
-	 *            to generate it. i.e: <br>
-	 *            connectableObservable = Observable.fromEmitter(...).publish();
-	 */
 	public final void connectObservable( ConnectableObservable connectableObservable )
 	{
 		if ( !isSubscribed() )
@@ -201,18 +179,12 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 		}
 	}
 
-	/**
-	 * Executes the asynchronous task in {@link Schedulers#immediate()}
-	 * (The current thread) as long as the {@link this#observable}
-	 * is not subscribed. Otherwise the invocation to this method is ignored.
-	 * The operation is observed in {@link SwingScheduler#getInstance()}
-	 */
 	@Override
 	public final void runObservable()
 	{
 		if ( !isSubscribed() )
 		{
-			Scheduler scheduler = Schedulers.immediate();
+			Scheduler scheduler = Schedulers.trampoline();
 			subscribeObservable( scheduler );
 		}
 	}
@@ -298,15 +270,15 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 	 * @return true if this observer was successfully unsubscribed, false otherwise
 	 */
 	@Override
-	public final boolean cancelObservable( boolean mayInterruptIfRunning )
+	public final boolean cancel( boolean mayInterruptIfRunning )
 	{
 		if ( cancelled.get() || currentState.equals( SwingWorker.StateValue.DONE ) )
 		{
 			return false;
 		}
-		else if ( !this.isUnsubscribed() && mayInterruptIfRunning )
+		else if ( subscription != null && !subscription.isDisposed() && mayInterruptIfRunning )
 		{
-			this.unsubscribe();
+			subscription.dispose();
 			this.cancelled.set( true );
 			return true;
 		}
@@ -388,11 +360,6 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 
 	// ### Protected Methods ###
 
-	/**
-	 * This method is invoked after {@link SWEmitter#doInBackground()} has completed.
-	 * The method is invoked in {@link SwingScheduler#getInstance()}
-	 *
-	 */
 	protected void done()
 	{
 
@@ -450,14 +417,14 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 
 	private boolean isSubscribed()
 	{
-		return subscription != null && !subscription.isUnsubscribed();
+		return subscription != null && !subscription.isDisposed();
 	}
 
 	private void subscribeObservable( Scheduler scheduler )
 	{
 		validateObservableNotNull();
 		this.subscription = this.observable
-				.observeOn( rx.schedulers.Schedulers.io() )
+				.observeOn( Schedulers.io() )
 				.subscribeOn( scheduler )
 				.subscribe( this );
 		
@@ -482,4 +449,6 @@ public abstract class SWSubscriber<ResultType, ProcessType>
 			this.currentState = state;
 		}
 	}
+
+
 }
