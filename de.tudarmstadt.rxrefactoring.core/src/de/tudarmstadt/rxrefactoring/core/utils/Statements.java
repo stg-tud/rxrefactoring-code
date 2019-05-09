@@ -1,5 +1,6 @@
 package de.tudarmstadt.rxrefactoring.core.utils;
 
+import com.google.common.collect.Lists;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.*;
@@ -103,15 +104,26 @@ public final class Statements {
 		synchronized (unit) {
 			ASTNodes.findParent(child, TryStatement.class).ifPresent( tryStatement -> {
 				List<CatchClause> catchClauses = tryStatement.catchClauses();
+				List<CatchClause> unneededCatchClauses = Lists.newLinkedList();
 
 				for (CatchClause cc : catchClauses) {
 					Type exType = cc.getException().getType();
 
 					if (Types.isTypeOf(exType.resolveBinding(), exceptionType)) {
-						unit.remove(cc);
+						unneededCatchClauses.add(cc);
 					}					
-				}			
+				}
+
+				if (unneededCatchClauses.size() == catchClauses.size()) {
+					unit.replace(tryStatement, unit.copyNode(tryStatement.getBody()));
+				} else {
+					unneededCatchClauses.forEach(unit::remove);
+				}
+
 			});
+
+
+
 		}
 
 	}
