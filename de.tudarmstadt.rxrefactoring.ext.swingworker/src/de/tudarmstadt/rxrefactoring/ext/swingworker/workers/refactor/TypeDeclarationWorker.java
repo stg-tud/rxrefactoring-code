@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types;
+package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -42,6 +42,8 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.TemplateUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.TemplateVisitor;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.GeneralWorker;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.RxCollector;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.SwingWorkerWrapper;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
 
 /**
  * Author: Grebiel Jose Ifill Brito<br>
@@ -318,7 +320,7 @@ public class TypeDeclarationWorker extends GeneralWorker<RxCollector, TypeOutput
 		if (constructor == null) {
 			// define constructor
 			String className = typeDeclaration.getName().toString();
-			String constructorString = className + "() { setObservable(getRxObservable()); }";
+			String constructorString = "public " + className + "() { setObservable(getRxObservable()); }";
 			MethodDeclaration newConstructor = TemplateVisitor.createMethodFromText(ast, constructorString);
 			newConstructor.setConstructor(true);
 

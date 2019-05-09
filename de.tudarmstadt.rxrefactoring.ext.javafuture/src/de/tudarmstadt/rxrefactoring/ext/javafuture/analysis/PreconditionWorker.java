@@ -492,8 +492,9 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 			MethodInvocation mi = (MethodInvocation) use.getOp();
 			// The Use is a method call within an EnhancedForStatement or LambdaExpression
 			// The method receiver is a collection item, not the collection itself
+			ITypeBinding exprBinding = expr.resolveTypeBinding();
 			if(mi.getExpression() != null && 
-					!expr.resolveTypeBinding().isAssignmentCompatible(mi.getExpression().resolveTypeBinding())){
+					exprBinding != null && !exprBinding.isAssignmentCompatible(mi.getExpression().resolveTypeBinding())){
 				collectionItemUses.put(expr, use);
 				collectionCreationsToUses.remove(expr, use);
 				if (unsupportedUse(use)) 

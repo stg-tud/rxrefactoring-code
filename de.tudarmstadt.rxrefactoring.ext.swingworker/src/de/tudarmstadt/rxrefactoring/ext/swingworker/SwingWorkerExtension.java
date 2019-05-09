@@ -26,8 +26,8 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.MethodInvoc
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.RelevantInvocationsWorker;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.SimpleNameWorker;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.SingleVariableDeclWorker;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.TypeDeclarationWorker;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.VariableDeclStatementWorker;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeDeclarationWorker;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
@@ -116,7 +116,8 @@ public class SwingWorkerExtension implements IRefactorExtension {
 
 	@Override
 	public @NonNull ExecutorService createExecutorService() {
-		return Executors.newSingleThreadExecutor();
+		return //Executors.newFixedThreadPool(4);
+			Executors.newSingleThreadExecutor();
 	}
 
 }

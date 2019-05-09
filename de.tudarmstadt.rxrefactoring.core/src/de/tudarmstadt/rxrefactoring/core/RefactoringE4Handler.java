@@ -15,12 +15,15 @@ import de.tudarmstadt.rxrefactoring.core.internal.testing.RefactorExecutionWithT
  */
 public abstract class RefactoringE4Handler {
 
+	public static final boolean ENABLE_TESTING = true;
+	
 	/*
 	 * Callback for the handler.
 	 */
 	@Execute
 	public final void execute(Shell shell) {
-		RefactorExecution app = new RefactorExecutionWithTesting(createExtension());
+		RefactorExecution app = ENABLE_TESTING ? 
+				new RefactorExecutionWithTesting(createExtension()) : new RefactorExecution(createExtension());
 		app.run();
 	}
 
