@@ -34,3 +34,4 @@ It contains the necessary automatic testing system.
 to /tmp/randoop-gen.../libs. The common libraries are in automatic-testing/libs.
 3. The script /tmp/randoop-gen.../randoop.sh generates JUnit tests and executes them. 
 
+![](https://tva1.sinaimg.cn/large/006y8mN6gy1g8r9ghzle0j30am061wfx.jpg)
