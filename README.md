@@ -24,7 +24,7 @@ and it can provide a refactoring for 91.7% of their occurrences.
 Rx is an Eclipse plugin that provides refactoring for asynchronous
 constructs to ReactiveX. 
 
-![](https://tva1.sinaimg.cn/large/006y8mN6gy1g8r9ghzle0j30am061wfx.jpg)
+![](https://https://stg-tud.github.io/rxrefactoring-code/image.png)
 
 ## Repository Overview
 
