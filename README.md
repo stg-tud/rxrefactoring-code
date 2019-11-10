@@ -1,13 +1,12 @@
 
+# Refactoring to Reactive Programming
+
 The documentation for this project is available in the [Project's website](https://stg-tud.github.io/rxrefactoring-code/)
 
-# 2Rx - Refactoring Tool for ReactiveX
-
-This is an Eclipse plugin that provides refactoring for asynchronous
+2Rx is an Eclipse plugin that provides refactoring for asynchronous
 constructs to ReactiveX. 
 
 ## Overview
-
 
 This repository contains a core project which provides
 general refactoring functionality and integration into Eclipse.
