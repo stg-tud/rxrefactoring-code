@@ -1,11 +1,32 @@
 
-# 2Rx - Refactoring Tool for ReactiveX
+# Refactoring to Reactive Programming
 
-This is an Eclipse plugin that provides refactoring for asynchronous
+Reactive programming languages and libraries, such as
+ReactiveX, have been shown to significantly improve software
+design and have seen important industrial adoption.
+Asynchronous applications - which are notoriously error-prone to
+implement and to maintain - greatly benefit from
+reactive programming because they can be defined in a declarative style,
+which improves code clarity and extensibility.
+
+In this project, we tackle the problem of
+refactoring existing software that has been designed with
+traditional abstractions for asynchronous programming.
+
+2Rx is a refactoring approach to automatically
+convert asynchronous code to reactive programming.
+We tested 2Rx on top-starred GitHub projects showing that 
+effective with common asynchronous constructs
+and it can provide a refactoring for 91.7% of their occurrences.
+
+# Eclipse Plugin
+
+Rx is an Eclipse plugin that provides refactoring for asynchronous
 constructs to ReactiveX. 
 
-## Overview
+![](https://tva1.sinaimg.cn/large/006y8mN6gy1g8r9ghzle0j30am061wfx.jpg)
 
+## Repository Overview
 
 This repository contains a core project which provides
 general refactoring functionality and integration into Eclipse.
@@ -34,4 +55,9 @@ It contains the necessary automatic testing system.
 to /tmp/randoop-gen.../libs. The common libraries are in automatic-testing/libs.
 3. The script /tmp/randoop-gen.../randoop.sh generates JUnit tests and executes them. 
 
-![](https://tva1.sinaimg.cn/large/006y8mN6gy1g8r9ghzle0j30am061wfx.jpg)
+# Publications
+
+Mirko Köhler, Guido Salvaneschi, Automated Refactoring to Reactive Programming,
+34th IEEE/ACM International Conference on Automated Software Engineering (ASE 2019). 
+
+     
