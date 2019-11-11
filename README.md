@@ -19,6 +19,11 @@ We tested 2Rx on top-starred GitHub projects showing that
 effective with common asynchronous constructs
 and it can provide a refactoring for 91.7% of their occurrences.
 
+# Datasets
+
+The global and refactoring datasets are available at:
+https://github.com/stg-tud/rxrefactoring-dataset
+
 # Eclipse Plugin
 
 Rx is an Eclipse plugin that provides refactoring for asynchronous
@@ -38,11 +43,6 @@ for various asynchronous constructs, e.g., Java Future.
 - __de.tudarmstadt.rxrefactoring.core__: The extensible core project.
 - __de.tudarmstadt.rxrefactoring.ext.XXX__: The extensions for each
 supported asynchronous construct XXX.
-
-## Develop
-
-develop - Branch for development.
-
 
 ## Automatic Testing
 
