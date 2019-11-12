@@ -31,11 +31,9 @@ which is a programming abstraction that emits
 events that are asynchronously handled by `Observers`. [ReactiveX](http://reactivex.io/) uses
 operators from RP to compose computations on `Observable`s.
 Using these operators, it is straight-forward to extend asynchronous computations,
-thus increasing extensibility.
+adding new operators such as [`map`](http://reactivex.io/documentation/operators/map.html):
 
-
-
-![](https://stg-tud.github.io/rxrefactoring-code/marble-map.png)
+![](https://stg-tud.github.io/rxrefactoring-code/map.png)
 
 Our methodology applies to common abstractions for 
 asynchronous computations in Java, including `Future`, and Swing's `SwingWorker`.
