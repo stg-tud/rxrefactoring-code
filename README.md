@@ -51,7 +51,9 @@ https://github.com/stg-tud/rxrefactoring-dataset
 Rx is an Eclipse plugin that provides refactoring for asynchronous
 constructs to ReactiveX. 
 
-![](https://stg-tud.github.io/rxrefactoring-code/image.png)
+![](https://stg-tud.github.io/rxrefactoring-code/image.png | width=300)
+
+
 
 # Repository Overview
 
