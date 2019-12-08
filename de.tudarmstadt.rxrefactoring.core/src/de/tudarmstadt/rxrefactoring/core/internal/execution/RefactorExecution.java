@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.core.internal.runtime.Activator;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -25,6 +26,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.*;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -35,6 +37,7 @@ import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
@@ -45,6 +48,7 @@ import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.text.edits.MalformedTreeException;
+import org.eclipse.ui.progress.IProgressConstants;
 import org.osgi.framework.Bundle;
 
 import com.google.common.collect.Sets;
@@ -99,92 +103,111 @@ public class RefactorExecution implements Runnable {
 			}
 
 			@Override
-			public Change createChange(IProgressMonitor monitor) throws CoreException, OperationCanceledException {
-								
+			public Change createChange(IProgressMonitor monitor) throws CoreException {
+				
 				//Retrieve projects in the workspace
 				IProject[] projects = getWorkspaceProjects();
 				
-				monitor.beginTask(extension.getDescription(), projects.length);
-							
-				
-				preRefactor(projects);
-				
-				
 				// Gathers information about the refactoring and presents it to the user.
 				RefactorSummary summary = new RefactorSummary(extension.getName());
-				
-				//Tracks the changes that have been done by this refactoring
+						
+				//Tracks the changes that have been done by this refactoring --> TODO aufpassen das keine Änderungen drch verschieben
 				CompositeChange changes = new CompositeChange(extension.getName());
 				
-				// Reports that the refactoring is starting
-				summary.reportStarted();
+			    Job job = new Job("Do refactoring!") {
+			    	
+			    	@Override
+					protected IStatus run(IProgressMonitor monitor){
+			    		
+			    		//setProperty(IProgressConstants.ICON_PROPERTY, image);
+						
+						monitor.beginTask(extension.getDescription(), projects.length);
+								
+								
+						preRefactor(projects);
+								
+								
+						// Reports that the refactoring is starting
+						summary.reportStarted();
 
-				// Iterate over all projects
-				for (IProject project : projects) {
+						// Iterate over all projects
+						for (IProject project : projects) {	
+																
+							ProjectSummary projectSummary = summary.reportProject(project);
+							// Try to refactor the project
+							try {
+								Objects.requireNonNull(project);
 										
-					
-					ProjectSummary projectSummary = summary.reportProject(project);
-					// Try to refactor the project
-					try {
-						Objects.requireNonNull(project);
-						
-						// Check whether the project is open and if it is a Java project
-						if (considerProject(project)) {
-							// Reports the project as completed. In case of an error this status can get changed during execution.
-							projectSummary.reportStatus(ProjectStatus.COMPLETED);
-							
-							
-							Log.info(RefactorExecution.class, ">>> Refactor project: " + project.getName());
-							// Reports the project as being refactored
+								// Check whether the project is open and if it is a Java project
+								if (considerProject(project)) {
+									// Reports the project as completed. In case of an error this status can get changed during execution.
+									projectSummary.reportStatus(ProjectStatus.COMPLETED);
+											
+											
+									Log.info(RefactorExecution.class, ">>> Refactor project: " + project.getName());
+									// Reports the project as being refactored
 
-							@SuppressWarnings("null")
-							@NonNull
-							IJavaProject javaProject = JavaCore.create(project);
+									@SuppressWarnings("null")
+									@NonNull
+									IJavaProject javaProject = JavaCore.create(project);
 
-							// Adds the additional resource files to the project.
-							Log.info(RefactorExecution.class, "Copy library resources...");
-							addResourceFiles(project, javaProject);
+									// Adds the additional resource files to the project.
+									Log.info(RefactorExecution.class, "Copy library resources...");
+									addResourceFiles(project, javaProject);
 
-							// Finds all java files in the project and produces the according bundled unit.
-							Log.info(RefactorExecution.class, "Parse compilation units...");
-							ProjectUnits units = parseCompilationUnits(javaProject);
+									// Finds all java files in the project and produces the according bundled unit.
+									Log.info(RefactorExecution.class, "Parse compilation units...");
+									ProjectUnits units = parseCompilationUnits(javaProject);
 
-							// Performs the refactoring by applying the workers of the extension.
-							Log.info(RefactorExecution.class, "Refactor units...");
-							doRefactorProject(units, changes, projectSummary, project);
+									// Performs the refactoring by applying the workers of the extension.
+									Log.info(RefactorExecution.class, "Refactor units...");
+									doRefactorProject(units, changes, projectSummary, project);
 
-							//Call template method
-							onProjectFinished(project, javaProject, units);
-							
-							Log.info(RefactorExecution.class, "<<< Refactor project");
+									//Call template method
+									onProjectFinished(project, javaProject, units);
+											
+									Log.info(RefactorExecution.class, "<<< Refactor project");
 
-						} else {
-							projectSummary.reportStatus(ProjectStatus.SKIPPED);
-							Log.info(RefactorExecution.class, "Skipping project: " + project.getName());
+								} else {
+									projectSummary.reportStatus(ProjectStatus.SKIPPED);
+									Log.info(RefactorExecution.class, "Skipping project: " + project.getName());	
+									}
+							} catch (InterruptedException e) {
+								return new Status(IStatus.CANCEL, extension.getPlugInId(), IStatus.CANCEL, "The execution has been interrupted.", e);
+								//throw new CoreException(new Status(IStatus.CANCEL, extension.getPlugInId(), IStatus.CANCEL, 
+									//	"The execution has been interrupted.", e));						
+										
+							} catch (Exception e) {
+								projectSummary.reportStatus(ProjectStatus.ERROR);
+								Log.error(RefactorExecution.class, "Error during refactoring of " +project.getName() , e);
+								return new Status(IStatus.ERROR, extension.getPlugInId(), IStatus.ERROR, 
+										"Error during refactoring of " + project.getName(), e);
+								//throw new CoreException(new Status(IStatus.ERROR, extension.getPlugInId(), IStatus.ERROR, 
+										//"Error during refactoring of " + project.getName(), e));
+							}
+
+							monitor.worked(1);
 						}
-					} catch (InterruptedException e) {
-						throw new CoreException(new Status(IStatus.CANCEL, extension.getPlugInId(), IStatus.CANCEL, 
-								"The execution has been interrupted.", e));						
 						
-					} catch (Exception e) {
-						projectSummary.reportStatus(ProjectStatus.ERROR);
-						Log.error(RefactorExecution.class, "Error during refactoring of " +project.getName() , e);
-						throw new CoreException(new Status(IStatus.ERROR, extension.getPlugInId(), IStatus.ERROR, 
-								"Error during refactoring of " + project.getName(), e));
-					}
-
-					monitor.worked(1);
-				}
+						return new Status(IStatus.OK, Activator.PLUGIN_ID, "Do refactoring");
+			    		
+			    	}				    	
+			    };
+			    
+				job.setUser(true);
+				job.schedule();
 
 				// Reports that the refactoring is finished.
 				Log.info(RefactorExecution.class, "Finished.");
 				summary.reportFinished();
 				monitor.done();	
-					
+							
 
 				Log.info(RefactorExecution.class, "Print summary...\n" + summary.toString());	
-				
-				return changes;				
+					
+
+				return changes;
+										
 			}
 		};
 	}
@@ -192,30 +215,41 @@ public class RefactorExecution implements Runnable {
 	
 	
 	public void run() {
-		Refactoring refactoring = createRefactoring();
-		RefactoringWizard wizard = new RefactoringWizard(refactoring, RefactoringWizard.WIZARD_BASED_USER_INTERFACE) {			
-			@Override
-			protected void addUserInputPages() {
-				//TODO: Add user input pages here!				
-			}
-		};		
-		RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
-		
 		Shell shell = Display.getCurrent().getActiveShell();
-
-		int result = IDialogConstants.CANCEL_ID;
-		try {
-			result = op.run(shell, "This is an dialog title!");
-		} catch (InterruptedException e) {
-			//operation was cancelled 
-			Log.info(RefactorExecution.class, "Operation was cancelled.");
-		}
-
-		if (result == IDialogConstants.OK_ID) {
-		    postRefactor();
-		}
 		
-		Log.info(RefactorExecution.class, "Done.");
+		//MessageDialog.openInformation(shell, "Progress Bar", "Refactoring needs some time.");
+		//final Job job = new Job("Do refactoring!") {
+
+		//	@Override
+		//	protected IStatus run(IProgressMonitor monitor){
+				Refactoring refactoring = createRefactoring();
+				RefactoringWizard wizard = new RefactoringWizard(refactoring, RefactoringWizard.WIZARD_BASED_USER_INTERFACE) {			
+					@Override
+					protected void addUserInputPages() {
+						//TODO: Add user input pages here!				
+					}
+				};	
+				
+				RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
+				
+				int result = IDialogConstants.CANCEL_ID;
+				try {
+					result = op.run(shell, "This is an dialog title!");
+				} catch (InterruptedException e) {
+					//operation was cancelled 
+					Log.info(RefactorExecution.class, "Operation was cancelled.");
+				}
+
+				if (result == IDialogConstants.OK_ID) {
+				    postRefactor();
+				}
+				
+		//	}			
+		//};
+		
+		//job.setUser(true);
+		//job.schedule();
+		
 	}
 	
 	
