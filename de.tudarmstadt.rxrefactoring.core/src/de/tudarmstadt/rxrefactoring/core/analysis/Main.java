@@ -16,9 +16,6 @@ import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.Reach
 
 public final class Main {
 
-
-	
-	
 	
 	static IControlFlowGraph<Expression> expressionExample() {
 		String program =
@@ -34,11 +31,13 @@ public final class Main {
 		ExpressionGraph g = ExpressionGraph.createFrom((Expression) node);
 		
 		System.out.println(ExpressionGraph.createAccess((Expression) node));
+		
+		IControlFlowGraph<Expression> a = (IControlFlowGraph<Expression>) g;
 				
-		return g;
+		return null;
 	}
 	
-	static IControlFlowGraph<? extends ASTNode> programExample() throws NotConvergingException {
+	static IControlFlowGraph<ASTNode> programExample() throws NotConvergingException {
 		String program =
 				  "{"
 				+ 	"Future<Integer> f1 = ask(\"Hello\");"
@@ -144,7 +143,7 @@ public final class Main {
 
 	
 	public static void main(String[] args) throws NotConvergingException {
-		
+	
 //		CallHierarchy callHierarchy = CallHierarchy.getDefault();
 //	    IMember[] members = { method };
 //	    MethodWrapper[] callers = callHierarchy.getCallerRoots(members);

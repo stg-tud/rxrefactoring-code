@@ -43,6 +43,7 @@ import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation;
+import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.text.edits.MalformedTreeException;
@@ -187,14 +188,17 @@ public class RefactorExecution implements Runnable {
 	}
 
 	public void run() {
+		System.out.println("Start run!");
 		Refactoring refactoring = createRefactoring();
 		RefactoringWizard wizard = new RefactoringWizard(refactoring, RefactoringWizard.WIZARD_BASED_USER_INTERFACE) {
 			@Override
 			protected void addUserInputPages() {
 				// TODO: Add user input pages here!
 			}
+			
 		};
 		RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
+		
 		Shell shell = Display.getCurrent().getActiveShell();
 		
 		ProcessDialog dialog = new ProcessDialog(shell);
@@ -202,8 +206,10 @@ public class RefactorExecution implements Runnable {
 		dialog.open();
 		
 		int result = IDialogConstants.CANCEL_ID;
+
 		try {
 			result = op.run(shell, "This is an dialog title!");
+			
 		} catch (InterruptedException e) {
 			// operation was cancelled
 			Log.info(RefactorExecution.class, "Operation was cancelled.");

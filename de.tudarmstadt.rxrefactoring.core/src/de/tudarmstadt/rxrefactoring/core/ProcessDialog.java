@@ -25,7 +25,7 @@ public class ProcessDialog extends Dialog {
         GridData gdl = new GridData();
         gdl.grabExcessHorizontalSpace = true;
         label.setLayoutData(gdl);
-        label.setText("The refactring started and could take a while!");
+        label.setText("The refactoring started and could take a while!");
         return container;
     }
 
