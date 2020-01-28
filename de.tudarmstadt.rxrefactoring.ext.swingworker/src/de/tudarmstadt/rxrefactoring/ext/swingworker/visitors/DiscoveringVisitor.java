@@ -59,7 +59,8 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 
 	@Override
 	public boolean visit(FieldDeclaration node) {
-		if (Types.isTypeOf(node.getType().resolveBinding(), classBinaryName)) {
+		ITypeBinding type = node.getType().resolveBinding();
+		if (Types.isTypeOf(type, classBinaryName)) {
 			fieldDeclarations.add(node);
 		}
 		return true;

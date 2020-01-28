@@ -5,11 +5,11 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 
-class RewriteCompilationUnitFactory {
+public class RewriteCompilationUnitFactory { // THA umbauen, dass nicht public sein muss
 
 	private final ASTParser parser;
 
-	RewriteCompilationUnitFactory() {
+	public RewriteCompilationUnitFactory() {
 		parser = ASTParser.newParser(AST.JLS10);
 	}
 

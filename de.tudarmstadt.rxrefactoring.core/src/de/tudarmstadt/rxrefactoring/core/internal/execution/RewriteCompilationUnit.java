@@ -803,5 +803,10 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 	public void restore() throws JavaModelException {
 		unit.restore();
 	}
-
+	
+	@Override
+	public RewriteCompilationUnit clone() throws CloneNotSupportedException{
+		return this.clone();
+	}
+	
 }

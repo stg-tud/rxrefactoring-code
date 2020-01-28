@@ -1,19 +1,25 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
 
+import com.google.common.collect.Sets;
+
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnitFactory;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
@@ -36,9 +42,13 @@ public class MethodInvocationWorker implements IWorker<TypeOutput, Void> {
 
 		for (Map.Entry<IRewriteCompilationUnit, MethodInvocation> invocationEntry : input.collector
 				.getMethodInvocationsMap().entries()) {
+			//RewriteCompilationUnitFactory factory = new RewriteCompilationUnitFactory();
 			IRewriteCompilationUnit unit = invocationEntry.getKey();
 			MethodInvocation methodInvocation = invocationEntry.getValue();
-
+			//ICompilationUnit testUnit = unit.getPrimary();
+			//RewriteCompilationUnit unitOfSmallChange = factory.from(testUnit);
+			//unitOfSmallChange.copyNode(unit.getRoot());
+	
 			Expression expression = methodInvocation.getExpression();
 
 			boolean receiverIsRefactored = expression == null
@@ -64,6 +74,8 @@ public class MethodInvocationWorker implements IWorker<TypeOutput, Void> {
 			AST ast = methodInvocation.getAST();
 
 			refactorInvocation(ast, unit, methodInvocation);
+			RewriteCompilationUnit copy = (RewriteCompilationUnit) unit;
+			units.add(unit);
 
 			summary.addCorrect("methodInvocations");
 
@@ -78,19 +90,20 @@ public class MethodInvocationWorker implements IWorker<TypeOutput, Void> {
 
 		SimpleName newMethod = SwingWorkerASTUtils.newSimpleName(ast, newMethodName);
 
-
-		synchronized (unit) {
-			unit.replace(methodSimpleName, newMethod);
-		}
-
-		Expression expression = methodInvocation.getExpression();
-		if (expression instanceof SimpleName) {
-			SimpleName simpleName = (SimpleName) expression;
-			String newName = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
+			
 			synchronized (unit) {
-				unit.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newName));
+				unit.replace(methodSimpleName, newMethod);
 			}
-		}
+
+			Expression expression = methodInvocation.getExpression();
+			if (expression instanceof SimpleName) {
+				SimpleName simpleName = (SimpleName) expression;
+				String newName = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
+				synchronized (unit) {
+					unit.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newName));
+				}
+			}
+		
 	}
 
 }

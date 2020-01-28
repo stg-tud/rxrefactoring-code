@@ -33,9 +33,8 @@ public interface IProjectUnits extends Set<IRewriteCompilationUnit> {
 	}
 
 	@Override
-	default public boolean add(IRewriteCompilationUnit e) {
-		throw new UnsupportedOperationException("this set is not mutable");
-	}
+	public boolean add(IRewriteCompilationUnit e);
+	
 
 	@Override
 	default public boolean remove(Object o) {
@@ -61,4 +60,6 @@ public interface IProjectUnits extends Set<IRewriteCompilationUnit> {
 	default public void clear() {
 		throw new UnsupportedOperationException("this set is not mutable");
 	}
+
+	public Set<IRewriteCompilationUnit> getUnits();
 }

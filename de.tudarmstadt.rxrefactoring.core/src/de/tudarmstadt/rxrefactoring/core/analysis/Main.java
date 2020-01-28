@@ -37,7 +37,7 @@ public final class Main {
 		return null;
 	}
 	
-	static IControlFlowGraph<ASTNode> programExample() throws NotConvergingException {
+	static IControlFlowGraph<? extends ASTNode> programExample() throws NotConvergingException {
 		String program =
 				  "{"
 				+ 	"Future<Integer> f1 = ask(\"Hello\");"

@@ -15,6 +15,8 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.eclipse.text.edits.MalformedTreeException;
 
+import com.google.common.collect.Sets;
+
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
@@ -42,6 +44,14 @@ public class ProjectUnits implements IProjectUnits {
 //	protected ProjectUnits() {
 //		this(Sets.newHashSet());
 //	}
+	
+	public Set<IRewriteCompilationUnit> getUnits(){
+		@SuppressWarnings("null")
+		@NonNull
+		Set<IRewriteCompilationUnit> result = Sets.newConcurrentHashSet();
+		result.addAll(this.units);
+		return result;
+	}
 
 	/**
 	 * Adds the changes that are stored in this sets compilation units
@@ -123,6 +133,16 @@ public class ProjectUnits implements IProjectUnits {
 	@Override
 	public <T> T[] toArray(T[] a) {
 		return units.toArray(a);
+	}
+
+	@Override
+	public boolean add(IRewriteCompilationUnit e) {
+		if(e==null || units.contains(e))
+			return false;
+		else{
+			units.add((RewriteCompilationUnit) e);
+		}
+		return true;
 	}
 
 

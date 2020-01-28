@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -52,11 +54,15 @@ import org.osgi.framework.Bundle;
 import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.ProcessDialog;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectStatus;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
+
+import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
+import org.eclipse.jdt.internal.core.dom.rewrite.RewriteEventStore;
 
 /**
  * This class is used to run the refactoring on all workspace projects.
@@ -146,10 +152,19 @@ public class RefactorExecution implements Runnable {
 							// Finds all java files in the project and produces the according bundled unit.
 							Log.info(RefactorExecution.class, "Parse compilation units...");
 							ProjectUnits units = parseCompilationUnits(javaProject);
-
+							
 							// Performs the refactoring by applying the workers of the extension.
 							Log.info(RefactorExecution.class, "Refactor units...");
 							doRefactorProject(units, changes, projectSummary, project);
+							
+							Iterator<IRewriteCompilationUnit> it = units.iterator();
+							while(it.hasNext()) {
+								//ICompilationUnit test = it.next().getPrimary();
+								//System.out.println(test.findElements(test)[0].toString());
+								//RewriteEventStore store = writer.getRewriteEventStore()
+								
+								//System.out.println("!");
+							}
 
 							// Call template method
 							onProjectFinished(project, javaProject, units);
@@ -342,7 +357,7 @@ public class RefactorExecution implements Runnable {
 
 						@SuppressWarnings("null")
 						@NonNull
-						ICompilationUnit[] units = packageFragment.getCompilationUnits();
+						ICompilationUnit[] units = packageFragment.getCompilationUnits();						
 
 						if (units.length > 0) {
 							// Asynchronously parse units

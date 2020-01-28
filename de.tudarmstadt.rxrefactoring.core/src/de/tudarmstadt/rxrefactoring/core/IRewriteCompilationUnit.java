@@ -302,5 +302,8 @@ public interface IRewriteCompilationUnit extends ICompilationUnit {
 		});
 		
 		return Optional.ofNullable(type[0]);			
-	}	
+	}
+
+	public RewriteCompilationUnit clone() throws CloneNotSupportedException;
+	
 }

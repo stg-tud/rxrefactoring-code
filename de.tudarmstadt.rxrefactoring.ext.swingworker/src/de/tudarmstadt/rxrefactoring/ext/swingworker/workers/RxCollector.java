@@ -22,6 +22,7 @@ import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnitFactory;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.DiscoveringVisitor;
 
@@ -47,10 +48,12 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 	public @Nullable RxCollector refactor(@NonNull IProjectUnits units, @Nullable Void input,
 			@NonNull WorkerSummary summary) throws Exception {
 		String className = SwingWorkerInfo.getBinaryName();
+		//RewriteCompilationUnitFactory factory = new RewriteCompilationUnitFactory();
+		
 		for (IRewriteCompilationUnit unit : units) {
 			// Initialize Visitor
 			DiscoveringVisitor discoveringVisitor = new DiscoveringVisitor(className);
-
+			//IRewriteCompilationUnit testUnit = factory.from(new CompilationUnit);
 			// Collect information using visitor
 			unit.accept(discoveringVisitor);
 			typeDeclMap.putAll(unit, discoveringVisitor.getTypeDeclarations());
@@ -111,6 +114,7 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 
 	public int getNumberOfCompilationUnits() {
 		Set<IRewriteCompilationUnit> allCompilationUnits = new HashSet<>();
+		System.out.println(varDeclMap.entries());
 		allCompilationUnits.addAll(typeDeclMap.keySet());
 		allCompilationUnits.addAll(fieldDeclMap.keySet());
 		allCompilationUnits.addAll(assigmentsMap.keySet());

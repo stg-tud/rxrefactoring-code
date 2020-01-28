@@ -14,6 +14,7 @@ Export-Package: de.tudarmstadt.rxrefactoring.core,
  de.tudarmstadt.rxrefactoring.core.analysis.dataflow,
  de.tudarmstadt.rxrefactoring.core.analysis.impl,
  de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions,
+ de.tudarmstadt.rxrefactoring.core.internal.execution,
  de.tudarmstadt.rxrefactoring.core.legacy,
  de.tudarmstadt.rxrefactoring.core.utils,
  org.jgrapht.graph
