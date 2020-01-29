@@ -1,7 +1,9 @@
 package de.tudarmstadt.rxrefactoring.core.internal.execution;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -51,6 +53,11 @@ public class ProjectUnits implements IProjectUnits {
 		Set<IRewriteCompilationUnit> result = Sets.newConcurrentHashSet();
 		result.addAll(this.units);
 		return result;
+	}
+	
+	public IRewriteCompilationUnit getAtPosition(int pos) {
+		List<RewriteCompilationUnit> list = new ArrayList<>(units);
+		return list.get(pos);		
 	}
 
 	/**
@@ -141,6 +148,16 @@ public class ProjectUnits implements IProjectUnits {
 			return false;
 		else{
 			units.add((RewriteCompilationUnit) e);
+		}
+		return true;
+	}
+
+	@Override
+	public boolean addAll(Collection<? extends IRewriteCompilationUnit> c) {
+		if(c == null || units.containsAll(c) || c.isEmpty())
+			return false;
+		for(IRewriteCompilationUnit unit: c) {
+			units.add((RewriteCompilationUnit) unit);		
 		}
 		return true;
 	}

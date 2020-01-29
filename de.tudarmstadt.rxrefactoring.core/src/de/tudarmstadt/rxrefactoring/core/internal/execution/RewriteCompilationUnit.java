@@ -76,6 +76,8 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 	 * The AST that has been used to create the AST of this unit.
 	 */
 	private @Nullable AST ast;
+	
+	private String worker;
 
 	/**
 	 * <p>Bundles a compilation unit together with its root AST node. Use
@@ -156,7 +158,13 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 	}
 
 	
+	public String getWorker() {
+		return this.worker;
+	}
 	
+	public void setWorker(String worker) { //TODO THA vielleicht auch Worker verknüpfen
+		this.worker = worker;
+	}
 	
 	
 	

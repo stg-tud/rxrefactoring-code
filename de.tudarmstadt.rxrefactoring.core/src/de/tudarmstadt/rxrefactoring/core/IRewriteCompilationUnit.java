@@ -63,6 +63,10 @@ public interface IRewriteCompilationUnit extends ICompilationUnit {
 	 * @return The non-null {@link ASTRewrite}.
 	 */
 	public @NonNull ASTRewrite writer();
+	
+	public String getWorker();
+	
+	public void setWorker(String worker);
 
 	/**
 	 * Retrieves the {@link ImportRewrite} used for this compilation unit.

@@ -74,8 +74,6 @@ public class MethodInvocationWorker implements IWorker<TypeOutput, Void> {
 			AST ast = methodInvocation.getAST();
 
 			refactorInvocation(ast, unit, methodInvocation);
-			RewriteCompilationUnit copy = (RewriteCompilationUnit) unit;
-			units.add(unit);
 
 			summary.addCorrect("methodInvocations");
 

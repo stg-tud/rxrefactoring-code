@@ -158,13 +158,13 @@ public class RefactorExecution implements Runnable {
 							doRefactorProject(units, changes, projectSummary, project);
 							
 							Iterator<IRewriteCompilationUnit> it = units.iterator();
-							while(it.hasNext()) {
+							//while(it.hasNext()) {
 								//ICompilationUnit test = it.next().getPrimary();
 								//System.out.println(test.findElements(test)[0].toString());
 								//RewriteEventStore store = writer.getRewriteEventStore()
 								
 								//System.out.println("!");
-							}
+							//}
 
 							// Call template method
 							onProjectFinished(project, javaProject, units);

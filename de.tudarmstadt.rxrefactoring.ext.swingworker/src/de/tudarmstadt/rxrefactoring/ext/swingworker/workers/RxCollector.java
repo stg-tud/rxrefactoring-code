@@ -5,6 +5,7 @@ import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
@@ -17,6 +18,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
@@ -48,12 +50,10 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 	public @Nullable RxCollector refactor(@NonNull IProjectUnits units, @Nullable Void input,
 			@NonNull WorkerSummary summary) throws Exception {
 		String className = SwingWorkerInfo.getBinaryName();
-		//RewriteCompilationUnitFactory factory = new RewriteCompilationUnitFactory();
 		
 		for (IRewriteCompilationUnit unit : units) {
 			// Initialize Visitor
 			DiscoveringVisitor discoveringVisitor = new DiscoveringVisitor(className);
-			//IRewriteCompilationUnit testUnit = factory.from(new CompilationUnit);
 			// Collect information using visitor
 			unit.accept(discoveringVisitor);
 			typeDeclMap.putAll(unit, discoveringVisitor.getTypeDeclarations());
@@ -66,8 +66,14 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 			methodInvocationsMap.putAll(unit, discoveringVisitor.getMethodInvocations());
 			methodDeclarationsMap.putAll(unit, discoveringVisitor.getMethodDeclarations());
 			relevantInvocationsMap.putAll(unit, discoveringVisitor.getRelevantInvocations());
+			
+		
+			Set<IRewriteCompilationUnit> allWorkerUnits = addWorkerUnitsToMaps(unit.getPrimary());
+			
+			units.addAll(allWorkerUnits);
 
 		}
+		
 		summary.setCorrect("numberOfCompilationUnits", getNumberOfCompilationUnits());
 		return this;
 	}
@@ -125,6 +131,77 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 		allCompilationUnits.addAll(methodInvocationsMap.keySet());
 		allCompilationUnits.addAll(methodDeclarationsMap.keySet());
 		return allCompilationUnits.size();
+	}
+	
+	private Set<IRewriteCompilationUnit> addWorkerUnitsToMaps(ICompilationUnit compilationUnit) {
+		DiscoveringVisitor discoveringVisitor1 = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
+		DiscoveringVisitor discoveringVisitor2 = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
+		DiscoveringVisitor discoveringVisitor3 = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
+		DiscoveringVisitor discoveringVisitor4 = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
+		DiscoveringVisitor discoveringVisitor5 = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
+		DiscoveringVisitor discoveringVisitor6 = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
+		DiscoveringVisitor discoveringVisitor7 = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
+		DiscoveringVisitor discoveringVisitor8 = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
+		DiscoveringVisitor discoveringVisitor9 = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
+		DiscoveringVisitor discoveringVisitor10 = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
+		// Collect information using visitor
+		Set<IRewriteCompilationUnit> allWorkerUnits = Sets.newConcurrentHashSet();
+		RewriteCompilationUnitFactory factory = new RewriteCompilationUnitFactory();
+		
+		IRewriteCompilationUnit unitTypeDeclarationWorker = factory.from(compilationUnit);
+		IRewriteCompilationUnit unitFieldDeclarationWorker = factory.from(compilationUnit);
+		IRewriteCompilationUnit unitAssignmentsWorker = factory.from(compilationUnit);
+		IRewriteCompilationUnit unitVariableDeclWorker = factory.from(compilationUnit);
+		IRewriteCompilationUnit unitSimpleNamesWorker = factory.from(compilationUnit);
+		IRewriteCompilationUnit unitClassInstanceWorker = factory.from(compilationUnit);
+		IRewriteCompilationUnit unitSingleVariableDeclWorker = factory.from(compilationUnit);
+		IRewriteCompilationUnit unitMethodInvocationWorker = factory.from(compilationUnit);
+		IRewriteCompilationUnit unitMethodDeclarationWorker = factory.from(compilationUnit);
+		IRewriteCompilationUnit unitRelevantInvocationsWorker = factory.from(compilationUnit);
+		
+		unitTypeDeclarationWorker.accept(discoveringVisitor1);
+		typeDeclMap.putAll(unitTypeDeclarationWorker, discoveringVisitor1.getTypeDeclarations());
+		
+		unitFieldDeclarationWorker.accept(discoveringVisitor2);
+		fieldDeclMap.putAll(unitFieldDeclarationWorker, discoveringVisitor2.getFieldDeclarations());
+		
+		unitAssignmentsWorker.accept(discoveringVisitor3);
+		assigmentsMap.putAll(unitAssignmentsWorker, discoveringVisitor3.getAssignments());
+		
+		unitVariableDeclWorker.accept(discoveringVisitor4);
+		varDeclMap.putAll(unitVariableDeclWorker, discoveringVisitor4.getVarDeclStatements());
+		
+		unitSimpleNamesWorker.accept(discoveringVisitor5);
+		simpleNamesMap.putAll(unitSimpleNamesWorker, discoveringVisitor5.getSimpleNames());
+		
+		unitClassInstanceWorker.accept(discoveringVisitor6);
+		classInstanceMap.putAll(unitClassInstanceWorker, discoveringVisitor6.getClassInstanceCreations());
+		
+		unitSingleVariableDeclWorker.accept(discoveringVisitor7);
+		singleVarDeclMap.putAll(unitSingleVariableDeclWorker, discoveringVisitor7.getSingleVarDeclarations());
+		
+		unitMethodInvocationWorker.setWorker("MethodInvocationWorker"); //TODO THA für alle Name setzen
+		unitMethodInvocationWorker.accept(discoveringVisitor8);
+		methodInvocationsMap.putAll(unitMethodInvocationWorker, discoveringVisitor8.getMethodInvocations());
+		
+		unitMethodDeclarationWorker.accept(discoveringVisitor9);
+		methodDeclarationsMap.putAll(unitMethodDeclarationWorker, discoveringVisitor9.getMethodDeclarations());		
+
+		unitRelevantInvocationsWorker.accept(discoveringVisitor10);
+		relevantInvocationsMap.putAll(unitRelevantInvocationsWorker, discoveringVisitor10.getRelevantInvocations());
+		
+		allWorkerUnits.add(unitTypeDeclarationWorker);
+		allWorkerUnits.add(unitFieldDeclarationWorker);
+		allWorkerUnits.add(unitAssignmentsWorker);
+		allWorkerUnits.add(unitVariableDeclWorker);
+		allWorkerUnits.add(unitSimpleNamesWorker);
+		allWorkerUnits.add(unitClassInstanceWorker);
+		allWorkerUnits.add(unitSingleVariableDeclWorker);
+		allWorkerUnits.add(unitMethodInvocationWorker);
+		allWorkerUnits.add(unitMethodDeclarationWorker);
+		allWorkerUnits.add(unitRelevantInvocationsWorker);
+		return allWorkerUnits;
+				
 	}
 
 	public String getDetails() {
