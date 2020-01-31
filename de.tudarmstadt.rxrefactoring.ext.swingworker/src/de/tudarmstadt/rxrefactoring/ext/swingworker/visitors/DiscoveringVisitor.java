@@ -207,5 +207,19 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 	public List<MethodInvocation> getRelevantInvocations() {
 		return relevantInvocations;
 	}
+	
+	public void cleanAllLists() {
+		this.typeDeclarations.clear();
+		this.fieldDeclarations.clear();
+		this.assignments.clear();
+		this.varDeclStatements.clear();
+		this.simpleNames.clear();
+		this.classInstanceCreations.clear();
+		this.singleVarDeclarations.clear();
+		this.methodInvocations.clear();
+		this.methodDeclarations.clear();
+		this.relevantInvocations.clear();
+		
+	}
 
 }

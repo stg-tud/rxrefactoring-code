@@ -42,19 +42,19 @@ public class MethodInvocationWorker implements IWorker<TypeOutput, Void> {
 
 		for (Map.Entry<IRewriteCompilationUnit, MethodInvocation> invocationEntry : input.collector
 				.getMethodInvocationsMap().entries()) {
-			//RewriteCompilationUnitFactory factory = new RewriteCompilationUnitFactory();
+			// RewriteCompilationUnitFactory factory = new RewriteCompilationUnitFactory();
 			IRewriteCompilationUnit unit = invocationEntry.getKey();
 			MethodInvocation methodInvocation = invocationEntry.getValue();
-			//ICompilationUnit testUnit = unit.getPrimary();
-			//RewriteCompilationUnit unitOfSmallChange = factory.from(testUnit);
-			//unitOfSmallChange.copyNode(unit.getRoot());
-	
+			// ICompilationUnit testUnit = unit.getPrimary();
+			// RewriteCompilationUnit unitOfSmallChange = factory.from(testUnit);
+			// unitOfSmallChange.copyNode(unit.getRoot());
+
 			Expression expression = methodInvocation.getExpression();
 
 			boolean receiverIsRefactored = expression == null
 					|| info.shouldBeRefactored(expression.resolveTypeBinding())
 					|| Types.isExactTypeOf(expression.resolveTypeBinding().getErasure(), "javax.swing.SwingWorker");
-			
+
 			boolean methodDeclaredBySwingWorker = Types
 					.isTypeOf(methodInvocation.resolveMethodBinding().getDeclaringClass(), "javax.swing.SwingWorker");
 
@@ -88,20 +88,19 @@ public class MethodInvocationWorker implements IWorker<TypeOutput, Void> {
 
 		SimpleName newMethod = SwingWorkerASTUtils.newSimpleName(ast, newMethodName);
 
-			
-			synchronized (unit) {
-				unit.replace(methodSimpleName, newMethod);
-			}
+		synchronized (unit) {
+			unit.replace(methodSimpleName, newMethod);
+		}
 
-			Expression expression = methodInvocation.getExpression();
-			if (expression instanceof SimpleName) {
-				SimpleName simpleName = (SimpleName) expression;
-				String newName = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
-				synchronized (unit) {
-					unit.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newName));
-				}
+		Expression expression = methodInvocation.getExpression();
+		if (expression instanceof SimpleName) {
+			SimpleName simpleName = (SimpleName) expression;
+			String newName = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
+			synchronized (unit) {
+				unit.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newName));
 			}
-		
+		}
+
 	}
 
 }

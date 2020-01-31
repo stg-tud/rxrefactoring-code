@@ -1,6 +1,9 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
 
+import java.util.List;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -35,6 +38,7 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.DiscoveringVisitor;
  * Adapted to new core by Camila Gonzalez on 19/01/2018
  */
 public class RxCollector implements IWorker<Void, RxCollector> {
+	private final Multimap<String, Multimap<IRewriteCompilationUnit,?>> allWorkerMap = HashMultimap.create();
 	private final Multimap<IRewriteCompilationUnit, TypeDeclaration> typeDeclMap = HashMultimap.create();
 	private final Multimap<IRewriteCompilationUnit, FieldDeclaration> fieldDeclMap = HashMultimap.create();
 	private final Multimap<IRewriteCompilationUnit, Assignment> assigmentsMap = HashMultimap.create();
@@ -46,29 +50,24 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 	private final Multimap<IRewriteCompilationUnit, MethodDeclaration> methodDeclarationsMap = HashMultimap.create();
 	private final Multimap<IRewriteCompilationUnit, MethodInvocation> relevantInvocationsMap = HashMultimap.create();
 
+	@SuppressWarnings("unchecked") //TODO THA
 	@Override
 	public @Nullable RxCollector refactor(@NonNull IProjectUnits units, @Nullable Void input,
 			@NonNull WorkerSummary summary) throws Exception {
 		String className = SwingWorkerInfo.getBinaryName();
+		fillAllWorkerMap();
 		
 		for (IRewriteCompilationUnit unit : units) {
 			// Initialize Visitor
 			DiscoveringVisitor discoveringVisitor = new DiscoveringVisitor(className);
 			// Collect information using visitor
 			unit.accept(discoveringVisitor);
-			typeDeclMap.putAll(unit, discoveringVisitor.getTypeDeclarations());
-			fieldDeclMap.putAll(unit, discoveringVisitor.getFieldDeclarations());
-			assigmentsMap.putAll(unit, discoveringVisitor.getAssignments());
-			varDeclMap.putAll(unit, discoveringVisitor.getVarDeclStatements());
-			simpleNamesMap.putAll(unit, discoveringVisitor.getSimpleNames());
-			classInstanceMap.putAll(unit, discoveringVisitor.getClassInstanceCreations());
-			singleVarDeclMap.putAll(unit, discoveringVisitor.getSingleVarDeclarations());
-			methodInvocationsMap.putAll(unit, discoveringVisitor.getMethodInvocations());
-			methodDeclarationsMap.putAll(unit, discoveringVisitor.getMethodDeclarations());
-			relevantInvocationsMap.putAll(unit, discoveringVisitor.getRelevantInvocations());
 			
+			for(Entry<String, Multimap<IRewriteCompilationUnit, ?>> entry: allWorkerMap.entries()) {	
+				entry.getValue().putAll(unit, getNeededList(entry.getKey(), discoveringVisitor)); 
+			}
 		
-			Set<IRewriteCompilationUnit> allWorkerUnits = addWorkerUnitsToMaps(unit.getPrimary());
+			Set<IRewriteCompilationUnit> allWorkerUnits = addWorkerUnitsToMaps(unit.getPrimary(), discoveringVisitor);
 			
 			units.addAll(allWorkerUnits);
 
@@ -76,6 +75,10 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 		
 		summary.setCorrect("numberOfCompilationUnits", getNumberOfCompilationUnits());
 		return this;
+	}
+	
+	public Multimap<String, Multimap<IRewriteCompilationUnit, ?>> getAllWorkerMap(){
+		return allWorkerMap;
 	}
 
 	public Multimap<IRewriteCompilationUnit, TypeDeclaration> getTypeDeclMap() {
@@ -120,7 +123,6 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 
 	public int getNumberOfCompilationUnits() {
 		Set<IRewriteCompilationUnit> allCompilationUnits = new HashSet<>();
-		System.out.println(varDeclMap.entries());
 		allCompilationUnits.addAll(typeDeclMap.keySet());
 		allCompilationUnits.addAll(fieldDeclMap.keySet());
 		allCompilationUnits.addAll(assigmentsMap.keySet());
@@ -133,73 +135,67 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 		return allCompilationUnits.size();
 	}
 	
-	private Set<IRewriteCompilationUnit> addWorkerUnitsToMaps(ICompilationUnit compilationUnit) {
-		DiscoveringVisitor discoveringVisitor1 = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
-		DiscoveringVisitor discoveringVisitor2 = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
-		DiscoveringVisitor discoveringVisitor3 = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
-		DiscoveringVisitor discoveringVisitor4 = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
-		DiscoveringVisitor discoveringVisitor5 = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
-		DiscoveringVisitor discoveringVisitor6 = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
-		DiscoveringVisitor discoveringVisitor7 = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
-		DiscoveringVisitor discoveringVisitor8 = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
-		DiscoveringVisitor discoveringVisitor9 = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
-		DiscoveringVisitor discoveringVisitor10 = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
+	private void fillAllWorkerMap() {
+		allWorkerMap.put("varDeclMap", varDeclMap);
+		allWorkerMap.put("typeDeclMap", typeDeclMap);
+		allWorkerMap.put("fieldDeclMap", fieldDeclMap);
+		allWorkerMap.put("assigmentsMap", assigmentsMap);
+		allWorkerMap.put("simpleNamesMap", simpleNamesMap);
+		allWorkerMap.put("classInstanceMap", classInstanceMap);
+		allWorkerMap.put("singleVarDeclMap", singleVarDeclMap);
+		allWorkerMap.put("methodInvocationsMap", methodInvocationsMap);
+		allWorkerMap.put("methodDeclarationsMap", methodDeclarationsMap);
+		allWorkerMap.put("relevantInvocationsMap", relevantInvocationsMap);
+		
+	}
+	
+	private List getNeededList(String key, DiscoveringVisitor visitor){
+		switch(key) {
+		case "varDeclMap": 
+			return visitor.getVarDeclStatements();	
+		case "typeDeclMap":
+			return visitor.getTypeDeclarations();
+		case "fieldDeclMap":
+			return visitor.getFieldDeclarations();
+		case "assigmentsMap":
+			return visitor.getAssignments();
+		case "simpleNamesMap":
+			return visitor.getSimpleNames();
+		case "classInstanceMap":
+			return visitor.getClassInstanceCreations();
+		case "singleVarDeclMap":
+			return visitor.getSingleVarDeclarations();
+		case "methodInvocationsMap":
+			return visitor.getMethodInvocations();
+		case "methodDeclarationsMap":
+			return visitor.getMethodDeclarations();
+		case "relevantInvocationsMap":
+			return visitor.getRelevantInvocations();
+		default :
+			throw new IllegalStateException("Key not in different Maps!");
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	private Set<IRewriteCompilationUnit> addWorkerUnitsToMaps(ICompilationUnit compilationUnit, DiscoveringVisitor allVisitor) {
+		
 		// Collect information using visitor
 		Set<IRewriteCompilationUnit> allWorkerUnits = Sets.newConcurrentHashSet();
 		RewriteCompilationUnitFactory factory = new RewriteCompilationUnitFactory();
+		DiscoveringVisitor visitor = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
 		
-		IRewriteCompilationUnit unitTypeDeclarationWorker = factory.from(compilationUnit);
-		IRewriteCompilationUnit unitFieldDeclarationWorker = factory.from(compilationUnit);
-		IRewriteCompilationUnit unitAssignmentsWorker = factory.from(compilationUnit);
-		IRewriteCompilationUnit unitVariableDeclWorker = factory.from(compilationUnit);
-		IRewriteCompilationUnit unitSimpleNamesWorker = factory.from(compilationUnit);
-		IRewriteCompilationUnit unitClassInstanceWorker = factory.from(compilationUnit);
-		IRewriteCompilationUnit unitSingleVariableDeclWorker = factory.from(compilationUnit);
-		IRewriteCompilationUnit unitMethodInvocationWorker = factory.from(compilationUnit);
-		IRewriteCompilationUnit unitMethodDeclarationWorker = factory.from(compilationUnit);
-		IRewriteCompilationUnit unitRelevantInvocationsWorker = factory.from(compilationUnit);
+		for(Entry<String, Multimap<IRewriteCompilationUnit, ?>> entry: allWorkerMap.entries()) {
+			
+			if(!getNeededList(entry.getKey(), allVisitor).isEmpty()) {
+				IRewriteCompilationUnit unitWorker = factory.from(compilationUnit);
+				unitWorker.setWorker(entry.getKey());
+				unitWorker.accept(visitor);
+				entry.getValue().putAll(unitWorker, getNeededList(entry.getKey(), visitor)); 
+				allWorkerUnits.add(unitWorker);
+				visitor.cleanAllLists();	
+			}
+		}
 		
-		unitTypeDeclarationWorker.accept(discoveringVisitor1);
-		typeDeclMap.putAll(unitTypeDeclarationWorker, discoveringVisitor1.getTypeDeclarations());
-		
-		unitFieldDeclarationWorker.accept(discoveringVisitor2);
-		fieldDeclMap.putAll(unitFieldDeclarationWorker, discoveringVisitor2.getFieldDeclarations());
-		
-		unitAssignmentsWorker.accept(discoveringVisitor3);
-		assigmentsMap.putAll(unitAssignmentsWorker, discoveringVisitor3.getAssignments());
-		
-		unitVariableDeclWorker.accept(discoveringVisitor4);
-		varDeclMap.putAll(unitVariableDeclWorker, discoveringVisitor4.getVarDeclStatements());
-		
-		unitSimpleNamesWorker.accept(discoveringVisitor5);
-		simpleNamesMap.putAll(unitSimpleNamesWorker, discoveringVisitor5.getSimpleNames());
-		
-		unitClassInstanceWorker.accept(discoveringVisitor6);
-		classInstanceMap.putAll(unitClassInstanceWorker, discoveringVisitor6.getClassInstanceCreations());
-		
-		unitSingleVariableDeclWorker.accept(discoveringVisitor7);
-		singleVarDeclMap.putAll(unitSingleVariableDeclWorker, discoveringVisitor7.getSingleVarDeclarations());
-		
-		unitMethodInvocationWorker.setWorker("MethodInvocationWorker"); //TODO THA für alle Name setzen
-		unitMethodInvocationWorker.accept(discoveringVisitor8);
-		methodInvocationsMap.putAll(unitMethodInvocationWorker, discoveringVisitor8.getMethodInvocations());
-		
-		unitMethodDeclarationWorker.accept(discoveringVisitor9);
-		methodDeclarationsMap.putAll(unitMethodDeclarationWorker, discoveringVisitor9.getMethodDeclarations());		
-
-		unitRelevantInvocationsWorker.accept(discoveringVisitor10);
-		relevantInvocationsMap.putAll(unitRelevantInvocationsWorker, discoveringVisitor10.getRelevantInvocations());
-		
-		allWorkerUnits.add(unitTypeDeclarationWorker);
-		allWorkerUnits.add(unitFieldDeclarationWorker);
-		allWorkerUnits.add(unitAssignmentsWorker);
-		allWorkerUnits.add(unitVariableDeclWorker);
-		allWorkerUnits.add(unitSimpleNamesWorker);
-		allWorkerUnits.add(unitClassInstanceWorker);
-		allWorkerUnits.add(unitSingleVariableDeclWorker);
-		allWorkerUnits.add(unitMethodInvocationWorker);
-		allWorkerUnits.add(unitMethodDeclarationWorker);
-		allWorkerUnits.add(unitRelevantInvocationsWorker);
 		return allWorkerUnits;
 				
 	}
