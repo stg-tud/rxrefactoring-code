@@ -7,8 +7,10 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
 
@@ -20,6 +22,7 @@ import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnitFactory;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
@@ -32,22 +35,20 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
  * Created: 12/21/2016<br>
  * Adapted to new core by Camila Gonzalez on 24/01/2018
  */
-public class MethodInvocationWorker implements IWorker<TypeOutput, Void> {
+public class MethodInvocationWorker implements IWorker<TypeOutput, Boolean> {
 
+	private MethodDeclaration isSameMethod;
+	
 	@Override
-	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,
+	public Boolean refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,
 			@NonNull WorkerSummary summary) throws Exception {
 
 		RefactorInfo info = input.info;
 
 		for (Map.Entry<IRewriteCompilationUnit, MethodInvocation> invocationEntry : input.collector
 				.getMethodInvocationsMap().entries()) {
-			// RewriteCompilationUnitFactory factory = new RewriteCompilationUnitFactory();
 			IRewriteCompilationUnit unit = invocationEntry.getKey();
 			MethodInvocation methodInvocation = invocationEntry.getValue();
-			// ICompilationUnit testUnit = unit.getPrimary();
-			// RewriteCompilationUnit unitOfSmallChange = factory.from(testUnit);
-			// unitOfSmallChange.copyNode(unit.getRoot());
 
 			Expression expression = methodInvocation.getExpression();
 
@@ -72,34 +73,57 @@ public class MethodInvocationWorker implements IWorker<TypeOutput, Void> {
 			}
 
 			AST ast = methodInvocation.getAST();
+			
+			/*if(expression != null) {
+				MethodDeclaration method = ASTNodes.findParent(expression, MethodDeclaration.class).get();
+				if(!method.equals(isSameMethod) && isSameMethod != null) {
+					ASTNode newNode = unit.copyNode(methodInvocation.getParent());
+					RewriteCompilationUnit newUnit = new RewriteCompilationUnit(unit.getPrimary(), newNode);
+					unit = (IRewriteCompilationUnit) newUnit;
+				}
+				isSameMethod = method;
+			}*/
 
-			refactorInvocation(ast, unit, methodInvocation);
+			boolean noChanges = refactorInvocation(ast, unit, methodInvocation);
 
+			if(noChanges) {
+				summary.addSkipped("methodInvocations");
+				continue;
+				}
 			summary.addCorrect("methodInvocations");
 
 		}
+	
+		
 		return null;
 	}
 
-	private void refactorInvocation(AST ast, IRewriteCompilationUnit unit, MethodInvocation methodInvocation) {
+	private boolean refactorInvocation(AST ast, IRewriteCompilationUnit unit, MethodInvocation methodInvocation) {
 
 		SimpleName methodSimpleName = methodInvocation.getName();
 		String newMethodName = RefactoringUtils.getNewMethodName(methodSimpleName.toString());
+		boolean noChanges = methodSimpleName.getIdentifier().equals(newMethodName);
+		
 
-		SimpleName newMethod = SwingWorkerASTUtils.newSimpleName(ast, newMethodName);
-
-		synchronized (unit) {
-			unit.replace(methodSimpleName, newMethod);
+		if(!noChanges) {	
+			synchronized (unit) {
+				unit.replace(methodSimpleName, SwingWorkerASTUtils.newSimpleName(ast, newMethodName));
+			}
 		}
 
 		Expression expression = methodInvocation.getExpression();
 		if (expression instanceof SimpleName) {
 			SimpleName simpleName = (SimpleName) expression;
 			String newName = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
-			synchronized (unit) {
-				unit.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newName));
+			noChanges = simpleName.getIdentifier().equals(newName);
+			if(!noChanges) {
+				synchronized (unit) {
+					unit.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newName));
+				}
 			}
 		}
+		
+		return noChanges;
 
 	}
 

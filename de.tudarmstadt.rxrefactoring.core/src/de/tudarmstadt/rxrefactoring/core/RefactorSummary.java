@@ -146,6 +146,10 @@ public class RefactorSummary {
 		public String toString() {
 			return toString(0);
 		}
+		
+		public Set<WorkerSummary> getWorkers(){
+			return this.workers;
+		}
 
 		public Map<String, CountEntry> getTotal() {
 			Map<String, CountEntry> result = Maps.newHashMap();
@@ -225,6 +229,7 @@ public class RefactorSummary {
 		public synchronized void setThrowable(Throwable throwable) {
 			this.throwable = throwable;
 		}
+	
 
 		private CountEntry getEntryFor(String key) {
 			Objects.requireNonNull(key, "The key can not be null.");

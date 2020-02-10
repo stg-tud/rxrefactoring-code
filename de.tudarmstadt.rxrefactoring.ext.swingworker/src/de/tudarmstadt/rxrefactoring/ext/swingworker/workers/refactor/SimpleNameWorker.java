@@ -73,6 +73,7 @@ public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
 
 			summary.addCorrect("simpleNames");
 		}
+		
 
 		return null;
 	}

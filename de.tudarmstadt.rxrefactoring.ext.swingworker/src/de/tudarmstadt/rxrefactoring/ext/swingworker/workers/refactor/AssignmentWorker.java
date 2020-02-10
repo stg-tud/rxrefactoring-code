@@ -25,6 +25,7 @@ import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObservableModel;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObserverModel;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SWSubscriberModel;
@@ -56,7 +57,7 @@ public class AssignmentWorker extends GeneralWorker<TypeOutput, Void> {
 			IRewriteCompilationUnit icu = assignmentEntry.getKey();
 			Assignment assignment = assignmentEntry.getValue();
 
-			if (info.shouldBeRefactored(assignment.getRightHandSide().resolveTypeBinding())) {
+			if (!info.shouldBeRefactored(assignment.getRightHandSide().resolveTypeBinding())) {
 				summary.addSkipped("assignment");
 				continue;
 			}
@@ -67,7 +68,7 @@ public class AssignmentWorker extends GeneralWorker<TypeOutput, Void> {
 			if (rightHandSide instanceof ClassInstanceCreation) {
 				ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) rightHandSide;
 
-				if (ASTUtils.isClassOf(classInstanceCreation, SwingWorkerInfo.getBinaryName())) {
+				if (Types.isExactTypeOf(classInstanceCreation.getType().resolveBinding(), SwingWorkerInfo.getBinaryName())) {//TODO THA geändert
 					Log.info(getClass(),
 							"METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName());
 					SwingWorkerWrapper refactoringVisitor = new SwingWorkerWrapper();
@@ -100,6 +101,7 @@ public class AssignmentWorker extends GeneralWorker<TypeOutput, Void> {
 
 			summary.addCorrect("assignment");
 		}
+		
 
 		return null;
 	}

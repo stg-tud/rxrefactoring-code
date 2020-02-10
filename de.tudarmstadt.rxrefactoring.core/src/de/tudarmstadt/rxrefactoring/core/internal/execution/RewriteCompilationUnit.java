@@ -140,6 +140,11 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 	}
 	
 	@Override
+	public ASTRewrite getWriter() {
+		return writer;
+	}
+	
+	@Override
 	@SuppressWarnings("null")
 	public @NonNull ImportRewrite imports() {
 		if (imports == null) {

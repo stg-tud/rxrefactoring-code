@@ -87,6 +87,7 @@ public class FieldDeclarationWorker extends GeneralWorker<TypeOutput, Void> {
 
 			summary.addCorrect("fieldDeclarations");
 		}
+		
 		return null;
 	}
 

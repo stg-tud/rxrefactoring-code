@@ -1,14 +1,20 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
 
 import java.util.List;
+import java.util.Map;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
@@ -27,7 +33,9 @@ import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnitFactory;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.DiscoveringVisitor;
 
@@ -56,6 +64,7 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 			@NonNull WorkerSummary summary) throws Exception {
 		String className = SwingWorkerInfo.getBinaryName();
 		fillAllWorkerMap();
+		Set<IRewriteCompilationUnit> newUnits = Sets.newConcurrentHashSet();
 		
 		for (IRewriteCompilationUnit unit : units) {
 			// Initialize Visitor
@@ -63,17 +72,19 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 			// Collect information using visitor
 			unit.accept(discoveringVisitor);
 			
-			for(Entry<String, Multimap<IRewriteCompilationUnit, ?>> entry: allWorkerMap.entries()) {	
-				entry.getValue().putAll(unit, getNeededList(entry.getKey(), discoveringVisitor)); 
-			}
+			//for(Entry<String, Multimap<IRewriteCompilationUnit, ?>> entry: allWorkerMap.entries()) {	
+			//	entry.getValue().putAll(unit, getNeededList(entry.getKey(), discoveringVisitor)); 
+			//}
 		
 			Set<IRewriteCompilationUnit> allWorkerUnits = addWorkerUnitsToMaps(unit.getPrimary(), discoveringVisitor);
 			
-			units.addAll(allWorkerUnits);
+			newUnits.addAll(allWorkerUnits);
 
 		}
 		
-		summary.setCorrect("numberOfCompilationUnits", getNumberOfCompilationUnits());
+		units.addAll(newUnits);
+		//System.out.println(units.size());
+	
 		return this;
 	}
 	
@@ -123,7 +134,7 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 
 	public int getNumberOfCompilationUnits() {
 		Set<IRewriteCompilationUnit> allCompilationUnits = new HashSet<>();
-		allCompilationUnits.addAll(typeDeclMap.keySet());
+		allCompilationUnits.addAll(typeDeclMap.keySet()); // TODO THA correct calculation not used anymore
 		allCompilationUnits.addAll(fieldDeclMap.keySet());
 		allCompilationUnits.addAll(assigmentsMap.keySet());
 		allCompilationUnits.addAll(varDeclMap.keySet());
@@ -192,6 +203,9 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 				unitWorker.accept(visitor);
 				entry.getValue().putAll(unitWorker, getNeededList(entry.getKey(), visitor)); 
 				allWorkerUnits.add(unitWorker);
+				//if(entry.getKey().matches("methodInvocationsMap")) {
+					//allWorkerUnits.addAll(checkForSameMethod(unitWorker));
+				//}
 				visitor.cleanAllLists();	
 			}
 		}
@@ -209,6 +223,27 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 				+ "SingleVariableDeclarations = " + singleVarDeclMap.values().size() + "\n" + "MethodInvocations = "
 				+ methodInvocationsMap.values().size() + "\n" + "MethodDeclarations = "
 				+ methodDeclarationsMap.values().size();
+	}
+	
+	private Set<IRewriteCompilationUnit> checkForSameMethod(IRewriteCompilationUnit unit) {
+		
+		MethodDeclaration outerMethod = null;
+		Set<IRewriteCompilationUnit> set = Sets.newConcurrentHashSet();
+		
+		for(Entry<IRewriteCompilationUnit,  MethodInvocation> entry :  methodInvocationsMap.entries()) {
+			MethodInvocation m = entry.getValue();
+			if(m.getExpression() != null && entry.getKey().equals(unit)) {
+				MethodDeclaration actualMD = ASTNodes.findParent(m.getExpression(), MethodDeclaration.class).get();
+				if(!(actualMD.equals(outerMethod)) && outerMethod != null) {
+					ASTNode newNode = unit.copyNode(actualMD.getParent());
+					RewriteCompilationUnit newUnit = new RewriteCompilationUnit(unit.getPrimary(), newNode);
+					newUnit.setWorker("methodInvocationsMap");
+					set.add(newUnit);	
+				}
+				outerMethod = actualMD;
+			}	
+		}
+		return set;
 	}
 
 }

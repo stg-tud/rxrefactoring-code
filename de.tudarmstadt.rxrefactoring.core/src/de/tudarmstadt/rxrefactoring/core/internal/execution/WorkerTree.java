@@ -91,8 +91,8 @@ public class WorkerTree implements IWorkerTree {
 				result = worker.refactor(units, in, workerSummary);
 				hasResult = true;
 				//Dereference the worker to allow garbage collection 
-				worker = null;				
-			}
+				worker = null;	
+			}	
 			return result;
 		}
 	}
@@ -251,7 +251,7 @@ public class WorkerTree implements IWorkerTree {
 							latch.countDown();				
 						}
 					},
-					executor);
+					executor);			
 		}
 		
 		/**
@@ -272,7 +272,8 @@ public class WorkerTree implements IWorkerTree {
 	
 	public void run(ExecutorService executor) throws InterruptedException {				
 		WorkerTreeExecution execution = new WorkerTreeExecution(executor);
-		execution.execute(root, WorkerSummary.createNullSummary());		
+		WorkerSummary workerSummary = WorkerSummary.createNullSummary();
+		execution.execute(root, workerSummary);		
 		execution.waitFinished();
 		
 	}

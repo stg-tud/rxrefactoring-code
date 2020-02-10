@@ -59,6 +59,7 @@ import de.tudarmstadt.rxrefactoring.core.ProcessDialog;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectStatus;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
+import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
@@ -157,15 +158,7 @@ public class RefactorExecution implements Runnable {
 							Log.info(RefactorExecution.class, "Refactor units...");
 							doRefactorProject(units, changes, projectSummary, project);
 							
-							Iterator<IRewriteCompilationUnit> it = units.iterator();
-							//while(it.hasNext()) {
-								//ICompilationUnit test = it.next().getPrimary();
-								//System.out.println(test.findElements(test)[0].toString());
-								//RewriteEventStore store = writer.getRewriteEventStore()
-								
-								//System.out.println("!");
-							//}
-
+							
 							// Call template method
 							onProjectFinished(project, javaProject, units);
 
