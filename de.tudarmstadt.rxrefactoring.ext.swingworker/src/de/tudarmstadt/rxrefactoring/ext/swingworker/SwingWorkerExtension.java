@@ -41,7 +41,7 @@ public class SwingWorkerExtension implements IRefactorExtension {
 
 	@Override
 	public @NonNull String getName() {
-		return "SwingWorker to Observable";
+		return "SwingWorker to Observable Test";
 	}
 
 	@Override

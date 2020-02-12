@@ -55,6 +55,10 @@ public class ProjectUnits implements IProjectUnits {
 		return result;
 	}
 	
+	public IJavaProject getJavaProject() {
+		return this.project;
+	}
+	
 	public IRewriteCompilationUnit getAtPosition(int pos) {
 		List<RewriteCompilationUnit> list = new ArrayList<>(units);
 		return list.get(pos);		
@@ -69,7 +73,7 @@ public class ProjectUnits implements IProjectUnits {
 	protected void addChangesTo(@NonNull CompositeChange changes)
 			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {		
 		
-		for (RewriteCompilationUnit unit : units) {				
+		for (RewriteCompilationUnit unit : units) {	
 				unit.getChangedDocument().ifPresent(doc -> {
 					changes.add(doc);
 				});				

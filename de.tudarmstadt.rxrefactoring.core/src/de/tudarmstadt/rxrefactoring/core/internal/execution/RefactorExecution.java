@@ -5,14 +5,18 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.core.resources.IProject;
@@ -118,9 +122,14 @@ public class RefactorExecution implements Runnable {
 
 				// Gathers information about the refactoring and presents it to the user.
 				RefactorSummary summary = new RefactorSummary(extension.getName());
+				CompositeChange[] changes = null;
 
 				// Tracks the changes that have been done by this refactoring
-				CompositeChange changes = new CompositeChange(extension.getName());
+				/*CompositeChange change1 = new CompositeChange(extension.getName());
+				CompositeChange change2 = new CompositeChange(extension.getName() + "!");
+				changesOfAll[0] = change1;
+				changesOfAll[1] = change2;*/
+				
 
 				// Reports that the refactoring is starting
 				summary.reportStarted();
@@ -156,7 +165,7 @@ public class RefactorExecution implements Runnable {
 							
 							// Performs the refactoring by applying the workers of the extension.
 							Log.info(RefactorExecution.class, "Refactor units...");
-							doRefactorProject(units, changes, projectSummary, project);
+							changes = doRefactorProject(units, projectSummary, project);
 							
 							
 							// Call template method
@@ -188,8 +197,10 @@ public class RefactorExecution implements Runnable {
 				monitor.done();
 
 				Log.info(RefactorExecution.class, "Print summary...\n" + summary.toString());
+				
+				CompositeChange resultChange = new CompositeChange("Testtt", changes);
 
-				return changes;
+				return resultChange;
 
 			}
 		};
@@ -382,7 +393,7 @@ public class RefactorExecution implements Runnable {
 
 	}
 
-	private void doRefactorProject(@NonNull ProjectUnits units, @NonNull CompositeChange changes,
+	private CompositeChange[] doRefactorProject(@NonNull ProjectUnits units,
 			@NonNull ProjectSummary projectSummary, IProject project) throws IllegalArgumentException,
 			MalformedTreeException, BadLocationException, CoreException, InterruptedException {
 
@@ -392,12 +403,35 @@ public class RefactorExecution implements Runnable {
 
 		// The workers add their changes to the bundled compilation units
 		workerTree.run(extension.createExecutorService());
-
+		
+		Map<String, List<IRewriteCompilationUnit>> grouped = getUnitToChangeMapping(units);
+		List<CompositeChange> changeList = new ArrayList<CompositeChange>();
+		int i = 0;
 		// The changes of the compilation units are applied
 		Log.info(getClass(), "Write changes...");
-		units.addChangesTo(changes);
+		for(Map.Entry<String, List<IRewriteCompilationUnit>> entry: grouped.entrySet()) {
+			CompositeChange change = new CompositeChange(entry.getKey());
+			Set<RewriteCompilationUnit> set = entry.getValue().stream().map(e-> (RewriteCompilationUnit) e).collect(Collectors.toSet());
+			ProjectUnits pu = new ProjectUnits(units.getJavaProject(), set);
+			pu.addChangesTo(change);
+			changeList.add(change);
+		}
+		
+		CompositeChange[] array = changeList.toArray(new CompositeChange[changeList.size()]);
+		
+		return array;
+		
 	}
 
+	private Map<String, List<IRewriteCompilationUnit>> getUnitToChangeMapping(ProjectUnits units) {
+		Map<String, List<IRewriteCompilationUnit>> groupedByWorker = units.getUnits().stream()
+				  .filter(unit-> unit.getWorker() != null)
+				  .collect(Collectors.groupingBy(IRewriteCompilationUnit::getWorker));
+				  
+		
+		return groupedByWorker;	
+	}
+		
 	protected static boolean considerProject(IProject project) {
 		try {
 			return project.isOpen() && project.hasNature(JavaCore.NATURE_ID);
