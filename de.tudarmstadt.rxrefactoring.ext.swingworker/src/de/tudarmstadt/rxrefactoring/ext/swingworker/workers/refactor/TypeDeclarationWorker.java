@@ -32,6 +32,7 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.Methods;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObservableModel;
@@ -54,7 +55,7 @@ public class TypeDeclarationWorker extends GeneralWorker<RxCollector, TypeOutput
 
 	@Override
 	public @Nullable TypeOutput refactor(@NonNull IProjectUnits units, @Nullable RxCollector input,
-			@NonNull WorkerSummary summary) throws Exception {
+			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception {
 
 		RefactorInfo info = new RefactorInfo();
 

@@ -5,6 +5,7 @@ import org.eclipse.jdt.annotation.Nullable;
 
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 
 @FunctionalInterface
 public interface IWorker<Input, Output> {
@@ -25,6 +26,9 @@ public interface IWorker<Input, Output> {
 	 *            The result of the parent worker.
 	 * @param summary
 	 *            The worker summary to report the refactoring.
+	 *            
+	 * @param scope
+	 * 			  The scope how distinct the refactorings are possible. TODO THA
 	 * 
 	 * @return An output that gets passed to child workers.
 	 * 
@@ -32,6 +36,6 @@ public interface IWorker<Input, Output> {
 	 *             if there is a problem with the refactoring.
 	 */
 	public @Nullable Output refactor(@NonNull IProjectUnits units, @Nullable Input input,
-			@NonNull WorkerSummary summary) throws Exception;
+			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception;
 
 }

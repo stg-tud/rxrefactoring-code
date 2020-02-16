@@ -19,6 +19,7 @@ import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SWSubscriberModel;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
@@ -39,7 +40,7 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
 public class FieldDeclarationWorker extends GeneralWorker<TypeOutput, Void> {
 	@Override
 	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,
-			@NonNull WorkerSummary summary) throws Exception {
+			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception {
 
 		RefactorInfo info = input.info;
 

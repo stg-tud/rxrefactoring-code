@@ -23,6 +23,7 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnitFactory;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
@@ -41,7 +42,7 @@ public class MethodInvocationWorker implements IWorker<TypeOutput, Boolean> {
 	
 	@Override
 	public Boolean refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,
-			@NonNull WorkerSummary summary) throws Exception {
+			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception {
 
 		RefactorInfo info = input.info;
 

@@ -36,6 +36,7 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnitFactory;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.DiscoveringVisitor;
 
@@ -61,7 +62,7 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 	@SuppressWarnings("unchecked") //TODO THA
 	@Override
 	public @Nullable RxCollector refactor(@NonNull IProjectUnits units, @Nullable Void input,
-			@NonNull WorkerSummary summary) throws Exception {
+			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception {
 		String className = SwingWorkerInfo.getBinaryName();
 		fillAllWorkerMap();
 		Set<IRewriteCompilationUnit> newUnits = Sets.newConcurrentHashSet();
@@ -70,20 +71,22 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 			// Initialize Visitor
 			DiscoveringVisitor discoveringVisitor = new DiscoveringVisitor(className);
 			// Collect information using visitor
+			unit.setWorker("All");
 			unit.accept(discoveringVisitor);
 			
-			//for(Entry<String, Multimap<IRewriteCompilationUnit, ?>> entry: allWorkerMap.entries()) {	
-			//	entry.getValue().putAll(unit, getNeededList(entry.getKey(), discoveringVisitor)); 
-			//}
-		
-			Set<IRewriteCompilationUnit> allWorkerUnits = addWorkerUnitsToMaps(unit.getPrimary(), discoveringVisitor);
-			
-			newUnits.addAll(allWorkerUnits);
+			if(scope.equals(RefactorScope.WHOLE_PROJECT)) {
+				for(Entry<String, Multimap<IRewriteCompilationUnit, ?>> entry: allWorkerMap.entries()) {	
+					entry.getValue().putAll(unit, getNeededList(entry.getKey(), discoveringVisitor)); 
+				}
+			} else if(scope.equals(RefactorScope.SEPARATE_OCCURENCES)){
+				Set<IRewriteCompilationUnit> allWorkerUnits = addWorkerUnitsToMaps(unit.getPrimary(), discoveringVisitor);
+				newUnits.addAll(allWorkerUnits);
+				
+			}
 
 		}
 		
 		units.addAll(newUnits);
-		//System.out.println(units.size());
 	
 		return this;
 	}

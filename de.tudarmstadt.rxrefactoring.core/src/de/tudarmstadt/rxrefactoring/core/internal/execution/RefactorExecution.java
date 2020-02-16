@@ -50,7 +50,16 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage;
+import org.eclipse.ltk.ui.refactoring.UserInputWizardPage;
+import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.osgi.framework.Bundle;
@@ -65,6 +74,7 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectStatus;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.internal.core.dom.rewrite.RewriteEventStore;
@@ -82,6 +92,7 @@ public class RefactorExecution implements Runnable {
 	 * given by the extension .
 	 */
 	private final IRefactorExtension extension;
+	private RefactorScope scope;
 
 	public RefactorExecution(IRefactorExtension env) {
 		Objects.requireNonNull(env);
@@ -207,12 +218,38 @@ public class RefactorExecution implements Runnable {
 	}
 
 	public void run() {
-		System.out.println("Start run!");
 		Refactoring refactoring = createRefactoring();
 		RefactoringWizard wizard = new RefactoringWizard(refactoring, RefactoringWizard.WIZARD_BASED_USER_INTERFACE) {
 			@Override
 			protected void addUserInputPages() {
-				// TODO: Add user input pages here!
+				   UserInputWizardPage page = new UserInputWizardPage("input") {
+
+						@Override
+						public void createControl(Composite parent) {
+							Composite container = new Composite(parent, SWT.NULL);
+				            GridLayout layout = new GridLayout();
+				            container.setLayout(layout);
+				            layout.numColumns = 1;
+				            layout.verticalSpacing = 3;
+				            Label label = new Label(container, SWT.NULL);
+				            label.setText("Choose if yout want to refactor the whole project or not!");
+				            Combo combo = new Combo(container, SWT.DROP_DOWN | SWT.BORDER);
+				            combo.add("Refactor the whole project");
+				            combo.add("Refactor every occurence separately");
+				            combo.addSelectionListener(new SelectionAdapter(){
+				                public void widgetSelected(SelectionEvent e) {
+				                    if (combo.getText().equals("Refactor the whole project")) {
+				                    	scope = RefactorScope.WHOLE_PROJECT;
+				                    } else {
+				                    	scope = RefactorScope.SEPARATE_OCCURENCES;
+				                    }
+				                }});
+				            
+				            setControl(container);
+							
+						}
+				    };
+				    addPage(page);
 			}
 			
 		};
@@ -402,7 +439,7 @@ public class RefactorExecution implements Runnable {
 		extension.addWorkersTo(workerTree);
 
 		// The workers add their changes to the bundled compilation units
-		workerTree.run(extension.createExecutorService());
+		workerTree.run(extension.createExecutorService(), scope);
 		
 		Map<String, List<IRewriteCompilationUnit>> grouped = getUnitToChangeMapping(units);
 		List<CompositeChange> changeList = new ArrayList<CompositeChange>();

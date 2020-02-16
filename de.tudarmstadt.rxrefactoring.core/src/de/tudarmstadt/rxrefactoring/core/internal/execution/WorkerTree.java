@@ -25,6 +25,7 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerStatus;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 
 /**
  * This class defines hierarchies of workers that may rely on the results of
@@ -85,10 +86,10 @@ public class WorkerTree implements IWorkerTree {
 		}
 
 		
-		public Output run(WorkerSummary workerSummary) throws Exception {
+		public Output run(WorkerSummary workerSummary, RefactorScope scope) throws Exception {
 			if (!hasResult()) {
 				Input in = parent == null ? null : parent.getResult();
-				result = worker.refactor(units, in, workerSummary);
+				result = worker.refactor(units, in, workerSummary, scope);
 				hasResult = true;
 				//Dereference the worker to allow garbage collection 
 				worker = null;	
@@ -163,7 +164,7 @@ public class WorkerTree implements IWorkerTree {
 			Log.info(getClass(), "Run worker: " + current.worker.getName());
 
 			try {
-				current.run(workerSummary);
+				current.run(workerSummary, null); //TODO really not called?
 
 				for (WorkerNode<?, ?> node : workers) {
 					if (node.parent == current)
@@ -216,10 +217,10 @@ public class WorkerTree implements IWorkerTree {
 		 * 
 		 * @param workerSummary The summary to use for this worker node.
 		 */
-		public void execute(final WorkerNode<?,?> workerNode, final WorkerSummary workerSummary) {	
+		public void execute(final WorkerNode<?,?> workerNode, final WorkerSummary workerSummary, RefactorScope scope) {	
 			Log.info(WorkerTree.class, "Start execution: " + workerNode);
 			Futures.addCallback(
-					executor.submit(() -> workerNode.run(workerSummary)), 
+					executor.submit(() -> workerNode.run(workerSummary, scope)), 
 					new FutureCallback<Object>() {
 						@Override
 						public void onFailure(Throwable arg0) {
@@ -246,7 +247,7 @@ public class WorkerTree implements IWorkerTree {
 							Log.info(WorkerTree.class, "Finished execution: " + workerNode + " (remaining: " + latch.getCount() + ")");							
 							for (WorkerNode<?, ?> node : workers) {
 								if (node.parent == workerNode)
-									execute(node, summary.reportWorker(node.worker));
+									execute(node, summary.reportWorker(node.worker), scope);
 							}		
 							latch.countDown();				
 						}
@@ -270,10 +271,10 @@ public class WorkerTree implements IWorkerTree {
 	}
 	
 	
-	public void run(ExecutorService executor) throws InterruptedException {				
+	public void run(ExecutorService executor, RefactorScope scope) throws InterruptedException {				
 		WorkerTreeExecution execution = new WorkerTreeExecution(executor);
 		WorkerSummary workerSummary = WorkerSummary.createNullSummary();
-		execution.execute(root, workerSummary);		
+		execution.execute(root, workerSummary, scope);		
 		execution.waitFinished();
 		
 	}
