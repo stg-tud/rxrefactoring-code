@@ -39,7 +39,8 @@ public class MethodDeclarationWorker implements IWorker<TypeOutput, Void> {
 			IRewriteCompilationUnit unit = methodDeclEntry.getKey();
 			MethodDeclaration methodDeclaration = methodDeclEntry.getValue();
 
-			if (!info.shouldBeRefactored(methodDeclaration.resolveBinding().getDeclaringClass())) {
+			if (!info.shouldBeRefactored(methodDeclaration.resolveBinding().getDeclaringClass())
+					&& !Types.isExactTypeOf(methodDeclaration.resolveBinding().getReturnType(), SwingWorkerInfo.getBinaryName())) {
 				summary.addSkipped("methodDeclarations");
 				continue;
 			}
