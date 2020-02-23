@@ -86,8 +86,7 @@ public class ClassInstanceCreationWorker extends GeneralWorker<TypeOutput, Void>
 	private boolean isRefactoredHere(ClassInstanceCreation classInstanceCreation) {
 		boolean relevant = ASTNodes.findParentInStatement(classInstanceCreation, Assignment.class).isPresent()
 				|| ASTNodes.findParentInStatement(classInstanceCreation, VariableDeclarationStatement.class).isPresent()
-				|| ASTNodes.findParentInStatement(classInstanceCreation, FieldDeclaration.class).isPresent()
-				|| ASTNodes.findParentInStatement(classInstanceCreation, MethodInvocation.class).isPresent(); // TODO THA (wegen new .. ().execute()
+				|| ASTNodes.findParentInStatement(classInstanceCreation, FieldDeclaration.class).isPresent();
 
 		// if any is present, then another worker handles this case
 		return !relevant;

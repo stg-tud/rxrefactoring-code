@@ -10,11 +10,11 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorker;
+import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 
-public class TemplateCollector implements IWorker<TemplatePreconditionWorker, TemplateCollector>{
+public class TemplateCollector implements IWorkerV1<TemplatePreconditionWorker, TemplateCollector>{
 	
 	/**
 	 * TODO 8 - Determine how the collector will interact with the other workers.

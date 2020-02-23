@@ -9,10 +9,10 @@ import org.eclipse.jdt.core.dom.ASTNode;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorker;
+import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 
-public abstract class AbstractGeneralWorker<NodeType extends ASTNode> implements IWorker<FutureCollector, Void> {
+public abstract class AbstractGeneralWorker<NodeType extends ASTNode> implements IWorkerV1<FutureCollector, Void> {
 
 	protected final String nodeName;
 	protected FutureCollector collector;

@@ -146,8 +146,8 @@ public class RefactorSummary {
 		public String toString() {
 			return toString(0);
 		}
-		
-		public Set<WorkerSummary> getWorkers(){
+
+		public Set<WorkerSummary> getWorkers() {
 			return this.workers;
 		}
 
@@ -225,11 +225,10 @@ public class RefactorSummary {
 			Objects.requireNonNull(status);
 			this.status = status;
 		}
-		
+
 		public synchronized void setThrowable(Throwable throwable) {
 			this.throwable = throwable;
 		}
-	
 
 		private CountEntry getEntryFor(String key) {
 			Objects.requireNonNull(key, "The key can not be null.");
@@ -255,8 +254,8 @@ public class RefactorSummary {
 			String result = pad + ">>> Worker[" + status + "]: " + workerName;
 
 			result += mapToString(entries, padding + 1);
-			
-			if (throwable != null) {				
+
+			if (throwable != null) {
 				ByteArrayOutputStream out = new ByteArrayOutputStream();
 				PrintStream ps = new PrintStream(out);
 				throwable.printStackTrace(ps);
@@ -268,10 +267,10 @@ public class RefactorSummary {
 
 		}
 
-		private static String mapToString(Map<String, CountEntry> map, int padding) {			
-			return map.entrySet().stream()
-				.sorted((e1, e2) -> e1.getKey().compareTo(e2.getKey()))
-				.reduce("", (acc, s) -> acc + "\n" + fromPadding(padding) + s.getKey() + ": " + s.getValue(), (s1, s2) -> s1 + "\n" + s2);
+		private static String mapToString(Map<String, CountEntry> map, int padding) {
+			return map.entrySet().stream().sorted((e1, e2) -> e1.getKey().compareTo(e2.getKey())).reduce("",
+					(acc, s) -> acc + "\n" + fromPadding(padding) + s.getKey() + ": " + s.getValue(),
+					(s1, s2) -> s1 + "\n" + s2);
 		}
 
 		private static Map<String, CountEntry> combine(Map<String, CountEntry> a, Map<String, CountEntry> b) {
@@ -334,10 +333,10 @@ public class RefactorSummary {
 	private static String fromPadding(int padding) {
 		return Strings.repeat("\t", padding);
 	}
-	
+
 	private static String withPadding(String s, int padding) {
 		String pad = fromPadding(padding);
-		return pad + s.replace("\n", "\n" + pad);		
+		return pad + s.replace("\n", "\n" + pad);
 	}
 
 }

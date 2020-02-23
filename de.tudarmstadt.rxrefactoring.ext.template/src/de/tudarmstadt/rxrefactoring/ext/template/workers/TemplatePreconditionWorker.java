@@ -9,11 +9,11 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
-import de.tudarmstadt.rxrefactoring.core.IWorker;
+import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
 
-public class TemplatePreconditionWorker implements IWorker<Collection<UseDef>, TemplatePreconditionWorker> {
+public class TemplatePreconditionWorker implements IWorkerV1<Collection<UseDef>, TemplatePreconditionWorker> {
 
 	public Set<ASTNode> instantiations = new HashSet<ASTNode>();
 	

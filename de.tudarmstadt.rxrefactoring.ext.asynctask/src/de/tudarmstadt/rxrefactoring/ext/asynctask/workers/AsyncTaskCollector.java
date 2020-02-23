@@ -23,7 +23,7 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorker;
+import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
@@ -36,7 +36,7 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
  * Author: Template<br>
  * Created: 01/18/2017
  */
-public class AsyncTaskCollector implements IWorker<Void,AsyncTaskCollector> {
+public class AsyncTaskCollector implements IWorkerV1<Void,AsyncTaskCollector> {
 
 	private final Multimap<IRewriteCompilationUnit, TypeDeclaration> subclassesMap;
 	private final Multimap<IRewriteCompilationUnit, AnonymousClassDeclaration> anonymousClassesMap;

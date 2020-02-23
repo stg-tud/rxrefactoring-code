@@ -18,7 +18,7 @@ import com.google.common.collect.Maps;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorker;
+import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement.ProgramGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
@@ -27,7 +27,7 @@ import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDe
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDefAnalysis;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 
-public class TemplateUseDef implements IWorker<Void, Collection<UseDef>> {
+public class TemplateUseDef implements IWorkerV1<Void, Collection<UseDef>> {
 
 	private static DataFlowAnalysis<ASTNode, UseDef> analysis = UseDefAnalysis.create();
 

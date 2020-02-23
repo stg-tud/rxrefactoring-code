@@ -30,7 +30,7 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorker;
+import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
 import de.tudarmstadt.rxrefactoring.core.NodeSupplier;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.ir.ComplexReactiveComputation;
@@ -46,7 +46,7 @@ import de.tudarmstadt.rxrefactoring.core.utils.Statements;
 import de.tudarmstadt.rxrefactoring.ext.future.Utils;
 
 
-public class FutureSubmitTransformer implements IWorker<Multimap<IRewriteCompilationUnit, MethodInvocation>, Void> {
+public class FutureSubmitTransformer implements IWorkerV1<Multimap<IRewriteCompilationUnit, MethodInvocation>, Void> {
 
 	@SuppressWarnings("null")
 	@Override

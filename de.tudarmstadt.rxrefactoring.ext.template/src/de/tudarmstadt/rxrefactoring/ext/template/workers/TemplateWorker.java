@@ -10,10 +10,10 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorker;
+import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 
-public class TemplateWorker implements IWorker<TemplateCollector, Void>{
+public class TemplateWorker implements IWorkerV1<TemplateCollector, Void>{
 	
 	@Override
 	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable TemplateCollector input,

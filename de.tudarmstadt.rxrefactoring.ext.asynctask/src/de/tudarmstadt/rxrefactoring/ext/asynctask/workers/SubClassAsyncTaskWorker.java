@@ -17,7 +17,7 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorker;
+import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.InnerClassBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.RefactorNames;
@@ -29,7 +29,7 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 /**
  * Refactors subclasses of AsyncTask that appear in the code.
  */
-public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>, WorkerEnvironment {
+public class SubClassAsyncTaskWorker implements IWorkerV1<AsyncTaskCollector, Void>, WorkerEnvironment {
 	final String SUBSCRIPTION = "Subscription";
 	final String EXECUTE = "execute";
 	final String EXECUTE_ON_EXECUTOR = "executeOnExecutor";

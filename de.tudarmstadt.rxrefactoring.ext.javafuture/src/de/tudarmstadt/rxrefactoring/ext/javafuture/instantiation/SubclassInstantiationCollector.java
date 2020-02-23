@@ -19,7 +19,7 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorker;
+import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
@@ -30,7 +30,7 @@ import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
  * Author: Camila Gonzalez<br>
  * Created: 24/02/2018
  */
-public class SubclassInstantiationCollector implements IWorker<InstantiationCollector, SubclassInstantiationCollector> {
+public class SubclassInstantiationCollector implements IWorkerV1<InstantiationCollector, SubclassInstantiationCollector> {
 
 	// TypeDeclarations of classes and interfaces that inherit directly or
 	// indirectly from binaryName and implement only 

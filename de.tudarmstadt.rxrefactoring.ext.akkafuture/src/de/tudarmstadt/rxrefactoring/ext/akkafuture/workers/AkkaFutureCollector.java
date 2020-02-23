@@ -17,7 +17,7 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorker;
+import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.AwaitBinding;
@@ -26,7 +26,7 @@ import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureCreationWrapper
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureMethodWrapper;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureTypeWrapper;
 
-public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
+public class AkkaFutureCollector implements IWorkerV1<Void, AkkaFutureCollector> {
 
 	
 	/**

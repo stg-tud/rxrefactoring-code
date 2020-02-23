@@ -31,7 +31,7 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorker;
+import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.RefactoringOptions;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.PreconditionWorker;
@@ -45,7 +45,7 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureVisitor3
  * Author: Template<br>
  * Created: 01/18/2017
  */
-public class FutureCollector implements IWorker<PreconditionWorker, FutureCollector> {
+public class FutureCollector implements IWorkerV1<PreconditionWorker, FutureCollector> {
 
 	private final Map<String, CollectorGroup> groups;
 

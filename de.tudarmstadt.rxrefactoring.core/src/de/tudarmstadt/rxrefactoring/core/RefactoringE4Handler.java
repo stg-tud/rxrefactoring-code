@@ -9,7 +9,7 @@ import de.tudarmstadt.rxrefactoring.core.internal.testing.RefactorExecutionWithT
 
 /**
  * Starts the refactoring when the button is clicked by invoking a
- * {@link RefactorExecution}.
+ * {@link RefactorExecutionV1}.
  * 
  * @author Grebiel Jose Ifill Brito, Mirko Köhler
  */

@@ -8,7 +8,7 @@ import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUn
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 
 @FunctionalInterface
-public interface IWorker<Input, Output> {
+public interface IWorkerV1<Input, Output> {
 
 	@SuppressWarnings("null")
 	default public @NonNull String getName() {
@@ -36,6 +36,6 @@ public interface IWorker<Input, Output> {
 	 *             if there is a problem with the refactoring.
 	 */
 	public @Nullable Output refactor(@NonNull IProjectUnits units, @Nullable Input input,
-			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception;
+			@NonNull WorkerSummary summary) throws Exception;
 
 }

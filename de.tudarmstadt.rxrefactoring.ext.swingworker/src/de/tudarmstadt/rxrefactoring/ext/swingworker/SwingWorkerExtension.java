@@ -119,5 +119,4 @@ public class SwingWorkerExtension implements IRefactorExtension {
 		return //Executors.newFixedThreadPool(4);
 			Executors.newSingleThreadExecutor();
 	}
-
 }

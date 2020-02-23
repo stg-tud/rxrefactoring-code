@@ -18,7 +18,7 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorker;
+import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
@@ -26,7 +26,7 @@ import de.tudarmstadt.rxrefactoring.core.utils.Methods;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 
 
-public class FutureSubmitCollector implements IWorker<Void, Multimap<IRewriteCompilationUnit, MethodInvocation>> {
+public class FutureSubmitCollector implements IWorkerV1<Void, Multimap<IRewriteCompilationUnit, MethodInvocation>> {
 
 	final Multimap<IRewriteCompilationUnit, MethodInvocation> submitInvocations = HashMultimap.create();
 	

@@ -29,7 +29,7 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorker;
+import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
@@ -40,7 +40,7 @@ import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
  * Author: Camila Gonzalez<br>
  * Created: 22/02/2018
  */
-public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, InstantiationCollector> {
+public class InstantiationCollector implements IWorkerV1<Map<ASTNode, UseDef>, InstantiationCollector> {
 	
 	// Method invocations that return binaryName, and for which the
 	// returned value is not discarded.
