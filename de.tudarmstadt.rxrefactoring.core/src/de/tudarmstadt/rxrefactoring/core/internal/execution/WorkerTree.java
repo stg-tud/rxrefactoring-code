@@ -271,6 +271,14 @@ public class WorkerTree implements IWorkerTree {
 		execution.waitFinished();
 
 	}
+	
+	public void run(ExecutorService executor) throws InterruptedException {
+		WorkerTreeExecution execution = new WorkerTreeExecution(executor);
+		WorkerSummary workerSummary = WorkerSummary.createNullSummary();
+		execution.execute(root, workerSummary, null);
+		execution.waitFinished();
+
+	}
 
 	@Override
 	public <Y> IWorkerRef<Void, Y> addWorker(IWorkerV1<Void, Y> worker) {

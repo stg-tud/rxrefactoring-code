@@ -119,8 +119,8 @@ public class RefactorExecution implements Runnable {
 					throws CoreException, OperationCanceledException {
 				// TODO: Check final conditions here...
 				return new RefactoringStatus();
-			}
-
+			} 
+			
 			@Override
 			public Change createChange(IProgressMonitor monitor) throws CoreException, OperationCanceledException {
 
@@ -133,20 +133,15 @@ public class RefactorExecution implements Runnable {
 
 				// Gathers information about the refactoring and presents it to the user.
 				RefactorSummary summary = new RefactorSummary(extension.getName());
-				CompositeChange[] changes = null;
-
-				// Tracks the changes that have been done by this refactoring
-				/*CompositeChange change1 = new CompositeChange(extension.getName());
-				CompositeChange change2 = new CompositeChange(extension.getName() + "!");
-				changesOfAll[0] = change1;
-				changesOfAll[1] = change2;*/
 				
-
+				CompositeChange[] allChanges = new CompositeChange[projects.length];
+				int i = 0;
 				// Reports that the refactoring is starting
 				summary.reportStarted();
 
 				// Iterate over all projects
 				for (IProject project : projects) {
+					CompositeChange[] changes = null;
 
 					ProjectSummary projectSummary = summary.reportProject(project);
 					// Try to refactor the project
@@ -173,11 +168,13 @@ public class RefactorExecution implements Runnable {
 							// Finds all java files in the project and produces the according bundled unit.
 							Log.info(RefactorExecution.class, "Parse compilation units...");
 							ProjectUnits units = parseCompilationUnits(javaProject);
-							
+
 							// Performs the refactoring by applying the workers of the extension.
 							Log.info(RefactorExecution.class, "Refactor units...");
 							changes = doRefactorProject(units, projectSummary, project);
-							
+							CompositeChange changePerProject = new CompositeChange(project.getName(), changes);
+							allChanges[i] = changePerProject;
+							i++;
 							
 							// Call template method
 							onProjectFinished(project, javaProject, units);
@@ -206,10 +203,8 @@ public class RefactorExecution implements Runnable {
 				Log.info(RefactorExecution.class, "Finished.");
 				summary.reportFinished();
 				monitor.done();
-
-				Log.info(RefactorExecution.class, "Print summary...\n" + summary.toString());
-				
-				CompositeChange resultChange = new CompositeChange("Testtt", changes);
+		
+				CompositeChange resultChange = new CompositeChange(extension.getName() , allChanges);
 
 				return resultChange;
 
@@ -222,50 +217,62 @@ public class RefactorExecution implements Runnable {
 		RefactoringWizard wizard = new RefactoringWizard(refactoring, RefactoringWizard.WIZARD_BASED_USER_INTERFACE) {
 			@Override
 			protected void addUserInputPages() {
-				   UserInputWizardPage page = new UserInputWizardPage("input") {
+				UserInputWizardPage page = new UserInputWizardPage("input") {
 
-						@Override
-						public void createControl(Composite parent) {
-							Composite container = new Composite(parent, SWT.NULL);
-				            GridLayout layout = new GridLayout();
-				            container.setLayout(layout);
-				            layout.numColumns = 1;
-				            layout.verticalSpacing = 3;
-				            Label label = new Label(container, SWT.NULL);
-				            label.setText("Choose if yout want to refactor the whole project or not!");
-				            Combo combo = new Combo(container, SWT.DROP_DOWN | SWT.BORDER);
-				            combo.add("Refactor the whole project");
-				            combo.add("Refactor every occurence separately");
-				            combo.addSelectionListener(new SelectionAdapter(){
-				                public void widgetSelected(SelectionEvent e) {
-				                    if (combo.getText().equals("Refactor the whole project")) {
-				                    	scope = RefactorScope.WHOLE_PROJECT;
-				                    } else {
-				                    	scope = RefactorScope.SEPARATE_OCCURENCES;
-				                    }
-				                }});
-				            
-				            setControl(container);
+					@Override
+					public void createControl(Composite parent) {
+						Composite container = new Composite(parent, SWT.NULL);
+						GridLayout layout = new GridLayout();
+						container.setLayout(layout);
+						layout.numColumns = 1;
+						layout.verticalSpacing = 3;
+						Label label = new Label(container, SWT.NULL);
+						label.setText("Choose if yout want to refactor the whole project or not!");
+						Combo combo = new Combo(container, SWT.DROP_DOWN | SWT.BORDER);
+						combo.add("Refactor the whole project");
+						combo.add("Refactor every occurence separately");
+						combo.addSelectionListener(new SelectionAdapter() {
+							public void widgetSelected(SelectionEvent e) {
+								if (combo.getText().equals("Refactor the whole project")) {
+									scope = RefactorScope.WHOLE_PROJECT;
+								} else {
+									scope = RefactorScope.SEPARATE_OCCURENCES;
+								}
+							}
 							
-						}
-				    };
-				    addPage(page);
+						
+						});
+
+						setControl(container);
+						
+					}
+					
+					@Override
+					protected boolean performFinish() {
+						
+						return false;
+						
+					}
+					
+				};
+				addPage(page);
+				
 			}
-			
+
 		};
 		RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
-		
 		Shell shell = Display.getCurrent().getActiveShell();
-		
+
 		ProcessDialog dialog = new ProcessDialog(shell);
+		
 		dialog.create();
 		dialog.open();
-		
+
 		int result = IDialogConstants.CANCEL_ID;
 
 		try {
 			result = op.run(shell, "This is an dialog title!");
-			
+
 		} catch (InterruptedException e) {
 			// operation was cancelled
 			Log.info(RefactorExecution.class, "Operation was cancelled.");
@@ -398,7 +405,7 @@ public class RefactorExecution implements Runnable {
 
 						@SuppressWarnings("null")
 						@NonNull
-						ICompilationUnit[] units = packageFragment.getCompilationUnits();						
+						ICompilationUnit[] units = packageFragment.getCompilationUnits();
 
 						if (units.length > 0) {
 							// Asynchronously parse units
@@ -430,45 +437,48 @@ public class RefactorExecution implements Runnable {
 
 	}
 
-	private CompositeChange[] doRefactorProject(@NonNull ProjectUnits units,
-			@NonNull ProjectSummary projectSummary, IProject project) throws IllegalArgumentException,
-			MalformedTreeException, BadLocationException, CoreException, InterruptedException {
+	private CompositeChange[] doRefactorProject(@NonNull ProjectUnits units, @NonNull ProjectSummary projectSummary,
+			IProject project) throws IllegalArgumentException, MalformedTreeException, BadLocationException,
+			CoreException, InterruptedException {
 
 		// Produce the worker tree
 		WorkerTree workerTree = new WorkerTree(units, projectSummary);
 		extension.addWorkersTo(workerTree);
 
+		if(scope == null) {
+			workerTree.run(extension.createExecutorService());
+		}
 		// The workers add their changes to the bundled compilation units
 		workerTree.run(extension.createExecutorService(), scope);
-		
+
 		Map<String, List<IRewriteCompilationUnit>> grouped = getUnitToChangeMapping(units);
 		List<CompositeChange> changeList = new ArrayList<CompositeChange>();
 		int i = 0;
 		// The changes of the compilation units are applied
 		Log.info(getClass(), "Write changes...");
-		for(Map.Entry<String, List<IRewriteCompilationUnit>> entry: grouped.entrySet()) {
+		for (Map.Entry<String, List<IRewriteCompilationUnit>> entry : grouped.entrySet()) {
 			CompositeChange change = new CompositeChange(entry.getKey());
-			Set<RewriteCompilationUnit> set = entry.getValue().stream().map(e-> (RewriteCompilationUnit) e).collect(Collectors.toSet());
+			Set<RewriteCompilationUnit> set = entry.getValue().stream().map(e -> (RewriteCompilationUnit) e)
+					.collect(Collectors.toSet());
 			ProjectUnits pu = new ProjectUnits(units.getJavaProject(), set);
 			pu.addChangesTo(change);
 			changeList.add(change);
 		}
-		
+
 		CompositeChange[] array = changeList.toArray(new CompositeChange[changeList.size()]);
-		
+
 		return array;
-		
+
 	}
 
 	private Map<String, List<IRewriteCompilationUnit>> getUnitToChangeMapping(ProjectUnits units) {
 		Map<String, List<IRewriteCompilationUnit>> groupedByWorker = units.getUnits().stream()
-				  .filter(unit-> unit.getWorker() != null)
-				  .collect(Collectors.groupingBy(IRewriteCompilationUnit::getWorker));
-				  
-		
-		return groupedByWorker;	
+				.filter(unit -> unit.getWorker() != null)
+				.collect(Collectors.groupingBy(IRewriteCompilationUnit::getWorker));
+
+		return groupedByWorker;
 	}
-		
+
 	protected static boolean considerProject(IProject project) {
 		try {
 			return project.isOpen() && project.hasNature(JavaCore.NATURE_ID);

@@ -225,7 +225,7 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 				root.addChild(edit);
 			}		
 			
-			DocumentChange change = new RewriteChange(unit.getElementName() + " of Worker: " + this.getWorker(), document);
+			DocumentChange change = new RewriteChange(unit.getElementName(), document);
 			change.setEdit(root);			
 			return Optional.of(change);
 		}

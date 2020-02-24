@@ -151,40 +151,40 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 	}
 	
 	private void fillAllWorkerMap() {
-		allWorkerMap.put("varDeclMap", varDeclMap);
-		allWorkerMap.put("typeDeclMap", typeDeclMap);
-		allWorkerMap.put("fieldDeclMap", fieldDeclMap);
-		allWorkerMap.put("assigmentsMap", assigmentsMap);
-		allWorkerMap.put("simpleNamesMap", simpleNamesMap);
-		allWorkerMap.put("classInstanceMap", classInstanceMap);
-		allWorkerMap.put("singleVarDeclMap", singleVarDeclMap);
-		allWorkerMap.put("methodInvocationsMap", methodInvocationsMap);
-		allWorkerMap.put("methodDeclarationsMap", methodDeclarationsMap);
-		allWorkerMap.put("relevantInvocationsMap", relevantInvocationsMap);
+		allWorkerMap.put("Variable Declarations", varDeclMap);
+		allWorkerMap.put("Type Declarations", typeDeclMap);
+		allWorkerMap.put("Field Declarations", fieldDeclMap);
+		allWorkerMap.put("Assigments", assigmentsMap);
+		allWorkerMap.put("Simple Names", simpleNamesMap);
+		allWorkerMap.put("Class Instances", classInstanceMap);
+		allWorkerMap.put("Single Variable Declarations", singleVarDeclMap);
+		allWorkerMap.put("Method Invocations" , methodInvocationsMap);
+		allWorkerMap.put("Method Declarations", methodDeclarationsMap);
+		allWorkerMap.put("Relevant Invocations", relevantInvocationsMap);
 		
 	}
 	
 	private List getNeededList(String key, DiscoveringVisitor visitor){
 		switch(key) {
-		case "varDeclMap": 
+		case "Variable Declarations": 
 			return visitor.getVarDeclStatements();	
-		case "typeDeclMap":
+		case "Type Declarations":
 			return visitor.getTypeDeclarations();
-		case "fieldDeclMap":
+		case "Field Declarations":
 			return visitor.getFieldDeclarations();
-		case "assigmentsMap":
+		case "Assigments":
 			return visitor.getAssignments();
-		case "simpleNamesMap":
+		case "Simple Names":
 			return visitor.getSimpleNames();
-		case "classInstanceMap":
+		case "Class Instances":
 			return visitor.getClassInstanceCreations();
-		case "singleVarDeclMap":
+		case "Single Variable Declarations":
 			return visitor.getSingleVarDeclarations();
-		case "methodInvocationsMap":
+		case "Method Invocations":
 			return visitor.getMethodInvocations();
-		case "methodDeclarationsMap":
+		case "Method Declarations":
 			return visitor.getMethodDeclarations();
-		case "relevantInvocationsMap":
+		case "Relevant Invocations":
 			return visitor.getRelevantInvocations();
 		default :
 			throw new IllegalStateException("Key not in different Maps!");
