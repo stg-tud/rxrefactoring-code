@@ -30,7 +30,7 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
+import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.NodeSupplier;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.ir.ComplexReactiveComputation;
@@ -42,11 +42,12 @@ import de.tudarmstadt.rxrefactoring.core.ir.ReactiveOutput;
 import de.tudarmstadt.rxrefactoring.core.ir.util.SchedulerBuilder;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
 import de.tudarmstadt.rxrefactoring.ext.future.Utils;
 
 
-public class FutureSubmitTransformer implements IWorkerV1<Multimap<IRewriteCompilationUnit, MethodInvocation>, Void> {
+public class FutureSubmitTransformer implements IWorker<Multimap<IRewriteCompilationUnit, MethodInvocation>, Void> {
 
 	@SuppressWarnings("null")
 	@Override
@@ -136,6 +137,14 @@ public class FutureSubmitTransformer implements IWorkerV1<Multimap<IRewriteCompi
 			}
 		}
 		
+		return null;
+	}
+
+	@Override
+	public @Nullable Void refactor(IProjectUnits units, Multimap<IRewriteCompilationUnit, MethodInvocation> input,
+			WorkerSummary summary, RefactorScope scope) throws Exception {
+		// TODO Auto-generated method stub
+		// only needed if RefactorScope is implemented in extension
 		return null;
 	}
 

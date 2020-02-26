@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ArrayCreation;
 import org.eclipse.jdt.core.dom.Assignment;
@@ -21,6 +22,7 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.Type;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfo;
 
@@ -29,7 +31,7 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
+import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
@@ -40,7 +42,7 @@ import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
  * Author: Camila Gonzalez<br>
  * Created: 22/02/2018
  */
-public class InstantiationCollector implements IWorkerV1<Map<ASTNode, UseDef>, InstantiationCollector> {
+public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, InstantiationCollector> {
 	
 	// Method invocations that return binaryName, and for which the
 	// returned value is not discarded.
@@ -308,6 +310,13 @@ public class InstantiationCollector implements IWorkerV1<Map<ASTNode, UseDef>, I
 				return false;
 		}	
 		return true;
+	}
+
+	@Override
+	public @Nullable InstantiationCollector refactor(IProjectUnits units, Map<ASTNode, UseDef> input,
+			WorkerSummary summary, RefactorScope scope) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

@@ -79,4 +79,11 @@ public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
 		return null;
 	}
 
+	@Override
+	public @Nullable Void refactor(IProjectUnits units, TypeOutput input, WorkerSummary summary) throws Exception {
+		// TODO Auto-generated method stub
+		// only needed if RefactorScope is not implemented
+		return null;
+	}
+
 }

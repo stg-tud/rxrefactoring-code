@@ -18,15 +18,16 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
+import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.Methods;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 
 
-public class FutureSubmitCollector implements IWorkerV1<Void, Multimap<IRewriteCompilationUnit, MethodInvocation>> {
+public class FutureSubmitCollector implements IWorker<Void, Multimap<IRewriteCompilationUnit, MethodInvocation>> {
 
 	final Multimap<IRewriteCompilationUnit, MethodInvocation> submitInvocations = HashMultimap.create();
 	
@@ -99,6 +100,15 @@ public class FutureSubmitCollector implements IWorkerV1<Void, Multimap<IRewriteC
 			
 			return true;
 		}
+	}
+
+
+	@Override
+	public @Nullable Multimap<IRewriteCompilationUnit, MethodInvocation> refactor(IProjectUnits units, Void input,
+			WorkerSummary summary, RefactorScope scope) throws Exception {
+		// TODO Auto-generated method stub
+		// only if RefactorScope is implemented in extension needed
+		return null;
 	}
 	
 	

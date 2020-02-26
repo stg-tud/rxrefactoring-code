@@ -17,7 +17,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
@@ -278,21 +277,5 @@ public class WorkerTree implements IWorkerTree {
 		execution.execute(root, workerSummary, null);
 		execution.waitFinished();
 
-	}
-
-	@Override
-	public <Y> IWorkerRef<Void, Y> addWorker(IWorkerV1<Void, Y> worker) {
-		return addWorker(root, worker);
-	}
-
-	@Override
-	public <X, Y> IWorkerRef<X, Y> addWorker(IWorkerRef<?, X> parent, IWorkerV1<X, Y> worker) {
-		if (!(parent instanceof WorkerNode)) {
-			throw new IllegalArgumentException("worker references in this tree have to be of type WorkerNode");
-		}
-		
-		WorkerNode<X, Y> node = new WorkerNode<>((IWorker<X, Y>) worker, (WorkerNode<?, X>) parent); // cast wegen IWorkerV1 für extensions ohne refactorInfo
-		workers.add(node);
-		return node;
 	}
 }

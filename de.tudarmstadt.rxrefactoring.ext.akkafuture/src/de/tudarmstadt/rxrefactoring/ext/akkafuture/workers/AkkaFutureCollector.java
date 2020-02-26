@@ -2,6 +2,7 @@ package de.tudarmstadt.rxrefactoring.ext.akkafuture.workers;
 
 import java.util.List;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
@@ -17,8 +18,9 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
+import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.utils.AkkaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.AwaitBinding;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureCollectionAccessWrapper;
@@ -26,7 +28,7 @@ import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureCreationWrapper
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureMethodWrapper;
 import de.tudarmstadt.rxrefactoring.ext.akkafuture.wrapper.FutureTypeWrapper;
 
-public class AkkaFutureCollector implements IWorkerV1<Void, AkkaFutureCollector> {
+public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 
 	
 	/**
@@ -198,6 +200,14 @@ public class AkkaFutureCollector implements IWorkerV1<Void, AkkaFutureCollector>
 			return true;
 		}
 		
+	}
+
+	@Override
+	public @Nullable AkkaFutureCollector refactor(IProjectUnits units, Void input, WorkerSummary summary,
+			RefactorScope scope) throws Exception {
+		// TODO Auto-generated method stub
+		// only needed if RefactorScope is implemented in this extension
+		return null;
 	}
 
 }

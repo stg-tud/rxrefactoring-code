@@ -68,6 +68,15 @@ public interface IRefactorExtension {
 	default public @Nullable IPath getDestinationDir() {
 		return null; // new Path("./libs");
 	}
+	
+	/**
+	 * Specifies if the extension can handle also different RefactorScope of changes.
+	 * 
+	 * @return true if it is available
+	 */
+	default public @Nullable boolean isRefactorScopeAvailable() {
+		return false; 
+	}
 
 	/**
 	 * Defines a thread pool that is used for parallel computations, i.e. parsing

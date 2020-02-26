@@ -22,15 +22,15 @@ import com.google.common.collect.Maps;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
+import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
-import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 import de.tudarmstadt.rxrefactoring.core.analysis.cfg.statement.ProgramGraph;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.DataFlowAnalysis;
 import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.NotConvergingException;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDefAnalysis;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 
 
 /**
@@ -39,7 +39,7 @@ import de.tudarmstadt.rxrefactoring.core.utils.Log;
  * @author mirko
  *
  */
-public class UseDefWorker implements IWorkerV1<Void, Map<ASTNode, UseDef>> {
+public class UseDefWorker implements IWorker<Void, Map<ASTNode, UseDef>> {
 
 	private static DataFlowAnalysis<ASTNode, UseDef> analysis = UseDefAnalysis.create();
 
@@ -164,6 +164,13 @@ public class UseDefWorker implements IWorkerV1<Void, Map<ASTNode, UseDef>> {
 				}
 			});
 		}
+	}
+
+	@Override
+	public @Nullable Map<ASTNode, UseDef> refactor(IProjectUnits units, Void input, WorkerSummary summary,
+			RefactorScope scope) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

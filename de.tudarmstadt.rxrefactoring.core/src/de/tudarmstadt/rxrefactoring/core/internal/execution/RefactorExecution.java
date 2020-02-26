@@ -119,8 +119,8 @@ public class RefactorExecution implements Runnable {
 					throws CoreException, OperationCanceledException {
 				// TODO: Check final conditions here...
 				return new RefactoringStatus();
-			} 
-			
+			}
+
 			@Override
 			public Change createChange(IProgressMonitor monitor) throws CoreException, OperationCanceledException {
 
@@ -133,9 +133,9 @@ public class RefactorExecution implements Runnable {
 
 				// Gathers information about the refactoring and presents it to the user.
 				RefactorSummary summary = new RefactorSummary(extension.getName());
-				
+
 				CompositeChange[] allChanges = new CompositeChange[projects.length];
-				int i = 0;
+				int projectCount = 0;
 				// Reports that the refactoring is starting
 				summary.reportStarted();
 
@@ -173,9 +173,9 @@ public class RefactorExecution implements Runnable {
 							Log.info(RefactorExecution.class, "Refactor units...");
 							changes = doRefactorProject(units, projectSummary, project);
 							CompositeChange changePerProject = new CompositeChange(project.getName(), changes);
-							allChanges[i] = changePerProject;
-							i++;
-							
+							allChanges[projectCount] = changePerProject;
+							projectCount++;
+
 							// Call template method
 							onProjectFinished(project, javaProject, units);
 
@@ -203,8 +203,8 @@ public class RefactorExecution implements Runnable {
 				Log.info(RefactorExecution.class, "Finished.");
 				summary.reportFinished();
 				monitor.done();
-		
-				CompositeChange resultChange = new CompositeChange(extension.getName() , allChanges);
+
+				CompositeChange resultChange = new CompositeChange(extension.getName(), allChanges);
 
 				return resultChange;
 
@@ -217,56 +217,59 @@ public class RefactorExecution implements Runnable {
 		RefactoringWizard wizard = new RefactoringWizard(refactoring, RefactoringWizard.WIZARD_BASED_USER_INTERFACE) {
 			@Override
 			protected void addUserInputPages() {
-				UserInputWizardPage page = new UserInputWizardPage("input") {
+				if (extension.isRefactorScopeAvailable()) {
+					UserInputWizardPage page = new UserInputWizardPage("input") {
 
-					@Override
-					public void createControl(Composite parent) {
-						Composite container = new Composite(parent, SWT.NULL);
-						GridLayout layout = new GridLayout();
-						container.setLayout(layout);
-						layout.numColumns = 1;
-						layout.verticalSpacing = 3;
-						Label label = new Label(container, SWT.NULL);
-						label.setText("Choose if yout want to refactor the whole project or not!");
-						Combo combo = new Combo(container, SWT.DROP_DOWN | SWT.BORDER);
-						combo.add("Refactor the whole project");
-						combo.add("Refactor every occurence separately");
-						combo.addSelectionListener(new SelectionAdapter() {
-							public void widgetSelected(SelectionEvent e) {
-								if (combo.getText().equals("Refactor the whole project")) {
-									scope = RefactorScope.WHOLE_PROJECT;
-								} else {
-									scope = RefactorScope.SEPARATE_OCCURENCES;
+						@Override
+						public void createControl(Composite parent) {
+							Composite container = new Composite(parent, SWT.NULL);
+							GridLayout layout = new GridLayout();
+							container.setLayout(layout);
+							layout.numColumns = 1;
+							layout.verticalSpacing = 3;
+							Label label = new Label(container, SWT.NULL);
+							label.setText("Choose if yout want to refactor the whole project or not!");
+							Combo combo = new Combo(container, SWT.DROP_DOWN | SWT.BORDER);
+							combo.add("Refactor the whole project");
+							combo.add("Refactor every occurence separately");
+							combo.addSelectionListener(new SelectionAdapter() {
+								public void widgetSelected(SelectionEvent e) {
+									if (combo.getText().equals("Refactor the whole project")) {
+										scope = RefactorScope.WHOLE_PROJECT;
+									} else {
+										scope = RefactorScope.SEPARATE_OCCURENCES;
+									}
 								}
-							}
-							
-						
-						});
 
-						setControl(container);
-						
-					}
-					
-					@Override
-					protected boolean performFinish() {
-						
-						return false;
-						
-					}
-					
-				};
-				addPage(page);
-				
+							});
+
+							setControl(container);
+
+						}
+
+						@Override
+						protected boolean performFinish() {
+
+							return false;
+
+						}
+
+					};
+					addPage(page);
+				}
+
 			}
 
 		};
 		RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
 		Shell shell = Display.getCurrent().getActiveShell();
 
-		ProcessDialog dialog = new ProcessDialog(shell);
-		
-		dialog.create();
-		dialog.open();
+		if (!extension.isRefactorScopeAvailable()) {
+			ProcessDialog dialog = new ProcessDialog(shell);
+
+			dialog.create();
+			dialog.open();
+		}
 
 		int result = IDialogConstants.CANCEL_ID;
 
@@ -445,11 +448,13 @@ public class RefactorExecution implements Runnable {
 		WorkerTree workerTree = new WorkerTree(units, projectSummary);
 		extension.addWorkersTo(workerTree);
 
-		if(scope == null) {
+		// The workers add their changes to the bundled compilation units
+		if (extension.isRefactorScopeAvailable()) {
+			workerTree.run(extension.createExecutorService(), scope);
+		}
+		else {
 			workerTree.run(extension.createExecutorService());
 		}
-		// The workers add their changes to the bundled compilation units
-		workerTree.run(extension.createExecutorService(), scope);
 
 		Map<String, List<IRewriteCompilationUnit>> grouped = getUnitToChangeMapping(units);
 		List<CompositeChange> changeList = new ArrayList<CompositeChange>();
@@ -463,6 +468,7 @@ public class RefactorExecution implements Runnable {
 			ProjectUnits pu = new ProjectUnits(units.getJavaProject(), set);
 			pu.addChangesTo(change);
 			changeList.add(change);
+
 		}
 
 		CompositeChange[] array = changeList.toArray(new CompositeChange[changeList.size()]);

@@ -30,11 +30,12 @@ import com.google.common.collect.SetMultimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
+import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use.Kind;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfo;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.SubclassInstantiationCollector;
@@ -44,7 +45,7 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.SubclassInstant
  * Author: Camila Gonzalez<br>
  * Created: 23/03/2018
  */
-public class PreconditionWorker implements IWorkerV1<SubclassInstantiationCollector, PreconditionWorker> {
+public class PreconditionWorker implements IWorker<SubclassInstantiationCollector, PreconditionWorker> {
 
 	// Maps MethodInvocations and ClassInstanceCreations that return Future or
 	// Future subclass instantiations to the latter instance uses.
@@ -597,6 +598,13 @@ public class PreconditionWorker implements IWorkerV1<SubclassInstantiationCollec
 				return true;
 		}
 		return false;
+	}
+
+	@Override
+	public @Nullable PreconditionWorker refactor(IProjectUnits units, SubclassInstantiationCollector input,
+			WorkerSummary summary, RefactorScope scope) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 

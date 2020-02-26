@@ -120,4 +120,11 @@ public class MethodInvocationWorker implements IWorker<TypeOutput, Boolean> {
 
 	}
 
+	@Override
+	public @Nullable Boolean refactor(IProjectUnits units, TypeOutput input, WorkerSummary summary) throws Exception {
+		// TODO Auto-generated method stub
+		// only needed if RefactorScope is not implemented
+		return null;
+	}
+
 }

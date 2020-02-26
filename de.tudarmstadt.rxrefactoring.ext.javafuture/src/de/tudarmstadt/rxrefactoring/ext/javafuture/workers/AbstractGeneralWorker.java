@@ -9,10 +9,11 @@ import org.eclipse.jdt.core.dom.ASTNode;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
+import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 
-public abstract class AbstractGeneralWorker<NodeType extends ASTNode> implements IWorkerV1<FutureCollector, Void> {
+public abstract class AbstractGeneralWorker<NodeType extends ASTNode> implements IWorker<FutureCollector, Void> {
 
 	protected final String nodeName;
 	protected FutureCollector collector;
@@ -59,6 +60,13 @@ public abstract class AbstractGeneralWorker<NodeType extends ASTNode> implements
 			}
 		}
 
+		return null;
+	}
+	
+	@Override
+	public Void refactor(@NonNull IProjectUnits units, @Nullable FutureCollector collector,
+			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception {
+		
 		return null;
 	}
 

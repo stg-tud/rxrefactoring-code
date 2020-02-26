@@ -19,13 +19,14 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.Type;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
+import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 
@@ -35,7 +36,7 @@ import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
  * Author: Camila Gonzalez<br>
  * Created: 01/03/2018
  */
-public class InstantiationCollector implements IWorkerV1<Void, InstantiationCollector> {
+public class InstantiationCollector implements IWorker<Void, InstantiationCollector> {
 	
 	// Direct subclasses of the target class that only implement allowed methods.
 	public final Multimap<IRewriteCompilationUnit, TypeDeclaration> directSubclassDeclarations;
@@ -241,6 +242,14 @@ public class InstantiationCollector implements IWorkerV1<Void, InstantiationColl
 			}
 		}
 		return true;
+	}
+
+	@Override
+	public InstantiationCollector refactor(IProjectUnits units, Void input, WorkerSummary summary, RefactorScope scope)
+			throws Exception {
+		// TODO Auto-generated method stub
+		// Only needed if RefactorScope is implemented in this extension
+		return null;
 	}
 }
 

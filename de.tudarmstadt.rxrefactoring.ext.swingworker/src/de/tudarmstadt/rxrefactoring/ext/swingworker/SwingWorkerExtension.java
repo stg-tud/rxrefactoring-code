@@ -12,6 +12,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.osgi.framework.Bundle;
 
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
@@ -57,6 +58,11 @@ public class SwingWorkerExtension implements IRefactorExtension {
 	@Override
 	public IPath getDestinationDir() {
 		return new Path("./libs/");
+	}
+	
+	@Override
+	public  boolean isRefactorScopeAvailable() {
+		return true; 
 	}
 
 	@Override

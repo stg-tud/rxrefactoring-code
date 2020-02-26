@@ -17,4 +17,10 @@ public class NullWorker implements IWorker<Void, Void>{
 		return null;
 	}
 
+	@Override
+	public @Nullable Void refactor(IProjectUnits units, Void input, WorkerSummary summary) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

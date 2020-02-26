@@ -22,9 +22,10 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
+import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.AnonymousClassBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.InnerClassBuilder;
@@ -36,7 +37,7 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 /**
  * Refactors anonymous classes of AsyncTask.
  */
-public class AnonymAsyncTaskWorker implements IWorkerV1<AsyncTaskCollector, Void>, WorkerEnvironment {
+public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>, WorkerEnvironment {
 
 	private final String EXECUTE = "execute";
 	private final String CANCEL = "cancel";
@@ -580,6 +581,15 @@ public class AnonymAsyncTaskWorker implements IWorkerV1<AsyncTaskCollector, Void
 			return builder;
 		}
 
+	}
+
+
+
+	@Override
+	public Void refactor(IProjectUnits units, AsyncTaskCollector input, WorkerSummary summary, RefactorScope scope)
+			throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 //	private AnonymousClassBuilder observableBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer,

@@ -23,10 +23,11 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
+import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.domain.ClassDetails;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
@@ -36,7 +37,7 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskASTUtils;
  * Author: Template<br>
  * Created: 01/18/2017
  */
-public class AsyncTaskCollector implements IWorkerV1<Void,AsyncTaskCollector> {
+public class AsyncTaskCollector implements IWorker<Void,AsyncTaskCollector> {
 
 	private final Multimap<IRewriteCompilationUnit, TypeDeclaration> subclassesMap;
 	private final Multimap<IRewriteCompilationUnit, AnonymousClassDeclaration> anonymousClassesMap;
@@ -316,6 +317,16 @@ public class AsyncTaskCollector implements IWorkerV1<Void,AsyncTaskCollector> {
 		public boolean isTargetClassFound() {
 			return !subclasses.isEmpty() || !anonymousClasses.isEmpty() || !anonymousCachedClasses.isEmpty();
 		}
+	}
+
+
+
+	@Override
+	public AsyncTaskCollector refactor(IProjectUnits units, Void input, WorkerSummary summary, RefactorScope scope)
+			throws Exception {
+		// TODO Auto-generated method stub
+		// only needed if RefactorScope is implemented in this extension
+		return null;
 	}
 
 

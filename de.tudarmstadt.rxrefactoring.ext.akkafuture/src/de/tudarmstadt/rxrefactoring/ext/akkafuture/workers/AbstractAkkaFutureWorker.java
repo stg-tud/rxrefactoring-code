@@ -4,11 +4,12 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
+import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 
 
-public abstract class AbstractAkkaFutureWorker<CollectorType, RefactorType> implements IWorkerV1<CollectorType, Void> {
+public abstract class AbstractAkkaFutureWorker<CollectorType, RefactorType> implements IWorker<CollectorType, Void> {
 
 	protected final String nodeName;
 	protected CollectorType collector;
@@ -49,6 +50,13 @@ public abstract class AbstractAkkaFutureWorker<CollectorType, RefactorType> impl
 				endRefactorNode(unit);			
 		}
 
+		return null;
+	}
+	
+	@Override
+	public Void refactor(IProjectUnits units, CollectorType collector, WorkerSummary summary, RefactorScope scope) throws Exception {
+		
+		// only needed if RefactorScope is implemented in this extension
 		return null;
 	}
 

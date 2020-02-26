@@ -32,7 +32,6 @@ import com.google.common.collect.Sets;
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
-import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnitFactory;
@@ -48,7 +47,7 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.DiscoveringVisitor;
  * Adapted to new core by Camila Gonzalez on 19/01/2018
  */
 public class RxCollector implements IWorker<Void, RxCollector> {
-	private final Multimap<String, Multimap<IRewriteCompilationUnit,?>> allWorkerMap = HashMultimap.create();
+	private final Multimap<String, Multimap<IRewriteCompilationUnit, ?>> allWorkerMap = HashMultimap.create();
 	private final Multimap<IRewriteCompilationUnit, TypeDeclaration> typeDeclMap = HashMultimap.create();
 	private final Multimap<IRewriteCompilationUnit, FieldDeclaration> fieldDeclMap = HashMultimap.create();
 	private final Multimap<IRewriteCompilationUnit, Assignment> assigmentsMap = HashMultimap.create();
@@ -60,39 +59,39 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 	private final Multimap<IRewriteCompilationUnit, MethodDeclaration> methodDeclarationsMap = HashMultimap.create();
 	private final Multimap<IRewriteCompilationUnit, MethodInvocation> relevantInvocationsMap = HashMultimap.create();
 
-	@SuppressWarnings("unchecked") //TODO THA
+	@SuppressWarnings("unchecked") // TODO THA
 	@Override
 	public @Nullable RxCollector refactor(@NonNull IProjectUnits units, @Nullable Void input,
 			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception {
 		String className = SwingWorkerInfo.getBinaryName();
 		fillAllWorkerMap();
 		Set<IRewriteCompilationUnit> newUnits = Sets.newConcurrentHashSet();
-		
+
 		for (IRewriteCompilationUnit unit : units) {
 			// Initialize Visitor
 			DiscoveringVisitor discoveringVisitor = new DiscoveringVisitor(className);
 			// Collect information using visitor
 			unit.setWorker("All");
 			unit.accept(discoveringVisitor);
-			
-			if(scope.equals(RefactorScope.WHOLE_PROJECT)) {
-				for(Entry<String, Multimap<IRewriteCompilationUnit, ?>> entry: allWorkerMap.entries()) {	
-					entry.getValue().putAll(unit, getNeededList(entry.getKey(), discoveringVisitor)); 
+
+			if (scope.equals(RefactorScope.WHOLE_PROJECT) || scope == null) {
+				for (Entry<String, Multimap<IRewriteCompilationUnit, ?>> entry : allWorkerMap.entries()) {
+					entry.getValue().putAll(unit, getNeededList(entry.getKey(), discoveringVisitor));
 				}
-			} else if(scope.equals(RefactorScope.SEPARATE_OCCURENCES)){
-				Set<IRewriteCompilationUnit> allWorkerUnits = addWorkerUnitsToMaps(unit.getPrimary(), discoveringVisitor);
+			} else if (scope.equals(RefactorScope.SEPARATE_OCCURENCES)) {
+				Set<IRewriteCompilationUnit> allWorkerUnits = addWorkerUnitsToMaps(unit.getPrimary(),
+						discoveringVisitor);
 				newUnits.addAll(allWorkerUnits);
-				
 			}
 
 		}
-		
+
 		units.addAll(newUnits);
-	
+
 		return this;
 	}
-	
-	public Multimap<String, Multimap<IRewriteCompilationUnit, ?>> getAllWorkerMap(){
+
+	public Multimap<String, Multimap<IRewriteCompilationUnit, ?>> getAllWorkerMap() {
 		return allWorkerMap;
 	}
 
@@ -149,7 +148,7 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 		allCompilationUnits.addAll(methodDeclarationsMap.keySet());
 		return allCompilationUnits.size();
 	}
-	
+
 	private void fillAllWorkerMap() {
 		allWorkerMap.put("Variable Declarations", varDeclMap);
 		allWorkerMap.put("Type Declarations", typeDeclMap);
@@ -158,16 +157,16 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 		allWorkerMap.put("Simple Names", simpleNamesMap);
 		allWorkerMap.put("Class Instances", classInstanceMap);
 		allWorkerMap.put("Single Variable Declarations", singleVarDeclMap);
-		allWorkerMap.put("Method Invocations" , methodInvocationsMap);
+		allWorkerMap.put("Method Invocations", methodInvocationsMap);
 		allWorkerMap.put("Method Declarations", methodDeclarationsMap);
 		allWorkerMap.put("Relevant Invocations", relevantInvocationsMap);
-		
+
 	}
-	
-	private List getNeededList(String key, DiscoveringVisitor visitor){
-		switch(key) {
-		case "Variable Declarations": 
-			return visitor.getVarDeclStatements();	
+
+	private List getNeededList(String key, DiscoveringVisitor visitor) {
+		switch (key) {
+		case "Variable Declarations":
+			return visitor.getVarDeclStatements();
 		case "Type Declarations":
 			return visitor.getTypeDeclarations();
 		case "Field Declarations":
@@ -186,36 +185,37 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 			return visitor.getMethodDeclarations();
 		case "Relevant Invocations":
 			return visitor.getRelevantInvocations();
-		default :
+		default:
 			throw new IllegalStateException("Key not in different Maps!");
 		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
-	private Set<IRewriteCompilationUnit> addWorkerUnitsToMaps(ICompilationUnit compilationUnit, DiscoveringVisitor allVisitor) {
-		
+	private Set<IRewriteCompilationUnit> addWorkerUnitsToMaps(ICompilationUnit compilationUnit,
+			DiscoveringVisitor allVisitor) {
+
 		// Collect information using visitor
 		Set<IRewriteCompilationUnit> allWorkerUnits = Sets.newConcurrentHashSet();
 		RewriteCompilationUnitFactory factory = new RewriteCompilationUnitFactory();
 		DiscoveringVisitor visitor = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
-		
-		for(Entry<String, Multimap<IRewriteCompilationUnit, ?>> entry: allWorkerMap.entries()) {
-			
-			if(!getNeededList(entry.getKey(), allVisitor).isEmpty()) {
+
+		for (Entry<String, Multimap<IRewriteCompilationUnit, ?>> entry : allWorkerMap.entries()) {
+
+			if (!getNeededList(entry.getKey(), allVisitor).isEmpty()) {
 				IRewriteCompilationUnit unitWorker = factory.from(compilationUnit);
 				unitWorker.setWorker(entry.getKey());
 				unitWorker.accept(visitor);
-				entry.getValue().putAll(unitWorker, getNeededList(entry.getKey(), visitor)); 
+				entry.getValue().putAll(unitWorker, getNeededList(entry.getKey(), visitor));
 				allWorkerUnits.add(unitWorker);
-				//if(entry.getKey().matches("methodInvocationsMap")) {
-					//allWorkerUnits.addAll(checkForSameMethod(unitWorker));
-				//}
-				visitor.cleanAllLists();	
+				// if(entry.getKey().matches("methodInvocationsMap")) {
+				// allWorkerUnits.addAll(checkForSameMethod(unitWorker));
+				// }
+				visitor.cleanAllLists();
 			}
 		}
-		
+
 		return allWorkerUnits;
-				
+
 	}
 
 	public String getDetails() {
@@ -228,26 +228,33 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 				+ methodInvocationsMap.values().size() + "\n" + "MethodDeclarations = "
 				+ methodDeclarationsMap.values().size();
 	}
-	
+
 	private Set<IRewriteCompilationUnit> checkForSameMethod(IRewriteCompilationUnit unit) {
-		
+
 		MethodDeclaration outerMethod = null;
 		Set<IRewriteCompilationUnit> set = Sets.newConcurrentHashSet();
-		
-		for(Entry<IRewriteCompilationUnit,  MethodInvocation> entry :  methodInvocationsMap.entries()) {
+
+		for (Entry<IRewriteCompilationUnit, MethodInvocation> entry : methodInvocationsMap.entries()) {
 			MethodInvocation m = entry.getValue();
-			if(m.getExpression() != null && entry.getKey().equals(unit)) {
+			if (m.getExpression() != null && entry.getKey().equals(unit)) {
 				MethodDeclaration actualMD = ASTNodes.findParent(m.getExpression(), MethodDeclaration.class).get();
-				if(!(actualMD.equals(outerMethod)) && outerMethod != null) {
+				if (!(actualMD.equals(outerMethod)) && outerMethod != null) {
 					ASTNode newNode = unit.copyNode(actualMD.getParent());
 					RewriteCompilationUnit newUnit = new RewriteCompilationUnit(unit.getPrimary(), newNode);
 					newUnit.setWorker("methodInvocationsMap");
-					set.add(newUnit);	
+					set.add(newUnit);
 				}
 				outerMethod = actualMD;
-			}	
+			}
 		}
 		return set;
+	}
+
+	@Override
+	public @Nullable RxCollector refactor(IProjectUnits units, Void input, WorkerSummary summary) throws Exception {
+		// TODO Auto-generated method stub
+		// only needed for classes without RefactorScope implemented
+		return null;
 	}
 
 }

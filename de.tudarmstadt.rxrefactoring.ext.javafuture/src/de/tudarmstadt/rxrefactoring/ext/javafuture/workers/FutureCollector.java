@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ArrayCreation;
 import org.eclipse.jdt.core.dom.Assignment;
@@ -31,8 +33,9 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
+import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.RefactoringOptions;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.PreconditionWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfos;
@@ -45,7 +48,7 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureVisitor3
  * Author: Template<br>
  * Created: 01/18/2017
  */
-public class FutureCollector implements IWorkerV1<PreconditionWorker, FutureCollector> {
+public class FutureCollector implements IWorker<PreconditionWorker, FutureCollector> {
 
 	private final Map<String, CollectorGroup> groups;
 
@@ -300,6 +303,14 @@ public class FutureCollector implements IWorkerV1<PreconditionWorker, FutureColl
 
 	public boolean isGetter(MethodInvocation methodInvocation) {
 		return (collectionGetters.containsValue(methodInvocation));
+	}
+
+	@Override
+	public @Nullable FutureCollector refactor(@NonNull IProjectUnits units, @Nullable PreconditionWorker input,
+			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception {
+		// TODO Auto-generated method stub
+		// only if RefactorScope is implemented in extension
+		return null;
 	}
 
 }

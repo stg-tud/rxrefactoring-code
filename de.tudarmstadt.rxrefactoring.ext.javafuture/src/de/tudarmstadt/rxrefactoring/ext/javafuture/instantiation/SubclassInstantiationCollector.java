@@ -19,9 +19,10 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
+import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 
 /**
@@ -30,7 +31,7 @@ import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
  * Author: Camila Gonzalez<br>
  * Created: 24/02/2018
  */
-public class SubclassInstantiationCollector implements IWorkerV1<InstantiationCollector, SubclassInstantiationCollector> {
+public class SubclassInstantiationCollector implements IWorker<InstantiationCollector, SubclassInstantiationCollector> {
 
 	// TypeDeclarations of classes and interfaces that inherit directly or
 	// indirectly from binaryName and implement only 
@@ -183,6 +184,14 @@ public class SubclassInstantiationCollector implements IWorkerV1<InstantiationCo
 			return true;
 		}
 
+	}
+
+	@Override
+	public @Nullable SubclassInstantiationCollector refactor(@NonNull IProjectUnits units,
+			@Nullable InstantiationCollector input, @NonNull WorkerSummary summary, RefactorScope scope)
+			throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

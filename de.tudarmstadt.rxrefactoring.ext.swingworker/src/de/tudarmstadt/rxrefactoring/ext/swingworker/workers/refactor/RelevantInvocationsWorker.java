@@ -65,4 +65,11 @@ public class RelevantInvocationsWorker implements IWorker<TypeOutput, Void> {
 		return m;
 	}
 
+	@Override
+	public @Nullable Void refactor(IProjectUnits units, TypeOutput input, WorkerSummary summary) throws Exception {
+		// TODO Auto-generated method stub
+		// only needed if RefactorScope is not implemented
+		return null;
+	}
+
 }

@@ -13,7 +13,6 @@ import org.eclipse.jdt.core.dom.Type;
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
-import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
@@ -62,6 +61,13 @@ public class MethodDeclarationWorker implements IWorker<TypeOutput, Void> {
 			summary.addCorrect("methodDeclarations");
 		}
 
+		return null;
+	}
+
+	@Override
+	public @Nullable Void refactor(IProjectUnits units, TypeOutput input, WorkerSummary summary) throws Exception {
+		// TODO Auto-generated method stub
+		// only needed if RefactorScope is not implemented
 		return null;
 	}
 

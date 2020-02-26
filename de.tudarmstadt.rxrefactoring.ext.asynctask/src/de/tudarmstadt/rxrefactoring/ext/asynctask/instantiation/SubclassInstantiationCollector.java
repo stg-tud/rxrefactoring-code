@@ -14,10 +14,11 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
+import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 
 /**
  * Description: Collects class instantiations of AsyncTask (the target class) subclasses and method invocations that 
@@ -25,7 +26,7 @@ import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
  * Author: Camila Gonzalez<br>
  * Created: 01/03/2018
  */
-public class SubclassInstantiationCollector implements IWorkerV1<InstantiationCollector, SubclassInstantiationCollector> {
+public class SubclassInstantiationCollector implements IWorker<InstantiationCollector, SubclassInstantiationCollector> {
 	
 	// TypeDeclarations of classes and interfaces that inherit directly or indirectly from the target class
 	// and implement only allowed methods. If excludeExternal is set, only classes for which the entire 
@@ -148,6 +149,15 @@ public class SubclassInstantiationCollector implements IWorkerV1<InstantiationCo
 			}
 			return true;
 		}
+	}
+
+
+	@Override
+	public SubclassInstantiationCollector refactor(IProjectUnits units, InstantiationCollector input,
+			WorkerSummary summary, RefactorScope scope) throws Exception {
+		// TODO Auto-generated method stub
+		// only needed if RefactorScope is implemented in this extension
+		return null;
 	}
 
 }

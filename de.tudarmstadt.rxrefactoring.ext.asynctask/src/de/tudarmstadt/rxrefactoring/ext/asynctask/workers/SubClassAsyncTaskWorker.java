@@ -17,8 +17,9 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.IWorkerV1;
+import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.InnerClassBuilder;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.RefactorNames;
 import de.tudarmstadt.rxrefactoring.ext.asynctask.builders.SubscriberBuilder;
@@ -29,7 +30,7 @@ import de.tudarmstadt.rxrefactoring.ext.asynctask.utils.AsyncTaskWrapper;
 /**
  * Refactors subclasses of AsyncTask that appear in the code.
  */
-public class SubClassAsyncTaskWorker implements IWorkerV1<AsyncTaskCollector, Void>, WorkerEnvironment {
+public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>, WorkerEnvironment {
 	final String SUBSCRIPTION = "Subscription";
 	final String EXECUTE = "execute";
 	final String EXECUTE_ON_EXECUTOR = "executeOnExecutor";
@@ -286,6 +287,14 @@ public class SubClassAsyncTaskWorker implements IWorkerV1<AsyncTaskCollector, Vo
 		
 		return innerClassBuilder;
 	
+	}
+
+	@Override
+	public Void refactor(IProjectUnits units, AsyncTaskCollector input, WorkerSummary summary, RefactorScope scope)
+			throws Exception {
+		// TODO Auto-generated method stub
+		// only needed if RefactorScope is implemented in this extension
+		return null;
 	}
 	
 //	private void replaceInstanceCreations(IRewriteCompilationUnit unit, InnerClassBuilder builder, TypeDeclaration oldClass, ASTNode root) {
