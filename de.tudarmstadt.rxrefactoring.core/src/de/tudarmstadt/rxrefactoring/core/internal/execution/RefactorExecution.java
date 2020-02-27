@@ -175,6 +175,7 @@ public class RefactorExecution implements Runnable {
 							CompositeChange changePerProject = new CompositeChange(project.getName(), changes);
 							allChanges[projectCount] = changePerProject;
 							projectCount++;
+									
 
 							// Call template method
 							onProjectFinished(project, javaProject, units);
@@ -458,7 +459,6 @@ public class RefactorExecution implements Runnable {
 
 		Map<String, List<IRewriteCompilationUnit>> grouped = getUnitToChangeMapping(units);
 		List<CompositeChange> changeList = new ArrayList<CompositeChange>();
-		int i = 0;
 		// The changes of the compilation units are applied
 		Log.info(getClass(), "Write changes...");
 		for (Map.Entry<String, List<IRewriteCompilationUnit>> entry : grouped.entrySet()) {
@@ -479,7 +479,7 @@ public class RefactorExecution implements Runnable {
 
 	private Map<String, List<IRewriteCompilationUnit>> getUnitToChangeMapping(ProjectUnits units) {
 		Map<String, List<IRewriteCompilationUnit>> groupedByWorker = units.getUnits().stream()
-				.filter(unit -> unit.getWorker() != null)
+				.filter(unit -> unit.getWorker() != null && unit.hasChanges())
 				.collect(Collectors.groupingBy(IRewriteCompilationUnit::getWorker));
 
 		return groupedByWorker;

@@ -80,13 +80,15 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 				}
 			} else if (scope.equals(RefactorScope.SEPARATE_OCCURENCES)) {
 				Set<IRewriteCompilationUnit> allWorkerUnits = addWorkerUnitsToMaps(unit.getPrimary(),
-						discoveringVisitor);
+						discoveringVisitor, unit);
 				newUnits.addAll(allWorkerUnits);
-			}
+			}	
 
 		}
 
 		units.addAll(newUnits);
+		
+		
 
 		return this;
 	}
@@ -192,25 +194,17 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 
 	@SuppressWarnings("unchecked")
 	private Set<IRewriteCompilationUnit> addWorkerUnitsToMaps(ICompilationUnit compilationUnit,
-			DiscoveringVisitor allVisitor) {
-
-		// Collect information using visitor
+			DiscoveringVisitor allVisitor, IRewriteCompilationUnit unit) {
 		Set<IRewriteCompilationUnit> allWorkerUnits = Sets.newConcurrentHashSet();
-		RewriteCompilationUnitFactory factory = new RewriteCompilationUnitFactory();
-		DiscoveringVisitor visitor = new DiscoveringVisitor(SwingWorkerInfo.getBinaryName());
-
-		for (Entry<String, Multimap<IRewriteCompilationUnit, ?>> entry : allWorkerMap.entries()) {
-
-			if (!getNeededList(entry.getKey(), allVisitor).isEmpty()) {
-				IRewriteCompilationUnit unitWorker = factory.from(compilationUnit);
-				unitWorker.setWorker(entry.getKey());
-				unitWorker.accept(visitor);
-				entry.getValue().putAll(unitWorker, getNeededList(entry.getKey(), visitor));
-				allWorkerUnits.add(unitWorker);
-				// if(entry.getKey().matches("methodInvocationsMap")) {
-				// allWorkerUnits.addAll(checkForSameMethod(unitWorker));
-				// }
-				visitor.cleanAllLists();
+		
+		for (Entry<String, Multimap<IRewriteCompilationUnit, ?>> entryList : allWorkerMap.entries()) {
+			if (!getNeededList(entryList.getKey(), allVisitor).isEmpty()) {
+				
+				ASTNode newNode = unit.copyNode(unit.getRoot());
+				RewriteCompilationUnit newUnit = new RewriteCompilationUnit(unit.getPrimary(), newNode);
+				newUnit.setWorker(entryList.getKey());
+				entryList.getValue().putAll(newUnit, getNeededList(entryList.getKey(), allVisitor));
+				allWorkerUnits.add(newUnit);
 			}
 		}
 

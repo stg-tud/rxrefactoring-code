@@ -20,6 +20,7 @@ import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
@@ -139,6 +140,7 @@ class MethodScanner {
 	 */
 	private ImmutableMap<MethodDeclaration, IRewriteCompilationUnit> findImpactedMethods(ProjectUnits units) {
 		ImmutableMap.Builder<MethodDeclaration, IRewriteCompilationUnit> builder = ImmutableMap.builder();
+		Set<MethodDeclaration> alreadyConsideredMethods = Sets.newConcurrentHashSet(); //TODO THA vielleicht anders lösen
 		
 		for (IRewriteCompilationUnit unit : units) {
 			if (unit.hasChanges()) {
@@ -153,8 +155,11 @@ class MethodScanner {
 					if (objType instanceof TypeDeclaration) {
 						TypeDeclaration type = (TypeDeclaration) objType;
 						for (MethodDeclaration method : type.getMethods()) {							
-							if (ASTNodes.containsNode(method, node -> nodeHasChanges(node, unit.writer()))) 
+							if (ASTNodes.containsNode(method, node -> nodeHasChanges(node, unit.writer()))
+									&& !alreadyConsideredMethods.contains(method)) {
 								builder.put(method, unit);
+								alreadyConsideredMethods.add(method);
+							}
 						}
 					}
 				}
