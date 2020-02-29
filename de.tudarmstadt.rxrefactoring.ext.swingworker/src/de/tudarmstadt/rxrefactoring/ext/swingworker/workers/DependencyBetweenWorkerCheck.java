@@ -1,6 +1,7 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
 
 import java.util.Set;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import org.eclipse.jdt.core.dom.AST;
@@ -13,27 +14,42 @@ import org.eclipse.ltk.core.refactoring.CompositeChange;
 import com.google.common.collect.Sets;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 
 public class DependencyBetweenWorkerCheck {
 	
-	private IRewriteCompilationUnit[] units;
+	private ProjectUnits units;
 	
-	public DependencyBetweenWorkerCheck(IRewriteCompilationUnit[] units) {
+	public DependencyBetweenWorkerCheck(ProjectUnits units) {
 		this.units = units;
 		
 	}
 	
-	/*public CompositeChange regroupChangesBecauseOfDependencies() {
-		for(CompositeChange change: changes) {
-			if(change.getName().equals("Class Instances")) {
-				CompositeChange connctedChange = checkForClassInstanceAsReturnType(change);
-			}
+	public ProjectUnits regroupBecauseOfMethodDependencies() {
+		MethodScanner scanner = new MethodScanner();
+		scanner.scan(units);
+		Map<Map.Entry<MethodDeclaration, IRewriteCompilationUnit>, Map.Entry<MethodDeclaration, IRewriteCompilationUnit>> mappingMap = scanner.mappingCalledRefactoredMethods;
+		
+		for(IRewriteCompilationUnit unit: units.getUnits()) {
+			for(Entry<Map.Entry<MethodDeclaration, IRewriteCompilationUnit>, Map.Entry<MethodDeclaration, IRewriteCompilationUnit>> entryMap : mappingMap.entrySet()) {
+				Map.Entry<MethodDeclaration, IRewriteCompilationUnit> keyRefactored = entryMap.getKey();
+				IRewriteCompilationUnit unitRefactored = keyRefactored.getValue();
+				Map.Entry<MethodDeclaration, IRewriteCompilationUnit> valueCalling = entryMap.getValue();
+				IRewriteCompilationUnit unitCalling = valueCalling.getValue();
+				int i = 1;
+				if(unit.equals(unitRefactored) || unit.equals(unitCalling)) {
+					unit.setWorker("test" + i);
+					i++;
+				}
+		    }
 		}
 		
-		return null;		
-	}*/
+		return units;
+		
+	}
 	
 	public CompositeChange checkForClassInstanceAsReturnType(IRewriteCompilationUnit unitToCheck, ClassInstanceCreation classInstance) {
 		AST ast = classInstance.getAST(); 
@@ -48,11 +64,11 @@ public class DependencyBetweenWorkerCheck {
 		
 	}
 	
-	/*private Set<IRewriteCompilationUnit> checkForSameMethod(IRewriteCompilationUnit unit) {
+	private Set<IRewriteCompilationUnit> checkForSameMethod(IRewriteCompilationUnit unit) {
 
 		MethodDeclaration outerMethod = null;
 		Set<IRewriteCompilationUnit> set = Sets.newConcurrentHashSet();
-
+/*
 		for (Entry<IRewriteCompilationUnit, MethodInvocation> entry : methodInvocationsMap.entries()) {
 			MethodInvocation m = entry.getValue();
 			if (m.getExpression() != null && entry.getKey().equals(unit)) {
@@ -64,10 +80,10 @@ public class DependencyBetweenWorkerCheck {
 					set.add(newUnit);
 				}
 				outerMethod = actualMD;
-			}
-		}
+			}*/
+		//}
 		return set;
-	}*/
+	}
 
 }
 

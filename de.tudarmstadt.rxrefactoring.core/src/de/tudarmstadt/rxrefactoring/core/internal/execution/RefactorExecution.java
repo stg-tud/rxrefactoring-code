@@ -478,6 +478,7 @@ public class RefactorExecution implements Runnable {
 	}
 
 	private Map<String, List<IRewriteCompilationUnit>> getUnitToChangeMapping(ProjectUnits units) {
+		
 		Map<String, List<IRewriteCompilationUnit>> groupedByWorker = units.getUnits().stream()
 				.filter(unit -> unit.getWorker() != null && unit.hasChanges())
 				.collect(Collectors.groupingBy(IRewriteCompilationUnit::getWorker));

@@ -1,5 +1,6 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
 
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -28,7 +29,9 @@ import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUn
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerMapsUtils;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerMapsUtils.Key;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.DiscoveringVisitor;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.DiscoveringVisitor.RelevantInvocation;
 
 /**
  * Description: Collects relevant information for refactoring<br>
@@ -37,12 +40,11 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.DiscoveringVisitor;
  * Adapted to new core by Camila Gonzalez on 19/01/2018
  */
 public class RxCollector implements IWorker<Void, RxCollector> {
-	
+
 	@Override
 	public @Nullable RxCollector refactor(@NonNull IProjectUnits units, @Nullable Void input,
 			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception {
 		String className = SwingWorkerInfo.getBinaryName();
-		WorkerMapsUtils.fillAllWorkerMap();
 		Set<IRewriteCompilationUnit> newUnits = Sets.newConcurrentHashSet();
 
 		for (IRewriteCompilationUnit unit : units) {
@@ -52,70 +54,203 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 			unit.setWorker("All");
 			unit.accept(discoveringVisitor);
 
-			if (scope.equals(RefactorScope.WHOLE_PROJECT) || scope == null) {
-				for (Entry<String, Multimap<IRewriteCompilationUnit, ? extends ASTNode>> entry : WorkerMapsUtils.getAllWorkerMap().entries()) {
-					entry.getValue().putAll(unit, WorkerMapsUtils.getNeededList(entry.getKey(), discoveringVisitor));
+			if (scope.equals(RefactorScope.WHOLE_PROJECT) || scope == null){
+				WorkerMapsUtils.fillAllMap();
+				for(Entry<String, Multimap<IRewriteCompilationUnit, ?>> m : WorkerMapsUtils.getAllMap().entries()) {		
+					m.getValue().putAll(unit, WorkerMapsUtils.getNeededList(m.getKey(), discoveringVisitor));
 				}
 			} else if (scope.equals(RefactorScope.SEPARATE_OCCURENCES)) {
-				Set<IRewriteCompilationUnit> allWorkerUnits = addWorkerUnitsToMaps(unit.getPrimary(),
-						discoveringVisitor, unit);
+				WorkerMapsUtils.fillAllKeys();
+				Set<IRewriteCompilationUnit> allWorkerUnits = addWorkerUnitsToMaps(discoveringVisitor, unit);
 				newUnits.addAll(allWorkerUnits);
-			}	
+			}
 
 		}
 
 		units.addAll(newUnits);
-		
-		
 
 		return this;
 	}
 
-
-	private Set<IRewriteCompilationUnit> addWorkerUnitsToMaps(ICompilationUnit compilationUnit,
-			DiscoveringVisitor allVisitor, IRewriteCompilationUnit unit) {
+	private Set<IRewriteCompilationUnit> addWorkerUnitsToMaps(DiscoveringVisitor allVisitor,
+			IRewriteCompilationUnit unit) {
 		Set<IRewriteCompilationUnit> allWorkerUnits = Sets.newConcurrentHashSet();
-		
-		for (Entry<String, Multimap<IRewriteCompilationUnit, ? extends ASTNode>> entryList : WorkerMapsUtils.getAllWorkerMap().entries()) {
-			if (!WorkerMapsUtils.getNeededList(entryList.getKey(), allVisitor).isEmpty()) {
+
+		for (Key key : WorkerMapsUtils.getAllKeys()) {
 				
-				ASTNode newNode = unit.copyNode(unit.getRoot());
-				RewriteCompilationUnit newUnit = new RewriteCompilationUnit(unit.getPrimary(), newNode);
-				newUnit.setWorker(entryList.getKey());
-				entryList.getValue().putAll(newUnit, WorkerMapsUtils.getNeededList(entryList.getKey(), allVisitor));
-				allWorkerUnits.add(newUnit);
-			}
+				if(key.name.equals("Type Declarations") && !allVisitor.getTypeDeclarations().isEmpty())
+					loopOverTypeDeclarations(unit, key.name, allWorkerUnits, allVisitor);
+				
+				if(key.name.equals("Field Declarations") && !allVisitor.getFieldDeclarations().isEmpty())
+					loopOverFieldDeclarations(unit, key.name, allWorkerUnits, allVisitor);
+				
+				if(key.name.equals("Variable Declaration Statements") && !allVisitor.getVarDeclStatements().isEmpty())
+					loopOverVariableDeclarationStatements(unit, key.name, allWorkerUnits, allVisitor);
+				
+				if(key.name.equals("Single Variable Declarations") && !allVisitor.getSingleVarDeclarations().isEmpty())
+					loopOverSingleVariableDeclarations(unit, key.name, allWorkerUnits, allVisitor);
+				
+				if(key.name.equals("Simple Names") && !allVisitor.getSimpleNames().isEmpty())
+					loopOverSimpleNames(unit, key.name, allWorkerUnits, allVisitor);
+				
+				if(key.name.equals("Assignments") && !allVisitor.getAssignments().isEmpty())
+					loopOverAssignments(unit, key.name, allWorkerUnits, allVisitor);
+				
+				if(key.name.equals("Class Instances") && !allVisitor.getClassInstanceCreations().isEmpty())
+					loopOverClassInstanceCreations(unit, key.name, allWorkerUnits, allVisitor);
+				
+				if(key.name.equals("Method Declarations") && !allVisitor.getMethodDeclarations().isEmpty())
+					loopOverMethodDeclarations(unit, key.name, allWorkerUnits, allVisitor);
+				
+				if(key.name.equals("Method Invocations") && !allVisitor.getMethodInvocations().isEmpty())
+					loopOverMethodInvocations(unit, key.name, allWorkerUnits, allVisitor);
+				
+				if(key.name.equals("Relevant Invocations") && !allVisitor.getRelevantInvocations().isEmpty())
+					loopOverRelevantInvocations(unit, key.name, allWorkerUnits, allVisitor);
+							
 		}
 
 		return allWorkerUnits;
 
 	}
-
-
-	/*private Set<IRewriteCompilationUnit> checkForSameMethod(IRewriteCompilationUnit unit) {
-		//TODO THA entfernen wenn Organizer umgesetzt
-		MethodDeclaration outerMethod = null;
-		Set<IRewriteCompilationUnit> set = Sets.newConcurrentHashSet();
-
-		for (Entry<IRewriteCompilationUnit, MethodInvocation> entry : WorkerMapsUtils.getMethodInvocationsMap().entries()) {
-			MethodInvocation m = entry.getValue();
-			if (m.getExpression() != null && entry.getKey().equals(unit)) {
-				MethodDeclaration actualMD = ASTNodes.findParent(m.getExpression(), MethodDeclaration.class).get();
-				if (!(actualMD.equals(outerMethod)) && outerMethod != null) {
-					ASTNode newNode = unit.copyNode(actualMD.getParent());
-					RewriteCompilationUnit newUnit = new RewriteCompilationUnit(unit.getPrimary(), newNode);
-					newUnit.setWorker("methodInvocationsMap");
-					set.add(newUnit);
-				}
-				outerMethod = actualMD;
-			}
-		}
-		return set;
-	}*/
 	
-	public static Multimap<String, Multimap<IRewriteCompilationUnit, ? extends ASTNode>> getAllWorkerMap() {
-		return WorkerMapsUtils.getAllWorkerMap();
+	private void loopOverTypeDeclarations(IRewriteCompilationUnit unit, String keyName,
+			Set<IRewriteCompilationUnit> allWorkerUnits, DiscoveringVisitor visitor) {
+		
+		for (TypeDeclaration m : visitor.getTypeDeclarations()) {
+			ASTNode newNode = unit.copyNode(unit.getRoot());
+			RewriteCompilationUnit newUnit = new RewriteCompilationUnit(unit.getPrimary(), newNode);
+			newUnit.setWorker(keyName);
+			WorkerMapsUtils.getTypeDeclMap().put(newUnit, m);
+			allWorkerUnits.add(newUnit);
+		}
 	}
+	
+	private void loopOverFieldDeclarations(IRewriteCompilationUnit unit, String keyName,
+			Set<IRewriteCompilationUnit> allWorkerUnits, DiscoveringVisitor visitor) {
+		
+		for (FieldDeclaration m : visitor.getFieldDeclarations()) {
+			ASTNode newNode = unit.copyNode(unit.getRoot());
+			RewriteCompilationUnit newUnit = new RewriteCompilationUnit(unit.getPrimary(), newNode);
+			newUnit.setWorker(keyName);
+			WorkerMapsUtils.getFieldDeclMap().put(newUnit, m);
+			allWorkerUnits.add(newUnit);
+		}
+	}
+	
+	private void loopOverAssignments(IRewriteCompilationUnit unit, String keyName,
+			Set<IRewriteCompilationUnit> allWorkerUnits, DiscoveringVisitor visitor) {
+		
+		for (Assignment m : visitor.getAssignments()) {
+			ASTNode newNode = unit.copyNode(unit.getRoot());
+			RewriteCompilationUnit newUnit = new RewriteCompilationUnit(unit.getPrimary(), newNode);
+			newUnit.setWorker(keyName);
+			WorkerMapsUtils.getAssigmentsMap().put(newUnit, m);
+			allWorkerUnits.add(newUnit);
+		}
+	}
+	
+	private void loopOverSimpleNames(IRewriteCompilationUnit unit, String keyName,
+			Set<IRewriteCompilationUnit> allWorkerUnits, DiscoveringVisitor visitor) {
+		
+		for (SimpleName m : visitor.getSimpleNames()) {
+			ASTNode newNode = unit.copyNode(unit.getRoot());
+			RewriteCompilationUnit newUnit = new RewriteCompilationUnit(unit.getPrimary(), newNode);
+			newUnit.setWorker(keyName);
+			WorkerMapsUtils.getSimpleNamesMap().put(newUnit, m);
+			allWorkerUnits.add(newUnit);
+		}
+	}
+	
+	private void loopOverClassInstanceCreations(IRewriteCompilationUnit unit, String keyName,
+			Set<IRewriteCompilationUnit> allWorkerUnits, DiscoveringVisitor visitor) {
+		
+		for (ClassInstanceCreation m : visitor.getClassInstanceCreations()) {
+			ASTNode newNode = unit.copyNode(unit.getRoot());
+			RewriteCompilationUnit newUnit = new RewriteCompilationUnit(unit.getPrimary(), newNode);
+			newUnit.setWorker(keyName);
+			WorkerMapsUtils.getClassInstanceMap().put(newUnit, m);
+			allWorkerUnits.add(newUnit);
+		}
+	}
+	
+	private void loopOverVariableDeclarationStatements(IRewriteCompilationUnit unit, String keyName,
+			Set<IRewriteCompilationUnit> allWorkerUnits, DiscoveringVisitor visitor) {
+		
+		for (VariableDeclarationStatement m : visitor.getVarDeclStatements()) {
+			ASTNode newNode = unit.copyNode(unit.getRoot());
+			RewriteCompilationUnit newUnit = new RewriteCompilationUnit(unit.getPrimary(), newNode);
+			newUnit.setWorker(keyName);
+			WorkerMapsUtils.getVarDeclMap().put(newUnit, m);
+			allWorkerUnits.add(newUnit);
+		}
+	}
+	
+	private void loopOverSingleVariableDeclarations(IRewriteCompilationUnit unit, String keyName,
+			Set<IRewriteCompilationUnit> allWorkerUnits, DiscoveringVisitor visitor) {
+		
+		for (SingleVariableDeclaration m : visitor.getSingleVarDeclarations()) {
+			ASTNode newNode = unit.copyNode(unit.getRoot());
+			RewriteCompilationUnit newUnit = new RewriteCompilationUnit(unit.getPrimary(), newNode);
+			newUnit.setWorker(keyName);
+			WorkerMapsUtils.getSingleVarDeclMap().put(newUnit, m);
+			allWorkerUnits.add(newUnit);
+		}
+	}
+
+	private void loopOverMethodInvocations(IRewriteCompilationUnit unit, String keyName,
+			Set<IRewriteCompilationUnit> allWorkerUnits, DiscoveringVisitor visitor) {
+		
+		for (MethodInvocation m : visitor.getMethodInvocations()) {
+			ASTNode newNode = unit.copyNode(unit.getRoot());
+			RewriteCompilationUnit newUnit = new RewriteCompilationUnit(unit.getPrimary(), newNode);
+			newUnit.setWorker(keyName);
+			WorkerMapsUtils.getMethodInvocationsMap().put(newUnit, m);
+			allWorkerUnits.add(newUnit);
+		}
+	}
+	
+	private void loopOverMethodDeclarations(IRewriteCompilationUnit unit, String keyName,
+			Set<IRewriteCompilationUnit> allWorkerUnits, DiscoveringVisitor visitor) {
+		
+		for (MethodDeclaration m : visitor.getMethodDeclarations()) {
+			ASTNode newNode = unit.copyNode(unit.getRoot());
+			RewriteCompilationUnit newUnit = new RewriteCompilationUnit(unit.getPrimary(), newNode);
+			newUnit.setWorker(keyName);
+			WorkerMapsUtils.getMethodDeclarationsMap().put(newUnit, m);
+			allWorkerUnits.add(newUnit);
+		}
+	}
+	
+	private void loopOverRelevantInvocations(IRewriteCompilationUnit unit, String keyName,
+			Set<IRewriteCompilationUnit> allWorkerUnits, DiscoveringVisitor visitor) {
+		
+		for (RelevantInvocation m : visitor.getRelevantInvocations()) {
+			ASTNode newNode = unit.copyNode(unit.getRoot());
+			RewriteCompilationUnit newUnit = new RewriteCompilationUnit(unit.getPrimary(), newNode);
+			newUnit.setWorker(keyName);
+			WorkerMapsUtils.getRelevantInvocations().put(newUnit, m);
+			allWorkerUnits.add(newUnit);
+		}
+	}
+
+	/*
+	 * private Set<IRewriteCompilationUnit>
+	 * checkForSameMethod(IRewriteCompilationUnit unit) { //TODO THA entfernen wenn
+	 * Organizer umgesetzt MethodDeclaration outerMethod = null;
+	 * Set<IRewriteCompilationUnit> set = Sets.newConcurrentHashSet();
+	 * 
+	 * for (Entry<IRewriteCompilationUnit, MethodInvocation> entry :
+	 * WorkerMapsUtils.getMethodInvocationsMap().entries()) { MethodInvocation m =
+	 * entry.getValue(); if (m.getExpression() != null &&
+	 * entry.getKey().equals(unit)) { MethodDeclaration actualMD =
+	 * ASTNodes.findParent(m.getExpression(), MethodDeclaration.class).get(); if
+	 * (!(actualMD.equals(outerMethod)) && outerMethod != null) { ASTNode newNode =
+	 * unit.copyNode(actualMD.getParent()); RewriteCompilationUnit newUnit = new
+	 * RewriteCompilationUnit(unit.getPrimary(), newNode);
+	 * newUnit.setWorker("methodInvocationsMap"); set.add(newUnit); } outerMethod =
+	 * actualMD; } } return set; }
+	 */
 
 	public Multimap<IRewriteCompilationUnit, TypeDeclaration> getTypeDeclMap() {
 		return WorkerMapsUtils.getTypeDeclMap();
@@ -153,7 +288,7 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 		return WorkerMapsUtils.getMethodDeclarationsMap();
 	}
 
-	public Multimap<IRewriteCompilationUnit, MethodInvocation> getRelevantInvocations() {
+	public Multimap<IRewriteCompilationUnit, RelevantInvocation> getRelevantInvocations() {
 		return WorkerMapsUtils.getRelevantInvocations();
 	}
 

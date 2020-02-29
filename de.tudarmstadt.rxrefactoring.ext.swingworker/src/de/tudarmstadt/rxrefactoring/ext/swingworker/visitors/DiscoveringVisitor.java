@@ -3,6 +3,7 @@ package de.tudarmstadt.rxrefactoring.ext.swingworker.visitors;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
@@ -15,6 +16,7 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 import com.google.common.collect.Lists;
@@ -41,7 +43,7 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 	private final List<SingleVariableDeclaration> singleVarDeclarations;
 	private final List<MethodDeclaration> methodDeclarations;
 	private final List<MethodInvocation> methodInvocations;
-	private final List<MethodInvocation> relevantInvocations;
+	private final List<RelevantInvocation> relevantInvocations;
 
 	public DiscoveringVisitor(String classBinaryName) {
 		this.classBinaryName = classBinaryName;
@@ -141,7 +143,7 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 			}
 
 			if (Methods.hasSignature(binding, "java.util.concurrent.Executor", "execute", "java.lang.Runnable")) {
-				relevantInvocations.add(node);
+				relevantInvocations.add(new RelevantInvocation(node));
 			}
 		}
 
@@ -167,7 +169,32 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 		}
 		return true;
 	}
-
+	
+	/*public <T> List<T> getList(Class<T> c){
+		if(c.isInstance(TypeDeclaration.class))
+			return (List<T>) typeDeclarations;
+		if(c.isInstance(FieldDeclaration.class))
+			return (List<T>) fieldDeclarations;
+		if(c.isInstance(VariableDeclarationStatement.class))
+			return (List<T>) varDeclStatements;
+		if(c.isInstance(SingleVariableDeclaration.class))
+			return (List<T>) singleVarDeclarations;
+		if(c.isInstance(Assignment.class))
+			return (List<T>) assignments;
+		if(c.isInstance(SimpleName.class))
+			return (List<T>) simpleNames;
+		if(c.isInstance(ClassInstanceCreation.class))
+			return (List<T>) classInstanceCreations;
+		if(c.isInstance(MethodInvocation.class))
+			return (List<T>) methodInvocations;
+		if(c.isInstance(MethodDeclaration.class))
+			return (List<T>) methodDeclarations;
+		if(c.isInstance(RelevantInvocation.class))
+			return (List<T>) relevantInvocations;		
+		
+		return null;
+	}*/
+	
 	public List<TypeDeclaration> getTypeDeclarations() {
 		return typeDeclarations;
 	}
@@ -204,7 +231,7 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 		return methodDeclarations;
 	}
 
-	public List<MethodInvocation> getRelevantInvocations() {
+	public List<RelevantInvocation> getRelevantInvocations() {
 		return relevantInvocations;
 	}
 	
@@ -221,5 +248,20 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 		this.relevantInvocations.clear();
 		
 	}
-
+	
+	public class RelevantInvocation{
+		private MethodInvocation m;
+		
+		public RelevantInvocation(MethodInvocation m) {
+			this.m = m;
+		}
+		
+		public MethodInvocation getMethodInvocation() {
+			return m;
+		}
+		
+	}
 }
+
+
+
