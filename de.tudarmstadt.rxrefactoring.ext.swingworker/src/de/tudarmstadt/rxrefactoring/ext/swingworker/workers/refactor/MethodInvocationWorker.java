@@ -111,7 +111,7 @@ public class MethodInvocationWorker implements IWorker<TypeOutput, Boolean> {
 			noChanges = simpleName.getIdentifier().equals(newName);
 			if(!noChanges) {
 				synchronized (unit) {
-					unit.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newName));
+		//			unit.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newName)); // THA no simple name change -> simple names worker does that
 				}
 			}
 		}

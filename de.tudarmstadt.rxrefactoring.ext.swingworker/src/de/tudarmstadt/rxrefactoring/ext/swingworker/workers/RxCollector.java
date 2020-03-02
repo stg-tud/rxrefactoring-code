@@ -63,7 +63,10 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 				WorkerMapsUtils.fillAllKeys();
 				Set<IRewriteCompilationUnit> allWorkerUnits = addWorkerUnitsToMaps(discoveringVisitor, unit);
 				newUnits.addAll(allWorkerUnits);
+				units.remove(unit);
 			}
+			
+			discoveringVisitor.cleanAllLists();
 
 		}
 

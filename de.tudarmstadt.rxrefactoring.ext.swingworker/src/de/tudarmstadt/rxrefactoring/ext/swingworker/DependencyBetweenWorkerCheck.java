@@ -1,25 +1,31 @@
-package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
+package de.tudarmstadt.rxrefactoring.ext.swingworker;
 
 import java.util.Set;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
 
 import com.google.common.collect.Sets;
 
+import de.tudarmstadt.rxrefactoring.core.IDependencyBetweenWorkerCheck;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerMapsUtils;
 
-public class DependencyBetweenWorkerCheck {
+public class DependencyBetweenWorkerCheck implements IDependencyBetweenWorkerCheck {
 	
 	private ProjectUnits units;
 	
@@ -28,12 +34,18 @@ public class DependencyBetweenWorkerCheck {
 		
 	}
 	
+	@Override
 	public ProjectUnits regroupBecauseOfMethodDependencies() {
 		MethodScanner scanner = new MethodScanner();
 		scanner.scan(units);
-		Map<Map.Entry<MethodDeclaration, IRewriteCompilationUnit>, Map.Entry<MethodDeclaration, IRewriteCompilationUnit>> mappingMap = scanner.mappingCalledRefactoredMethods;
+		//Map<Map.Entry<MethodDeclaration, IRewriteCompilationUnit>, Map.Entry<MethodDeclaration, IRewriteCompilationUnit>> mappingMap = scanner.mappingCalledRefactoredMethods;
 		
-		for(IRewriteCompilationUnit unit: units.getUnits()) {
+		for(Entry<MethodDeclaration, IRewriteCompilationUnit> entry: scanner.refactoredMethods.entrySet()) {
+			
+			searchForMethodInvocation(entry);
+			
+		}
+		/*for(IRewriteCompilationUnit unit: units.getUnits()) {
 			for(Entry<Map.Entry<MethodDeclaration, IRewriteCompilationUnit>, Map.Entry<MethodDeclaration, IRewriteCompilationUnit>> entryMap : mappingMap.entrySet()) {
 				Map.Entry<MethodDeclaration, IRewriteCompilationUnit> keyRefactored = entryMap.getKey();
 				IRewriteCompilationUnit unitRefactored = keyRefactored.getValue();
@@ -45,16 +57,39 @@ public class DependencyBetweenWorkerCheck {
 					i++;
 				}
 		    }
-		}
+		}*/
 		
 		return units;
 		
 	}
 	
-	public CompositeChange checkForClassInstanceAsReturnType(IRewriteCompilationUnit unitToCheck, ClassInstanceCreation classInstance) {
+	private void searchForMethodInvocation(Map.Entry<MethodDeclaration, IRewriteCompilationUnit> entry) {
+		int i = 1;
+		Map<IRewriteCompilationUnit, String> toChangeWorker = new HashMap<IRewriteCompilationUnit, String>();
+		for(IRewriteCompilationUnit unit: units.getUnits()) {
+			if(toChangeWorker.keySet().contains(unit)) {
+				unit.setWorker(toChangeWorker.get(unit));
+			}
+			if(unit.getWorker().equals("Method Invocation")) {
+				Collection<MethodInvocation> methodInvs = WorkerMapsUtils.getMethodInvocationsMap().get(unit);
+				for(MethodInvocation m: methodInvs) {
+					IMethodBinding bindingInv = m.resolveMethodBinding();
+					MethodDeclaration methodDecl = entry.getKey();
+					IRewriteCompilationUnit unitDecl = entry.getValue();
+					IMethodBinding bindingDecl = methodDecl.resolveBinding();
+					if(bindingInv.equals(bindingDecl)) {
+						unit.setWorker(" same" + i);
+						toChangeWorker.put(unitDecl, "same" + i);				
+					}
+				}
+			}
+		}
+	
+	}
+	
+	public void checkForClassInstanceAsReturnType(IRewriteCompilationUnit unitToCheck, ClassInstanceCreation classInstance) {
 		AST ast = classInstance.getAST(); 
 		
-		return null;
 	}
 	
 	public boolean checkMethodDependencies(MethodDeclaration unit) {

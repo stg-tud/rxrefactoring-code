@@ -1,17 +1,22 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleName;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
@@ -30,7 +35,10 @@ public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
 			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception {
 
 		RefactorInfo info = input.info;
-
+		
+		Map<MethodDeclaration, Map.Entry<IRewriteCompilationUnit, SimpleName> > methods = new HashMap<MethodDeclaration, Map.Entry<IRewriteCompilationUnit, SimpleName>>();
+		Map<MethodDeclaration, String> list = new HashMap<MethodDeclaration, String>();
+		int counter = 1;
 		for (Map.Entry<IRewriteCompilationUnit, SimpleName> simpleNameEntry : input.collector.getSimpleNamesMap()
 				.entries()) {
 			IRewriteCompilationUnit icu = simpleNameEntry.getKey();
@@ -42,6 +50,25 @@ public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
 				summary.addSkipped("simpleNames");
 				continue;
 			}
+			
+			MethodDeclaration nameInMethod = ASTNodes.findParent(simpleName, MethodDeclaration.class).get();
+			if(!list.keySet().contains(nameInMethod)){
+				list.put(nameInMethod, Integer.toString(counter));
+				counter++;
+				
+			}
+			icu.setWorker(icu.getWorker() + list.get(nameInMethod));
+			
+			/*if(methods.keySet().contains(nameInMethod)) {
+				Map.Entry<IRewriteCompilationUnit, SimpleName> entry = methods.get(nameInMethod);
+				IRewriteCompilationUnit unit = entry.getKey();
+				if(simpleName.getIdentifier().equals(entry.getValue().getIdentifier()))
+					icu.setWorker(icu.getWorker() + nameInMethod.getName().getIdentifier());
+			}else {
+				methods.put(nameInMethod, simpleNameEntry);
+				
+			}*/
+		
 
 			AST ast = simpleName.getAST();
 
@@ -68,10 +95,12 @@ public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
 			// }
 			// }
 			SimpleName newName = SwingWorkerASTUtils.newSimpleName(ast, newIdentifier);
-			synchronized (icu) {
-				icu.replace(simpleName, newName);
+			if(!simpleName.equals(newName)){
+				synchronized (icu) {
+					icu.replace(simpleName, newName);
+				}	
 			}
-
+		
 			summary.addCorrect("simpleNames");
 		}
 		

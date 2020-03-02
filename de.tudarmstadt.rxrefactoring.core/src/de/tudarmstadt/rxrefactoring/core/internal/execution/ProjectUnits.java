@@ -166,6 +166,16 @@ public class ProjectUnits implements IProjectUnits {
 		return true;
 	}
 
+	@Override
+	public boolean remove(Object o) {
+		if(o == null || !units.contains(o))
+			return false;
+		else{
+			units.remove(o);
+		}
+		return true;
+	}
+
 
 
 	

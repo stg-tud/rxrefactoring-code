@@ -40,9 +40,7 @@ public interface IProjectUnits extends Set<IRewriteCompilationUnit> {
 	
 
 	@Override
-	default public boolean remove(Object o) {
-		throw new UnsupportedOperationException("this set is not mutable");
-	}
+	public boolean remove(Object o);
 
 	@Override
 	public boolean addAll(Collection<? extends IRewriteCompilationUnit> c);

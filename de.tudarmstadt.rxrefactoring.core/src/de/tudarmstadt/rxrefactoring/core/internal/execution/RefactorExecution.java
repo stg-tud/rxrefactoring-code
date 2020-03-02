@@ -66,6 +66,7 @@ import org.osgi.framework.Bundle;
 
 import com.google.common.collect.Sets;
 
+import de.tudarmstadt.rxrefactoring.core.IDependencyBetweenWorkerCheck;
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.ProcessDialog;
@@ -75,6 +76,7 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.DependencyBetweenWorkerCheck;
 
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.internal.core.dom.rewrite.RewriteEventStore;
@@ -478,7 +480,8 @@ public class RefactorExecution implements Runnable {
 	}
 
 	private Map<String, List<IRewriteCompilationUnit>> getUnitToChangeMapping(ProjectUnits units) {
-		
+		DependencyBetweenWorkerCheck check = new DependencyBetweenWorkerCheck(units);
+		units = check.regroupBecauseOfMethodDependencies();
 		Map<String, List<IRewriteCompilationUnit>> groupedByWorker = units.getUnits().stream()
 				.filter(unit -> unit.getWorker() != null && unit.hasChanges())
 				.collect(Collectors.groupingBy(IRewriteCompilationUnit::getWorker));

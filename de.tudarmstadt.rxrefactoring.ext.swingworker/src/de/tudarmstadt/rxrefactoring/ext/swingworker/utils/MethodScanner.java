@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core.internal.testing;
+package de.tudarmstadt.rxrefactoring.ext.swingworker.utils;
 
 import java.util.*;
 import java.util.stream.Collectors;
