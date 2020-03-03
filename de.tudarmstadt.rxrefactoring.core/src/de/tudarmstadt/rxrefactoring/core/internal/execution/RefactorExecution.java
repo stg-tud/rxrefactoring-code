@@ -73,13 +73,11 @@ import de.tudarmstadt.rxrefactoring.core.ProcessDialog;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectStatus;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
-import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
+import de.tudarmstadt.rxrefactoring.core.utils.DependencyBetweenWorkerCheck;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.DependencyBetweenWorkerCheck;
+import de.tudarmstadt.rxrefactoring.core.utils.WorkerUtils;
 
-import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
-import org.eclipse.jdt.internal.core.dom.rewrite.RewriteEventStore;
 
 /**
  * This class is used to run the refactoring on all workspace projects.
@@ -473,6 +471,7 @@ public class RefactorExecution implements Runnable {
 
 		}
 
+		WorkerUtils.clearAllMaps();
 		CompositeChange[] array = changeList.toArray(new CompositeChange[changeList.size()]);
 
 		return array;
@@ -480,8 +479,8 @@ public class RefactorExecution implements Runnable {
 	}
 
 	private Map<String, List<IRewriteCompilationUnit>> getUnitToChangeMapping(ProjectUnits units) {
-		DependencyBetweenWorkerCheck check = new DependencyBetweenWorkerCheck(units);
-		units = check.regroupBecauseOfMethodDependencies();
+		DependencyBetweenWorkerCheck checker = new DependencyBetweenWorkerCheck(units);
+		units = checker.regroupBecauseOfMethodDependencies();
 		Map<String, List<IRewriteCompilationUnit>> groupedByWorker = units.getUnits().stream()
 				.filter(unit -> unit.getWorker() != null && unit.hasChanges())
 				.collect(Collectors.groupingBy(IRewriteCompilationUnit::getWorker));

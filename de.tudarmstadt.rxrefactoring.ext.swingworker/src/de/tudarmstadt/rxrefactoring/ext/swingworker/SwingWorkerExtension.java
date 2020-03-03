@@ -18,6 +18,7 @@ import org.osgi.framework.Bundle;
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerMapsUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.RxCollector;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.AssignmentWorker;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.ClassInstanceCreationWorker;
@@ -124,5 +125,10 @@ public class SwingWorkerExtension implements IRefactorExtension {
 	public @NonNull ExecutorService createExecutorService() {
 		return //Executors.newFixedThreadPool(4);
 			Executors.newSingleThreadExecutor();
+	}
+	
+	public WorkerMapsUtils getWorkerMapsUtils() {
+		return null;
+		
 	}
 }

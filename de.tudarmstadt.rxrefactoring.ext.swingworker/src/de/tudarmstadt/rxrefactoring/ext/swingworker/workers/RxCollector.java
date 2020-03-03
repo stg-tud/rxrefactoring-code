@@ -27,11 +27,11 @@ import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
+import de.tudarmstadt.rxrefactoring.core.utils.RelevantInvocation;
+import de.tudarmstadt.rxrefactoring.core.utils.WorkerUtils.Key;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerMapsUtils;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerMapsUtils.Key;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.DiscoveringVisitor;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.DiscoveringVisitor.RelevantInvocation;
 
 /**
  * Description: Collects relevant information for refactoring<br>

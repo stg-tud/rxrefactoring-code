@@ -268,4 +268,11 @@ public class MethodScanner {
 		}
 		return false;
 	}
+	
+	public void clearMaps() {
+		this.refactoredMethods.clear();
+		this.callingMethods.clear();
+		this.mappingCalledRefactoredMethods.clear();
+		
+	}
 }

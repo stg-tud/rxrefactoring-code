@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.Methods;
+import de.tudarmstadt.rxrefactoring.core.utils.RelevantInvocation;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 
 /**
@@ -248,20 +249,6 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 		this.relevantInvocations.clear();
 		
 	}
-	
-	public class RelevantInvocation{
-		private MethodInvocation m;
-		
-		public RelevantInvocation(MethodInvocation m) {
-			this.m = m;
-		}
-		
-		public MethodInvocation getMethodInvocation() {
-			return m;
-		}
-		
-	}
 }
-
 
 
