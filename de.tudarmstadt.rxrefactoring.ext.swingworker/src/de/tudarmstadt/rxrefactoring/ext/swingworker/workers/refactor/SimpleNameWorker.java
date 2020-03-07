@@ -1,9 +1,11 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -12,6 +14,10 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleName;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
@@ -38,7 +44,7 @@ public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
 		RefactorInfo info = input.info;
 
 		Map<MethodDeclaration, Map.Entry<IRewriteCompilationUnit, SimpleName>> methods = new HashMap<MethodDeclaration, Map.Entry<IRewriteCompilationUnit, SimpleName>>();
-		Map<MethodDeclaration, String> list = new HashMap<MethodDeclaration, String>();
+		Map<MethodDeclaration, List<SimpleName>> list = new HashMap<>();
 		int counter = 1;
 		for (Map.Entry<IRewriteCompilationUnit, SimpleName> simpleNameEntry : input.collector.getSimpleNamesMap()
 				.entries()) {
@@ -54,24 +60,18 @@ public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
 
 			Optional<MethodDeclaration> nameInMethod = ASTNodes.findParent(simpleName, MethodDeclaration.class);
 			if (nameInMethod.isPresent()) {
-				if (!list.keySet().contains(nameInMethod.get()) && nameInMethod.get() != null) {
-					list.put(nameInMethod.get(), Integer.toString(counter));
-					counter++;
-
+				MethodDeclaration method = nameInMethod.get();
+				if (shouldBeSaved(nameInMethod, list)) {
+					list.put(nameInMethod.get(), List.of(simpleName));
 				}
-				icu.setWorker(icu.getWorker() + list.get(nameInMethod.get()));
-			}
 
-			/*
-			 * if(methods.keySet().contains(nameInMethod)) {
-			 * Map.Entry<IRewriteCompilationUnit, SimpleName> entry =
-			 * methods.get(nameInMethod); IRewriteCompilationUnit unit = entry.getKey();
-			 * if(simpleName.getIdentifier().equals(entry.getValue().getIdentifier()))
-			 * icu.setWorker(icu.getWorker() + nameInMethod.getName().getIdentifier());
-			 * }else { methods.put(nameInMethod, simpleNameEntry);
-			 * 
-			 * }
-			 */
+				if(!list.get(nameInMethod.get()).contains(simpleName)) {
+					List<SimpleName> subMap = list.get(method);
+					subMap.add(simpleName);
+				}
+				
+				icu.setWorker(icu.getWorker() + getRightWorkerName(nameInMethod.get(), simpleName, list));
+			}
 
 			AST ast = simpleName.getAST();
 
@@ -110,10 +110,34 @@ public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
 		return null;
 	}
 
+	
+	private boolean shouldBeSaved(Optional<MethodDeclaration> methodName, Map<MethodDeclaration, List<SimpleName>> list) {
+		return !list.keySet().contains(methodName.get()) && methodName.get() != null;
+
+	}
+	
+	private String getRightWorkerName(MethodDeclaration m, SimpleName simpleName, Map<MethodDeclaration, List<SimpleName>> list) {
+		int counter = 1;
+		
+		for(Entry<MethodDeclaration, List<SimpleName>> entry : list.entrySet()) {
+			for(SimpleName name: entry.getValue()) {
+				if(name.getIdentifier().equals(simpleName.getIdentifier()) && entry.getKey().equals(m))
+					return Integer.toString(counter);
+				counter++;
+			}
+			counter++;
+		}
+		
+		
+		return "";
+		
+	}
+
+
 	@Override
-	public @Nullable Void refactor(IProjectUnits units, TypeOutput input, WorkerSummary summary) throws Exception {
+	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,
+			@NonNull WorkerSummary summary) throws Exception {
 		// TODO Auto-generated method stub
-		// only needed if RefactorScope is not implemented
 		return null;
 	}
 
