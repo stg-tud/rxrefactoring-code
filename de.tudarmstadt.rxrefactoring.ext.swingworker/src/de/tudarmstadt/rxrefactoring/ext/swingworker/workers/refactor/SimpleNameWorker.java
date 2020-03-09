@@ -1,6 +1,7 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -11,9 +12,12 @@ import java.util.Optional;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
@@ -28,6 +32,7 @@ import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RenamingUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
 
@@ -53,25 +58,27 @@ public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
 
 			ITypeBinding type = simpleName.resolveTypeBinding();
 
-			if (!info.shouldBeRefactored(type) && !Types.isExactTypeOf(type.getErasure(), "javax.swing.SwingWorker")) {
+			if ((!info.shouldBeRefactored(type) && !Types.isExactTypeOf(type.getErasure(), "javax.swing.SwingWorker")) ||
+				 ASTNodes.findParentInStatement(simpleName, FieldDeclaration.class).isPresent()) {
 				summary.addSkipped("simpleNames");
 				continue;
 			}
 
-			Optional<MethodDeclaration> nameInMethod = ASTNodes.findParent(simpleName, MethodDeclaration.class);
-			if (nameInMethod.isPresent()) {
-				MethodDeclaration method = nameInMethod.get();
-				if (shouldBeSaved(nameInMethod, list)) {
-					list.put(nameInMethod.get(), List.of(simpleName));
-				}
+			/*
+			 * Optional<MethodDeclaration> nameInMethod = ASTNodes.findParent(simpleName,
+			 * MethodDeclaration.class); if (nameInMethod.isPresent()) { MethodDeclaration
+			 * method = nameInMethod.get(); if (shouldBeSaved(nameInMethod, list)) {
+			 * list.put(nameInMethod.get(), new ArrayList<SimpleName>(
+			 * Arrays.asList(simpleName))); counter++; }
+			 * 
+			 * if(!list.get(nameInMethod.get()).stream().anyMatch(x ->
+			 * x.getIdentifier().equals(simpleName.getIdentifier()))) { List<SimpleName>
+			 * subMap = list.get(method); subMap.add(simpleName); counter++; }
+			 */
 
-				if(!list.get(nameInMethod.get()).contains(simpleName)) {
-					List<SimpleName> subMap = list.get(method);
-					subMap.add(simpleName);
-				}
-				
-				icu.setWorker(icu.getWorker() + getRightWorkerName(nameInMethod.get(), simpleName, list));
-			}
+			// icu.setWorker(icu.getWorker() +
+			// RenamingUtils.getRightWorkerName(nameInMethod.get(), simpleName));
+			// }
 
 			AST ast = simpleName.getAST();
 
@@ -98,9 +105,16 @@ public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
 			// }
 			// }
 			SimpleName newName = SwingWorkerASTUtils.newSimpleName(ast, newIdentifier);
-			if (!simpleName.equals(newName)) {
+			if (!simpleName.getIdentifier().equals(newName.getIdentifier())) {
 				synchronized (icu) {
 					icu.replace(simpleName, newName);
+				}
+
+				Optional<MethodDeclaration> nameInMethod = ASTNodes.findParent(simpleName, MethodDeclaration.class);
+				Optional<Assignment> assignment = ASTNodes.findParent(simpleName,
+						Assignment.class);
+				if (nameInMethod.isPresent() && !assignment.isPresent() && scope.equals(RefactorScope.SEPARATE_OCCURENCES)) {
+					icu.setWorker(icu.getWorker() + RenamingUtils.getRightWorkerName(nameInMethod.get(), simpleName));
 				}
 			}
 
@@ -110,29 +124,21 @@ public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
 		return null;
 	}
 
-	
-	private boolean shouldBeSaved(Optional<MethodDeclaration> methodName, Map<MethodDeclaration, List<SimpleName>> list) {
-		return !list.keySet().contains(methodName.get()) && methodName.get() != null;
-
-	}
-	
-	private String getRightWorkerName(MethodDeclaration m, SimpleName simpleName, Map<MethodDeclaration, List<SimpleName>> list) {
-		int counter = 1;
-		
-		for(Entry<MethodDeclaration, List<SimpleName>> entry : list.entrySet()) {
-			for(SimpleName name: entry.getValue()) {
-				if(name.getIdentifier().equals(simpleName.getIdentifier()) && entry.getKey().equals(m))
-					return Integer.toString(counter);
-				counter++;
-			}
-			counter++;
-		}
-		
-		
-		return "";
-		
-	}
-
+	/*
+	 * private String getRightWorkerName(MethodDeclaration m, SimpleName simpleName,
+	 * Map<MethodDeclaration, List<SimpleName>> list) { int counter = 1;
+	 * 
+	 * for(Entry<MethodDeclaration, List<SimpleName>> entry : list.entrySet()) {
+	 * for(SimpleName name: entry.getValue()) {
+	 * if(name.getIdentifier().equals(simpleName.getIdentifier()) &&
+	 * entry.getKey().equals(m)) return Integer.toString(counter); counter++; }
+	 * counter++; }
+	 * 
+	 * 
+	 * return "";
+	 * 
+	 * }
+	 */
 
 	@Override
 	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,

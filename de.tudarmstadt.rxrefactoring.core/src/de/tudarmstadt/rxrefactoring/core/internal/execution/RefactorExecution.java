@@ -78,7 +78,6 @@ import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.WorkerUtils;
 
-
 /**
  * This class is used to run the refactoring on all workspace projects.
  * 
@@ -175,7 +174,6 @@ public class RefactorExecution implements Runnable {
 							CompositeChange changePerProject = new CompositeChange(project.getName(), changes);
 							allChanges[projectCount] = changePerProject;
 							projectCount++;
-									
 
 							// Call template method
 							onProjectFinished(project, javaProject, units);
@@ -452,8 +450,7 @@ public class RefactorExecution implements Runnable {
 		// The workers add their changes to the bundled compilation units
 		if (extension.isRefactorScopeAvailable()) {
 			workerTree.run(extension.createExecutorService(), scope);
-		}
-		else {
+		} else {
 			workerTree.run(extension.createExecutorService());
 		}
 
@@ -479,8 +476,16 @@ public class RefactorExecution implements Runnable {
 	}
 
 	private Map<String, List<IRewriteCompilationUnit>> getUnitToChangeMapping(ProjectUnits units) {
-		DependencyBetweenWorkerCheck checker = new DependencyBetweenWorkerCheck(units);
-		units = checker.regroupBecauseOfMethodDependencies();
+		if (scope.equals(RefactorScope.SEPARATE_OCCURENCES)) {
+			DependencyBetweenWorkerCheck checker = new DependencyBetweenWorkerCheck(units);
+			units = checker.regroupBecauseOfMethodDependencies();
+			try {
+				units = checker.searchForFieldDependencies();
+			} catch (JavaModelException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		Map<String, List<IRewriteCompilationUnit>> groupedByWorker = units.getUnits().stream()
 				.filter(unit -> unit.getWorker() != null && unit.hasChanges())
 				.collect(Collectors.groupingBy(IRewriteCompilationUnit::getWorker));
