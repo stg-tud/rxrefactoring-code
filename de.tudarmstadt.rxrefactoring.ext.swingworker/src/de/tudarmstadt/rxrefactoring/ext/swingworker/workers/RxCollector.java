@@ -28,6 +28,7 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.RelevantInvocation;
+import de.tudarmstadt.rxrefactoring.core.utils.WorkerUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.WorkerUtils.Key;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerMapsUtils;
@@ -64,6 +65,7 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 				Set<IRewriteCompilationUnit> allWorkerUnits = addWorkerUnitsToMaps(discoveringVisitor, unit);
 				newUnits.addAll(allWorkerUnits);
 				units.remove(unit);
+				WorkerMapsUtils.clearKeys();
 			}
 			
 			discoveringVisitor.cleanAllLists();

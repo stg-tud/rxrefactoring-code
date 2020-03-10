@@ -164,6 +164,10 @@ public class WorkerUtils {
 		methodDeclarationsMap.clear();
 		relevantInvocationsMap.clear();
 	}
+	
+	public static void clearKeys() {
+		allKeys.clear();
+	}
 
 	public static class Key {
 		public String name;

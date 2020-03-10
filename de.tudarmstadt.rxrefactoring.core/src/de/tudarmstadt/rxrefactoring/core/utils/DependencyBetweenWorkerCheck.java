@@ -49,9 +49,11 @@ public class DependencyBetweenWorkerCheck implements IDependencyBetweenWorkerChe
 		// Map.Entry<MethodDeclaration, IRewriteCompilationUnit>> mappingMap =
 		// scanner.mappingCalledRefactoredMethods;
 
+		int i = 1;
 		for (Entry<MethodDeclaration, IRewriteCompilationUnit> entry : scanner.refactoredMethods.entrySet()) {
 
-			searchForMethodInvocation(entry);
+			searchForMethodInvocation(entry, i);
+			i++;
 
 		}
 
@@ -74,8 +76,7 @@ public class DependencyBetweenWorkerCheck implements IDependencyBetweenWorkerChe
 
 	}
 
-	private void searchForMethodInvocation(Map.Entry<MethodDeclaration, IRewriteCompilationUnit> entry) {
-		int i = 1;
+	private void searchForMethodInvocation(Map.Entry<MethodDeclaration, IRewriteCompilationUnit> entry, Integer i) {
 		Map<IRewriteCompilationUnit, String> toChangeWorker = new HashMap<IRewriteCompilationUnit, String>();
 		for (IRewriteCompilationUnit unit : units.getUnits()) {
 			if (toChangeWorker.keySet().contains(unit)) {
@@ -111,7 +112,7 @@ public class DependencyBetweenWorkerCheck implements IDependencyBetweenWorkerChe
 				}
 			}
 
-			if (unit.getWorker().equals("Method Declarations")) {
+			if (unit.getWorker().equals("Method Declarations") && entry.getValue().getResource().equals(unit.getResource())) {
 				Collection<MethodDeclaration> methodDecls = WorkerUtils.getMethodDeclarationsMap().get(unit);
 				for (MethodDeclaration decl : methodDecls) {
 					Type type = decl.getReturnType2();
@@ -121,7 +122,7 @@ public class DependencyBetweenWorkerCheck implements IDependencyBetweenWorkerChe
 				}
 			}
 
-			if (unit.getWorker().equals("Class Instances")) {
+			if (unit.getWorker().equals("Class Instances") && entry.getValue().getResource().equals(unit.getResource())) {
 				Collection<ClassInstanceCreation> classInstances = WorkerUtils.getClassInstanceMap().get(unit);
 				for (ClassInstanceCreation instance : classInstances) {
 					Optional<MethodDeclaration> methodDecl = ASTNodes.findParent(instance, MethodDeclaration.class);
