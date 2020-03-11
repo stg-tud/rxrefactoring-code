@@ -7,15 +7,19 @@ import java.util.Map;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
 import org.eclipse.jdt.core.dom.FieldAccess;
+import org.eclipse.jdt.core.dom.IBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
@@ -27,6 +31,7 @@ import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
+import de.tudarmstadt.rxrefactoring.core.utils.WorkerUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObservableModel;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObserverModel;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SWSubscriberModel;
@@ -89,12 +94,13 @@ public class AssignmentWorker extends GeneralWorker<TypeOutput, Void> {
 
 			Expression leftHandSide = assignment.getLeftHandSide();
 			if (leftHandSide instanceof SimpleName) {
-				Log.info(getClass(), "METHOD=refactor - Refactoring left variable name: " + icu.getElementName());
+				/*Log.info(getClass(), "METHOD=refactor - Refactoring left variable name: " + icu.getElementName());
 				SimpleName simpleName = (SimpleName) leftHandSide;
 				String newIdentifier = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
 				synchronized (icu) {
 					icu.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newIdentifier));
 				}
+				icu.setWorker("Simple Names");*/
 
 			}
 

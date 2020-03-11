@@ -13,6 +13,8 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -58,8 +60,8 @@ public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
 
 			ITypeBinding type = simpleName.resolveTypeBinding();
 
-			if ((!info.shouldBeRefactored(type) && !Types.isExactTypeOf(type.getErasure(), "javax.swing.SwingWorker")) ||
-				 ASTNodes.findParentInStatement(simpleName, FieldDeclaration.class).isPresent()) {
+			if ((!info.shouldBeRefactored(type) && !Types.isExactTypeOf(type.getErasure(), "javax.swing.SwingWorker"))
+					|| ASTNodes.findParentInStatement(simpleName, FieldDeclaration.class).isPresent()) {
 				summary.addSkipped("simpleNames");
 				continue;
 			}
@@ -111,10 +113,11 @@ public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
 				}
 
 				Optional<MethodDeclaration> nameInMethod = ASTNodes.findParent(simpleName, MethodDeclaration.class);
-				Optional<Assignment> assignment = ASTNodes.findParent(simpleName,
-						Assignment.class);
-				if (nameInMethod.isPresent() && !assignment.isPresent() && scope.equals(RefactorScope.SEPARATE_OCCURENCES)) {
-					icu.setWorker(icu.getWorker() + RenamingUtils.getRightWorkerName(nameInMethod.get(), simpleName));
+				Optional<Assignment> assignment = ASTNodes.findParent(simpleName, Assignment.class);
+
+				if (nameInMethod.isPresent() && !assignment.isPresent()
+						&& scope.equals(RefactorScope.SEPARATE_OCCURENCES)) {
+						icu.setWorker(icu.getWorker() + RenamingUtils.getRightWorkerName(nameInMethod.get(), simpleName));
 				}
 			}
 

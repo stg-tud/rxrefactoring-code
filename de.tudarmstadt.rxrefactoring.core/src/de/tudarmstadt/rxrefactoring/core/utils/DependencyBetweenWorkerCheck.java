@@ -3,24 +3,25 @@ package de.tudarmstadt.rxrefactoring.core.utils;
 import java.util.Set;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
+import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
 
 import com.google.common.collect.Maps;
@@ -94,7 +95,7 @@ public class DependencyBetweenWorkerCheck implements IDependencyBetweenWorkerChe
 				 */
 			}
 
-			if (unit.getWorker().equals("Variable Declaration Statements")) {
+			if (unit.getWorker().equals("Variable Declarations")) {
 				Collection<VariableDeclarationStatement> varDecls = WorkerUtils.getVarDeclMap().get(unit);
 				for (VariableDeclarationStatement st : varDecls) {
 
@@ -103,7 +104,8 @@ public class DependencyBetweenWorkerCheck implements IDependencyBetweenWorkerChe
 					if (initializer instanceof MethodInvocation) {
 						MethodInvocation method = (MethodInvocation) initializer;
 						IMethodBinding binding = method.resolveMethodBinding();
-						if (binding.equals(entry.getKey().resolveBinding()) && entry.getValue().getResource().equals(unit.getResource())) {
+						if (binding.equals(entry.getKey().resolveBinding())
+								&& entry.getValue().getResource().equals(unit.getResource())) {
 							unit.setWorker("Change of MethodDeclaration: " + i);
 							toChangeWorker.put(entry.getValue(), "Change of MethodDeclaration: " + i);
 
@@ -112,7 +114,8 @@ public class DependencyBetweenWorkerCheck implements IDependencyBetweenWorkerChe
 				}
 			}
 
-			if (unit.getWorker().equals("Method Declarations") && entry.getValue().getResource().equals(unit.getResource())) {
+			if (unit.getWorker().equals("Method Declarations")
+					&& entry.getValue().getResource().equals(unit.getResource())) {
 				Collection<MethodDeclaration> methodDecls = WorkerUtils.getMethodDeclarationsMap().get(unit);
 				for (MethodDeclaration decl : methodDecls) {
 					Type type = decl.getReturnType2();
@@ -122,7 +125,8 @@ public class DependencyBetweenWorkerCheck implements IDependencyBetweenWorkerChe
 				}
 			}
 
-			if (unit.getWorker().equals("Class Instances") && entry.getValue().getResource().equals(unit.getResource())) {
+			if (unit.getWorker().equals("Class Instances")
+					&& entry.getValue().getResource().equals(unit.getResource())) {
 				Collection<ClassInstanceCreation> classInstances = WorkerUtils.getClassInstanceMap().get(unit);
 				for (ClassInstanceCreation instance : classInstances) {
 					Optional<MethodDeclaration> methodDecl = ASTNodes.findParent(instance, MethodDeclaration.class);
@@ -143,8 +147,18 @@ public class DependencyBetweenWorkerCheck implements IDependencyBetweenWorkerChe
 
 				Collection<SimpleName> actSimpleNames = WorkerUtils.getSimpleNamesMap().get(unit);
 				for (SimpleName name : actSimpleNames) {
-					simpleNames.put(name, unit);
-					unit.setWorker("Field Declarations "+ name.getIdentifier());
+
+					IBinding binding = name.resolveBinding();
+					boolean isField = false;
+					if (binding.getKind() == IBinding.VARIABLE) {
+						IVariableBinding curr = (IVariableBinding) binding;
+						isField = curr.isField();
+					}
+					if(isField) {
+						simpleNames.put(name, unit);
+						unit.setWorker("Field Declarations " + name.getIdentifier());
+					}
+
 				}
 
 			}
