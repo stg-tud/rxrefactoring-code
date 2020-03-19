@@ -44,7 +44,7 @@ public class WorkerUtils {
 			.create();
 
 	public static void fillAllKeys() {
-		allKeys.add(new Key("Variable Declaration Statements", VariableDeclarationStatement.class));
+		allKeys.add(new Key("Variable Declarations", VariableDeclarationStatement.class));
 		allKeys.add(new Key("Type Declarations", TypeDeclaration.class));
 		allKeys.add(new Key("Field Declarations", FieldDeclaration.class));
 		allKeys.add(new Key("Assignments", Assignment.class));
@@ -88,7 +88,13 @@ public class WorkerUtils {
 	}
 
 	
-
+	public static String getNameToClassOfWorker(Class c) {
+		for(Key k: allKeys)	{
+			if(k.getClass().equals(c));
+				return k.name;
+		}
+		 return null;
+	}
 	
 
 	public String getDetails() {
