@@ -7,12 +7,15 @@ import java.util.Map;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
 import org.eclipse.jdt.core.dom.FieldAccess;
+import org.eclipse.jdt.core.dom.IBinding;
+import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.Statement;
@@ -69,7 +72,8 @@ public class AssignmentWorker extends GeneralWorker<TypeOutput, Void> {
 			if (rightHandSide instanceof ClassInstanceCreation) {
 				ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) rightHandSide;
 
-				if (Types.isExactTypeOf(classInstanceCreation.getType().resolveBinding(), SwingWorkerInfo.getBinaryName())) {//TODO THA geändert
+				if (Types.isExactTypeOf(classInstanceCreation.getType().resolveBinding(),
+						SwingWorkerInfo.getBinaryName())) {
 					Log.info(getClass(),
 							"METHOD=refactor - Gathering information from SwingWorker: " + icu.getElementName());
 					SwingWorkerWrapper refactoringVisitor = new SwingWorkerWrapper();
@@ -88,12 +92,16 @@ public class AssignmentWorker extends GeneralWorker<TypeOutput, Void> {
 			}
 
 			Expression leftHandSide = assignment.getLeftHandSide();
-			if (leftHandSide instanceof SimpleName) {
+
+			if (leftHandSide instanceof SimpleName && !(assignment.getLeftHandSide() instanceof FieldAccess)) {
 				Log.info(getClass(), "METHOD=refactor - Refactoring left variable name: " + icu.getElementName());
 				SimpleName simpleName = (SimpleName) leftHandSide;
-				String newIdentifier = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
-				synchronized (icu) {
-					icu.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newIdentifier));
+
+				if (!isFieldName(simpleName)) {
+					String newIdentifier = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
+					synchronized (icu) {
+						icu.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newIdentifier));
+					}
 				}
 
 			}
@@ -102,9 +110,17 @@ public class AssignmentWorker extends GeneralWorker<TypeOutput, Void> {
 
 			summary.addCorrect("assignment");
 		}
-		
 
 		return null;
+	}
+
+	private boolean isFieldName(SimpleName name) {
+		if (name.resolveBinding().getKind() == IBinding.VARIABLE) {
+			IVariableBinding b = (IVariableBinding) name.resolveBinding();
+			return b.isField();
+		}
+
+		return false;
 	}
 
 	private void refactorAssignment(IRewriteCompilationUnit icu, SwingWorkerWrapper refactoringVisitor,

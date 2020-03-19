@@ -1,6 +1,7 @@
 package de.tudarmstadt.rxrefactoring.core.utils;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -11,13 +12,17 @@ import java.util.Optional;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
@@ -78,6 +83,7 @@ public class DependencyBetweenWorkerCheck implements IDependencyBetweenWorkerChe
 
 	private void searchForMethodInvocation(Map.Entry<MethodDeclaration, IRewriteCompilationUnit> entry, Integer i) {
 		Map<IRewriteCompilationUnit, String> toChangeWorker = new HashMap<IRewriteCompilationUnit, String>();
+
 		for (IRewriteCompilationUnit unit : units.getUnits()) {
 			if (toChangeWorker.keySet().contains(unit)) {
 				unit.setWorker(toChangeWorker.get(unit));
@@ -103,7 +109,8 @@ public class DependencyBetweenWorkerCheck implements IDependencyBetweenWorkerChe
 					if (initializer instanceof MethodInvocation) {
 						MethodInvocation method = (MethodInvocation) initializer;
 						IMethodBinding binding = method.resolveMethodBinding();
-						if (binding.equals(entry.getKey().resolveBinding()) && entry.getValue().getResource().equals(unit.getResource())) {
+						if (binding.equals(entry.getKey().resolveBinding())
+								&& entry.getValue().getResource().equals(unit.getResource())) {
 							unit.setWorker("Change of MethodDeclaration: " + i);
 							toChangeWorker.put(entry.getValue(), "Change of MethodDeclaration: " + i);
 
@@ -112,7 +119,8 @@ public class DependencyBetweenWorkerCheck implements IDependencyBetweenWorkerChe
 				}
 			}
 
-			if (unit.getWorker().equals("Method Declarations") && entry.getValue().getResource().equals(unit.getResource())) {
+			if (unit.getWorker().equals("Method Declarations")
+					&& entry.getValue().getResource().equals(unit.getResource())) {
 				Collection<MethodDeclaration> methodDecls = WorkerUtils.getMethodDeclarationsMap().get(unit);
 				for (MethodDeclaration decl : methodDecls) {
 					Type type = decl.getReturnType2();
@@ -122,7 +130,8 @@ public class DependencyBetweenWorkerCheck implements IDependencyBetweenWorkerChe
 				}
 			}
 
-			if (unit.getWorker().equals("Class Instances") && entry.getValue().getResource().equals(unit.getResource())) {
+			if (unit.getWorker().equals("Class Instances")
+					&& entry.getValue().getResource().equals(unit.getResource())) {
 				Collection<ClassInstanceCreation> classInstances = WorkerUtils.getClassInstanceMap().get(unit);
 				for (ClassInstanceCreation instance : classInstances) {
 					Optional<MethodDeclaration> methodDecl = ASTNodes.findParent(instance, MethodDeclaration.class);
@@ -144,7 +153,7 @@ public class DependencyBetweenWorkerCheck implements IDependencyBetweenWorkerChe
 				Collection<SimpleName> actSimpleNames = WorkerUtils.getSimpleNamesMap().get(unit);
 				for (SimpleName name : actSimpleNames) {
 					simpleNames.put(name, unit);
-					unit.setWorker("Field Declarations "+ name.getIdentifier());
+					unit.setWorker("Field Declarations " + name.getIdentifier());
 				}
 
 			}
@@ -168,6 +177,63 @@ public class DependencyBetweenWorkerCheck implements IDependencyBetweenWorkerChe
 		}
 		return units;
 
+	}
+
+	private void getMethodInvocationsTo(MethodDeclaration methodDecl) {
+
+		Set<IRewriteCompilationUnit> units_MethodInvoc = units.stream()
+				.filter(unit -> unit.getWorker().equals("Method Invocations")).collect(Collectors.toSet());
+
+		for (IRewriteCompilationUnit unit : units_MethodInvoc) {
+			Collection<MethodInvocation> invocs = WorkerUtils.getMethodInvocationsMap().get(unit);
+			for (MethodInvocation invoc : invocs) {
+				if (invoc.resolveMethodBinding().equals(methodDecl.resolveBinding())) {
+
+					Optional<VariableDeclarationStatement> varDeclSt = ASTNodes.findParent(invoc,
+							VariableDeclarationStatement.class);
+					if (varDeclSt.isPresent()) {
+						Optional<Entry<IRewriteCompilationUnit, VariableDeclarationStatement>> matchedEntry = WorkerUtils
+								.getVarDeclMap().entries().stream().filter(e -> e.getValue().equals(varDeclSt.get()))
+								.findFirst();
+
+						if (matchedEntry.isPresent()) {
+							IRewriteCompilationUnit unitVarDecl = matchedEntry.get().getKey();
+							// unit change name of worker
+							
+						}
+					}
+				}
+
+			}
+
+		}
+
+	}
+	
+	private IRewriteCompilationUnit getClassInstanceCreationUnit(MethodDeclaration methodDecl) {
+		ITypeBinding binding = methodDecl.getReturnType2().resolveBinding();
+		Block block = methodDecl.getBody();
+		IRewriteCompilationUnit unit = null;
+		
+		for(Object st : block.statements()) {
+			if(st instanceof ReturnStatement) {
+				ReturnStatement rStatement = (ReturnStatement) st;
+				if(rStatement.getExpression() instanceof ClassInstanceCreation && Types.isTypeOf(binding, "javax.swing.SwingWorker")) { // TODO aufpassen geht nicht mit erbenden Klassen
+					ClassInstanceCreation classInstance = (ClassInstanceCreation) rStatement.getExpression();
+					
+					Optional<Entry<IRewriteCompilationUnit, ClassInstanceCreation>> matchedEntry = WorkerUtils
+							.getClassInstanceMap().entries().stream().filter(e -> e.getValue().equals(classInstance))
+							.findFirst();
+					if(matchedEntry.isPresent()) {
+						unit = matchedEntry.get().getKey();
+					}
+				}
+			}
+		}
+		
+		
+	
+		return unit;
 	}
 
 }
