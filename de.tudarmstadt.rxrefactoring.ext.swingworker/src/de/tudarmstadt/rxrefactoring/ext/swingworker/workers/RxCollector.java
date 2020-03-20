@@ -89,7 +89,7 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 				if(key.name.equals("Field Declarations") && !allVisitor.getFieldDeclarations().isEmpty())
 					loopOverFieldDeclarations(unit, key.name, allWorkerUnits, allVisitor);
 				
-				if(key.name.equals("Variable Declaration Statements") && !allVisitor.getVarDeclStatements().isEmpty())
+				if(key.name.equals("Variable Declarations") && !allVisitor.getVarDeclStatements().isEmpty())
 					loopOverVariableDeclarationStatements(unit, key.name, allWorkerUnits, allVisitor);
 				
 				if(key.name.equals("Single Variable Declarations") && !allVisitor.getSingleVarDeclarations().isEmpty())

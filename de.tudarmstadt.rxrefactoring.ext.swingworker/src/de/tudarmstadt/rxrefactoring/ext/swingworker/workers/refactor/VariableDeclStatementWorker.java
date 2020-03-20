@@ -59,10 +59,12 @@ public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void>
 
 			IRewriteCompilationUnit icu = entry.getKey();
 			VariableDeclarationStatement varDeclStatement = entry.getValue();
+			boolean isOtherThanNameChanged = false;
 
 			ITypeBinding typeBinding = varDeclStatement.getType().resolveBinding();
-			
-			if (!info.shouldBeRefactored(typeBinding) && !Types.isExactTypeOf(typeBinding.getErasure(), "javax.swing.SwingWorker")) {
+
+			if (!info.shouldBeRefactored(typeBinding)
+					&& !Types.isExactTypeOf(typeBinding.getErasure(), "javax.swing.SwingWorker")) {
 				summary.addSkipped("variableDeclarations");
 				continue;
 			}
@@ -74,17 +76,23 @@ public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void>
 			if (initializer instanceof ClassInstanceCreation) {
 				ClassInstanceCreation classInstanceCreation = (ClassInstanceCreation) initializer;
 
-				//if (Types.isExactTypeOf(classInstanceCreation.resolveTypeBinding().getErasure(), "javax.swing.SwingWorker")) {
+				// if
+				// (Types.isExactTypeOf(classInstanceCreation.resolveTypeBinding().getErasure(),
+				// "javax.swing.SwingWorker")) {
 				if (classInstanceCreation.getAnonymousClassDeclaration() != null) {
-						//&& Types.isExactTypeOf(classInstanceCreation.resolveTypeBinding(), "javax.swing.SwingWorker")) {
+					// && Types.isExactTypeOf(classInstanceCreation.resolveTypeBinding(),
+					// "javax.swing.SwingWorker")) {
 					SwingWorkerWrapper refactoringVisitor = new SwingWorkerWrapper();
 					varDeclStatement.accept(refactoringVisitor);
 					refactorVarDecl(icu, refactoringVisitor, varDeclStatement, fragment);
+					isOtherThanNameChanged = true;
 				} else {
 					SimpleName simpleName = fragment.getName();
 					String newIdentifier = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
-					synchronized (icu) {
-						icu.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newIdentifier));
+					if (!simpleName.getIdentifier().equals(newIdentifier) && isOtherThanNameChanged) {
+						synchronized (icu) {
+							icu.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newIdentifier));
+						}
 					}
 				}
 			} else if (initializer instanceof SimpleName) {
@@ -92,9 +100,11 @@ public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void>
 				String newAssignedVarName = RefactoringUtils
 						.cleanSwingWorkerName(assignedVarSimpleName.getIdentifier());
 				SimpleName newAssignedVar = SwingWorkerASTUtils.newSimpleName(ast, newAssignedVarName);
-				
-				synchronized (icu) {
-					icu.replace(assignedVarSimpleName, newAssignedVar);
+
+				if (!assignedVarSimpleName.getIdentifier().equals(assignedVarSimpleName) && isOtherThanNameChanged) {
+					synchronized (icu) {
+						icu.replace(assignedVarSimpleName, newAssignedVar);
+					}
 				}
 			}
 
@@ -113,8 +123,10 @@ public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void>
 			}
 
 			String newVarName = RefactoringUtils.cleanSwingWorkerName(fragment.getName().getIdentifier());
-			synchronized (icu) {
-				icu.replace(fragment.getName(), SwingWorkerASTUtils.newSimpleName(ast, newVarName));
+			if (fragment.getName().getIdentifier().equals(newVarName)) {
+				synchronized (icu) {
+					icu.replace(fragment.getName(), SwingWorkerASTUtils.newSimpleName(ast, newVarName));
+				}
 			}
 
 			// Add changes to the multiple compilation units write object
@@ -136,7 +148,8 @@ public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void>
 			refactorStatefulSwingWorker(icu, refactoringVisitor, varDeclStatement, fragment);
 		} else {
 			refactorStatelessSwingWorker(icu, refactoringVisitor, varDeclStatement, fragment);
-			//refactorStatefulSwingWorker(icu, refactoringVisitor, varDeclStatement, fragment);
+			// refactorStatefulSwingWorker(icu, refactoringVisitor, varDeclStatement,
+			// fragment);
 		}
 	}
 
@@ -200,12 +213,12 @@ public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void>
 		SwingWorkerASTUtils.removeStatement(icu, varDeclStatement);
 	}
 
-	private String cleanBlock(Block block) {	
+	private String cleanBlock(Block block) {
 		if (block != null)
 			return RefactoringUtils.cleanSwingWorkerName(block.toString());
-		else 
+		else
 			return null;
-		
+
 	}
 
 }
