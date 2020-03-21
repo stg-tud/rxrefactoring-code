@@ -54,21 +54,20 @@ public class ClassInstanceCreationWorker extends GeneralWorker<TypeOutput, Void>
 
 		RefactorInfo info = input.info;
 
-		for (Map.Entry<IRewriteCompilationUnit, ClassInstanceCreation> entry : input.collector.getClassInstanceMap().entries()) {
+		for (Map.Entry<IRewriteCompilationUnit, ClassInstanceCreation> entry : input.collector.getClassInstanceMap()
+				.entries()) {
 
 			IRewriteCompilationUnit unit = entry.getKey();
 			ClassInstanceCreation classInstanceCreation = entry.getValue();
 
 			if (!isRefactoredHere(classInstanceCreation)) {
-				//This does NOT use the refactorinfo
+				// This does NOT use the refactorinfo
 				// Is handled by other workers
 				continue;
 			}
 
-			ITypeBinding typeBinding = classInstanceCreation.resolveTypeBinding();
-			
-			if (!info.shouldBeRefactored(classInstanceCreation.resolveTypeBinding())
-					&& !Types.isTypeOf(typeBinding, "javax.swing.SwingWorker")) {
+
+			if (shouldBeSkipped(classInstanceCreation, info)) {
 				summary.addSkipped("classInstanceCreation");
 				continue;
 			}
@@ -79,7 +78,7 @@ public class ClassInstanceCreationWorker extends GeneralWorker<TypeOutput, Void>
 
 			summary.addCorrect("classInstanceCreation");
 		}
-		
+
 		return null;
 	}
 
@@ -99,11 +98,11 @@ public class ClassInstanceCreationWorker extends GeneralWorker<TypeOutput, Void>
 //				MethodInvocation.class);
 //		if (methodInvocation.isPresent() && methodInvocation.get().getExpression() instanceof ClassInstanceCreation) {
 //			if (Types.isTypeOf(classInstanceCreation.resolveTypeBinding(), SwingWorkerInfo.getBinaryName())) {
-				/*
-				 * Abstract class : For anonymous swingworker classes, we need to replace
-				 * doInBackground method name with getRxObservable Scenario:
-				 * 37--KolakCC--lol-jclient : ProfileController.java StoreController.java
-				 */
+		/*
+		 * Abstract class : For anonymous swingworker classes, we need to replace
+		 * doInBackground method name with getRxObservable Scenario:
+		 * 37--KolakCC--lol-jclient : ProfileController.java StoreController.java
+		 */
 //				if (classInstanceCreation.getAnonymousClassDeclaration() != null) {
 //					List childlist = classInstanceCreation.getAnonymousClassDeclaration().bodyDeclarations();
 //					for (int k = 0; k < childlist.size(); k++) {
@@ -236,6 +235,19 @@ public class ClassInstanceCreationWorker extends GeneralWorker<TypeOutput, Void>
 			newMethodName = methodName;
 		}
 		return newMethodName;
+	}
+	
+	private boolean shouldBeSkipped(ClassInstanceCreation classInstance, RefactorInfo info) {
+		if(Types.isTypeOf(classInstance.resolveTypeBinding(), "javax.swing.SwingWorker")) {
+			if(info.shouldBeRefactored(classInstance.resolveTypeBinding())) {
+				if(classInstance.getAnonymousClassDeclaration() == null)
+					return true;
+			}else {
+				return false;
+			}
+		}
+		
+		return true;
 	}
 
 }
