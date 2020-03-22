@@ -1,6 +1,7 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.visitors;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -126,9 +127,11 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 		if (binding != null) {
 			ITypeBinding returnType = binding.getReturnType();
 
-			if (Types.isTypeOf(returnType, classBinaryName)) {
+			if (Types.isTypeOf(returnType, classBinaryName))
 				methodDeclarations.add(node);
-			}
+		
+			if(Arrays.asList(binding.getParameterTypes()).stream().anyMatch(param -> Types.isTypeOf(param, classBinaryName)))
+				methodDeclarations.add(node);
 		}
 		return true;
 	}

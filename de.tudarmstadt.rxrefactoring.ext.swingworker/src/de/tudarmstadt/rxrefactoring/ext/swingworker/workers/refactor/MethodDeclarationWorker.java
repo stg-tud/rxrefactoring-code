@@ -1,14 +1,21 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
@@ -38,24 +45,23 @@ public class MethodDeclarationWorker implements IWorker<TypeOutput, Void> {
 				.getMethodDeclarationsMap().entries()) {
 			IRewriteCompilationUnit unit = methodDeclEntry.getKey();
 			MethodDeclaration methodDeclaration = methodDeclEntry.getValue();
+			boolean isReturnTypeToRefactor = shouldNotBeSkippedBecauseOfReturnType(methodDeclaration);
+			boolean isParameterToRefactor = shouldNotBeSkippedBecauseOfParameters(methodDeclaration);
 
 			if (!info.shouldBeRefactored(methodDeclaration.resolveBinding().getDeclaringClass())
-					&& !Types.isExactTypeOf(methodDeclaration.resolveBinding().getReturnType(), SwingWorkerInfo.getBinaryName())) {
+					&& !isReturnTypeToRefactor
+					&& !isParameterToRefactor) {
 				summary.addSkipped("methodDeclarations");
 				continue;
 			}
-
-			AST ast = methodDeclaration.getAST();
-
-			Type type = methodDeclaration.getReturnType2();
-			if (type instanceof ParameterizedType) {
-				type = ((ParameterizedType) type).getType();
-			}
-			if (Types.isTypeOf(type.resolveBinding(), SwingWorkerInfo.getBinaryName())) {
-				SimpleType newType = SwingWorkerASTUtils.newSimpleType(ast, "SWSubscriber");
-				synchronized (unit) {
-					unit.replace(type, newType);
-				}
+			
+			if(isReturnTypeToRefactor && isParameterToRefactor) {
+				refactorReturnType(methodDeclaration, unit);
+				refactorParameters(methodDeclaration, unit);
+			}else if (isReturnTypeToRefactor && !isParameterToRefactor) {
+				refactorReturnType(methodDeclaration, unit);
+			} else if(isParameterToRefactor && !isReturnTypeToRefactor) {
+				refactorParameters(methodDeclaration, unit);
 			}
 
 			summary.addCorrect("methodDeclarations");
@@ -69,6 +75,78 @@ public class MethodDeclarationWorker implements IWorker<TypeOutput, Void> {
 		// TODO Auto-generated method stub
 		// only needed if RefactorScope is not implemented
 		return null;
+	}
+
+	private boolean shouldNotBeSkippedBecauseOfReturnType(MethodDeclaration decl) {
+		if (Types.isTypeOf(decl.resolveBinding().getReturnType(), SwingWorkerInfo.getBinaryName()))
+			return true;
+
+		return false;
+
+	}
+
+	private boolean shouldNotBeSkippedBecauseOfParameters(MethodDeclaration decl) {
+		List<ITypeBinding> listParameters = Arrays.asList(decl.resolveBinding().getParameterTypes());
+		boolean swingWorkerInParams = listParameters.stream()
+				.anyMatch(param -> Types.isTypeOf(param, SwingWorkerInfo.getBinaryName()));
+		if (swingWorkerInParams)
+			return true;
+
+		return false;
+
+	}
+
+	private void refactorReturnType(MethodDeclaration methodDeclaration, IRewriteCompilationUnit unit) {
+
+		AST ast = methodDeclaration.getAST();
+
+		Type type = methodDeclaration.getReturnType2();
+		if (type instanceof ParameterizedType) {
+			type = ((ParameterizedType) type).getType();
+		}
+		ITypeBinding binding = type.resolveBinding();
+		if (Types.isExactTypeOf(type.resolveBinding(), SwingWorkerInfo.getBinaryName())) {
+			SimpleType newType = SwingWorkerASTUtils.newSimpleType(ast, "SWSubscriber");
+			synchronized (unit) {
+				unit.replace(type, newType);
+			}
+		}
+
+	}
+
+	private void refactorParameters(MethodDeclaration methodDeclaration, IRewriteCompilationUnit unit) {
+
+		List<SingleVariableDeclaration> listParameters = methodDeclaration.parameters();
+		listParameters.stream().filter(param -> Types.isTypeOf(param.getType().resolveBinding(), SwingWorkerInfo.getBinaryName()))
+				.collect(Collectors.toSet());
+		for (SingleVariableDeclaration varDecl : listParameters) {
+			Type type = varDecl.getType();
+			if (type instanceof ParameterizedType) {
+						type = ((ParameterizedType) type).getType();
+			}
+			if (Types.isExactTypeOf(type.resolveBinding(), SwingWorkerInfo.getBinaryName())) {
+				SimpleType newType = SwingWorkerASTUtils.newSimpleType(type.getAST(), "SWSubscriber");
+				synchronized (unit) {
+					unit.replace(type, newType);
+				}
+
+			}
+
+		}
+
+		AST ast = methodDeclaration.getAST();
+
+		Type type = methodDeclaration.getReturnType2();
+		if (type instanceof ParameterizedType) {
+			type = ((ParameterizedType) type).getType();
+		}
+		if (Types.isTypeOf(type.resolveBinding(), SwingWorkerInfo.getBinaryName())) {
+			SimpleType newType = SwingWorkerASTUtils.newSimpleType(ast, "SWSubscriber");
+			synchronized (unit) {
+				unit.replace(type, newType);
+			}
+		}
+
 	}
 
 }

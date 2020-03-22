@@ -113,63 +113,6 @@ public class DependencyBetweenWorkerCheck implements IDependencyBetweenWorkerChe
 
 	}
 
-	/*
-	 * private void searchForMethodInvocation(Map.Entry<MethodDeclaration,
-	 * IRewriteCompilationUnit> entry, Integer i) { Map<IRewriteCompilationUnit,
-	 * String> toChangeWorker = new HashMap<IRewriteCompilationUnit, String>();
-	 * 
-	 * for (IRewriteCompilationUnit unit : units.getUnits()) { if
-	 * (toChangeWorker.keySet().contains(unit)) {
-	 * unit.setWorker(toChangeWorker.get(unit)); } if
-	 * (unit.getWorker().equals("Method Invocations")) { /*
-	 * Collection<MethodInvocation> methodInvs =
-	 * WorkerUtils.getMethodInvocationsMap().get(unit); for (MethodInvocation m :
-	 * methodInvs) { IMethodBinding bindingInv = m.resolveMethodBinding();
-	 * MethodDeclaration methodDecl = entry.getKey(); IRewriteCompilationUnit
-	 * unitDecl = entry.getValue(); IMethodBinding bindingDecl =
-	 * methodDecl.resolveBinding(); if (bindingInv.equals(bindingDecl)) {
-	 * unit.setWorker(" same" + i); toChangeWorker.put(unitDecl, "same" + i); } }
-	 */
-	/*
-	 * }
-	 * 
-	 * if (unit.getWorker().equals("Variable Declarations")) {
-	 * Collection<VariableDeclarationStatement> varDecls =
-	 * WorkerUtils.getVarDeclMap().get(unit); for (VariableDeclarationStatement st :
-	 * varDecls) {
-	 * 
-	 * VariableDeclarationFragment fragment = (VariableDeclarationFragment)
-	 * st.fragments().get(0); Expression initializer = fragment.getInitializer(); if
-	 * (initializer instanceof MethodInvocation) { MethodInvocation method =
-	 * (MethodInvocation) initializer; IMethodBinding binding =
-	 * method.resolveMethodBinding(); if
-	 * (binding.equals(entry.getKey().resolveBinding()) &&
-	 * entry.getValue().getResource().equals(unit.getResource())) {
-	 * unit.setWorker("Change of MethodDeclaration: " + i);
-	 * toChangeWorker.put(entry.getValue(), "Change of MethodDeclaration: " + i);
-	 * 
-	 * } } } }
-	 * 
-	 * if (unit.getWorker().equals("Method Declarations") &&
-	 * entry.getValue().getResource().equals(unit.getResource())) {
-	 * Collection<MethodDeclaration> methodDecls =
-	 * WorkerUtils.getMethodDeclarationsMap().get(unit); for (MethodDeclaration decl
-	 * : methodDecls) { Type type = decl.getReturnType2(); if
-	 * (Types.isTypeOf(type.resolveBinding(), "javax.swing.SwingWorker")) {
-	 * unit.setWorker("Change of MethodDeclaration: " + i); } } }
-	 * 
-	 * if (unit.getWorker().equals("Class Instances") &&
-	 * entry.getValue().getResource().equals(unit.getResource())) {
-	 * Collection<ClassInstanceCreation> classInstances =
-	 * WorkerUtils.getClassInstanceMap().get(unit); for (ClassInstanceCreation
-	 * instance : classInstances) { Optional<MethodDeclaration> methodDecl =
-	 * ASTNodes.findParent(instance, MethodDeclaration.class); if
-	 * (methodDecl.isPresent()) { if (entry.getKey().equals(methodDecl.get()))
-	 * unit.setWorker("Change of MethodDeclaration: " + i); } } } }
-	 * 
-	 * }
-	 */
-
 	public ProjectUnits searchForFieldDependencies() throws JavaModelException {
 		Map<SimpleName, IRewriteCompilationUnit> simpleNames = Maps.newHashMap();
 		for (IRewriteCompilationUnit unit : units.getUnits()) {
