@@ -62,6 +62,13 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.text.edits.MalformedTreeException;
+import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IEditorReference;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 import org.osgi.framework.Bundle;
 
 import com.google.common.collect.Sets;
@@ -289,6 +296,18 @@ public class RefactorExecution implements Runnable {
 
 	protected IProject[] getWorkspaceProjects() {
 		IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
+		
+		Display.getDefault().asyncExec(new Runnable() {
+		    @Override
+		    public void run() {
+		        IWorkbenchWindow iw = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		        IWorkbenchPage page = iw.getActivePage();
+		        String name = page.getActiveEditor().getEditorInput().getName();
+		    }
+		});
+		
+		
+
 		return workspaceRoot.getProjects();
 	}
 
@@ -441,7 +460,7 @@ public class RefactorExecution implements Runnable {
 
 	private CompositeChange[] doRefactorProject(@NonNull ProjectUnits units, @NonNull ProjectSummary projectSummary,
 			IProject project) throws IllegalArgumentException, MalformedTreeException, BadLocationException,
-			CoreException, InterruptedException {
+			CoreException, InterruptedException, JavaModelException {
 
 		// Produce the worker tree
 		WorkerTree workerTree = new WorkerTree(units, projectSummary);
@@ -475,16 +494,13 @@ public class RefactorExecution implements Runnable {
 
 	}
 
-	private Map<String, List<IRewriteCompilationUnit>> getUnitToChangeMapping(ProjectUnits units) {
+	private Map<String, List<IRewriteCompilationUnit>> getUnitToChangeMapping(ProjectUnits units)
+			throws JavaModelException {
 		if (scope.equals(RefactorScope.SEPARATE_OCCURENCES)) {
 			DependencyBetweenWorkerCheck checker = new DependencyBetweenWorkerCheck(units);
 			units = checker.regroupBecauseOfMethodDependencies();
-			try {
-				units = checker.searchForFieldDependencies();
-			} catch (JavaModelException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			units = checker.searchForFieldDependencies();
+
 		}
 		Map<String, List<IRewriteCompilationUnit>> groupedByWorker = units.getUnits().stream()
 				.filter(unit -> unit.getWorker() != null && unit.hasChanges())

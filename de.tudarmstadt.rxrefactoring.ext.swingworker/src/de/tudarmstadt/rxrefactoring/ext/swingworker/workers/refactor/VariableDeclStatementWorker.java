@@ -9,6 +9,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ITypeBinding;
@@ -104,6 +105,21 @@ public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void>
 				if (!assignedVarSimpleName.getIdentifier().equals(assignedVarSimpleName) && isOtherThanNameChanged) {
 					synchronized (icu) {
 						icu.replace(assignedVarSimpleName, newAssignedVar);
+					}
+				}
+			} else if (initializer instanceof CastExpression) {
+				CastExpression castExp = (CastExpression) initializer;
+				Type type = castExp.getType();
+				
+				if (type instanceof ParameterizedType) {
+					type = ((ParameterizedType) type).getType();
+				}
+
+				if (Types.isExactTypeOf(type.resolveBinding().getErasure(), SwingWorkerInfo.getBinaryName())) {
+					synchronized (icu) {
+						icu.addImport("de.tudarmstadt.stg.rx.swingworker.SWSubscriber");
+						SimpleType newType = SwingWorkerASTUtils.newSimpleType(ast, "SWSubscriber");
+						icu.replace(type, newType);
 					}
 				}
 			}

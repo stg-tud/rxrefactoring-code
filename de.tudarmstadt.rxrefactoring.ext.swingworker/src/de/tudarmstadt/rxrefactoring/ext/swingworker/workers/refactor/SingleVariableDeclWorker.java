@@ -45,7 +45,7 @@ public class SingleVariableDeclWorker implements IWorker<TypeOutput, Void> {
 			IRewriteCompilationUnit unit = singVarDeclEntry.getKey();
 			SingleVariableDeclaration singleVarDecl = singVarDeclEntry.getValue();
 
-			if (!info.shouldBeRefactored(singleVarDecl.getType()) || singleVarDecl.getType().resolveBinding()
+			if (!info.shouldBeRefactored(singleVarDecl.getType()) && !singleVarDecl.getType().resolveBinding()
 					.getErasure().getQualifiedName().equals("javax.swing.SwingWorker")) {
 				summary.addSkipped("variableDeclarations");
 				continue;
@@ -81,7 +81,8 @@ public class SingleVariableDeclWorker implements IWorker<TypeOutput, Void> {
 							(!isTypeName || !isTopLevel))
 						synchronized (unit) {
 							String s = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
-							unit.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, s));
+							if(!s.equals(simpleName.getIdentifier()))
+								unit.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, s));
 						}
 				}
 			}

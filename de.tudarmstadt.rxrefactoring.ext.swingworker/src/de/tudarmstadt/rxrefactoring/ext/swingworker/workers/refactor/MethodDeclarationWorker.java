@@ -1,5 +1,6 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -46,23 +47,15 @@ public class MethodDeclarationWorker implements IWorker<TypeOutput, Void> {
 			IRewriteCompilationUnit unit = methodDeclEntry.getKey();
 			MethodDeclaration methodDeclaration = methodDeclEntry.getValue();
 			boolean isReturnTypeToRefactor = shouldNotBeSkippedBecauseOfReturnType(methodDeclaration);
-			boolean isParameterToRefactor = shouldNotBeSkippedBecauseOfParameters(methodDeclaration);
 
 			if (!info.shouldBeRefactored(methodDeclaration.resolveBinding().getDeclaringClass())
-					&& !isReturnTypeToRefactor
-					&& !isParameterToRefactor) {
+					&& !isReturnTypeToRefactor) {
 				summary.addSkipped("methodDeclarations");
 				continue;
 			}
 			
-			if(isReturnTypeToRefactor && isParameterToRefactor) {
+			if (isReturnTypeToRefactor)
 				refactorReturnType(methodDeclaration, unit);
-				refactorParameters(methodDeclaration, unit);
-			}else if (isReturnTypeToRefactor && !isParameterToRefactor) {
-				refactorReturnType(methodDeclaration, unit);
-			} else if(isParameterToRefactor && !isReturnTypeToRefactor) {
-				refactorParameters(methodDeclaration, unit);
-			}
 
 			summary.addCorrect("methodDeclarations");
 		}
@@ -85,16 +78,6 @@ public class MethodDeclarationWorker implements IWorker<TypeOutput, Void> {
 
 	}
 
-	private boolean shouldNotBeSkippedBecauseOfParameters(MethodDeclaration decl) {
-		List<ITypeBinding> listParameters = Arrays.asList(decl.resolveBinding().getParameterTypes());
-		boolean swingWorkerInParams = listParameters.stream()
-				.anyMatch(param -> Types.isTypeOf(param, SwingWorkerInfo.getBinaryName()));
-		if (swingWorkerInParams)
-			return true;
-
-		return false;
-
-	}
 
 	private void refactorReturnType(MethodDeclaration methodDeclaration, IRewriteCompilationUnit unit) {
 

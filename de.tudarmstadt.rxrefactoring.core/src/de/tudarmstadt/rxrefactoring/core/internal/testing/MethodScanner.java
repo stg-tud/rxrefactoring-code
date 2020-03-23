@@ -41,7 +41,6 @@ public class MethodScanner {
 	
 	public Map<MethodDeclaration, IRewriteCompilationUnit> refactoredMethods = Maps.newHashMap();
 	private Map<MethodDeclaration, IRewriteCompilationUnit> callingMethods = Maps.newHashMap();
-	public Map<Map.Entry<MethodDeclaration, IRewriteCompilationUnit>, Map.Entry<MethodDeclaration, IRewriteCompilationUnit>> mappingCalledRefactoredMethods = Maps.newHashMap();
 	
 	
 
@@ -198,7 +197,6 @@ public class MethodScanner {
 					if (impactedMethod != null)	{
 						Optional<MethodDeclaration> parentMthd = ASTNodes.findParent(node, MethodDeclaration.class);
 						parentMthd.ifPresent(mthd -> methods.put(mthd, unit));
-						parentMthd.ifPresent(mthd -> fillMappingMap(mthd, impactedMethod, unit));
 
 					}
 					return true;
@@ -208,16 +206,6 @@ public class MethodScanner {
 
 		//We can not use immutablemap builders here because methods can potenially be added more than once (if they appear twice in a project)
 		return Collections.unmodifiableMap(methods);
-	}
-
-	private void fillMappingMap(MethodDeclaration methodRefactored, MethodDeclaration methodCalling, IRewriteCompilationUnit unitCalling) {
-		
-		
-		Map.Entry<MethodDeclaration, IRewriteCompilationUnit> callingMapEntry = new AbstractMap.SimpleEntry<MethodDeclaration, IRewriteCompilationUnit>(methodCalling, unitCalling);
-		IRewriteCompilationUnit unitRefactored = refactoredMethods.get(methodRefactored);
-		Map.Entry<MethodDeclaration, IRewriteCompilationUnit> refactoredMapEntry = new AbstractMap.SimpleEntry<MethodDeclaration, IRewriteCompilationUnit>(methodRefactored, unitRefactored);
-		mappingCalledRefactoredMethods.put(refactoredMapEntry, callingMapEntry);
-		
 	}
 
 	private static boolean methodHasChangedSignature(MethodDeclaration method, ASTRewrite rewriter) {
@@ -272,7 +260,6 @@ public class MethodScanner {
 	public void clearMaps() {
 		this.refactoredMethods.clear();
 		this.callingMethods.clear();
-		this.mappingCalledRefactoredMethods.clear();
 		
 	}
 }

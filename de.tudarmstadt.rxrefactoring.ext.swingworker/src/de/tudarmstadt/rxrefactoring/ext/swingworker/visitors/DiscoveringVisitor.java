@@ -129,9 +129,6 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 
 			if (Types.isTypeOf(returnType, classBinaryName))
 				methodDeclarations.add(node);
-		
-			if(Arrays.asList(binding.getParameterTypes()).stream().anyMatch(param -> Types.isTypeOf(param, classBinaryName)))
-				methodDeclarations.add(node);
 		}
 		return true;
 	}
