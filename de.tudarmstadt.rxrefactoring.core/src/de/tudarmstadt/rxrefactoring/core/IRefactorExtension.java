@@ -7,6 +7,9 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
+import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
+import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
+
 /**
  * This interface is for defining refactorings.
  * 
@@ -58,6 +61,10 @@ public interface IRefactorExtension {
 	default public @Nullable IPath getResourceDir() {
 		return null;
 	}
+	
+	default public DependencyBetweenWorkerCheck getDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner) {
+		return null;
+	}
 
 	/**
 	 * Specifies where the jars should be included to the refactored project.
@@ -88,5 +95,5 @@ public interface IRefactorExtension {
 	default public @NonNull ExecutorService createExecutorService() {
 		return Executors.newFixedThreadPool(4);
 	}
-
+	
 }

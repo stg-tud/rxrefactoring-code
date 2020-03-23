@@ -15,9 +15,13 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.osgi.framework.Bundle;
 
+import de.tudarmstadt.rxrefactoring.core.DependencyBetweenWorkerCheck;
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
+import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.DependencyBetweenWorkerCheckSwingWorker;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerMapsUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.RxCollector;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.AssignmentWorker;
@@ -54,6 +58,11 @@ public class SwingWorkerExtension implements IRefactorExtension {
 	@Override
 	public IPath getResourceDir() {
 		return new Path("resources/");
+	}
+	
+	@Override
+	public DependencyBetweenWorkerCheck getDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner) {
+		return new DependencyBetweenWorkerCheckSwingWorker(units, scanner);
 	}
 
 	@Override

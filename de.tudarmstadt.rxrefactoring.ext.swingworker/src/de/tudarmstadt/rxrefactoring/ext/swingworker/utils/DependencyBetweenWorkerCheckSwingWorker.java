@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core.utils;
+package de.tudarmstadt.rxrefactoring.ext.swingworker.utils;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,23 +29,21 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 import com.google.common.collect.Maps;
 
-import de.tudarmstadt.rxrefactoring.core.IDependencyBetweenWorkerCheck;
+import de.tudarmstadt.rxrefactoring.core.DependencyBetweenWorkerCheck;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
+import de.tudarmstadt.rxrefactoring.core.utils.Types;
+import de.tudarmstadt.rxrefactoring.core.utils.WorkerUtils;
 
-public class DependencyBetweenWorkerCheck implements IDependencyBetweenWorkerCheck {
+public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWorkerCheck {
 
-	private ProjectUnits units;
-
-	public DependencyBetweenWorkerCheck(ProjectUnits units) {
-		this.units = units;
+	public DependencyBetweenWorkerCheckSwingWorker(ProjectUnits units, MethodScanner scanner) {
+		super();
 
 	}
 
-	@Override
 	public ProjectUnits regroupBecauseOfMethodDependencies() {
-		MethodScanner scanner = new MethodScanner();
 		scanner.scan(units);
 
 		int i = 1;

@@ -73,14 +73,14 @@ import org.osgi.framework.Bundle;
 
 import com.google.common.collect.Sets;
 
-import de.tudarmstadt.rxrefactoring.core.IDependencyBetweenWorkerCheck;
+import de.tudarmstadt.rxrefactoring.core.DependencyBetweenWorkerCheck;
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.ProcessDialog;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectStatus;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
-import de.tudarmstadt.rxrefactoring.core.utils.DependencyBetweenWorkerCheck;
+import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.WorkerUtils;
@@ -497,9 +497,9 @@ public class RefactorExecution implements Runnable {
 	private Map<String, List<IRewriteCompilationUnit>> getUnitToChangeMapping(ProjectUnits units)
 			throws JavaModelException {
 		if (scope.equals(RefactorScope.SEPARATE_OCCURENCES)) {
-			DependencyBetweenWorkerCheck checker = new DependencyBetweenWorkerCheck(units);
-			units = checker.regroupBecauseOfMethodDependencies();
-			units = checker.searchForFieldDependencies();
+			MethodScanner scanner = new MethodScanner();
+			units = extension.getDependencyBetweenWorkerCheck(units, scanner).regroupBecauseOfMethodDependencies();
+			units = extension.getDependencyBetweenWorkerCheck(units, scanner).searchForFieldDependencies();
 
 		}
 		Map<String, List<IRewriteCompilationUnit>> groupedByWorker = units.getUnits().stream()
