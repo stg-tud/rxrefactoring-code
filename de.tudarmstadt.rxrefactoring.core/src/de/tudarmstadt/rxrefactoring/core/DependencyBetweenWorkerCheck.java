@@ -8,7 +8,7 @@ import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
 public abstract class DependencyBetweenWorkerCheck {
 	
 	protected MethodScanner scanner;
-	protected ProjectUnits units;
+	public ProjectUnits units;
 	
 	public void DepenedencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner) {
 		this.scanner = scanner;

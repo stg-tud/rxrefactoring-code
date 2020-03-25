@@ -38,20 +38,22 @@ import de.tudarmstadt.rxrefactoring.core.utils.WorkerUtils;
 
 public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWorkerCheck {
 
+	public ProjectUnits units;
+	MethodScanner scanner;
+
 	public DependencyBetweenWorkerCheckSwingWorker(ProjectUnits units, MethodScanner scanner) {
-		super();
+		this.scanner = scanner;
+		this.units = units;
 
 	}
 
 	public ProjectUnits regroupBecauseOfMethodDependencies() {
 		scanner.scan(units);
 
-		int i = 1;
 		for (Entry<MethodDeclaration, IRewriteCompilationUnit> entry : scanner.refactoredMethods.entrySet()) {
 
 			if (checkIfReturnTypeIsSwingWorkerOrExtendsFromIt(entry.getKey())) {
-				changeDependentUnitsOfChangedMethodDeclaration(entry, i);
-				i++;
+				changeDependentUnitsOfChangedMethodDeclaration(entry);
 			}
 
 		}
@@ -71,70 +73,93 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 		return false;
 	}
 
-	private void changeDependentUnitsOfChangedMethodDeclaration(Entry<MethodDeclaration, IRewriteCompilationUnit> entry,
-			Integer i) {
+	private void changeDependentUnitsOfChangedMethodDeclaration(Entry<MethodDeclaration, IRewriteCompilationUnit> entry) {
+
+		String methodName = entry.getKey().getName().getIdentifier();
 		
-		//check if we have right unit
-		if(entry.getValue().getWorker() != "Method Declarations") {
+		// check if we have right unit
+		if (entry.getValue().getWorker() != "Method Declarations") {
 			entry.setValue(searchForMethodDeclUnit(entry.getKey()));
 		}
 
 		// first change methodDeclUnit
-
 		Optional<IRewriteCompilationUnit> unit_methodDecl = units.getUnits().stream()
 				.filter(unit -> unit.equals(entry.getValue())).findFirst();
 		if (unit_methodDecl.isPresent()) {
 			units.getUnits().stream().filter(unit -> unit.equals(unit_methodDecl.get()))
-					.forEach(unit -> unit.setWorker("Change of MethodDeclaration: " + i));
+					.forEach(unit -> unit.setWorker("Change of MethodDeclaration: " + methodName));
 		}
 
 		// second change of methodInvocations result in different VaraiableDeclarations
-
 		Set<IRewriteCompilationUnit> units_VariableDecl = getVariableDeclarationsTo(entry.getKey(), entry.getValue());
 		if (!units_VariableDecl.isEmpty()) {
 			for (IRewriteCompilationUnit unit_act : units_VariableDecl) {
 				units.getUnits().stream().filter(unit -> unit.equals(unit_act))
-						.forEach(unit -> unit.setWorker("Change of MethodDeclaration: " + i));
+						.forEach(unit -> unit.setWorker("Change of MethodDeclaration: " + methodName));
 			}
 		}
 
 		// third change class instance creation in returnType
-
 		Set<IRewriteCompilationUnit> unit_classInstances = getClassInstanceCreationUnit(entry.getKey());
 		if (!unit_classInstances.isEmpty()) {
 			for (IRewriteCompilationUnit unit_act : unit_classInstances) {
 				units.getUnits().stream().filter(unit -> unit.equals(unit_act))
-						.forEach(unit -> unit.setWorker("Change of MethodDeclaration: " + i));
+						.forEach(unit -> unit.setWorker("Change of MethodDeclaration: " + methodName));
 			}
 		}
-		
+
 		// fourth change of parameters in MethodDeclaration
 		List<ITypeBinding> listParameters = Arrays.asList(entry.getKey().resolveBinding().getParameterTypes());
 		boolean swingWorkerInParams = listParameters.stream()
 				.anyMatch(param -> Types.isTypeOf(param, "javax.swing.SwingWorker"));
-		if(swingWorkerInParams){
+		if (swingWorkerInParams) {
 			// check for SingleVariableDeclarations
-			Set<IRewriteCompilationUnit> unit_singleVarDecl = getSingleVariableDeclationsForMethodParams(entry.getKey());
+			Set<IRewriteCompilationUnit> unit_singleVarDecl = getSingleVariableDeclationsForMethodParams(
+					entry.getKey());
 			if (!unit_singleVarDecl.isEmpty()) {
 				for (IRewriteCompilationUnit unit_act : unit_singleVarDecl) {
 					units.getUnits().stream().filter(unit -> unit.equals(unit_act))
-							.forEach(unit -> unit.setWorker("Change of MethodDeclaration: " + i));
+							.forEach(unit -> unit.setWorker("Change of MethodDeclaration: " + methodName));
 				}
 			}
-			
+
 		}
 
 	}
 
-	public ProjectUnits searchForFieldDependencies() throws JavaModelException{
+	public ProjectUnits searchForFieldDependencies() throws JavaModelException {
+
+		// Change simpleNames which are fields
+		Map<SimpleName, IRewriteCompilationUnit> simpleNames = changeSimpleNamesFields();
+
+		// Change also corresponding FieldDeclaration
+		for (IRewriteCompilationUnit unit : units.getUnits()) {
+			if (unit.getWorker().equals("Field Declarations")) {
+				Collection<FieldDeclaration> actFieldDecls = WorkerUtils.getFieldDeclMap().get(unit);
+				for (FieldDeclaration fieldDecl : actFieldDecls) {
+					VariableDeclarationFragment varDeclFrag = (VariableDeclarationFragment) fieldDecl.fragments()
+							.get(0);
+					String identifier = varDeclFrag.getName().getIdentifier();
+
+					if (simpleNames.keySet().stream().anyMatch(x -> x.getIdentifier().equals(identifier))
+							&& unit.getCorrespondingResource().equals(simpleNames.get(varDeclFrag.getName()).getCorrespondingResource())) {
+						unit.setWorker(unit.getWorker() + " " + identifier);
+					}
+				}
+			}
+		}
+		return units;
+
+	}
+
+	private Map<SimpleName, IRewriteCompilationUnit> changeSimpleNamesFields() {
+
 		Map<SimpleName, IRewriteCompilationUnit> simpleNames = Maps.newHashMap();
 		for (IRewriteCompilationUnit unit : units.getUnits()) {
 			if (unit.getWorker().equals("Simple Names")) {
 
 				Collection<SimpleName> actSimpleNames = WorkerUtils.getSimpleNamesMap().get(unit);
 				for (SimpleName name : actSimpleNames) {
-					// simpleNames.put(name, unit);
-					// unit.setWorker("Field Declarations " + name.getIdentifier());
 
 					IBinding binding = name.resolveBinding();
 					boolean isField = false;
@@ -152,23 +177,7 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 			}
 		}
 
-		for (IRewriteCompilationUnit unit : units.getUnits()) {
-			if (unit.getWorker().equals("Field Declarations")) {
-				Collection<FieldDeclaration> actFieldDecls = WorkerUtils.getFieldDeclMap().get(unit);
-				for (FieldDeclaration fieldDecl : actFieldDecls) {
-					VariableDeclarationFragment varDeclFrag = (VariableDeclarationFragment) fieldDecl.fragments()
-							.get(0);
-					String identifier = varDeclFrag.getName().getIdentifier();
-
-					if (simpleNames.keySet().stream().anyMatch(x -> x.getIdentifier().equals(identifier))) {
-						IRewriteCompilationUnit u = simpleNames.get(varDeclFrag.getName());
-					if (unit.getCorrespondingResource().equals(u.getCorrespondingResource()))
-								unit.setWorker(unit.getWorker() + " " + identifier);
-					}
-				}
-			}
-		}
-		return units;
+		return simpleNames;
 
 	}
 
@@ -199,24 +208,23 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 		return unitsToChange;
 
 	}
-	
-	private Set<IRewriteCompilationUnit> getSingleVariableDeclationsForMethodParams(MethodDeclaration methodDecl){
+
+	private Set<IRewriteCompilationUnit> getSingleVariableDeclationsForMethodParams(MethodDeclaration methodDecl) {
 		Set<IRewriteCompilationUnit> unitsToChange = new HashSet<IRewriteCompilationUnit>();
 		List<SingleVariableDeclaration> listParams = (List<SingleVariableDeclaration>) methodDecl.parameters();
-		listParams.stream().filter(param -> Types.isTypeOf(param.resolveBinding().getType(), "javax.swing.SwingWorker")).collect(Collectors.toList());
-		
-		for(SingleVariableDeclaration decl: listParams) {
+		listParams.stream().filter(param -> Types.isTypeOf(param.resolveBinding().getType(), "javax.swing.SwingWorker"))
+				.collect(Collectors.toList());
+
+		for (SingleVariableDeclaration decl : listParams) {
 			Optional<Entry<IRewriteCompilationUnit, SingleVariableDeclaration>> matchedEntry = WorkerUtils
-					.getSingleVarDeclMap().entries().stream().filter(e -> e.getValue().equals(decl))
-					.findFirst();
+					.getSingleVarDeclMap().entries().stream().filter(e -> e.getValue().equals(decl)).findFirst();
 			if (matchedEntry.isPresent())
 				unitsToChange.add(matchedEntry.get().getKey());
-			
+
 		}
-		
+
 		return unitsToChange;
 	}
-
 
 	private Set<IRewriteCompilationUnit> getClassInstanceCreationUnit(MethodDeclaration methodDecl) {
 		Set<IRewriteCompilationUnit> unitsToChange = new HashSet<IRewriteCompilationUnit>();
@@ -251,12 +259,11 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 
 		return unitsToChange;
 	}
-	
+
 	private IRewriteCompilationUnit searchForMethodDeclUnit(MethodDeclaration methodDecl) {
 		Optional<Entry<IRewriteCompilationUnit, MethodDeclaration>> matchedEntry = WorkerUtils
-				.getMethodDeclarationsMap().entries().stream().filter(e -> e.getValue().equals(methodDecl))
-				.findFirst();
-		
+				.getMethodDeclarationsMap().entries().stream().filter(e -> e.getValue().equals(methodDecl)).findFirst();
+
 		return matchedEntry.get().getKey();
 	}
 

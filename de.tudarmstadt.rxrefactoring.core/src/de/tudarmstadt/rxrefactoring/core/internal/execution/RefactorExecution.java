@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -475,6 +476,7 @@ public class RefactorExecution implements Runnable {
 
 		Map<String, List<IRewriteCompilationUnit>> grouped = getUnitToChangeMapping(units);
 		List<CompositeChange> changeList = new ArrayList<CompositeChange>();
+
 		// The changes of the compilation units are applied
 		Log.info(getClass(), "Write changes...");
 		for (Map.Entry<String, List<IRewriteCompilationUnit>> entry : grouped.entrySet()) {
@@ -486,21 +488,23 @@ public class RefactorExecution implements Runnable {
 			changeList.add(change);
 
 		}
-
 		WorkerUtils.clearAllMaps();
 		CompositeChange[] array = changeList.toArray(new CompositeChange[changeList.size()]);
 
 		return array;
 
 	}
+	
+	
 
 	private Map<String, List<IRewriteCompilationUnit>> getUnitToChangeMapping(ProjectUnits units)
 			throws JavaModelException {
 		if (scope.equals(RefactorScope.SEPARATE_OCCURENCES)) {
 			MethodScanner scanner = new MethodScanner();
-			units = extension.getDependencyBetweenWorkerCheck(units, scanner).regroupBecauseOfMethodDependencies();
-			units = extension.getDependencyBetweenWorkerCheck(units, scanner).searchForFieldDependencies();
+			ProjectUnits unitsChecked = extension.runDependencyBetweenWorkerCheck(units, scanner);
 
+			if(unitsChecked != null)
+				units = unitsChecked;
 		}
 		Map<String, List<IRewriteCompilationUnit>> groupedByWorker = units.getUnits().stream()
 				.filter(unit -> unit.getWorker() != null && unit.hasChanges())
@@ -509,6 +513,30 @@ public class RefactorExecution implements Runnable {
 		return groupedByWorker;
 	}
 
+	private Map.Entry<String, List<IRewriteCompilationUnit>> groupAllByWorkerAndUnit(Map.Entry<String, List<IRewriteCompilationUnit>> entry) throws JavaModelException{
+		Map<IResource, List<IRewriteCompilationUnit>> perFile = new HashMap<IResource, List<IRewriteCompilationUnit>>();
+		
+		for(IRewriteCompilationUnit unit : entry.getValue()) {
+			IResource resource = unit.getCorrespondingResource();
+			if(perFile.keySet().contains(resource)) {
+				perFile.get(resource).add(unit);
+			}
+			else {
+				perFile.put(resource, List.of(unit));
+			}
+			
+		}
+		
+		for(Map.Entry<IResource, List<IRewriteCompilationUnit>> perFileEntry: perFile.entrySet()) {
+			
+		}
+			
+			
+		
+		return entry;
+		
+	}
+	
 	protected static boolean considerProject(IProject project) {
 		try {
 			return project.isOpen() && project.hasNature(JavaCore.NATURE_ID);

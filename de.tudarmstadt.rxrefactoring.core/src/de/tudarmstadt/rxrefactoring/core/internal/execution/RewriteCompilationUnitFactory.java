@@ -25,5 +25,4 @@ public class RewriteCompilationUnitFactory { // THA umbauen, dass nicht public s
 		parser.setResolveBindings(true);
 		parser.setBindingsRecovery(true);
 	}
-
 }

@@ -6,6 +6,7 @@ import java.util.concurrent.Executors;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.jdt.core.JavaModelException;
 
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
@@ -62,9 +63,18 @@ public interface IRefactorExtension {
 		return null;
 	}
 	
-	default public DependencyBetweenWorkerCheck getDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner) {
+	/**
+	 * Runs the extension specific dependency check between units
+	 * 
+	 * @param units actual Project units
+	 * @param scanner MethodScanner
+	 * @return return new grouped units because of dependencies between changes
+	 * @throws JavaModelException
+	 */
+	default public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner) throws JavaModelException{
 		return null;
-	}
+	};
+	
 
 	/**
 	 * Specifies where the jars should be included to the refactored project.

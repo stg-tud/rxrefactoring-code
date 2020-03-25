@@ -171,6 +171,33 @@ public class WorkerUtils {
 		relevantInvocationsMap.clear();
 	}
 	
+	public static Multimap getListToWorkerName(String key) {
+		switch (key) {
+		case "Variable Declarations":
+			return varDeclMap;
+		case "Type Declarations":
+			return typeDeclMap;
+		case "Field Declarations":
+			return fieldDeclMap;
+		case "Assigments":
+			return assigmentsMap;
+		case "Simple Names":
+			return simpleNamesMap;
+		case "Class Instances":
+			return classInstanceMap;
+		case "Single Variable Declarations":
+			return singleVarDeclMap;
+		case "Method Invocations":
+			return methodInvocationsMap;
+		case "Method Declarations":
+			return methodDeclarationsMap;
+		case "Relevant Invocations":
+			return relevantInvocationsMap;
+		default:
+			throw new IllegalStateException("Key not in different Maps!");
+		}
+	}
+	
 	public static void clearKeys() {
 		allKeys.clear();
 	}

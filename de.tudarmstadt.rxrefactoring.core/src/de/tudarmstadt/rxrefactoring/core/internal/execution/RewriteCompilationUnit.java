@@ -1,7 +1,9 @@
 package de.tudarmstadt.rxrefactoring.core.internal.execution;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
@@ -43,7 +45,6 @@ import org.eclipse.text.edits.UndoEdit;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 
-
 /**
  * Bundles a compilation unit together with its AST and AST rewriter.
  * 
@@ -76,21 +77,22 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 	 * The AST that has been used to create the AST of this unit.
 	 */
 	private @Nullable AST ast;
-	
+
 	private String worker;
 
 	/**
-	 * <p>Bundles a compilation unit together with its root AST node. Use
-	 * {@link RewriteCompilationUnitFactory} to generate Bundled compilation units.</p>
-	 * <p>This class should not be instantiated by clients.</p>
+	 * <p>
+	 * Bundles a compilation unit together with its root AST node. Use
+	 * {@link RewriteCompilationUnitFactory} to generate Bundled compilation units.
+	 * </p>
+	 * <p>
+	 * This class should not be instantiated by clients.
+	 * </p>
 	 * 
-	 * @param unit
-	 *            The compilation unit.
-	 * @param rootNode
-	 *            The root node of the AST.
+	 * @param unit     The compilation unit.
+	 * @param rootNode The root node of the AST.
 	 * 
-	 * @throws NullPointerException
-	 *             if any argument is null.
+	 * @throws NullPointerException if any argument is null.
 	 * 
 	 */
 	public RewriteCompilationUnit(@NonNull ICompilationUnit unit, @NonNull ASTNode rootNode) {
@@ -103,7 +105,7 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 
 	@Override
 	public void accept(@NonNull ASTVisitor visitor) {
-		rootNode.accept(visitor);		
+		rootNode.accept(visitor);
 	}
 
 	@Override
@@ -119,8 +121,8 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 			synchronized (this) {
 				if (ast == null) {
 					ast = getRoot().getAST();
-				}					
-			}			
+				}
+			}
 		}
 		return ast;
 	}
@@ -138,12 +140,12 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 
 		return writer;
 	}
-	
+
 	@Override
 	public ASTRewrite getWriter() {
 		return writer;
 	}
-	
+
 	@Override
 	@SuppressWarnings("null")
 	public @NonNull ImportRewrite imports() {
@@ -162,17 +164,14 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 		return imports;
 	}
 
-	
 	public String getWorker() {
 		return this.worker;
 	}
-	
-	public void setWorker(String worker) { //TODO THA vielleicht auch Worker verknüpfen
+
+	public void setWorker(String worker) { // TODO THA vielleicht auch Worker verknüpfen
 		this.worker = worker;
 	}
-	
-	
-	
+
 	/**
 	 * Checks whether this compilation unit is marked for changes in either its AST
 	 * or imports.
@@ -193,7 +192,6 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 		return writer != null;
 	}
 
-
 	/**
 	 * Applies the changes marked in this compilation unit and writes them to disk.
 	 * 
@@ -203,16 +201,15 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 	protected Optional<DocumentChange> getChangedDocument()
 			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
 
-				
 		// Only do something if there are changes to the compilation unit
-		if (hasChanges()) {		
-						
+		if (hasChanges()) {
+
 //			// Initialize the document with the old source code
-			
-			Document document = new Document(getSource());					
-			
-			MultiTextEdit root = new MultiTextEdit(); 
-			
+
+			Document document = new Document(getSource());
+
+			MultiTextEdit root = new MultiTextEdit();
+
 			// Apply changes to the classes AST if there are any
 			if (hasASTChanges()) {
 				TextEdit edit = writer().rewriteAST(document, null);
@@ -223,30 +220,60 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 			if (hasImportChanges()) {
 				TextEdit edit = imports().rewriteImports(null); // We can add a progress monitor here.
 				root.addChild(edit);
-			}		
-			
+			}
+
 			DocumentChange change = new RewriteChange(unit.getElementName(), document);
-			change.setEdit(root);			
+			change.setEdit(root);
 			return Optional.of(change);
 		}
 
 		return Optional.empty();
 	}
-	
+
+	protected Optional<DocumentChange> getChangedDocumentForListOfUnits(Set<RewriteCompilationUnit> unitsToAdd)
+			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
+
+		MultiTextEdit root = new MultiTextEdit();
+		Document document = new Document(this.getSource());
+		
+		for (RewriteCompilationUnit unit : unitsToAdd) {
+			if (unit.hasChanges() && unit.getCorrespondingResource().equals(this.getCorrespondingResource())) {
+
+				// Apply changes to the classes AST if there are any
+				if (unit.hasASTChanges()) {
+					TextEdit edit = unit.writer().rewriteAST(document, null);
+					root.addChild(edit);
+				}
+
+				// Apply changes to the classes imports if there are any
+				if (unit.hasImportChanges()) {
+					TextEdit edit = unit.imports().rewriteImports(null); // We can add a progress monitor here.
+					root.addChild(edit);
+				}
+		
+			}
+		}
+		
+		DocumentChange change = new RewriteChange(unit.getElementName(), document);
+		change.setEdit(root);
+		return Optional.of(change);
+
+	}
+
 	private class RewriteChange extends DocumentChange {
 
 		public RewriteChange(String name, IDocument document) {
-			super(name, document);			
+			super(name, document);
 		}
-		
+
 		@Override
 		protected UndoEdit performEdits(final IDocument document) throws BadLocationException, MalformedTreeException {
-			//TODO: Why is the original function not working? The refactoring does not change the files.
-			
-			//Document has changed 
+			// TODO: Why is the original function not working? The refactoring does not
+			// change the files.
+
+			// Document has changed
 			UndoEdit undo = super.performEdits(document);
-			
-			
+
 //			ITextFileBufferManager fileBufferManager= FileBuffers.getTextFileBufferManager();
 //			
 //			ITextFileBuffer fileBuffer= fileBufferManager.getTextFileBuffer(document);
@@ -289,21 +316,22 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 //			}
 //			
 //			UndoEdit undo = result[0];
-							
-			//UndoEdit undo = this.getEdit().apply(document);
-			
+
+			// UndoEdit undo = this.getEdit().apply(document);
+
 			try {
-				//TODO: Replace the following lines because undo functionality is not preserved...
-				IBuffer buffer = unit.getBuffer();			
-				buffer.setContents(document.get());			
-				buffer.save(null, false);			
+				// TODO: Replace the following lines because undo functionality is not
+				// preserved...
+				IBuffer buffer = unit.getBuffer();
+				buffer.setContents(document.get());
+				buffer.save(null, false);
 				return undo;
 			} catch (JavaModelException e) {
 				e.printStackTrace();
-				throw new BadLocationException();				
+				throw new BadLocationException();
 			}
 		}
-		
+
 	}
 
 	@Override
@@ -498,14 +526,16 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 	@SuppressWarnings("deprecation")
 	@Override
 	@Deprecated
-	public void codeComplete(int offset, org.eclipse.jdt.core.ICodeCompletionRequestor requestor) throws JavaModelException {
+	public void codeComplete(int offset, org.eclipse.jdt.core.ICodeCompletionRequestor requestor)
+			throws JavaModelException {
 		unit.codeComplete(offset, requestor);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Override
 	@Deprecated
-	public void codeComplete(int offset, org.eclipse.jdt.core.ICompletionRequestor requestor) throws JavaModelException {
+	public void codeComplete(int offset, org.eclipse.jdt.core.ICompletionRequestor requestor)
+			throws JavaModelException {
 		unit.codeComplete(offset, requestor);
 
 	}
@@ -816,10 +846,10 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 	public void restore() throws JavaModelException {
 		unit.restore();
 	}
-	
+
 	@Override
-	public RewriteCompilationUnit clone() throws CloneNotSupportedException{
+	public RewriteCompilationUnit clone() throws CloneNotSupportedException {
 		return this.clone();
 	}
-	
+
 }

@@ -81,8 +81,9 @@ public class SingleVariableDeclWorker implements IWorker<TypeOutput, Void> {
 							(!isTypeName || !isTopLevel))
 						synchronized (unit) {
 							String s = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
-							if(!s.equals(simpleName.getIdentifier()))
+							if(!s.equals(simpleName.getIdentifier())) {
 								unit.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, s));
+							}
 						}
 				}
 			}

@@ -74,6 +74,7 @@ public class FieldDeclarationWorker extends GeneralWorker<TypeOutput, Void> {
 						SwingWorkerASTUtils.newSimpleName(ast, RefactoringUtils.cleanSwingWorkerName(oldIdentifier)));
 				icu.addImport("de.tudarmstadt.stg.rx.swingworker.SWSubscriber");
 			}
+			
 
 			Expression initializer = varDeclFrag.getInitializer();
 			if (initializer != null && initializer instanceof ClassInstanceCreation) {
@@ -119,6 +120,7 @@ public class FieldDeclarationWorker extends GeneralWorker<TypeOutput, Void> {
 		synchronized (icu) {
 			icu.replace(oldClassInstanceCreation, newClassInstanceCreation);
 		}
+		
 	}
 
 }

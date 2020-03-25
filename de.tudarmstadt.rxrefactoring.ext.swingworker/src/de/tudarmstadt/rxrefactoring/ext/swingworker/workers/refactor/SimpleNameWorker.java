@@ -111,7 +111,7 @@ public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
 				synchronized (icu) {
 					icu.replace(simpleName, newName);
 				}
-
+				
 				Optional<MethodDeclaration> nameInMethod = ASTNodes.findParent(simpleName, MethodDeclaration.class);
 				Optional<Assignment> assignment = ASTNodes.findParent(simpleName, Assignment.class);
 

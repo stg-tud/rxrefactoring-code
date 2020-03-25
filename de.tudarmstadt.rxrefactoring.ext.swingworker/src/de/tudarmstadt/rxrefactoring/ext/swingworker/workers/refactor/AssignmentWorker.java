@@ -86,6 +86,7 @@ public class AssignmentWorker extends GeneralWorker<TypeOutput, Void> {
 				Log.info(getClass(), "METHOD=refactor - Refactoring right variable name: " + icu.getElementName());
 				SimpleName simpleName = (SimpleName) rightHandSide;
 				String newIdentifier = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
+				
 				synchronized (icu) {
 					icu.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newIdentifier));
 				}

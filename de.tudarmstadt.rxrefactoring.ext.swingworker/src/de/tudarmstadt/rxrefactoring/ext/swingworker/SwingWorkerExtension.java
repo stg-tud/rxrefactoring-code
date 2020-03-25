@@ -13,6 +13,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.framework.Bundle;
 
 import de.tudarmstadt.rxrefactoring.core.DependencyBetweenWorkerCheck;
@@ -61,9 +62,11 @@ public class SwingWorkerExtension implements IRefactorExtension {
 	}
 	
 	@Override
-	public DependencyBetweenWorkerCheck getDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner) {
-		return new DependencyBetweenWorkerCheckSwingWorker(units, scanner);
+	public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner) throws JavaModelException{
+		DependencyCheckSwingWorker dependencyCheck = new DependencyCheckSwingWorker(units, scanner);
+		return dependencyCheck.runDependendencyCheck();
 	}
+
 
 	@Override
 	public IPath getDestinationDir() {

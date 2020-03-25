@@ -1,11 +1,6 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -14,9 +9,7 @@ import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.SimpleType;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
-import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
@@ -88,7 +81,7 @@ public class MethodDeclarationWorker implements IWorker<TypeOutput, Void> {
 			type = ((ParameterizedType) type).getType();
 		}
 		ITypeBinding binding = type.resolveBinding();
-		if (Types.isExactTypeOf(type.resolveBinding(), SwingWorkerInfo.getBinaryName())) {
+		if (Types.isExactTypeOf(binding, SwingWorkerInfo.getBinaryName())) {
 			SimpleType newType = SwingWorkerASTUtils.newSimpleType(ast, "SWSubscriber");
 			synchronized (unit) {
 				unit.replace(type, newType);
@@ -96,40 +89,4 @@ public class MethodDeclarationWorker implements IWorker<TypeOutput, Void> {
 		}
 
 	}
-
-	private void refactorParameters(MethodDeclaration methodDeclaration, IRewriteCompilationUnit unit) {
-
-		List<SingleVariableDeclaration> listParameters = methodDeclaration.parameters();
-		listParameters.stream().filter(param -> Types.isTypeOf(param.getType().resolveBinding(), SwingWorkerInfo.getBinaryName()))
-				.collect(Collectors.toSet());
-		for (SingleVariableDeclaration varDecl : listParameters) {
-			Type type = varDecl.getType();
-			if (type instanceof ParameterizedType) {
-						type = ((ParameterizedType) type).getType();
-			}
-			if (Types.isExactTypeOf(type.resolveBinding(), SwingWorkerInfo.getBinaryName())) {
-				SimpleType newType = SwingWorkerASTUtils.newSimpleType(type.getAST(), "SWSubscriber");
-				synchronized (unit) {
-					unit.replace(type, newType);
-				}
-
-			}
-
-		}
-
-		AST ast = methodDeclaration.getAST();
-
-		Type type = methodDeclaration.getReturnType2();
-		if (type instanceof ParameterizedType) {
-			type = ((ParameterizedType) type).getType();
-		}
-		if (Types.isTypeOf(type.resolveBinding(), SwingWorkerInfo.getBinaryName())) {
-			SimpleType newType = SwingWorkerASTUtils.newSimpleType(ast, "SWSubscriber");
-			synchronized (unit) {
-				unit.replace(type, newType);
-			}
-		}
-
-	}
-
 }

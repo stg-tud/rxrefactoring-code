@@ -41,7 +41,7 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.DiscoveringVisitor;
  * Adapted to new core by Camila Gonzalez on 19/01/2018
  */
 public class RxCollector implements IWorker<Void, RxCollector> {
-
+	
 	@Override
 	public @Nullable RxCollector refactor(@NonNull IProjectUnits units, @Nullable Void input,
 			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception {
@@ -296,7 +296,7 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 	public Multimap<IRewriteCompilationUnit, RelevantInvocation> getRelevantInvocations() {
 		return WorkerMapsUtils.getRelevantInvocations();
 	}
-
+	
 	@Override
 	public @Nullable RxCollector refactor(IProjectUnits units, Void input, WorkerSummary summary) throws Exception {
 		// TODO Auto-generated method stub
