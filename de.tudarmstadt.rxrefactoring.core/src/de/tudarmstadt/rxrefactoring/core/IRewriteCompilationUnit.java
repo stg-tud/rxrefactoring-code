@@ -21,6 +21,7 @@ import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import com.google.common.annotations.Beta;
 
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 
 /**
  * A compilation unit that can be directly rewritten.
@@ -73,12 +74,15 @@ public interface IRewriteCompilationUnit extends ICompilationUnit {
 	/**
 	 * Retrieves the name of the worker of this RewriteCompilationUnit
 	 */
-	public String getWorker();
+	public WorkerIdentifier getWorkerIdentifier();
 	
 	/**
 	 * Set the worker field to the name of the worker who works with this RewriteCompilationUnit
 	 */
-	public void setWorker(String worker);
+	public void setWorkerIdentifier(WorkerIdentifier worker);
+	
+	// TODO only needed for groupingBy in dependency check
+	public String getWorkerString();
 
 	/**
 	 * Retrieves the {@link ImportRewrite} used for this compilation unit.

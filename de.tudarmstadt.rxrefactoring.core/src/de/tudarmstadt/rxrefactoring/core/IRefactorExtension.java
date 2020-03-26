@@ -75,6 +75,11 @@ public interface IRefactorExtension {
 		return null;
 	};
 	
+	/**
+	 * Clears all Maps that are used in the extension
+	 */
+	default public void clearAllMaps() {};
+	
 
 	/**
 	 * Specifies where the jars should be included to the refactored project.

@@ -32,9 +32,10 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
+import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RenamingUtils;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.NamingUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
 
@@ -117,7 +118,8 @@ public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
 
 				if (nameInMethod.isPresent() && !assignment.isPresent()
 						&& scope.equals(RefactorScope.SEPARATE_OCCURENCES)) {
-						icu.setWorker(icu.getWorker() + RenamingUtils.getRightWorkerName(nameInMethod.get(), simpleName));
+						String identifier = icu.getWorkerIdentifier().getName() + NamingUtils.getRightWorkerName(nameInMethod.get(), simpleName);
+						icu.setWorkerIdentifier(new WorkerIdentifier(identifier));
 				}
 			}
 

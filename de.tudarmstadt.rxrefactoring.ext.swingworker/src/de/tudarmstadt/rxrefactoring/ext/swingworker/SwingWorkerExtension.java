@@ -67,6 +67,10 @@ public class SwingWorkerExtension implements IRefactorExtension {
 		return dependencyCheck.runDependendencyCheck();
 	}
 
+	@Override
+	public void clearAllMaps() {
+		WorkerMapsUtils.clearAllMaps();
+	};
 
 	@Override
 	public IPath getDestinationDir() {

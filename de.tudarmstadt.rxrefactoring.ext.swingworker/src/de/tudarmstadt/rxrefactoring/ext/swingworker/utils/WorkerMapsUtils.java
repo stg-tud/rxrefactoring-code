@@ -1,13 +1,8 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.utils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
-import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
@@ -16,16 +11,13 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 
-import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.RelevantInvocation;
-import de.tudarmstadt.rxrefactoring.core.utils.WorkerUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.DiscoveringVisitor;
 
-public class WorkerMapsUtils extends WorkerUtils{
-	
+public class WorkerMapsUtils extends WorkerUtils {
+
 	public static List<VariableDeclarationStatement> getNeededList(VariableDeclarationStatement t,
 			DiscoveringVisitor visitor) {
 		return visitor.getVarDeclStatements();
@@ -63,33 +55,31 @@ public class WorkerMapsUtils extends WorkerUtils{
 	public static List<RelevantInvocation> getNeededList(RelevantInvocation t, DiscoveringVisitor visitor) {
 		return visitor.getRelevantInvocations();
 	}
-	
-	public static List getNeededList(String key, DiscoveringVisitor visitor) {
-		switch (key) {
-		case "Variable Declarations":
+
+	public static List getNeededList(WorkerIdentifier identifier, DiscoveringVisitor visitor) {
+
+		if (identifier.equals(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER))
 			return visitor.getVarDeclStatements();
-		case "Type Declarations":
+		else if (identifier.equals(NamingUtils.TYPE_DECL_IDENTIFIER))
 			return visitor.getTypeDeclarations();
-		case "Field Declarations":
+		else if (identifier.equals(NamingUtils.FIELD_DECLARATION_IDENTIFIER))
 			return visitor.getFieldDeclarations();
-		case "Assigments":
+		else if (identifier.equals(NamingUtils.ASSIGNMENTS_IDENTIFIER))
 			return visitor.getAssignments();
-		case "Simple Names":
+		else if (identifier.equals(NamingUtils.SIMPLE_NAME_IDENTIFIER))
 			return visitor.getSimpleNames();
-		case "Class Instances":
+		else if (identifier.equals(NamingUtils.CLASS_INSTANCE_CREATION_IDENTIFIER))
 			return visitor.getClassInstanceCreations();
-		case "Single Variable Declarations":
+		else if (identifier.equals(NamingUtils.SINGLE_VAR_DECL_IDENTIFIER))
 			return visitor.getSingleVarDeclarations();
-		case "Method Invocations":
+		else if (identifier.equals(NamingUtils.METHOD_INVOCATION_IDENTIFIER))
 			return visitor.getMethodInvocations();
-		case "Method Declarations":
+		else if (identifier.equals(NamingUtils.METHOD_DECLARATION_IDENTIFIER))
 			return visitor.getMethodDeclarations();
-		case "Relevant Invocations":
+		else if (identifier.equals(NamingUtils.RELEVANT_INVOCATION_IDENTIFIER))
 			return visitor.getRelevantInvocations();
-		default:
+		else {
 			throw new IllegalStateException("Key not in different Maps!");
 		}
 	}
-
-
 }

@@ -44,6 +44,7 @@ import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.UndoEdit;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 
 /**
  * Bundles a compilation unit together with its AST and AST rewriter.
@@ -78,7 +79,10 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 	 */
 	private @Nullable AST ast;
 
-	private String worker;
+	/**
+	 * Gets the worker which worked with this RewriteCompilation unit or all if more are involved
+	 */
+	private WorkerIdentifier worker;
 
 	/**
 	 * <p>
@@ -164,12 +168,19 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 		return imports;
 	}
 
-	public String getWorker() {
+	@Override
+	public WorkerIdentifier getWorkerIdentifier() {
 		return this.worker;
 	}
 
-	public void setWorker(String worker) { // TODO THA vielleicht auch Worker verknüpfen
+	@Override
+	public void setWorkerIdentifier(WorkerIdentifier worker) { 
 		this.worker = worker;
+	}
+	
+	@Override
+	public String getWorkerString() {
+		return this.worker.getName();
 	}
 
 	/**

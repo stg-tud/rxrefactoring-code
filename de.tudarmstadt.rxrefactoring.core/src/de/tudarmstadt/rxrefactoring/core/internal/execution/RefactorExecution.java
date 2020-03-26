@@ -84,7 +84,7 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
 import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
-import de.tudarmstadt.rxrefactoring.core.utils.WorkerUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 
 /**
  * This class is used to run the refactoring on all workspace projects.
@@ -488,7 +488,7 @@ public class RefactorExecution implements Runnable {
 			changeList.add(change);
 
 		}
-		WorkerUtils.clearAllMaps();
+		extension.clearAllMaps();
 		CompositeChange[] array = changeList.toArray(new CompositeChange[changeList.size()]);
 
 		return array;
@@ -507,8 +507,8 @@ public class RefactorExecution implements Runnable {
 				units = unitsChecked;
 		}
 		Map<String, List<IRewriteCompilationUnit>> groupedByWorker = units.getUnits().stream()
-				.filter(unit -> unit.getWorker() != null && unit.hasChanges())
-				.collect(Collectors.groupingBy(IRewriteCompilationUnit::getWorker));
+				.filter(unit -> unit.getWorkerIdentifier().getName() != null && unit.hasChanges())
+				.collect(Collectors.groupingBy(IRewriteCompilationUnit::getWorkerString));
 
 		return groupedByWorker;
 	}

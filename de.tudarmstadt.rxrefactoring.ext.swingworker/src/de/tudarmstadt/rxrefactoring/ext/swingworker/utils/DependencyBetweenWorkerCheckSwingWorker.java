@@ -34,7 +34,7 @@ import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
-import de.tudarmstadt.rxrefactoring.core.utils.WorkerUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 
 public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWorkerCheck {
 
@@ -78,7 +78,7 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 		String methodName = entry.getKey().getName().getIdentifier();
 		
 		// check if we have right unit
-		if (entry.getValue().getWorker() != "Method Declarations") {
+		if (entry.getValue().getWorkerIdentifier().getName() != "Method Declarations") {
 			entry.setValue(searchForMethodDeclUnit(entry.getKey()));
 		}
 
@@ -87,7 +87,7 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 				.filter(unit -> unit.equals(entry.getValue())).findFirst();
 		if (unit_methodDecl.isPresent()) {
 			units.getUnits().stream().filter(unit -> unit.equals(unit_methodDecl.get()))
-					.forEach(unit -> unit.setWorker("Change of MethodDeclaration: " + methodName));
+					.forEach(unit -> unit.setWorkerIdentifier(new WorkerIdentifier("Change of MethodDeclaration: " + methodName)));
 		}
 
 		// second change of methodInvocations result in different VaraiableDeclarations
@@ -95,7 +95,7 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 		if (!units_VariableDecl.isEmpty()) {
 			for (IRewriteCompilationUnit unit_act : units_VariableDecl) {
 				units.getUnits().stream().filter(unit -> unit.equals(unit_act))
-						.forEach(unit -> unit.setWorker("Change of MethodDeclaration: " + methodName));
+						.forEach(unit -> unit.setWorkerIdentifier(new WorkerIdentifier("Change of MethodDeclaration: " + methodName)));
 			}
 		}
 
@@ -104,7 +104,7 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 		if (!unit_classInstances.isEmpty()) {
 			for (IRewriteCompilationUnit unit_act : unit_classInstances) {
 				units.getUnits().stream().filter(unit -> unit.equals(unit_act))
-						.forEach(unit -> unit.setWorker("Change of MethodDeclaration: " + methodName));
+						.forEach(unit -> unit.setWorkerIdentifier(new WorkerIdentifier("Change of MethodDeclaration: " + methodName)));
 			}
 		}
 
@@ -119,7 +119,7 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 			if (!unit_singleVarDecl.isEmpty()) {
 				for (IRewriteCompilationUnit unit_act : unit_singleVarDecl) {
 					units.getUnits().stream().filter(unit -> unit.equals(unit_act))
-							.forEach(unit -> unit.setWorker("Change of MethodDeclaration: " + methodName));
+							.forEach(unit -> unit.setWorkerIdentifier(new WorkerIdentifier("Change of MethodDeclaration: " + methodName)));
 				}
 			}
 
@@ -134,7 +134,7 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 
 		// Change also corresponding FieldDeclaration
 		for (IRewriteCompilationUnit unit : units.getUnits()) {
-			if (unit.getWorker().equals("Field Declarations")) {
+			if (unit.getWorkerIdentifier().getName().equals("Field Declarations")) {
 				Collection<FieldDeclaration> actFieldDecls = WorkerUtils.getFieldDeclMap().get(unit);
 				for (FieldDeclaration fieldDecl : actFieldDecls) {
 					VariableDeclarationFragment varDeclFrag = (VariableDeclarationFragment) fieldDecl.fragments()
@@ -143,7 +143,7 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 
 					if (simpleNames.keySet().stream().anyMatch(x -> x.getIdentifier().equals(identifier))
 							&& unit.getCorrespondingResource().equals(simpleNames.get(varDeclFrag.getName()).getCorrespondingResource())) {
-						unit.setWorker(unit.getWorker() + " " + identifier);
+						unit.setWorkerIdentifier(new WorkerIdentifier(unit.getWorkerIdentifier().getName() + " " + identifier));
 					}
 				}
 			}
@@ -156,7 +156,8 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 
 		Map<SimpleName, IRewriteCompilationUnit> simpleNames = Maps.newHashMap();
 		for (IRewriteCompilationUnit unit : units.getUnits()) {
-			if (unit.getWorker().equals("Simple Names")) {
+			;
+			if (unit.getWorkerIdentifier().getName().equals("Simple Names")) {
 
 				Collection<SimpleName> actSimpleNames = WorkerUtils.getSimpleNamesMap().get(unit);
 				for (SimpleName name : actSimpleNames) {
@@ -170,7 +171,7 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 
 					if (isField) {
 						simpleNames.put(name, unit);
-						unit.setWorker("Field Declarations " + name.getIdentifier());
+						unit.setWorkerIdentifier(new WorkerIdentifier("Field Declarations " + name.getIdentifier()));
 					}
 				}
 
@@ -186,7 +187,7 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 		Set<IRewriteCompilationUnit> unitsToChange = new HashSet<IRewriteCompilationUnit>();
 
 		Set<IRewriteCompilationUnit> units_MethodInvoc = units.stream()
-				.filter(unit -> unit.getWorker().equals("Variable Declarations"))
+				.filter(unit -> unit.getWorkerIdentifier().getName().equals("Variable Declarations"))
 				.filter(unit -> unit.getResource().equals(unit_MethodDecl.getResource())).collect(Collectors.toSet());
 
 		for (IRewriteCompilationUnit unit_Var : units_MethodInvoc) {
