@@ -41,6 +41,7 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.BadLocationException;
@@ -212,6 +213,8 @@ public class RefactorExecution implements Runnable {
 				monitor.done();
 
 				CompositeChange resultChange = new CompositeChange(extension.getName(), allChanges);
+				
+				Log.info(RefactorExecution.class, "Print summary...\n" + summary.toString());	
 
 				return resultChange;
 
@@ -297,18 +300,6 @@ public class RefactorExecution implements Runnable {
 
 	protected IProject[] getWorkspaceProjects() {
 		IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-		
-		Display.getDefault().asyncExec(new Runnable() {
-		    @Override
-		    public void run() {
-		        IWorkbenchWindow iw = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-		        IWorkbenchPage page = iw.getActivePage();
-		        String name = page.getActiveEditor().getEditorInput().getName();
-		    }
-		});
-		
-		
-
 		return workspaceRoot.getProjects();
 	}
 
@@ -410,6 +401,19 @@ public class RefactorExecution implements Runnable {
 		@SuppressWarnings("null")
 		@NonNull
 		Set<RewriteCompilationUnit> result = Sets.newConcurrentHashSet();
+		
+		getOpenFile();
+		String testName = "";
+		if(page != null) {
+			testName = page.getActiveEditor().getEditorInput().getName();
+		}
+		System.out.println(testName);
+		//IEditorPart editor = page.getActiveEditor();
+		IEditorInput editor = page.getActiveEditor().getEditorInput();
+		IJavaElement elem = JavaUI.getEditorInputJavaElement(editor);
+		if(elem instanceof ICompilationUnit) {
+			ICompilationUnit unitRoot = (ICompilationUnit) elem;
+		}
 
 		// Initializes a new thread pool.
 		ExecutorService executor = extension.createExecutorService();
@@ -513,28 +517,17 @@ public class RefactorExecution implements Runnable {
 		return groupedByWorker;
 	}
 
-	private Map.Entry<String, List<IRewriteCompilationUnit>> groupAllByWorkerAndUnit(Map.Entry<String, List<IRewriteCompilationUnit>> entry) throws JavaModelException{
-		Map<IResource, List<IRewriteCompilationUnit>> perFile = new HashMap<IResource, List<IRewriteCompilationUnit>>();
-		
-		for(IRewriteCompilationUnit unit : entry.getValue()) {
-			IResource resource = unit.getCorrespondingResource();
-			if(perFile.keySet().contains(resource)) {
-				perFile.get(resource).add(unit);
-			}
-			else {
-				perFile.put(resource, List.of(unit));
-			}
-			
-		}
-		
-		for(Map.Entry<IResource, List<IRewriteCompilationUnit>> perFileEntry: perFile.entrySet()) {
-			
-		}
-			
-			
-		
-		return entry;
-		
+	IWorkbenchPage page;
+	
+	private void getOpenFile() {
+		Display.getDefault().syncExec(new Runnable() {
+		    @Override
+		    public void run() {
+		        IWorkbenchWindow iw = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		        page = iw.getActivePage();
+		       
+		    }
+		});
 	}
 	
 	protected static boolean considerProject(IProject project) {
