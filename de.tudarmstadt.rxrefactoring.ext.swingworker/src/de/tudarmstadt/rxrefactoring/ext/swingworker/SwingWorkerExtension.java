@@ -114,7 +114,7 @@ public class SwingWorkerExtension implements IRefactorExtension {
 		return freemakerCfg;
 	}
 
-	private void setupFreemaker() {
+	protected void setupFreemaker() {
 		Bundle bundle = Platform.getBundle(getPlugInId());
 		URL pluginURL = null;
 		try {
