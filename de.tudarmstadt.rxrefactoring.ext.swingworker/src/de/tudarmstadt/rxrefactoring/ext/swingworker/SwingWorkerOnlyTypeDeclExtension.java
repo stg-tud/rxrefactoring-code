@@ -9,12 +9,20 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.TypeDeclara
 
 
 public class SwingWorkerOnlyTypeDeclExtension extends SwingWorkerExtension {
-	
+		
 	@Override
 	public @NonNull String getName() {
 		return "SwingWorker to Observable only Type Declarations";
 	}
-
+	
+	@Override
+	public boolean hasInteractiveRefactorScope() {
+		return false;
+	}
+	@Override
+	public boolean onlyScanOpenFile() {
+		return true;
+	}
 	
 	@Override
 	public void addWorkersTo(@NonNull IWorkerTree workerTree) {
@@ -24,5 +32,7 @@ public class SwingWorkerOnlyTypeDeclExtension extends SwingWorkerExtension {
 		workerTree.addWorker(collector, new TypeDeclarationWorker());
 
 	}
+	
+	
 
 }

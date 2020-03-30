@@ -63,6 +63,7 @@ public interface IRefactorExtension {
 		return null;
 	}
 	
+	
 	/**
 	 * Runs the extension specific dependency check between units
 	 * 
@@ -74,6 +75,14 @@ public interface IRefactorExtension {
 	default public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner) throws JavaModelException{
 		return null;
 	};
+	
+	/**
+	 * Checks if the all projects in the workspace or only open file should be refactored
+	 * @return false for the whole workspace and true if only the open file should be considered
+	 */
+	default boolean onlyScanOpenFile() {
+		return false;
+	}
 	
 	/**
 	 * Clears all Maps that are used in the extension
@@ -96,7 +105,7 @@ public interface IRefactorExtension {
 	 * 
 	 * @return true if it is available
 	 */
-	default public @Nullable boolean isRefactorScopeAvailable() {
+	default public @Nullable boolean hasInteractiveRefactorScope() {
 		return false; 
 	}
 

@@ -227,7 +227,7 @@ public class RefactorExecution implements Runnable {
 		RefactoringWizard wizard = new RefactoringWizard(refactoring, RefactoringWizard.WIZARD_BASED_USER_INTERFACE) {
 			@Override
 			protected void addUserInputPages() {
-				if (extension.isRefactorScopeAvailable()) {
+				if (extension.hasInteractiveRefactorScope()) {
 					UserInputWizardPage page = new UserInputWizardPage("input") {
 
 						@Override
@@ -267,6 +267,9 @@ public class RefactorExecution implements Runnable {
 					};
 					addPage(page);
 				}
+				else {
+					scope = RefactorScope.ONLY_ONE_OCCURENCE;
+				}
 
 			}
 
@@ -274,7 +277,7 @@ public class RefactorExecution implements Runnable {
 		RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
 		Shell shell = Display.getCurrent().getActiveShell();
 
-		if (!extension.isRefactorScopeAvailable()) {
+		if (!extension.hasInteractiveRefactorScope()) {
 			ProcessDialog dialog = new ProcessDialog(shell);
 
 			dialog.create();
@@ -411,9 +414,9 @@ public class RefactorExecution implements Runnable {
 		//IEditorPart editor = page.getActiveEditor();
 		IEditorInput editor = page.getActiveEditor().getEditorInput();
 		IJavaElement elem = JavaUI.getEditorInputJavaElement(editor);
-		if(elem instanceof ICompilationUnit) {
-			ICompilationUnit unitRoot = (ICompilationUnit) elem;
-		}
+		ICompilationUnit openUnit = (ICompilationUnit) elem;
+		
+
 
 		// Initializes a new thread pool.
 		ExecutorService executor = extension.createExecutorService();
@@ -441,7 +444,20 @@ public class RefactorExecution implements Runnable {
 
 								// Find the compilation units, i.e. .java source files.
 								for (ICompilationUnit unit : units) {
-									result.add(factory.from(unit));
+									try {
+										if(extension.onlyScanOpenFile()){
+											if(unit.getCorrespondingResource().equals(openUnit.getCorrespondingResource())){
+											result.add(factory.from(unit));
+											}
+										}
+										
+										else {
+											result.add(factory.from(unit));
+										}
+									} catch (JavaModelException e) {
+										// TODO Auto-generated catch block
+										e.printStackTrace();
+									}
 								}
 							});
 						}
@@ -472,7 +488,7 @@ public class RefactorExecution implements Runnable {
 		extension.addWorkersTo(workerTree);
 
 		// The workers add their changes to the bundled compilation units
-		if (extension.isRefactorScopeAvailable()) {
+		if (extension.hasInteractiveRefactorScope()) {
 			workerTree.run(extension.createExecutorService(), scope);
 		} else {
 			workerTree.run(extension.createExecutorService());
@@ -529,6 +545,7 @@ public class RefactorExecution implements Runnable {
 		    }
 		});
 	}
+	
 	
 	protected static boolean considerProject(IProject project) {
 		try {

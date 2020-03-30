@@ -78,7 +78,7 @@ public class SwingWorkerExtension implements IRefactorExtension {
 	}
 	
 	@Override
-	public  boolean isRefactorScopeAvailable() {
+	public  boolean hasInteractiveRefactorScope() {
 		return true; 
 	}
 

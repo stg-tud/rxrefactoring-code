@@ -53,13 +53,15 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 			// Collect information using visitor
 			unit.setWorkerIdentifier(new WorkerIdentifier("All"));
 			unit.accept(discoveringVisitor);
+			if(scope == null)
+				scope = RefactorScope.ONLY_ONE_OCCURENCE;
 
-			if (scope.equals(RefactorScope.WHOLE_PROJECT) || scope == null){
+			if (scope == null || scope.equals(RefactorScope.WHOLE_PROJECT)){
 				WorkerMapsUtils.fillAllMap();
 				for(Entry<WorkerIdentifier, Multimap<IRewriteCompilationUnit, ?>> m : WorkerMapsUtils.getAllMap().entries()) {		
 					m.getValue().putAll(unit, WorkerMapsUtils.getNeededList(m.getKey(), discoveringVisitor));
 				}
-			} else if (scope.equals(RefactorScope.SEPARATE_OCCURENCES)) {
+			} else if (scope.equals(RefactorScope.SEPARATE_OCCURENCES) || scope.equals(RefactorScope.ONLY_ONE_OCCURENCE)) {
 				WorkerMapsUtils.fillAllWorkerIdentifier();
 				Set<IRewriteCompilationUnit> allWorkerUnits = addWorkerUnitsToMaps(discoveringVisitor, unit);
 				newUnits.addAll(allWorkerUnits);
