@@ -51,7 +51,7 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 			// Initialize Visitor
 			DiscoveringVisitor discoveringVisitor = new DiscoveringVisitor(className);
 			// Collect information using visitor
-			unit.setWorkerIdentifier(new WorkerIdentifier("All"));
+			unit.setWorkerIdentifier(new WorkerIdentifier("All changes for " + unit.getElementName()));
 			unit.accept(discoveringVisitor);
 			if(scope == null)
 				scope = RefactorScope.ONLY_ONE_OCCURENCE;

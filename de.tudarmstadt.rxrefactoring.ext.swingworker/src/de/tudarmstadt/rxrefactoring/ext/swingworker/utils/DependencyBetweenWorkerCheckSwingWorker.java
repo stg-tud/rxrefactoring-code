@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
@@ -33,6 +35,7 @@ import de.tudarmstadt.rxrefactoring.core.DependencyBetweenWorkerCheck;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
+import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 
@@ -40,22 +43,32 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 
 	public ProjectUnits units;
 	MethodScanner scanner;
+	Integer offset;
+	Integer length;
 
-	public DependencyBetweenWorkerCheckSwingWorker(ProjectUnits units, MethodScanner scanner) {
+	public DependencyBetweenWorkerCheckSwingWorker(ProjectUnits units, MethodScanner scanner, int offset,
+			int length) {
 		this.scanner = scanner;
 		this.units = units;
+		this.offset = offset;
+		this.length = length;
 
 	}
 
 	public ProjectUnits regroupBecauseOfMethodDependencies() {
 		scanner.scan(units);
 
-		for (Entry<MethodDeclaration, IRewriteCompilationUnit> entry : scanner.refactoredMethods.entrySet()) {
+		if (offset == null && length == null) {
+			for (Entry<MethodDeclaration, IRewriteCompilationUnit> entry : scanner.refactoredMethods.entrySet()) {
 
-			if (checkIfReturnTypeIsSwingWorkerOrExtendsFromIt(entry.getKey())) {
-				changeDependentUnitsOfChangedMethodDeclaration(entry);
+				if (checkIfReturnTypeIsSwingWorkerOrExtendsFromIt(entry.getKey())) {
+					changeDependentUnitsOfChangedMethodDeclaration(entry);
+				}
+
 			}
-
+		}else {
+			
+			searchForCursorVarDecl();
 		}
 
 		scanner.clearMaps();
@@ -73,10 +86,11 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 		return false;
 	}
 
-	private void changeDependentUnitsOfChangedMethodDeclaration(Entry<MethodDeclaration, IRewriteCompilationUnit> entry) {
+	private void changeDependentUnitsOfChangedMethodDeclaration(
+			Entry<MethodDeclaration, IRewriteCompilationUnit> entry) {
 
 		String methodName = entry.getKey().getName().getIdentifier();
-		
+
 		// check if we have right unit
 		if (entry.getValue().getWorkerIdentifier().getName() != "Method Declarations") {
 			entry.setValue(searchForMethodDeclUnit(entry.getKey()));
@@ -86,16 +100,16 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 		Optional<IRewriteCompilationUnit> unit_methodDecl = units.getUnits().stream()
 				.filter(unit -> unit.equals(entry.getValue())).findFirst();
 		if (unit_methodDecl.isPresent()) {
-			units.getUnits().stream().filter(unit -> unit.equals(unit_methodDecl.get()))
-					.forEach(unit -> unit.setWorkerIdentifier(new WorkerIdentifier("Change of MethodDeclaration: " + methodName)));
+			units.getUnits().stream().filter(unit -> unit.equals(unit_methodDecl.get())).forEach(unit -> unit
+					.setWorkerIdentifier(new WorkerIdentifier("Change of MethodDeclaration: " + methodName)));
 		}
 
 		// second change of methodInvocations result in different VaraiableDeclarations
 		Set<IRewriteCompilationUnit> units_VariableDecl = getVariableDeclarationsTo(entry.getKey(), entry.getValue());
 		if (!units_VariableDecl.isEmpty()) {
 			for (IRewriteCompilationUnit unit_act : units_VariableDecl) {
-				units.getUnits().stream().filter(unit -> unit.equals(unit_act))
-						.forEach(unit -> unit.setWorkerIdentifier(new WorkerIdentifier("Change of MethodDeclaration: " + methodName)));
+				units.getUnits().stream().filter(unit -> unit.equals(unit_act)).forEach(unit -> unit
+						.setWorkerIdentifier(new WorkerIdentifier("Change of MethodDeclaration: " + methodName)));
 			}
 		}
 
@@ -103,8 +117,8 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 		Set<IRewriteCompilationUnit> unit_classInstances = getClassInstanceCreationUnit(entry.getKey());
 		if (!unit_classInstances.isEmpty()) {
 			for (IRewriteCompilationUnit unit_act : unit_classInstances) {
-				units.getUnits().stream().filter(unit -> unit.equals(unit_act))
-						.forEach(unit -> unit.setWorkerIdentifier(new WorkerIdentifier("Change of MethodDeclaration: " + methodName)));
+				units.getUnits().stream().filter(unit -> unit.equals(unit_act)).forEach(unit -> unit
+						.setWorkerIdentifier(new WorkerIdentifier("Change of MethodDeclaration: " + methodName)));
 			}
 		}
 
@@ -118,8 +132,8 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 					entry.getKey());
 			if (!unit_singleVarDecl.isEmpty()) {
 				for (IRewriteCompilationUnit unit_act : unit_singleVarDecl) {
-					units.getUnits().stream().filter(unit -> unit.equals(unit_act))
-							.forEach(unit -> unit.setWorkerIdentifier(new WorkerIdentifier("Change of MethodDeclaration: " + methodName)));
+					units.getUnits().stream().filter(unit -> unit.equals(unit_act)).forEach(unit -> unit
+							.setWorkerIdentifier(new WorkerIdentifier("Change of MethodDeclaration: " + methodName)));
 				}
 			}
 
@@ -142,8 +156,10 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 					String identifier = varDeclFrag.getName().getIdentifier();
 
 					if (simpleNames.keySet().stream().anyMatch(x -> x.getIdentifier().equals(identifier))
-							&& unit.getCorrespondingResource().equals(simpleNames.get(varDeclFrag.getName()).getCorrespondingResource())) {
-						unit.setWorkerIdentifier(new WorkerIdentifier(unit.getWorkerIdentifier().getName() + " " + identifier));
+							&& unit.getCorrespondingResource()
+									.equals(simpleNames.get(varDeclFrag.getName()).getCorrespondingResource())) {
+						unit.setWorkerIdentifier(
+								new WorkerIdentifier(unit.getWorkerIdentifier().getName() + " " + identifier));
 					}
 				}
 			}
@@ -156,7 +172,7 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 
 		Map<SimpleName, IRewriteCompilationUnit> simpleNames = Maps.newHashMap();
 		for (IRewriteCompilationUnit unit : units.getUnits()) {
-			;
+
 			if (unit.getWorkerIdentifier().getName().equals("Simple Names")) {
 
 				Collection<SimpleName> actSimpleNames = WorkerUtils.getSimpleNamesMap().get(unit);
@@ -266,6 +282,48 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 				.getMethodDeclarationsMap().entries().stream().filter(e -> e.getValue().equals(methodDecl)).findFirst();
 
 		return matchedEntry.get().getKey();
+	}
+
+	private void searchForCursorVarDecl() {
+		Set<IRewriteCompilationUnit> units_VarDecls = units.stream()
+				.filter(unit -> unit.getWorkerIdentifier().getName().equals("Variable Declarations"))
+				.collect(Collectors.toSet());
+		
+		for (IRewriteCompilationUnit unit : units_VarDecls) {
+			Collection<VariableDeclarationStatement> varDecls = WorkerUtils.getVarDeclMap().get(unit);
+			for (VariableDeclarationStatement statement : varDecls) {
+				VariableDeclarationFragment fragment = (VariableDeclarationFragment) statement.fragments().get(0);
+				String name = fragment.getName().getIdentifier();
+				Optional<MethodDeclaration> methodDeclaration = ASTNodes.findParent(statement, MethodDeclaration.class);
+				String methodNameUnit = "";
+				if (methodDeclaration.isPresent()) {
+					methodNameUnit = methodDeclaration.get().getName().getIdentifier();
+				}
+				String varName = resolveCursorPosition(unit)[1];
+				String methodName = resolveCursorPosition(unit)[0];
+				if (varName.contains(name) && methodNameUnit.equals(methodName))
+					unit.setWorkerIdentifier(new WorkerIdentifier("Cursor Method"));
+			}
+
+		}
+	}
+	
+	private String[] resolveCursorPosition(IRewriteCompilationUnit unit){
+		ICompilationUnit compUnit = (ICompilationUnit) unit;
+		IJavaElement elemMethod = null;
+		IJavaElement[] elemText = null;
+		try {
+			elemMethod = compUnit.getElementAt(offset);
+			elemText = compUnit.codeSelect(offset, length);
+		} catch (JavaModelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		String nameElemMethod = elemMethod.getElementName();
+		String nameElemText = elemText[0].getElementName();
+			
+		return new String[] {nameElemMethod, nameElemText};
+		
 	}
 
 }

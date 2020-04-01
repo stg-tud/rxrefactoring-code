@@ -6,6 +6,7 @@ import java.util.concurrent.Executors;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.JavaModelException;
 
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
@@ -72,7 +73,7 @@ public interface IRefactorExtension {
 	 * @return return new grouped units because of dependencies between changes
 	 * @throws JavaModelException
 	 */
-	default public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner) throws JavaModelException{
+	default public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner, int offset, int length) throws JavaModelException{
 		return null;
 	};
 	

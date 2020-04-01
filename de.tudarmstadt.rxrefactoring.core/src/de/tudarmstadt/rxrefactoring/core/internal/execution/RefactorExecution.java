@@ -6,10 +6,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +26,7 @@ import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
@@ -37,23 +35,32 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IMember;
+import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.TextSelection;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation;
-import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage;
 import org.eclipse.ltk.ui.refactoring.UserInputWizardPage;
-import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -66,9 +73,8 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IEditorReference;
-import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchPartSite;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.osgi.framework.Bundle;
@@ -101,6 +107,11 @@ public class RefactorExecution implements Runnable {
 	 */
 	private final IRefactorExtension extension;
 	private RefactorScope scope;
+	private IWorkbenchPage page;
+	private int offset;
+	private int length;
+	private String text;
+	private ICompilationUnit openUnit;
 
 	public RefactorExecution(IRefactorExtension env) {
 		Objects.requireNonNull(env);
@@ -213,8 +224,8 @@ public class RefactorExecution implements Runnable {
 				monitor.done();
 
 				CompositeChange resultChange = new CompositeChange(extension.getName(), allChanges);
-				
-				Log.info(RefactorExecution.class, "Print summary...\n" + summary.toString());	
+
+				Log.info(RefactorExecution.class, "Print summary...\n" + summary.toString());
 
 				return resultChange;
 
@@ -266,8 +277,7 @@ public class RefactorExecution implements Runnable {
 
 					};
 					addPage(page);
-				}
-				else {
+				} else {
 					scope = RefactorScope.ONLY_ONE_OCCURENCE;
 				}
 
@@ -404,19 +414,13 @@ public class RefactorExecution implements Runnable {
 		@SuppressWarnings("null")
 		@NonNull
 		Set<RewriteCompilationUnit> result = Sets.newConcurrentHashSet();
-		
+
 		getOpenFile();
-		String testName = "";
-		if(page != null) {
-			testName = page.getActiveEditor().getEditorInput().getName();
-		}
-		System.out.println(testName);
-		//IEditorPart editor = page.getActiveEditor();
+		
+		// IEditorPart editor = page.getActiveEditor();
 		IEditorInput editor = page.getActiveEditor().getEditorInput();
 		IJavaElement elem = JavaUI.getEditorInputJavaElement(editor);
-		ICompilationUnit openUnit = (ICompilationUnit) elem;
-		
-
+		openUnit = (ICompilationUnit) elem;
 
 		// Initializes a new thread pool.
 		ExecutorService executor = extension.createExecutorService();
@@ -435,7 +439,6 @@ public class RefactorExecution implements Runnable {
 						@SuppressWarnings("null")
 						@NonNull
 						ICompilationUnit[] units = packageFragment.getCompilationUnits();
-
 						if (units.length > 0) {
 							// Asynchronously parse units
 							executor.submit(() -> {
@@ -445,12 +448,14 @@ public class RefactorExecution implements Runnable {
 								// Find the compilation units, i.e. .java source files.
 								for (ICompilationUnit unit : units) {
 									try {
-										if(extension.onlyScanOpenFile()){
-											if(unit.getCorrespondingResource().equals(openUnit.getCorrespondingResource())){
-											result.add(factory.from(unit));
+										if (extension.onlyScanOpenFile()) {
+											
+											if (unit.getCorrespondingResource()
+													.equals(openUnit.getCorrespondingResource())) {
+												result.add(factory.from(unit));
 											}
 										}
-										
+
 										else {
 											result.add(factory.from(unit));
 										}
@@ -514,16 +519,14 @@ public class RefactorExecution implements Runnable {
 		return array;
 
 	}
-	
-	
 
 	private Map<String, List<IRewriteCompilationUnit>> getUnitToChangeMapping(ProjectUnits units)
 			throws JavaModelException {
-		if (scope.equals(RefactorScope.SEPARATE_OCCURENCES)) {
+		if (scope.equals(RefactorScope.SEPARATE_OCCURENCES) || scope.equals(RefactorScope.ONLY_ONE_OCCURENCE)) {
 			MethodScanner scanner = new MethodScanner();
-			ProjectUnits unitsChecked = extension.runDependencyBetweenWorkerCheck(units, scanner);
+			ProjectUnits unitsChecked = extension.runDependencyBetweenWorkerCheck(units, scanner, offset, length);
 
-			if(unitsChecked != null)
+			if (unitsChecked != null)
 				units = unitsChecked;
 		}
 		Map<String, List<IRewriteCompilationUnit>> groupedByWorker = units.getUnits().stream()
@@ -533,20 +536,32 @@ public class RefactorExecution implements Runnable {
 		return groupedByWorker;
 	}
 
-	IWorkbenchPage page;
-	
 	private void getOpenFile() {
 		Display.getDefault().syncExec(new Runnable() {
-		    @Override
-		    public void run() {
-		        IWorkbenchWindow iw = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-		        page = iw.getActivePage();
-		       
-		    }
+			@Override
+			public void run() {
+				IWorkbenchWindow iw = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+				page = iw.getActivePage();
+				IEditorPart editor1 = page.getActiveEditor();
+				final IWorkbenchPartSite site = editor1.getSite();
+				if (site != null) {
+					final ISelectionProvider provider = site.getSelectionProvider();
+					if (provider != null) {
+						ISelection viewSiteSelection = provider.getSelection();
+
+						if (viewSiteSelection instanceof TextSelection) {
+							final TextSelection textSelection = (TextSelection) viewSiteSelection;
+							String cursorPosition = textSelection.getText();
+							offset = textSelection.getOffset();
+							length = textSelection.getLength();
+						}
+					}
+				}
+
+			}
 		});
 	}
-	
-	
+
 	protected static boolean considerProject(IProject project) {
 		try {
 			return project.isOpen() && project.hasNature(JavaCore.NATURE_ID);
