@@ -23,6 +23,7 @@ import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.CursorRefactorOccurenceSearcher;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.DependencyBetweenWorkerCheckSwingWorker;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerMapsUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.RxCollector;
@@ -63,9 +64,16 @@ public class SwingWorkerExtension implements IRefactorExtension {
 	}
 	
 	@Override
-	public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner, int offset, int length) throws JavaModelException{
-		DependencyCheckSwingWorker dependencyCheck = new DependencyCheckSwingWorker(units, scanner, offset, length);
+	public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner) throws JavaModelException{
+		DependencyCheckSwingWorker dependencyCheck = new DependencyCheckSwingWorker(units, scanner);
 		return dependencyCheck.runDependendencyCheck();
+	}
+	
+	@Override
+	public ProjectUnits analyseCursorPosition(ProjectUnits units, int offset, int startLine) {
+		CursorRefactorOccurenceSearcher searcher = new CursorRefactorOccurenceSearcher(units, offset, startLine);
+		return searcher.searchOccurence();
+		
 	}
 
 	@Override

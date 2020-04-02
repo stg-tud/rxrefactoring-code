@@ -43,22 +43,17 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 
 	public ProjectUnits units;
 	MethodScanner scanner;
-	Integer offset;
-	Integer length;
 
-	public DependencyBetweenWorkerCheckSwingWorker(ProjectUnits units, MethodScanner scanner, int offset,
-			int length) {
+
+	public DependencyBetweenWorkerCheckSwingWorker(ProjectUnits units, MethodScanner scanner) {
 		this.scanner = scanner;
 		this.units = units;
-		this.offset = offset;
-		this.length = length;
 
 	}
 
 	public ProjectUnits regroupBecauseOfMethodDependencies() {
 		scanner.scan(units);
 
-		if (offset == null && length == null) {
 			for (Entry<MethodDeclaration, IRewriteCompilationUnit> entry : scanner.refactoredMethods.entrySet()) {
 
 				if (checkIfReturnTypeIsSwingWorkerOrExtendsFromIt(entry.getKey())) {
@@ -66,10 +61,6 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 				}
 
 			}
-		}else {
-			
-			searchForCursorVarDecl();
-		}
 
 		scanner.clearMaps();
 
@@ -283,47 +274,4 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 
 		return matchedEntry.get().getKey();
 	}
-
-	private void searchForCursorVarDecl() {
-		Set<IRewriteCompilationUnit> units_VarDecls = units.stream()
-				.filter(unit -> unit.getWorkerIdentifier().getName().equals("Variable Declarations"))
-				.collect(Collectors.toSet());
-		
-		for (IRewriteCompilationUnit unit : units_VarDecls) {
-			Collection<VariableDeclarationStatement> varDecls = WorkerUtils.getVarDeclMap().get(unit);
-			for (VariableDeclarationStatement statement : varDecls) {
-				VariableDeclarationFragment fragment = (VariableDeclarationFragment) statement.fragments().get(0);
-				String name = fragment.getName().getIdentifier();
-				Optional<MethodDeclaration> methodDeclaration = ASTNodes.findParent(statement, MethodDeclaration.class);
-				String methodNameUnit = "";
-				if (methodDeclaration.isPresent()) {
-					methodNameUnit = methodDeclaration.get().getName().getIdentifier();
-				}
-				String varName = resolveCursorPosition(unit)[1];
-				String methodName = resolveCursorPosition(unit)[0];
-				if (varName.contains(name) && methodNameUnit.equals(methodName))
-					unit.setWorkerIdentifier(new WorkerIdentifier("Cursor Method"));
-			}
-
-		}
-	}
-	
-	private String[] resolveCursorPosition(IRewriteCompilationUnit unit){
-		ICompilationUnit compUnit = (ICompilationUnit) unit;
-		IJavaElement elemMethod = null;
-		IJavaElement[] elemText = null;
-		try {
-			elemMethod = compUnit.getElementAt(offset);
-			elemText = compUnit.codeSelect(offset, length);
-		} catch (JavaModelException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		String nameElemMethod = elemMethod.getElementName();
-		String nameElemText = elemText[0].getElementName();
-			
-		return new String[] {nameElemMethod, nameElemText};
-		
-	}
-
 }

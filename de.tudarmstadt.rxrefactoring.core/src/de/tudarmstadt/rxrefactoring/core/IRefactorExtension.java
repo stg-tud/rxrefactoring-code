@@ -73,9 +73,20 @@ public interface IRefactorExtension {
 	 * @return return new grouped units because of dependencies between changes
 	 * @throws JavaModelException
 	 */
-	default public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner, int offset, int length) throws JavaModelException{
+	default public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner) throws JavaModelException{
 		return null;
 	};
+	
+	/**
+	 * Runs the check where the cursor is and what expression should be refactored
+	 * @param units Project units
+	 * @param offset cursor offset
+	 * @param startLine start of line of cursor
+	 * @return
+	 */
+	default public ProjectUnits analyseCursorPosition(ProjectUnits units, int offset, int startLine) {
+		return null;
+	}
 	
 	/**
 	 * Checks if the all projects in the workspace or only open file should be refactored

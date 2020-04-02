@@ -73,9 +73,11 @@ public class ProjectUnits implements IProjectUnits {
 	protected void addChangesTo(@NonNull CompositeChange changes)
 			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
 
+		if (units.size() > 0) {
 			units.iterator().next().getChangedDocumentForListOfUnits(units).ifPresent(doc -> {
 				changes.add(doc);
 			});
+		}
 	}
 
 	public void accept(@NonNull UnitASTVisitor visitor) {

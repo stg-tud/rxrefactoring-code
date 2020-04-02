@@ -7,6 +7,7 @@ import java.net.URL;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -112,6 +113,7 @@ public class RefactorExecution implements Runnable {
 	private int length;
 	private String text;
 	private ICompilationUnit openUnit;
+	private int startLine;
 
 	public RefactorExecution(IRefactorExtension env) {
 		Objects.requireNonNull(env);
@@ -448,11 +450,10 @@ public class RefactorExecution implements Runnable {
 								// Find the compilation units, i.e. .java source files.
 								for (ICompilationUnit unit : units) {
 									try {
-										if (extension.onlyScanOpenFile()) {
-											
+										if (extension.onlyScanOpenFile()) {		
 											if (unit.getCorrespondingResource()
 													.equals(openUnit.getCorrespondingResource())) {
-												result.add(factory.from(unit));
+												result.add(factory.from(unit));		
 											}
 										}
 
@@ -522,13 +523,32 @@ public class RefactorExecution implements Runnable {
 
 	private Map<String, List<IRewriteCompilationUnit>> getUnitToChangeMapping(ProjectUnits units)
 			throws JavaModelException {
-		if (scope.equals(RefactorScope.SEPARATE_OCCURENCES) || scope.equals(RefactorScope.ONLY_ONE_OCCURENCE)) {
+		if (scope.equals(RefactorScope.SEPARATE_OCCURENCES)) {
 			MethodScanner scanner = new MethodScanner();
-			ProjectUnits unitsChecked = extension.runDependencyBetweenWorkerCheck(units, scanner, offset, length);
-
+			ProjectUnits unitsChecked = extension.runDependencyBetweenWorkerCheck(units, scanner);
+			
 			if (unitsChecked != null)
 				units = unitsChecked;
+		
 		}
+		
+		if(scope.equals(RefactorScope.ONLY_ONE_OCCURENCE) && 
+				extension.getName().equals("SwingWorker to Observable only Variable Declarations")){
+			
+			ProjectUnits newUnits = extension.analyseCursorPosition(units, offset, startLine);
+
+			if (newUnits != null)
+				units = newUnits;
+			
+		
+			 List<IRewriteCompilationUnit> grouped =  units.getUnits().stream()
+					.filter(unit -> unit.getWorkerIdentifier().name.equals("Cursor Method"))
+					.collect(Collectors.toList());
+			 
+			return Collections.singletonMap("Cursor Method", grouped);
+			
+		}
+		
 		Map<String, List<IRewriteCompilationUnit>> groupedByWorker = units.getUnits().stream()
 				.filter(unit -> unit.getWorkerIdentifier().getName() != null && unit.hasChanges())
 				.collect(Collectors.groupingBy(IRewriteCompilationUnit::getWorkerString));
@@ -551,9 +571,9 @@ public class RefactorExecution implements Runnable {
 
 						if (viewSiteSelection instanceof TextSelection) {
 							final TextSelection textSelection = (TextSelection) viewSiteSelection;
-							String cursorPosition = textSelection.getText();
 							offset = textSelection.getOffset();
 							length = textSelection.getLength();
+							startLine = textSelection.getStartLine();
 						}
 					}
 				}
