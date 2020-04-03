@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="ASCII"?>
 <fragment:ModelFragments xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:commands="http://www.eclipse.org/ui/2010/UIModel/application/commands" xmlns:fragment="http://www.eclipse.org/ui/2010/UIModel/fragment" xmlns:menu="http://www.eclipse.org/ui/2010/UIModel/application/ui/menu" xmi:id="_xBSzgKKUEees06EUjNaWOg">
+  <imports xsi:type="commands:BindingContext" xmi:id="_aUdmIHUDEeqBn5Q8_5vy4Q" elementId="org.eclipse.ui.contexts.dialogAndWindow"/>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_9eU78KKUEees06EUjNaWOg" featurename="menuContributions" parentElementId="org.eclipse.e4.legacy.ide.application" positionInList="">
     <elements xsi:type="menu:MenuContribution" xmi:id="_D_3WUKKVEees06EUjNaWOg" elementId="de.tudarmstadt.rxrefactoring.core.menucontribution.0" positionInParent="after=org.eclipse.ui.run" parentId="org.eclipse.ui.main.menu">
       <children xsi:type="menu:Menu" xmi:id="_hEtlkKKVEees06EUjNaWOg" elementId="de.tudarmstadt.rxrefactoring.core.menu" label="RxRefactoring Plugin" iconURI="">
@@ -13,5 +14,11 @@
   </fragments>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_OYgIoKKWEees06EUjNaWOg" featurename="handlers" parentElementId="org.eclipse.e4.legacy.ide.application">
     <elements xsi:type="commands:Handler" xmi:id="_QTt4IKKWEees06EUjNaWOg" elementId="de.tudarmstadt.rxrefactoring.core.handler.about" contributionURI="bundleclass://de.tudarmstadt.rxrefactoring.core/de.tudarmstadt.rxrefactoring.core.internal.e4.AboutHandler" command="_uTR4oKKVEees06EUjNaWOg"/>
+  </fragments>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_Tx1NUHUIEeqBn5Q8_5vy4Q" featurename="bindingTables" parentElementId="org.eclipse.e4.legacy.ide.application">
+    <elements xsi:type="commands:BindingTable" xmi:id="_VVKBQHUIEeqBn5Q8_5vy4Q" elementId="de.tudarmstadt.rxrefactoring.core.bindingtable.0" bindingContext="_aUdmIHUDEeqBn5Q8_5vy4Q">
+      <tags>type:user</tags>
+      <bindings xmi:id="_YQMPAHUIEeqBn5Q8_5vy4Q" elementId="de.tudarmstadt.rxrefactoring.core.keybinding.aboutWindow" keySequence="M3+A" command="_uTR4oKKVEees06EUjNaWOg"/>
+    </elements>
   </fragments>
 </fragment:ModelFragments>
