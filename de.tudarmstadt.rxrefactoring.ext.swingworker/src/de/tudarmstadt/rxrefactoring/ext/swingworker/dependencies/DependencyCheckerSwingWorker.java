@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.swingworker.utils;
+package de.tudarmstadt.rxrefactoring.ext.swingworker.dependencies;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -31,27 +31,37 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 import com.google.common.collect.Maps;
 
-import de.tudarmstadt.rxrefactoring.core.DependencyBetweenWorkerCheck;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.dependencies.DependencyBetweenWorkerCheck;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerUtils;
 
-public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWorkerCheck {
+public class DependencyCheckerSwingWorker extends DependencyBetweenWorkerCheck {
 
 	public ProjectUnits units;
 	MethodScanner scanner;
 
 
-	public DependencyBetweenWorkerCheckSwingWorker(ProjectUnits units, MethodScanner scanner) {
+	public DependencyCheckerSwingWorker(ProjectUnits units, MethodScanner scanner) {
 		this.scanner = scanner;
 		this.units = units;
 
 	}
+	
+	public ProjectUnits runDependendencyCheck() throws JavaModelException {
+		
+		DependencyCheckerSwingWorker checker = new DependencyCheckerSwingWorker(units, scanner);
+		checker.regroupBecauseOfMethodDependencies();
+		checker.searchForFieldDependencies();
+		
+		return checker.units;
+	}
 
-	public ProjectUnits regroupBecauseOfMethodDependencies() {
+	private ProjectUnits regroupBecauseOfMethodDependencies() {
 		scanner.scan(units);
 
 			for (Entry<MethodDeclaration, IRewriteCompilationUnit> entry : scanner.refactoredMethods.entrySet()) {
@@ -132,7 +142,7 @@ public class DependencyBetweenWorkerCheckSwingWorker extends DependencyBetweenWo
 
 	}
 
-	public ProjectUnits searchForFieldDependencies() throws JavaModelException {
+	private ProjectUnits searchForFieldDependencies() throws JavaModelException {
 
 		// Change simpleNames which are fields
 		Map<SimpleName, IRewriteCompilationUnit> simpleNames = changeSimpleNamesFields();

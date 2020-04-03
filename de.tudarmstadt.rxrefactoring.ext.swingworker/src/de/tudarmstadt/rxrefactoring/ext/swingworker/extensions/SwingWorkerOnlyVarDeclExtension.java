@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.swingworker;
+package de.tudarmstadt.rxrefactoring.ext.swingworker.extensions;
 
 import org.eclipse.jdt.annotation.NonNull;
 

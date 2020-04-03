@@ -6,7 +6,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,7 +26,6 @@ import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
@@ -36,19 +34,10 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IMember;
-import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTParser;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.Type;
-import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.text.BadLocationException;
@@ -82,7 +71,6 @@ import org.osgi.framework.Bundle;
 
 import com.google.common.collect.Sets;
 
-import de.tudarmstadt.rxrefactoring.core.DependencyBetweenWorkerCheck;
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.ProcessDialog;
@@ -92,7 +80,6 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
 import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
-import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 
 /**
  * This class is used to run the refactoring on all workspace projects.
@@ -110,9 +97,6 @@ public class RefactorExecution implements Runnable {
 	private RefactorScope scope;
 	private IWorkbenchPage page;
 	private int offset;
-	private int length;
-	private String text;
-	private ICompilationUnit openUnit;
 	private int startLine;
 
 	public RefactorExecution(IRefactorExtension env) {
@@ -251,10 +235,10 @@ public class RefactorExecution implements Runnable {
 							layout.numColumns = 1;
 							layout.verticalSpacing = 3;
 							Label label = new Label(container, SWT.NULL);
-							label.setText("Choose if yout want to refactor the whole project or not!");
+							label.setText("Choose your degree of smallest possible refactoring");
 							Combo combo = new Combo(container, SWT.DROP_DOWN | SWT.BORDER);
-							combo.add("Refactor the whole project");
-							combo.add("Refactor every occurence separately");
+							combo.add("Refactor on file level");
+							combo.add("Refactor on expression level");
 							combo.addSelectionListener(new SelectionAdapter() {
 								public void widgetSelected(SelectionEvent e) {
 									if (combo.getText().equals("Refactor the whole project")) {
@@ -422,7 +406,7 @@ public class RefactorExecution implements Runnable {
 		// IEditorPart editor = page.getActiveEditor();
 		IEditorInput editor = page.getActiveEditor().getEditorInput();
 		IJavaElement elem = JavaUI.getEditorInputJavaElement(editor);
-		openUnit = (ICompilationUnit) elem;
+		ICompilationUnit openUnit = (ICompilationUnit) elem;
 
 		// Initializes a new thread pool.
 		ExecutorService executor = extension.createExecutorService();
@@ -542,10 +526,10 @@ public class RefactorExecution implements Runnable {
 			
 		
 			 List<IRewriteCompilationUnit> grouped =  units.getUnits().stream()
-					.filter(unit -> unit.getWorkerIdentifier().name.equals("Cursor Method"))
+					.filter(unit -> unit.getWorkerIdentifier().name.equals("Cursor Selection"))
 					.collect(Collectors.toList());
 			 
-			return Collections.singletonMap("Cursor Method", grouped);
+			return Collections.singletonMap("Cursor Selection", grouped);
 			
 		}
 		
@@ -572,7 +556,6 @@ public class RefactorExecution implements Runnable {
 						if (viewSiteSelection instanceof TextSelection) {
 							final TextSelection textSelection = (TextSelection) viewSiteSelection;
 							offset = textSelection.getOffset();
-							length = textSelection.getLength();
 							startLine = textSelection.getStartLine();
 						}
 					}

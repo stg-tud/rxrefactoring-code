@@ -1,22 +1,22 @@
-package de.tudarmstadt.rxrefactoring.ext.swingworker.utils;
+package de.tudarmstadt.rxrefactoring.ext.swingworker.dependencies;
 
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
-import de.tudarmstadt.rxrefactoring.core.CursorAnalysis;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.dependencies.CursorAnalysis;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerUtils;
 
 public class CursorRefactorOccurenceSearcher extends CursorAnalysis {
 
@@ -54,7 +54,7 @@ public class CursorRefactorOccurenceSearcher extends CursorAnalysis {
 				String varName = resolveCursorPosition(unit)[1];
 				String methodName = resolveCursorPosition(unit)[0];
 				if (varName.contains(name) && methodNameUnit.equals(methodName))
-					unit.setWorkerIdentifier(new WorkerIdentifier("Cursor Method"));
+					unit.setWorkerIdentifier(new WorkerIdentifier("Cursor Selection"));
 			}
 
 		}

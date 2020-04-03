@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core;
+package de.tudarmstadt.rxrefactoring.core.dependencies;
 
 import org.eclipse.jdt.core.JavaModelException;
 

@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="ASCII"?>
 <fragment:ModelFragments xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:commands="http://www.eclipse.org/ui/2010/UIModel/application/commands" xmlns:fragment="http://www.eclipse.org/ui/2010/UIModel/fragment" xmlns:menu="http://www.eclipse.org/ui/2010/UIModel/application/ui/menu" xmi:id="_zMoPINj5EeeCzMBBaSfrkA">
   <imports xsi:type="menu:Menu" xmi:id="_85_FQNj5EeeCzMBBaSfrkA" elementId="de.tudarmstadt.rxrefactoring.core.menu"/>
+  <imports xsi:type="commands:BindingContext" xmi:id="_BkXhcHWDEeqktJiYC_awVQ" elementId="org.eclipse.ui.contexts.dialogAndWindow"/>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_AkNUQNj6EeeCzMBBaSfrkA" featurename="menuContributions" parentElementId="org.eclipse.e4.legacy.ide.application">
     <elements xsi:type="menu:MenuContribution" xmi:id="_HPHGANj6EeeCzMBBaSfrkA" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.execute" positionInParent="before=de.tudarmstadt.rxrefactoring.core.menuseparator.0" parentId="de.tudarmstadt.rxrefactoring.core.menu">
       <children xsi:type="menu:Menu" xmi:id="_On6rMHA8Eeq6_YrVKBCVKA" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.menu.swingworker" label="SwingWorker ...">
-        <children xsi:type="menu:HandledMenuItem" xmi:id="_ayg_0HA8Eeq6_YrVKBCVKA" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.handledmenuitem.swingworker" label="All Worker" command="_Xc144Nj6EeeCzMBBaSfrkA"/>
-        <children xsi:type="menu:HandledMenuItem" xmi:id="_siJqUHA8Eeq6_YrVKBCVKA" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.handledmenuitem.onlytypedeclaration" label="Only Type Declaration" command="_yEwXQHA8Eeq6_YrVKBCVKA"/>
-        <children xsi:type="menu:HandledMenuItem" xmi:id="_bkOuIHQBEeqOMvyq2lQzPQ" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.handledmenuitem.onlyvariabledeclaration" label="Only Variable Declaration" command="_UhfrMHQBEeqOMvyq2lQzPQ"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_ayg_0HA8Eeq6_YrVKBCVKA" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.handledmenuitem.swingworker" label="Scan all projects in workspace" command="_Xc144Nj6EeeCzMBBaSfrkA"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_siJqUHA8Eeq6_YrVKBCVKA" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.handledmenuitem.onlytypedeclaration" label="Scan open file for Type Declaration Refactoring" command="_yEwXQHA8Eeq6_YrVKBCVKA"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_bkOuIHQBEeqOMvyq2lQzPQ" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.handledmenuitem.onlyvariabledeclaration" label="Scan cursor line for Varaible Declaration Refactoring" command="_UhfrMHQBEeqOMvyq2lQzPQ"/>
       </children>
     </elements>
   </fragments>
@@ -16,8 +17,16 @@
     <elements xsi:type="commands:Command" xmi:id="_UhfrMHQBEeqOMvyq2lQzPQ" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.command.executeOnlyVar" commandName="OnlyVar"/>
   </fragments>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_fWWy0Nj6EeeCzMBBaSfrkA" featurename="handlers" parentElementId="org.eclipse.e4.legacy.ide.application">
-    <elements xsi:type="commands:Handler" xmi:id="_hG6KcNj6EeeCzMBBaSfrkA" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.handler.execute" contributionURI="bundleclass://de.tudarmstadt.rxrefactoring.ext.swingworker/de.tudarmstadt.rxrefactoring.ext.swingworker.SwingWorkerHandler" command="_Xc144Nj6EeeCzMBBaSfrkA"/>
-    <elements xsi:type="commands:Handler" xmi:id="_3XRZwHA8Eeq6_YrVKBCVKA" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.handler.executeOnlyType" contributionURI="bundleclass://de.tudarmstadt.rxrefactoring.ext.swingworker/de.tudarmstadt.rxrefactoring.ext.swingworker.SwingWorkerOnlyTypeDeclHandler" command="_yEwXQHA8Eeq6_YrVKBCVKA"/>
-    <elements xsi:type="commands:Handler" xmi:id="_OoROAHQBEeqOMvyq2lQzPQ" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.handler.executeOnlyVar" contributionURI="bundleclass://de.tudarmstadt.rxrefactoring.ext.swingworker/de.tudarmstadt.rxrefactoring.ext.swingworker.SwingWokerOnlyVarDeclHandler" command="_UhfrMHQBEeqOMvyq2lQzPQ"/>
+    <elements xsi:type="commands:Handler" xmi:id="_hG6KcNj6EeeCzMBBaSfrkA" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.handler.execute" contributionURI="bundleclass://de.tudarmstadt.rxrefactoring.ext.swingworker/de.tudarmstadt.rxrefactoring.ext.swingworker.handler.SwingWorkerHandler" command="_Xc144Nj6EeeCzMBBaSfrkA"/>
+    <elements xsi:type="commands:Handler" xmi:id="_3XRZwHA8Eeq6_YrVKBCVKA" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.handler.executeOnlyType" contributionURI="bundleclass://de.tudarmstadt.rxrefactoring.ext.swingworker/de.tudarmstadt.rxrefactoring.ext.swingworker.handler.SwingWorkerOnlyTypeDeclHandler" command="_yEwXQHA8Eeq6_YrVKBCVKA"/>
+    <elements xsi:type="commands:Handler" xmi:id="_OoROAHQBEeqOMvyq2lQzPQ" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.handler.executeOnlyVar" contributionURI="bundleclass://de.tudarmstadt.rxrefactoring.ext.swingworker/de.tudarmstadt.rxrefactoring.ext.swingworker.handler.SwingWokerOnlyVarDeclHandler" command="_UhfrMHQBEeqOMvyq2lQzPQ"/>
+  </fragments>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_IidU8HWDEeqktJiYC_awVQ" featurename="bindingTables" parentElementId="org.eclipse.e4.legacy.ide.application">
+    <elements xsi:type="commands:BindingTable" xmi:id="_Lr7nUHWDEeqktJiYC_awVQ" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.bindingtable.SwingWorker" bindingContext="_BkXhcHWDEeqktJiYC_awVQ">
+      <tags>type:user</tags>
+      <bindings xmi:id="_NbdrQHWDEeqktJiYC_awVQ" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.keybinding.SwingWorkerAll" keySequence="M3+S" command="_Xc144Nj6EeeCzMBBaSfrkA"/>
+      <bindings xmi:id="_0Wm_UHWFEeqktJiYC_awVQ" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.keybinding.onlyType" keySequence="M3+T" command="_yEwXQHA8Eeq6_YrVKBCVKA"/>
+      <bindings xmi:id="_ovt_QHWGEeqktJiYC_awVQ" elementId="de.tudarmstadt.rxrefactoring.ext.swingworker.keybinding.onlyVar" keySequence="M3+V" command="_UhfrMHQBEeqOMvyq2lQzPQ"/>
+    </elements>
   </fragments>
 </fragment:ModelFragments>

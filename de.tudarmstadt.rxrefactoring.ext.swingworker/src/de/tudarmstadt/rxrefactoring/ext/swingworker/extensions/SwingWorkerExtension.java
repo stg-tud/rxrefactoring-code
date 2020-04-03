@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.ext.swingworker;
+package de.tudarmstadt.rxrefactoring.ext.swingworker.extensions;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,19 +12,16 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.annotation.NonNull;
-import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.JavaModelException;
 import org.osgi.framework.Bundle;
 
-import de.tudarmstadt.rxrefactoring.core.DependencyBetweenWorkerCheck;
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.CursorRefactorOccurenceSearcher;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.DependencyBetweenWorkerCheckSwingWorker;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.dependencies.CursorRefactorOccurenceSearcher;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.dependencies.DependencyCheckerSwingWorker;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerMapsUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.RxCollector;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.AssignmentWorker;
@@ -65,7 +62,7 @@ public class SwingWorkerExtension implements IRefactorExtension {
 	
 	@Override
 	public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner) throws JavaModelException{
-		DependencyCheckSwingWorker dependencyCheck = new DependencyCheckSwingWorker(units, scanner);
+		DependencyCheckerSwingWorker dependencyCheck = new DependencyCheckerSwingWorker(units, scanner);
 		return dependencyCheck.runDependendencyCheck();
 	}
 	

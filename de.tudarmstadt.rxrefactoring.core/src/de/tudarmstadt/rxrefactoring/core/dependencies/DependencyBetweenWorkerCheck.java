@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core;
+package de.tudarmstadt.rxrefactoring.core.dependencies;
 
 import org.eclipse.jdt.core.JavaModelException;
 
@@ -10,7 +10,6 @@ public abstract class DependencyBetweenWorkerCheck {
 	protected MethodScanner scanner;
 	public ProjectUnits units;
 	
-	public abstract ProjectUnits regroupBecauseOfMethodDependencies();
-	public abstract ProjectUnits searchForFieldDependencies()  throws JavaModelException;
+	public abstract ProjectUnits runDependendencyCheck() throws JavaModelException;
 
 }

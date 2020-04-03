@@ -5,7 +5,7 @@ import java.io.StringWriter;
 import java.util.Map;
 
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.SwingWorkerExtension;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.extensions.SwingWorkerExtension;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 
