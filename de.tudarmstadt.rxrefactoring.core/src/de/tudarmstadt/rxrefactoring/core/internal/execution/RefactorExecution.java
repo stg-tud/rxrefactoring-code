@@ -80,6 +80,7 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.ProjectSummary;
 import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
+import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 
 /**
  * This class is used to run the refactoring on all workspace projects.
@@ -402,7 +403,7 @@ public class RefactorExecution implements Runnable {
 		Set<RewriteCompilationUnit> result = Sets.newConcurrentHashSet();
 
 		getOpenFile();
-		
+
 		// IEditorPart editor = page.getActiveEditor();
 		IEditorInput editor = page.getActiveEditor().getEditorInput();
 		IJavaElement elem = JavaUI.getEditorInputJavaElement(editor);
@@ -434,14 +435,14 @@ public class RefactorExecution implements Runnable {
 								// Find the compilation units, i.e. .java source files.
 								for (ICompilationUnit unit : units) {
 									try {
-										if (extension.onlyScanOpenFile()) {		
+										if (extension.onlyScanOpenFile()) {
 											if (unit.getCorrespondingResource()
 													.equals(openUnit.getCorrespondingResource())) {
-												result.add(factory.from(unit));		
+												result.add(factory.from(unit));
 											}
 										}
 
-										else {
+								else {
 											result.add(factory.from(unit));
 										}
 									} catch (JavaModelException e) {
@@ -480,11 +481,13 @@ public class RefactorExecution implements Runnable {
 		// The workers add their changes to the bundled compilation units
 		if (extension.hasInteractiveRefactorScope()) {
 			workerTree.run(extension.createExecutorService(), scope);
+
 		} else {
 			workerTree.run(extension.createExecutorService());
 		}
 
 		Map<String, List<IRewriteCompilationUnit>> grouped = getUnitToChangeMapping(units);
+
 		List<CompositeChange> changeList = new ArrayList<CompositeChange>();
 
 		// The changes of the compilation units are applied
@@ -502,7 +505,6 @@ public class RefactorExecution implements Runnable {
 		CompositeChange[] array = changeList.toArray(new CompositeChange[changeList.size()]);
 
 		return array;
-
 	}
 
 	private Map<String, List<IRewriteCompilationUnit>> getUnitToChangeMapping(ProjectUnits units)
@@ -510,28 +512,30 @@ public class RefactorExecution implements Runnable {
 		if (scope.equals(RefactorScope.SEPARATE_OCCURENCES)) {
 			MethodScanner scanner = new MethodScanner();
 			ProjectUnits unitsChecked = extension.runDependencyBetweenWorkerCheck(units, scanner);
-			
+
 			if (unitsChecked != null)
 				units = unitsChecked;
-		
+
 		}
-		
-		if(scope.equals(RefactorScope.ONLY_ONE_OCCURENCE) && 
-				extension.getName().equals("SwingWorker to Observable only Variable Declarations")){
-			
+
+		if (scope.equals(RefactorScope.ONLY_ONE_OCCURENCE)
+				&& extension.getName().equals("SwingWorker to Observable only Variable Declarations")) {
+
 			ProjectUnits newUnits = extension.analyseCursorPosition(units, offset, startLine);
 
 			if (newUnits != null)
 				units = newUnits;
-			
-		
-			 List<IRewriteCompilationUnit> grouped =  units.getUnits().stream()
+
+			List<IRewriteCompilationUnit> grouped = units.getUnits().stream()
 					.filter(unit -> unit.getWorkerIdentifier().name.equals("Cursor Selection"))
 					.collect(Collectors.toList());
-			 
+
 			return Collections.singletonMap("Cursor Selection", grouped);
-			
+
 		}
+		
+		if(units.getUnits().stream().anyMatch(u -> u.getWorkerIdentifier() == null))
+			units.getUnits().stream().forEach(e-> e.setWorkerIdentifier(new WorkerIdentifier("Per File")));
 		
 		Map<String, List<IRewriteCompilationUnit>> groupedByWorker = units.getUnits().stream()
 				.filter(unit -> unit.getWorkerIdentifier().getName() != null && unit.hasChanges())

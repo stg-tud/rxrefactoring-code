@@ -54,11 +54,10 @@ public class DependencyCheckerSwingWorker extends DependencyBetweenWorkerCheck {
 	
 	public ProjectUnits runDependendencyCheck() throws JavaModelException {
 		
-		DependencyCheckerSwingWorker checker = new DependencyCheckerSwingWorker(units, scanner);
-		checker.regroupBecauseOfMethodDependencies();
-		checker.searchForFieldDependencies();
+		regroupBecauseOfMethodDependencies();
+		searchForFieldDependencies();
 		
-		return checker.units;
+		return units;
 	}
 
 	private ProjectUnits regroupBecauseOfMethodDependencies() {

@@ -35,7 +35,7 @@ public class ProjectUnits implements IProjectUnits {
 
 	private final @NonNull Set<RewriteCompilationUnit> units;
 
-	protected ProjectUnits(@NonNull IJavaProject project, @NonNull Set<RewriteCompilationUnit> units) {
+	public ProjectUnits(@NonNull IJavaProject project, @NonNull Set<RewriteCompilationUnit> units) {
 		Objects.requireNonNull(units, "The initial units can not be null");
 
 		this.project = project;
