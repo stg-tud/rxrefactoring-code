@@ -289,14 +289,6 @@ public class SubClassAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void
 	
 	}
 
-	@Override
-	public Void refactor(IProjectUnits units, AsyncTaskCollector input, WorkerSummary summary, RefactorScope scope)
-			throws Exception {
-		// TODO Auto-generated method stub
-		// only needed if RefactorScope is implemented in this extension
-		return null;
-	}
-	
 //	private void replaceInstanceCreations(IRewriteCompilationUnit unit, InnerClassBuilder builder, TypeDeclaration oldClass, ASTNode root) {
 //		
 //		

@@ -599,13 +599,4 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 		}
 		return false;
 	}
-
-	@Override
-	public @Nullable PreconditionWorker refactor(IProjectUnits units, SubclassInstantiationCollector input,
-			WorkerSummary summary, RefactorScope scope) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-
 }

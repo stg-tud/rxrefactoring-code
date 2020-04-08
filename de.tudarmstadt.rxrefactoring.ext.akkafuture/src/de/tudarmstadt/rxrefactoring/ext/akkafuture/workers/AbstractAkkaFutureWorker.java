@@ -52,13 +52,6 @@ public abstract class AbstractAkkaFutureWorker<CollectorType, RefactorType> impl
 
 		return null;
 	}
-	
-	@Override
-	public Void refactor(IProjectUnits units, CollectorType collector, WorkerSummary summary, RefactorScope scope) throws Exception {
-		
-		// only needed if RefactorScope is implemented in this extension
-		return null;
-	}
 
 	protected void addObservableImport(IRewriteCompilationUnit unit) {
 		unit.addImport("rx.Observable");

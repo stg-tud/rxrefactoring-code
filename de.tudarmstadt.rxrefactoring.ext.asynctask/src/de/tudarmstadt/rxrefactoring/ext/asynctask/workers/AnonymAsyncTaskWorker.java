@@ -585,13 +585,6 @@ public class AnonymAsyncTaskWorker implements IWorker<AsyncTaskCollector, Void>,
 
 
 
-	@Override
-	public Void refactor(IProjectUnits units, AsyncTaskCollector input, WorkerSummary summary, RefactorScope scope)
-			throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 //	private AnonymousClassBuilder observableBuilder(AsyncTaskWrapper asyncTask, UnitWriter writer,
 //			SubscriberHolder subscriberHolder) {
 //

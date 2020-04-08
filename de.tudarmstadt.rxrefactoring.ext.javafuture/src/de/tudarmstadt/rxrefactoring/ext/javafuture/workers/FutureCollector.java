@@ -304,13 +304,4 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 	public boolean isGetter(MethodInvocation methodInvocation) {
 		return (collectionGetters.containsValue(methodInvocation));
 	}
-
-	@Override
-	public @Nullable FutureCollector refactor(@NonNull IProjectUnits units, @Nullable PreconditionWorker input,
-			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception {
-		// TODO Auto-generated method stub
-		// only if RefactorScope is implemented in extension
-		return null;
-	}
-
 }

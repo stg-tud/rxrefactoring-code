@@ -185,13 +185,4 @@ public class SubclassInstantiationCollector implements IWorker<InstantiationColl
 		}
 
 	}
-
-	@Override
-	public @Nullable SubclassInstantiationCollector refactor(@NonNull IProjectUnits units,
-			@Nullable InstantiationCollector input, @NonNull WorkerSummary summary, RefactorScope scope)
-			throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }

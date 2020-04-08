@@ -243,13 +243,5 @@ public class InstantiationCollector implements IWorker<Void, InstantiationCollec
 		}
 		return true;
 	}
-
-	@Override
-	public InstantiationCollector refactor(IProjectUnits units, Void input, WorkerSummary summary, RefactorScope scope)
-			throws Exception {
-		// TODO Auto-generated method stub
-		// Only needed if RefactorScope is implemented in this extension
-		return null;
-	}
 }
 

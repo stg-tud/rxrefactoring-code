@@ -165,12 +165,4 @@ public class UseDefWorker implements IWorker<Void, Map<ASTNode, UseDef>> {
 			});
 		}
 	}
-
-	@Override
-	public @Nullable Map<ASTNode, UseDef> refactor(IProjectUnits units, Void input, WorkerSummary summary,
-			RefactorScope scope) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }

@@ -11,6 +11,7 @@ import org.eclipse.jdt.core.JavaModelException;
 
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 
 /**
  * This interface is for defining refactorings.
@@ -19,6 +20,14 @@ import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
  *
  */
 public interface IRefactorExtension {
+	
+	
+	default public RefactorScope getRefactorScope() {
+		return RefactorScope.NO_SCOPE;
+	}
+	
+	default void setRefactorScope(RefactorScope scope) {};
+		
 
 	/**
 	 * Provides the name of the extension.

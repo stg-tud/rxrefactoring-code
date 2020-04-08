@@ -311,12 +311,4 @@ public class InstantiationCollector implements IWorker<Map<ASTNode, UseDef>, Ins
 		}	
 		return true;
 	}
-
-	@Override
-	public @Nullable InstantiationCollector refactor(IProjectUnits units, Map<ASTNode, UseDef> input,
-			WorkerSummary summary, RefactorScope scope) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }

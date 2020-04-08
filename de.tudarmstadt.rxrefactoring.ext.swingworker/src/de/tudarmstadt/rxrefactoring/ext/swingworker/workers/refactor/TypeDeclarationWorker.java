@@ -55,7 +55,7 @@ public class TypeDeclarationWorker extends GeneralWorker<RxCollector, TypeOutput
 
 	@Override
 	public @Nullable TypeOutput refactor(@NonNull IProjectUnits units, @Nullable RxCollector input,
-			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception {
+			@NonNull WorkerSummary summary) throws Exception {
 
 		RefactorInfo info = new RefactorInfo();
 

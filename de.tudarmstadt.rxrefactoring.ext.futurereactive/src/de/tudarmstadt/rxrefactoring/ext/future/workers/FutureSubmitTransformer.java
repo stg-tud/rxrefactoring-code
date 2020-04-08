@@ -139,13 +139,4 @@ public class FutureSubmitTransformer implements IWorker<Multimap<IRewriteCompila
 		
 		return null;
 	}
-
-	@Override
-	public @Nullable Void refactor(IProjectUnits units, Multimap<IRewriteCompilationUnit, MethodInvocation> input,
-			WorkerSummary summary, RefactorScope scope) throws Exception {
-		// TODO Auto-generated method stub
-		// only needed if RefactorScope is implemented in extension
-		return null;
-	}
-
 }

@@ -1,13 +1,11 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
@@ -26,7 +24,6 @@ import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObservableModel;
@@ -51,7 +48,7 @@ public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void>
 
 	@Override
 	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,
-			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception {
+			@NonNull WorkerSummary summary) throws Exception {
 
 		RefactorInfo info = input.info;
 

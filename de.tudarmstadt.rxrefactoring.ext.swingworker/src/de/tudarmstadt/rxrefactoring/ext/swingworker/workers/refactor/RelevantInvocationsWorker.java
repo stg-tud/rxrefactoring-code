@@ -24,7 +24,7 @@ public class RelevantInvocationsWorker implements IWorker<TypeOutput, Void> {
 
 	@Override
 	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,
-			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception {
+			@NonNull WorkerSummary summary) throws Exception {
 
 		RefactorInfo info = input.info;
 
@@ -65,12 +65,4 @@ public class RelevantInvocationsWorker implements IWorker<TypeOutput, Void> {
 
 		return m;
 	}
-
-	@Override
-	public @Nullable Void refactor(IProjectUnits units, TypeOutput input, WorkerSummary summary) throws Exception {
-		// TODO Auto-generated method stub
-		// only needed if RefactorScope is not implemented
-		return null;
-	}
-
 }

@@ -59,13 +59,4 @@ public class TemplateWorker implements IWorker<TemplateCollector, Void>{
 		}
 		return null;
 	}
-
-	@Override
-	public @Nullable Void refactor(IProjectUnits units, TemplateCollector input, WorkerSummary summary,
-			RefactorScope scope) throws Exception {
-		// TODO Auto-generated method stub
-		//only needed if RefactorScope is implemented in this extension
-		return null;
-	}
-
 }

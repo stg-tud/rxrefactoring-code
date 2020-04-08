@@ -1,29 +1,16 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.Assignment;
-import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
-
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
@@ -33,9 +20,9 @@ import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.NamingUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.NamingUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
 
@@ -45,15 +32,13 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
  * Adapted to new core by Camila Gonzalez on 24/01/2018
  */
 public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
+	
 	@Override
 	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,
-			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception {
+			@NonNull WorkerSummary summary) throws Exception {
 
 		RefactorInfo info = input.info;
-
-		Map<MethodDeclaration, Map.Entry<IRewriteCompilationUnit, SimpleName>> methods = new HashMap<MethodDeclaration, Map.Entry<IRewriteCompilationUnit, SimpleName>>();
-		Map<MethodDeclaration, List<SimpleName>> list = new HashMap<>();
-		int counter = 1;
+		
 		for (Map.Entry<IRewriteCompilationUnit, SimpleName> simpleNameEntry : input.collector.getSimpleNamesMap()
 				.entries()) {
 			IRewriteCompilationUnit icu = simpleNameEntry.getKey();
@@ -117,7 +102,7 @@ public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
 				Optional<Assignment> assignment = ASTNodes.findParent(simpleName, Assignment.class);
 
 				if (nameInMethod.isPresent() && !assignment.isPresent()
-						&& scope.equals(RefactorScope.SEPARATE_OCCURENCES)) {
+						&& input.collector.scope.equals(RefactorScope.SEPARATE_OCCURENCES)) {
 						String identifier = icu.getWorkerIdentifier().getName() + NamingUtils.getRightWorkerName(nameInMethod.get(), simpleName);
 						icu.setWorkerIdentifier(new WorkerIdentifier(identifier));
 				}
@@ -144,12 +129,5 @@ public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
 	 * 
 	 * }
 	 */
-
-	@Override
-	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,
-			@NonNull WorkerSummary summary) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 }

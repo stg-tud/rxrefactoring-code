@@ -50,7 +50,7 @@ public class ClassInstanceCreationWorker extends GeneralWorker<TypeOutput, Void>
 
 	@Override
 	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,
-			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception {
+			@NonNull WorkerSummary summary) throws Exception {
 
 		RefactorInfo info = input.info;
 

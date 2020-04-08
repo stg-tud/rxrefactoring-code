@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.EnumSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,6 +21,7 @@ import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.dependencies.CursorRefactorOccurenceSearcher;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.dependencies.DependencyCheckerSwingWorker;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerMapsUtils;
@@ -44,7 +46,19 @@ import freemarker.template.TemplateExceptionHandler;
  * Created: 18/01/2018
  */
 public class SwingWorkerExtension implements IRefactorExtension {
-
+	
+	RefactorScope scope;
+	
+	@Override
+	public RefactorScope getRefactorScope() {
+		return scope;
+	}
+	
+	@Override
+	public void setRefactorScope(RefactorScope scope) {
+		this.scope = scope;
+	}
+	
 	@Override
 	public @NonNull String getName() {
 		return "SwingWorker to Observable Test";
@@ -91,7 +105,7 @@ public class SwingWorkerExtension implements IRefactorExtension {
 	@Override
 	public void addWorkersTo(@NonNull IWorkerTree workerTree) {
 		setupFreemaker();
-		IWorkerRef<Void, RxCollector> collector = workerTree.addWorker(new RxCollector());
+		IWorkerRef<Void, RxCollector> collector = workerTree.addWorker(new RxCollector(getRefactorScope()));
 
 		IWorkerRef<RxCollector, TypeOutput> typeWorker = workerTree.addWorker(collector, new TypeDeclarationWorker());
 

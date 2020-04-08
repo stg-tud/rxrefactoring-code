@@ -68,13 +68,4 @@ public class TemplateCollector implements IWorker<TemplatePreconditionWorker, Te
 		}
 		
 	}
-
-	@Override
-	public @Nullable TemplateCollector refactor(IProjectUnits units, TemplatePreconditionWorker input,
-			WorkerSummary summary, RefactorScope scope) throws Exception {
-		// TODO Auto-generated method stub
-		//only needed if RefactorScope is implemented in this extension
-		return null;
-	}
-
 }

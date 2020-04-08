@@ -1,5 +1,7 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
 
+import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -41,9 +43,15 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.DiscoveringVisitor;
  */
 public class RxCollector implements IWorker<Void, RxCollector> {
 	
+	public RefactorScope scope;
+	
+	public RxCollector(RefactorScope scope) {
+		this.scope = scope;
+	}
+	
 	@Override
 	public @Nullable RxCollector refactor(@NonNull IProjectUnits units, @Nullable Void input,
-			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception {
+			@NonNull WorkerSummary summary) throws Exception {
 		String className = SwingWorkerInfo.getBinaryName();
 		Set<IRewriteCompilationUnit> newUnits = Sets.newConcurrentHashSet();
 
@@ -279,13 +287,6 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 
 	public Multimap<IRewriteCompilationUnit, RelevantInvocation> getRelevantInvocations() {
 		return WorkerMapsUtils.getRelevantInvocations();
-	}
-	
-	@Override
-	public @Nullable RxCollector refactor(IProjectUnits units, Void input, WorkerSummary summary) throws Exception {
-		// TODO Auto-generated method stub
-		// only needed for classes without RefactorScope implemented
-		return null;
 	}
 
 }

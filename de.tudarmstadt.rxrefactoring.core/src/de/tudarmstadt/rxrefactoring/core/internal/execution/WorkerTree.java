@@ -85,10 +85,10 @@ public class WorkerTree implements IWorkerTree {
 					parent == null ? "null" : parent.workerName);
 		}
 
-		public Output run(WorkerSummary workerSummary, RefactorScope scope) throws Exception {
+		public Output run(WorkerSummary workerSummary) throws Exception {
 			if (!hasResult()) {
 				Input in = parent == null ? null : parent.getResult();
-				result = worker.refactor(units, in, workerSummary, scope);
+				result = worker.refactor(units, in, workerSummary);
 				hasResult = true;
 				// Dereference the worker to allow garbage collection
 				worker = null;
@@ -157,7 +157,7 @@ public class WorkerTree implements IWorkerTree {
 			Log.info(getClass(), "Run worker: " + current.worker.getName());
 
 			try {
-				current.run(workerSummary, null); // TODO really not called?
+				current.run(workerSummary); // TODO really not called?
 
 				for (WorkerNode<?, ?> node : workers) {
 					if (node.parent == current)
@@ -210,9 +210,9 @@ public class WorkerTree implements IWorkerTree {
 		 * 
 		 * @param workerSummary The summary to use for this worker node.
 		 */
-		public void execute(final WorkerNode<?, ?> workerNode, final WorkerSummary workerSummary, RefactorScope scope) {
+		public void execute(final WorkerNode<?, ?> workerNode, final WorkerSummary workerSummary) {
 			Log.info(WorkerTree.class, "Start execution: " + workerNode);
-			Futures.addCallback(executor.submit(() -> workerNode.run(workerSummary, scope)),
+			Futures.addCallback(executor.submit(() -> workerNode.run(workerSummary)),
 					new FutureCallback<Object>() {
 						@Override
 						public void onFailure(Throwable arg0) {
@@ -242,7 +242,7 @@ public class WorkerTree implements IWorkerTree {
 									"Finished execution: " + workerNode + " (remaining: " + latch.getCount() + ")");
 							for (WorkerNode<?, ?> node : workers) {
 								if (node.parent == workerNode)
-									execute(node, summary.reportWorker(node.worker), scope);
+									execute(node, summary.reportWorker(node.worker));
 							}
 							latch.countDown();
 						}
@@ -263,18 +263,10 @@ public class WorkerTree implements IWorkerTree {
 
 	}
 
-	public void run(ExecutorService executor, RefactorScope scope) throws InterruptedException {
-		WorkerTreeExecution execution = new WorkerTreeExecution(executor);
-		WorkerSummary workerSummary = WorkerSummary.createNullSummary();
-		execution.execute(root, workerSummary, scope);
-		execution.waitFinished();
-
-	}
-	
 	public void run(ExecutorService executor) throws InterruptedException {
 		WorkerTreeExecution execution = new WorkerTreeExecution(executor);
 		WorkerSummary workerSummary = WorkerSummary.createNullSummary();
-		execution.execute(root, workerSummary, null);
+		execution.execute(root, workerSummary);
 		execution.waitFinished();
 
 	}

@@ -34,7 +34,7 @@ public class MethodInvocationWorker implements IWorker<TypeOutput, Boolean> {
 	
 	@Override
 	public Boolean refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,
-			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception {
+			@NonNull WorkerSummary summary) throws Exception {
 
 		RefactorInfo info = input.info;
 
@@ -119,12 +119,4 @@ public class MethodInvocationWorker implements IWorker<TypeOutput, Boolean> {
 		return noChanges;
 
 	}
-
-	@Override
-	public @Nullable Boolean refactor(IProjectUnits units, TypeOutput input, WorkerSummary summary) throws Exception {
-		// TODO Auto-generated method stub
-		// only needed if RefactorScope is not implemented
-		return null;
-	}
-
 }

@@ -15,7 +15,6 @@ import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
@@ -31,7 +30,7 @@ public class MethodDeclarationWorker implements IWorker<TypeOutput, Void> {
 
 	@Override
 	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,
-			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception {
+			@NonNull WorkerSummary summary) throws Exception {
 
 		RefactorInfo info = input.info;
 
@@ -55,13 +54,7 @@ public class MethodDeclarationWorker implements IWorker<TypeOutput, Void> {
 
 		return null;
 	}
-
-	@Override
-	public @Nullable Void refactor(IProjectUnits units, TypeOutput input, WorkerSummary summary) throws Exception {
-		// TODO Auto-generated method stub
-		// only needed if RefactorScope is not implemented
-		return null;
-	}
+	
 
 	private boolean shouldNotBeSkippedBecauseOfReturnType(MethodDeclaration decl) {
 		if (Types.isTypeOf(decl.resolveBinding().getReturnType(), SwingWorkerInfo.getBinaryName()))

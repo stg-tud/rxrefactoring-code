@@ -95,7 +95,6 @@ public class RefactorExecution implements Runnable {
 	 * given by the extension .
 	 */
 	private final IRefactorExtension extension;
-	private RefactorScope scope;
 	private IWorkbenchPage page;
 	private int offset;
 	private int startLine;
@@ -242,10 +241,10 @@ public class RefactorExecution implements Runnable {
 							combo.add("Refactor on expression level");
 							combo.addSelectionListener(new SelectionAdapter() {
 								public void widgetSelected(SelectionEvent e) {
-									if (combo.getText().equals("Refactor the whole project")) {
-										scope = RefactorScope.WHOLE_PROJECT;
+									if (combo.getText().equals("Refactor on file level")) {
+										extension.setRefactorScope(RefactorScope.WHOLE_PROJECT);
 									} else {
-										scope = RefactorScope.SEPARATE_OCCURENCES;
+										extension.setRefactorScope(RefactorScope.SEPARATE_OCCURENCES);
 									}
 								}
 
@@ -264,8 +263,6 @@ public class RefactorExecution implements Runnable {
 
 					};
 					addPage(page);
-				} else {
-					scope = RefactorScope.ONLY_ONE_OCCURENCE;
 				}
 
 			}
@@ -478,13 +475,10 @@ public class RefactorExecution implements Runnable {
 		WorkerTree workerTree = new WorkerTree(units, projectSummary);
 		extension.addWorkersTo(workerTree);
 
-		// The workers add their changes to the bundled compilation units
-		if (extension.hasInteractiveRefactorScope()) {
-			workerTree.run(extension.createExecutorService(), scope);
+		// The workers add their changes to the bundled compilation units	
 
-		} else {
-			workerTree.run(extension.createExecutorService());
-		}
+		workerTree.run(extension.createExecutorService());
+		
 
 		Map<String, List<IRewriteCompilationUnit>> grouped = getUnitToChangeMapping(units);
 
@@ -509,7 +503,7 @@ public class RefactorExecution implements Runnable {
 
 	private Map<String, List<IRewriteCompilationUnit>> getUnitToChangeMapping(ProjectUnits units)
 			throws JavaModelException {
-		if (scope.equals(RefactorScope.SEPARATE_OCCURENCES)) {
+		if (extension.getRefactorScope().equals(RefactorScope.SEPARATE_OCCURENCES)) {
 			MethodScanner scanner = new MethodScanner();
 			ProjectUnits unitsChecked = extension.runDependencyBetweenWorkerCheck(units, scanner);
 
@@ -518,7 +512,7 @@ public class RefactorExecution implements Runnable {
 
 		}
 
-		if (scope.equals(RefactorScope.ONLY_ONE_OCCURENCE)
+		if (extension.getRefactorScope().equals(RefactorScope.ONLY_ONE_OCCURENCE)
 				&& extension.getName().equals("SwingWorker to Observable only Variable Declarations")) {
 
 			ProjectUnits newUnits = extension.analyseCursorPosition(units, offset, startLine);

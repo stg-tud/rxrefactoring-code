@@ -29,12 +29,4 @@ public class TemplatePreconditionWorker implements IWorker<Collection<UseDef>, T
 		 */
 		return this;
 	}
-
-	@Override
-	public @Nullable TemplatePreconditionWorker refactor(IProjectUnits units, Collection<UseDef> input,
-			WorkerSummary summary, RefactorScope scope) throws Exception {
-		// TODO Auto-generated method stub
-		//only needed if RefactorScope is implemented in this extension
-		return null;
-	}
 }

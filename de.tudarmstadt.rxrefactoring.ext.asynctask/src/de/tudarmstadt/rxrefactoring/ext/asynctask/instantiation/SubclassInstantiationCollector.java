@@ -150,15 +150,5 @@ public class SubclassInstantiationCollector implements IWorker<InstantiationColl
 			return true;
 		}
 	}
-
-
-	@Override
-	public SubclassInstantiationCollector refactor(IProjectUnits units, InstantiationCollector input,
-			WorkerSummary summary, RefactorScope scope) throws Exception {
-		// TODO Auto-generated method stub
-		// only needed if RefactorScope is implemented in this extension
-		return null;
-	}
-
 }
 

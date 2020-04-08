@@ -55,6 +55,7 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 	public IPath getDestinationDir() {
 		return new Path("./libs/");
 	}
+	
 
 	@Override
 	public void addWorkersTo(@NonNull IWorkerTree workerTree) {

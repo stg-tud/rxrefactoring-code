@@ -201,13 +201,4 @@ public class AkkaFutureCollector implements IWorker<Void, AkkaFutureCollector> {
 		}
 		
 	}
-
-	@Override
-	public @Nullable AkkaFutureCollector refactor(IProjectUnits units, Void input, WorkerSummary summary,
-			RefactorScope scope) throws Exception {
-		// TODO Auto-generated method stub
-		// only needed if RefactorScope is implemented in this extension
-		return null;
-	}
-
 }

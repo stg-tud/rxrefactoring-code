@@ -63,12 +63,6 @@ public abstract class AbstractGeneralWorker<NodeType extends ASTNode> implements
 		return null;
 	}
 	
-	@Override
-	public Void refactor(@NonNull IProjectUnits units, @Nullable FutureCollector collector,
-			@NonNull WorkerSummary summary, RefactorScope scope) throws Exception {
-		
-		return null;
-	}
 
 	// @Override
 	// protected WorkerStatus refactor() {
