@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
-import java.util.EnumSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -24,7 +23,7 @@ import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.dependencies.CursorRefactorOccurenceSearcher;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.dependencies.DependencyCheckerSwingWorker;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerMapsUtils;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.RxCollector;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.AssignmentWorker;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.ClassInstanceCreationWorker;
@@ -89,7 +88,7 @@ public class SwingWorkerExtension implements IRefactorExtension {
 
 	@Override
 	public void clearAllMaps() {
-		WorkerMapsUtils.clearAllMaps();
+		WorkerUtils.clearAllMaps();
 	};
 
 	@Override
@@ -161,10 +160,5 @@ public class SwingWorkerExtension implements IRefactorExtension {
 	public @NonNull ExecutorService createExecutorService() {
 		return //Executors.newFixedThreadPool(4);
 			Executors.newSingleThreadExecutor();
-	}
-	
-	public WorkerMapsUtils getWorkerMapsUtils() {
-		return null;
-		
 	}
 }

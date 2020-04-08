@@ -23,6 +23,7 @@ import com.google.common.collect.Multimap;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.RelevantInvocation;
 import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.DiscoveringVisitor;
 
 public class WorkerUtils {
 
@@ -72,14 +73,6 @@ public class WorkerUtils {
 
 	}
 
-	
-	/*public static String getNameToClassOfWorker(Class c) {
-		for(Key k: allWorkerIdentifier)	{
-			if(k.getClass().equals(c));
-				return k.name;
-		}
-		 return null;
-	}*/
 	
 
 	public String getDetails() {
@@ -156,34 +149,63 @@ public class WorkerUtils {
 		relevantInvocationsMap.clear();
 	}
 	
-	/*public static Multimap getListToWorkerName(String key) {
-		switch (key) {
-		case "Variable Declarations":
-			return varDeclMap;
-		case "Type Declarations":
-			return typeDeclMap;
-		case "Field Declarations":
-			return fieldDeclMap;
-		case "Assigments":
-			return assigmentsMap;
-		case "Simple Names":
-			return simpleNamesMap;
-		case "Class Instances":
-			return classInstanceMap;
-		case "Single Variable Declarations":
-			return singleVarDeclMap;
-		case "Method Invocations":
-			return methodInvocationsMap;
-		case "Method Declarations":
-			return methodDeclarationsMap;
-		case "Relevant Invocations":
-			return relevantInvocationsMap;
-		default:
-			throw new IllegalStateException("Key not in different Maps!");
-		}
-	}*/
 	
 	public static void clearKeys() {
 		allWorkerIdentifier.clear();
+	}
+	
+	public static List getNeededList(WorkerIdentifier identifier, DiscoveringVisitor visitor) {
+
+		if (identifier.equals(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER))
+			return visitor.getVarDeclStatements();
+		else if (identifier.equals(NamingUtils.TYPE_DECL_IDENTIFIER))
+			return visitor.getTypeDeclarations();
+		else if (identifier.equals(NamingUtils.FIELD_DECLARATION_IDENTIFIER))
+			return visitor.getFieldDeclarations();
+		else if (identifier.equals(NamingUtils.ASSIGNMENTS_IDENTIFIER))
+			return visitor.getAssignments();
+		else if (identifier.equals(NamingUtils.SIMPLE_NAME_IDENTIFIER))
+			return visitor.getSimpleNames();
+		else if (identifier.equals(NamingUtils.CLASS_INSTANCE_CREATION_IDENTIFIER))
+			return visitor.getClassInstanceCreations();
+		else if (identifier.equals(NamingUtils.SINGLE_VAR_DECL_IDENTIFIER))
+			return visitor.getSingleVarDeclarations();
+		else if (identifier.equals(NamingUtils.METHOD_INVOCATION_IDENTIFIER))
+			return visitor.getMethodInvocations();
+		else if (identifier.equals(NamingUtils.METHOD_DECLARATION_IDENTIFIER))
+			return visitor.getMethodDeclarations();
+		else if (identifier.equals(NamingUtils.RELEVANT_INVOCATION_IDENTIFIER))
+			return visitor.getRelevantInvocations();
+		else {
+			throw new IllegalStateException("Key not in different Maps!");
+		}
+	}
+		
+		public static void addElementToList(WorkerIdentifier identifier, DiscoveringVisitor visitor, 
+				IRewriteCompilationUnit unit, Object astNode) {
+
+			if (identifier.equals(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER))
+				varDeclMap.put(unit, (VariableDeclarationStatement) astNode);
+			else if (identifier.equals(NamingUtils.TYPE_DECL_IDENTIFIER))
+				typeDeclMap.put(unit, (TypeDeclaration) astNode);
+			else if (identifier.equals(NamingUtils.FIELD_DECLARATION_IDENTIFIER))
+				fieldDeclMap.put(unit, (FieldDeclaration) astNode);
+			else if (identifier.equals(NamingUtils.ASSIGNMENTS_IDENTIFIER))
+				assigmentsMap.put(unit, (Assignment) astNode);
+			else if (identifier.equals(NamingUtils.SIMPLE_NAME_IDENTIFIER))
+				simpleNamesMap.put(unit, (SimpleName) astNode);
+			else if (identifier.equals(NamingUtils.CLASS_INSTANCE_CREATION_IDENTIFIER))
+				classInstanceMap.put(unit, (ClassInstanceCreation) astNode);
+			else if (identifier.equals(NamingUtils.SINGLE_VAR_DECL_IDENTIFIER))
+				singleVarDeclMap.put(unit, (SingleVariableDeclaration) astNode);
+			else if (identifier.equals(NamingUtils.METHOD_INVOCATION_IDENTIFIER))
+				methodInvocationsMap.put(unit, (MethodInvocation) astNode);
+			else if (identifier.equals(NamingUtils.METHOD_DECLARATION_IDENTIFIER))
+				methodDeclarationsMap.put(unit, (MethodDeclaration) astNode);
+			else if (identifier.equals(NamingUtils.RELEVANT_INVOCATION_IDENTIFIER))
+				relevantInvocationsMap.put(unit, (RelevantInvocation) astNode);
+			else {
+				throw new IllegalStateException("Identifier not found!");
+			}
 	}
 }
