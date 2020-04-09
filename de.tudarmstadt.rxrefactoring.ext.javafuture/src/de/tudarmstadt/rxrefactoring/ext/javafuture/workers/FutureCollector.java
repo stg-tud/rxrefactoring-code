@@ -87,25 +87,30 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 				FutureCollectionVisitor2 collectionDiscoveringVisitor = new FutureCollectionVisitor2(
 						ClassInfos.Future.getBinaryName(), input);
 
-				/*if (options.contains(RefactoringOptions.SEPARATE_OCCURENCIES)) {
+				if (options.contains(RefactoringOptions.SEPARATE_OCCURENCIES)) {
+					unit.accept(discoveringVisitor);
+					add("future", unit, discoveringVisitor);
+					
 					WorkerUtils.fillAllWorkerIdentifierForFuture();
 					Set<IRewriteCompilationUnit> allWorkerUnits = loopOverEveryWorker(unit, discoveringVisitor);
 					newUnits.addAll(allWorkerUnits);
 					units.remove(unit);
 					WorkerUtils.clearKeys();
 
-				} else {*/
+				} else {
 					unit.accept(discoveringVisitor);
 					add("future", unit, discoveringVisitor);
 
 					unit.accept(collectionDiscoveringVisitor);
 					add("collection", unit, collectionDiscoveringVisitor);
-				//}
+				}
 
 				// discoveringVisitor.cleanAllLists(); TODO könnte nötig sein
 
 			}
 		}
+		
+		units.addAll(newUnits);
 
 		summary.setCorrect("numberOfCompilationUnits", units.size());
 
@@ -121,7 +126,7 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 				ASTNode newNode = unit.copyNode(unit.getRoot());
 				RewriteCompilationUnit newUnit = new RewriteCompilationUnit(unit.getPrimary(), newNode);
 				newUnit.setWorkerIdentifier(identifier);
-				WorkerUtils.addElementToList(identifier, visitor, newUnit, m);
+				WorkerUtils.addElementToList(identifier, visitor, newUnit, m, groups.get("future"));
 				allWorkerUnits.add(newUnit);
 			}
 		}

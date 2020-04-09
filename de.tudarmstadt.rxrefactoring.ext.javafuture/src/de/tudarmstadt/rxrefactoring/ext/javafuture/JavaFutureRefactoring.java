@@ -8,6 +8,7 @@ import java.util.concurrent.Executors;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Expression;
 
@@ -45,6 +46,14 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 	}
 	
 	@Override
+	public RefactorScope getRefactorScope() {
+		if(options.contains(RefactoringOptions.SEPARATE_OCCURENCIES))
+			return RefactorScope.SEPARATE_OCCURENCES;
+		
+		return RefactorScope.NO_SCOPE;
+	}
+	
+	@Override
 	public @NonNull String getName() {
 		return "Future and FutureTask to Observable";
 	}
@@ -62,6 +71,11 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 	@Override
 	public IPath getDestinationDir() {
 		return new Path("./libs/");
+	}
+	
+	@Override
+	public boolean hasInteractiveRefactorScope() {
+		return true; 
 	}
 	
 

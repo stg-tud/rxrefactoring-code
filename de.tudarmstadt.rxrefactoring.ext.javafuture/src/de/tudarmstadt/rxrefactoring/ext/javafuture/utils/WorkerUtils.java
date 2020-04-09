@@ -25,27 +25,12 @@ import de.tudarmstadt.rxrefactoring.core.utils.NamingUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.RelevantInvocation;
 import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureVisitor3;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.CollectorGroup;
 
 public class WorkerUtils {
 
 	private static final List<WorkerIdentifier> allWorkerIdentifier = new ArrayList<WorkerIdentifier>();
-	private static final Multimap<WorkerIdentifier, Multimap<IRewriteCompilationUnit, ?>> allMap = HashMultimap.create();
-	private static final Multimap<IRewriteCompilationUnit, TypeDeclaration> typeDeclMap = HashMultimap.create();
-	private static final Multimap<IRewriteCompilationUnit, FieldDeclaration> fieldDeclMap = HashMultimap.create();
-	private static final Multimap<IRewriteCompilationUnit, Assignment> assigmentsMap = HashMultimap.create();
-	private static final Multimap<IRewriteCompilationUnit, VariableDeclarationStatement> varDeclMap = HashMultimap
-			.create();
-	private static final Multimap<IRewriteCompilationUnit, SimpleName> simpleNamesMap = HashMultimap.create();
-	private static final Multimap<IRewriteCompilationUnit, ClassInstanceCreation> classInstanceMap = HashMultimap
-			.create();
-	private static final Multimap<IRewriteCompilationUnit, SingleVariableDeclaration> singleVarDeclMap = HashMultimap
-			.create();
-	private static final Multimap<IRewriteCompilationUnit, MethodInvocation> methodInvocationsMap = HashMultimap
-			.create();
-	private static final Multimap<IRewriteCompilationUnit, MethodDeclaration> methodDeclarationsMap = HashMultimap
-			.create();
-	private static final Multimap<IRewriteCompilationUnit, RelevantInvocation> relevantInvocationsMap = HashMultimap
-			.create();
+	
 
 	public static void fillAllWorkerIdentifierForFuture() {
 		allWorkerIdentifier.add(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER);
@@ -56,7 +41,7 @@ public class WorkerUtils {
 		allWorkerIdentifier.add(NamingUtils.METHOD_DECLARATION_IDENTIFIER);
 	}
 
-	public static void fillAllMap() {
+	/*public static void fillAllMap() {
 		allMap.put(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER, varDeclMap);
 		//allMap.put(NamingUtils.TYPE_DECL_IDENTIFIER, typeDeclMap);
 		allMap.put(NamingUtils.FIELD_DECLARATION_IDENTIFIER, fieldDeclMap);
@@ -68,70 +53,15 @@ public class WorkerUtils {
 		allMap.put(NamingUtils.METHOD_DECLARATION_IDENTIFIER, methodDeclarationsMap);
 		//allMap.put(NamingUtils.RELEVANT_INVOCATION_IDENTIFIER, relevantInvocationsMap);
 
-	}
+	}*/
 
 	
-
-	public String getDetails() {
-		return "Nr. files: " + allWorkerIdentifier.size() + "\n" + "TypeDeclarations = " + typeDeclMap.values().size() + "\n"
-				+ "FieldDeclarations = " + fieldDeclMap.values().size() + "\n" + "Assignments = "
-				+ assigmentsMap.values().size() + "\n" + "VariableDeclarationStatements = " + varDeclMap.values().size()
-				+ "\n" + "SimpleNames = " + simpleNamesMap.values().size() + "\n" + "ClassInstanceCreations = "
-				+ classInstanceMap.values().size() + "\n" + "SingleVariableDeclarations = "
-				+ singleVarDeclMap.values().size() + "\n" + "MethodInvocations = "
-				+ methodInvocationsMap.values().size() + "\n" + "MethodDeclarations = "
-				+ methodDeclarationsMap.values().size();
-	}
-
 	public static List<WorkerIdentifier> getAllIdentifier() {
 		return allWorkerIdentifier;
 	}
 
-	public static Multimap<WorkerIdentifier, Multimap<IRewriteCompilationUnit, ?>> getAllMap() {
-		return allMap;
-	}
-
-	public static Multimap<IRewriteCompilationUnit, TypeDeclaration> getTypeDeclMap() {
-		return typeDeclMap;
-	}
-
-	public static Multimap<IRewriteCompilationUnit, FieldDeclaration> getFieldDeclMap() {
-		return fieldDeclMap;
-	}
-
-	public static Multimap<IRewriteCompilationUnit, Assignment> getAssigmentsMap() {
-		return assigmentsMap;
-	}
-
-	public static Multimap<IRewriteCompilationUnit, VariableDeclarationStatement> getVarDeclMap() {
-		return varDeclMap;
-	}
-
-	public static Multimap<IRewriteCompilationUnit, SimpleName> getSimpleNamesMap() {
-		return simpleNamesMap;
-	}
-
-	public static Multimap<IRewriteCompilationUnit, ClassInstanceCreation> getClassInstanceMap() {
-		return classInstanceMap;
-	}
-
-	public static Multimap<IRewriteCompilationUnit, SingleVariableDeclaration> getSingleVarDeclMap() {
-		return singleVarDeclMap;
-	}
-
-	public static Multimap<IRewriteCompilationUnit, MethodInvocation> getMethodInvocationsMap() {
-		return methodInvocationsMap;
-	}
-
-	public static Multimap<IRewriteCompilationUnit, MethodDeclaration> getMethodDeclarationsMap() {
-		return methodDeclarationsMap;
-	}
-
-	public static Multimap<IRewriteCompilationUnit, RelevantInvocation> getRelevantInvocations() {
-		return relevantInvocationsMap;
-	}
 	
-	public static void clearAllMaps() {
+	/*public static void clearAllMaps() {
 		allWorkerIdentifier.clear();
 		allMap.clear();
 		//typeDeclMap.clear();
@@ -144,7 +74,7 @@ public class WorkerUtils {
 		methodInvocationsMap.clear();
 		methodDeclarationsMap.clear();
 		//relevantInvocationsMap.clear();
-	}
+	}*/
 	
 	
 	public static void clearKeys() {
@@ -177,26 +107,26 @@ public class WorkerUtils {
 	}
 		
 		public static void addElementToList(WorkerIdentifier identifier, FutureVisitor3 visitor, 
-				IRewriteCompilationUnit unit, Object astNode) {
+				IRewriteCompilationUnit unit, Object astNode, CollectorGroup group) {
 
 			if (identifier.equals(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER))
-				varDeclMap.put(unit, (VariableDeclarationStatement) astNode);
+				group.getVarDeclMap().put(unit, (VariableDeclarationStatement) astNode);
 			//else if (identifier.equals(NamingUtils.TYPE_DECL_IDENTIFIER))
 			//	typeDeclMap.put(unit, (TypeDeclaration) astNode);
 			else if (identifier.equals(NamingUtils.FIELD_DECLARATION_IDENTIFIER))
-				fieldDeclMap.put(unit, (FieldDeclaration) astNode);
+				group.getFieldDeclMap().put(unit, (FieldDeclaration) astNode);
 			else if (identifier.equals(NamingUtils.ASSIGNMENTS_IDENTIFIER))
-				assigmentsMap.put(unit, (Assignment) astNode);
+				group.getAssigmentsMap().put(unit, (Assignment) astNode);
 			//else if (identifier.equals(NamingUtils.SIMPLE_NAME_IDENTIFIER))
 			//	simpleNamesMap.put(unit, (SimpleName) astNode);
 			//else if (identifier.equals(NamingUtils.CLASS_INSTANCE_CREATION_IDENTIFIER))
 			//	classInstanceMap.put(unit, (ClassInstanceCreation) astNode);
 			else if (identifier.equals(NamingUtils.SINGLE_VAR_DECL_IDENTIFIER))
-				singleVarDeclMap.put(unit, (SingleVariableDeclaration) astNode);
+				group.getSingleVarDeclMap().put(unit, (SingleVariableDeclaration) astNode);
 			else if (identifier.equals(NamingUtils.METHOD_INVOCATION_IDENTIFIER))
-				methodInvocationsMap.put(unit, (MethodInvocation) astNode);
+				group.getMethodInvocationsMap().put(unit, (MethodInvocation) astNode);
 			else if (identifier.equals(NamingUtils.METHOD_DECLARATION_IDENTIFIER))
-				methodDeclarationsMap.put(unit, (MethodDeclaration) astNode);
+				group.getMethodDeclarationsMap().put(unit, (MethodDeclaration) astNode);
 			//else if (identifier.equals(NamingUtils.RELEVANT_INVOCATION_IDENTIFIER))
 			//	relevantInvocationsMap.put(unit, (RelevantInvocation) astNode);
 			else {
