@@ -1,13 +1,12 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.workers.futuretask;
 
-import java.util.List;
-import java.util.Map;
-
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
+
+import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
@@ -20,7 +19,7 @@ public class VariableDeclStatementWorker extends AbstractFutureTaskWorker<Variab
 	}
 
 	@Override
-	protected Map<IRewriteCompilationUnit, List<VariableDeclarationStatement>> getNodesMap() {
+	protected Multimap<IRewriteCompilationUnit, VariableDeclarationStatement> getNodesMap() {
 		return collector.getVarDeclMap("futuretask");
 	}
 

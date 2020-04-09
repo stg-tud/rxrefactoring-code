@@ -1,10 +1,9 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future;
 
-import java.util.List;
-import java.util.Map;
-
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ReturnStatement;
+
+import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
@@ -17,7 +16,7 @@ public class ReturnStatementWorker extends AbstractFutureWorker<ReturnStatement>
 	}
 
 	@Override
-	protected Map<IRewriteCompilationUnit, List<ReturnStatement>> getNodesMap() {
+	protected Multimap<IRewriteCompilationUnit, ReturnStatement> getNodesMap() {
 		return collector.getReturnStatementsMap("future");
 	}
 

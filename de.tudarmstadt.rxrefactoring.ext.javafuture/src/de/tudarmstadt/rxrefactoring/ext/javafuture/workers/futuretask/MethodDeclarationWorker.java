@@ -1,8 +1,5 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.workers.futuretask;
 
-import java.util.List;
-import java.util.Map;
-
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.LambdaExpression;
@@ -12,6 +9,8 @@ import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.Type;
+
+import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
@@ -24,7 +23,7 @@ public class MethodDeclarationWorker extends AbstractFutureTaskWorker<MethodDecl
 	}
 
 	@Override
-	protected Map<IRewriteCompilationUnit, List<MethodDeclaration>> getNodesMap() {
+	protected Multimap<IRewriteCompilationUnit, MethodDeclaration> getNodesMap() {
 		return collector.getMethodDeclarationsMap("futuretask");
 	}
 
@@ -38,7 +37,7 @@ public class MethodDeclarationWorker extends AbstractFutureTaskWorker<MethodDecl
 	private void replaceReturnType(IRewriteCompilationUnit unit, MethodDeclaration methodDeclaration) {
 		Type returnType = methodDeclaration.getReturnType2();
 		if (returnType instanceof ParameterizedType) {
-			Type type = ((ParameterizedType) returnType).getType();
+			//Type type = ((ParameterizedType) returnType).getType();
 
 			// Don't refactor return values for now
 			// unit.replaceType(type, "SimpleFutureTaskObservable");

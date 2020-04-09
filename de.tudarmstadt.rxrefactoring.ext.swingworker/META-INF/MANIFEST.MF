@@ -4,7 +4,8 @@ Bundle-Name: RxJavaRefactoringExtensionSwingWorker
 Bundle-SymbolicName: de.tudarmstadt.rxrefactoring.ext.swingworker;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Export-Package: de.tudarmstadt.rxrefactoring.ext.swingworker.extensions,
- de.tudarmstadt.rxrefactoring.ext.swingworker.handler
+ de.tudarmstadt.rxrefactoring.ext.swingworker.handler,
+ de.tudarmstadt.rxrefactoring.ext.swingworker.utils
 Require-Bundle: de.tudarmstadt.rxrefactoring.core,
  org.eclipse.ui,
  org.eclipse.core.runtime,

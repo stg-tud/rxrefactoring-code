@@ -1,9 +1,8 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection;
 
-import java.util.List;
-import java.util.Map;
-
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+
+import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
@@ -18,7 +17,7 @@ public class SingleVariableDeclWorker extends AbstractFutureWorker<SingleVariabl
 	}
 
 	@Override
-	protected Map<IRewriteCompilationUnit, List<SingleVariableDeclaration>> getNodesMap() {
+	protected Multimap<IRewriteCompilationUnit, SingleVariableDeclaration> getNodesMap() {
 		return collector.getSingleVarDeclMap("collection");
 	}
 

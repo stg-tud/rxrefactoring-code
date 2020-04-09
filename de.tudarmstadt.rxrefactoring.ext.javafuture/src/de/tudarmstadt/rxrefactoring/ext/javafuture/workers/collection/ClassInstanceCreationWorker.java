@@ -1,16 +1,12 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection;
 
-import java.util.List;
-import java.util.Map;
-
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.Type;
 
+import com.google.common.collect.Multimap;
+
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
-import de.tudarmstadt.rxrefactoring.core.utils.Types;
-import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.CollectionInfo;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
 
@@ -21,7 +17,7 @@ public class ClassInstanceCreationWorker extends AbstractFutureWorker<ClassInsta
 	}
 
 	@Override
-	protected Map<IRewriteCompilationUnit, List<ClassInstanceCreation>> getNodesMap() {
+	protected Multimap<IRewriteCompilationUnit, ClassInstanceCreation> getNodesMap() {
 		return collector.getClassInstanceMap("collection");
 	}
 

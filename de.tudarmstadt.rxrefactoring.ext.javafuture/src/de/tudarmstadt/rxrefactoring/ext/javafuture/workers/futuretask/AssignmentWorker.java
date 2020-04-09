@@ -1,10 +1,9 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.workers.futuretask;
 
-import java.util.List;
-import java.util.Map;
-
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Expression;
+
+import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
@@ -17,7 +16,7 @@ public class AssignmentWorker extends AbstractFutureTaskWorker<Assignment> {
 	}
 
 	@Override
-	protected Map<IRewriteCompilationUnit, List<Assignment>> getNodesMap() {
+	protected Multimap<IRewriteCompilationUnit, Assignment> getNodesMap() {
 		return collector.getAssigmentsMap("futuretask");
 	}
 

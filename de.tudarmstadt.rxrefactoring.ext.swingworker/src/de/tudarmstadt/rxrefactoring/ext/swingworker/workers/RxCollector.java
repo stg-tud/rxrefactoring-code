@@ -31,7 +31,6 @@ import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.RelevantInvocation;
 import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.NamingUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.DiscoveringVisitor;
 

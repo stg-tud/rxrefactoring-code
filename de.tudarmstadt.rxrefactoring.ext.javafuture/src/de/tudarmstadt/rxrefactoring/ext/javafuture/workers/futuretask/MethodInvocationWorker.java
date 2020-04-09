@@ -1,9 +1,8 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.workers.futuretask;
 
-import java.util.List;
-import java.util.Map;
-
 import org.eclipse.jdt.core.dom.MethodInvocation;
+
+import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureTaskWorker;
@@ -15,7 +14,7 @@ public class MethodInvocationWorker extends AbstractFutureTaskWorker<MethodInvoc
 	}
 
 	@Override
-	protected Map<IRewriteCompilationUnit, List<MethodInvocation>> getNodesMap() {
+	protected Multimap<IRewriteCompilationUnit, MethodInvocation> getNodesMap() {
 		return collector.getMethodInvocationsMap("futuretask");
 	}
 
@@ -27,7 +26,7 @@ public class MethodInvocationWorker extends AbstractFutureTaskWorker<MethodInvoc
 	 */
 	@Override
 	protected void refactorNode(IRewriteCompilationUnit unit, MethodInvocation methodInvocation) {
-		String methodName = methodInvocation.getName().getIdentifier();
+		//String methodName = methodInvocation.getName().getIdentifier();
 
 		/*
 		 * switch (methodName) { case "get":

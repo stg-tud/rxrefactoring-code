@@ -1,11 +1,14 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.workers;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.ASTNode;
+
+import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
@@ -27,7 +30,7 @@ public abstract class AbstractGeneralWorker<NodeType extends ASTNode> implements
 		return nodeName;
 	}
 
-	protected abstract Map<IRewriteCompilationUnit, List<NodeType>> getNodesMap();
+	protected abstract Multimap<IRewriteCompilationUnit, NodeType> getNodesMap();
 
 	protected abstract void refactorNode(IRewriteCompilationUnit unit, NodeType node);
 
@@ -45,9 +48,9 @@ public abstract class AbstractGeneralWorker<NodeType extends ASTNode> implements
 		this.collector = collector;
 		this.summary = summary;
 
-		Map<IRewriteCompilationUnit, List<NodeType>> nodeMap = getNodesMap();
+		Multimap<IRewriteCompilationUnit, NodeType> nodeMap = getNodesMap();
 
-		for (Map.Entry<IRewriteCompilationUnit, List<NodeType>> nodeEntry : nodeMap.entrySet()) {
+		for (Map.Entry<IRewriteCompilationUnit, Collection<NodeType>> nodeEntry : nodeMap.asMap().entrySet()) {
 
 			IRewriteCompilationUnit unit = nodeEntry.getKey();
 

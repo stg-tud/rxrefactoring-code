@@ -1,8 +1,6 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -18,6 +16,8 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 
+import com.google.common.collect.Multimap;
+
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
@@ -29,7 +29,7 @@ public class MethodDeclarationWorker extends AbstractFutureWorker<MethodDeclarat
 	}
 
 	@Override
-	protected Map<IRewriteCompilationUnit, List<MethodDeclaration>> getNodesMap() {
+	protected Multimap<IRewriteCompilationUnit, MethodDeclaration> getNodesMap() {
 		return collector.getMethodDeclarationsMap("future");
 	}
 
@@ -55,6 +55,7 @@ public class MethodDeclarationWorker extends AbstractFutureWorker<MethodDeclarat
 		
 	}
 
+	@SuppressWarnings("unused")
 	private void replaceParameters(IRewriteCompilationUnit unit, MethodDeclaration methodDeclaration, Collection<ASTNode> params) {
 		for(Object o :methodDeclaration.parameters()) {
 			if (o instanceof SingleVariableDeclaration) {

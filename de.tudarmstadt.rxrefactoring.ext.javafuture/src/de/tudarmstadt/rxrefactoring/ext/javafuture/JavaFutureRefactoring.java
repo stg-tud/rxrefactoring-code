@@ -17,6 +17,7 @@ import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.ReachingDefinition;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.PreconditionWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.UseDefWorker;
@@ -36,6 +37,13 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 		options = EnumSet.of(RefactoringOptions.FUTURE);// , RefactoringOptions.FUTURETASK);
 	}
 
+	@Override
+	public void setRefactorScope(RefactorScope scope) {
+		if(scope.equals(RefactorScope.SEPARATE_OCCURENCES))
+				options.add(RefactoringOptions.SEPARATE_OCCURENCIES);
+		
+	}
+	
 	@Override
 	public @NonNull String getName() {
 		return "Future and FutureTask to Observable";

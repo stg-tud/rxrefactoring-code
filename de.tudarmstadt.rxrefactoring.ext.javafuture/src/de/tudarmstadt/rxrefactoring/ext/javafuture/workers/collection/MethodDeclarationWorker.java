@@ -1,17 +1,14 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection;
 
-import java.util.List;
-import java.util.Map;
-
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.Type;
 
+import com.google.common.collect.Multimap;
+
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
-import de.tudarmstadt.rxrefactoring.core.utils.Types;
-import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.CollectionInfo;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.AbstractFutureWorker;
 
@@ -22,7 +19,7 @@ public class MethodDeclarationWorker extends AbstractFutureWorker<MethodDeclarat
 	}
 
 	@Override
-	protected Map<IRewriteCompilationUnit, List<MethodDeclaration>> getNodesMap() {
+	protected Multimap<IRewriteCompilationUnit, MethodDeclaration> getNodesMap() {
 		return collector.getMethodDeclarationsMap("collection");
 	}
 

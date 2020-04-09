@@ -1,9 +1,8 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.workers.futuretask;
 
-import java.util.List;
-import java.util.Map;
-
 import org.eclipse.jdt.core.dom.SimpleName;
+
+import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.JavaFutureASTUtils;
@@ -22,7 +21,7 @@ public class SimpleNameWorker extends AbstractFutureTaskWorker<SimpleName> {
 	}
 
 	@Override
-	protected Map<IRewriteCompilationUnit, List<SimpleName>> getNodesMap() {
+	protected Multimap<IRewriteCompilationUnit, SimpleName> getNodesMap() {
 		return collector.getSimpleNamesMap("futuretask");
 	}
 

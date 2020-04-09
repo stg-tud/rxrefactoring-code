@@ -1,12 +1,8 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future;
 
-import java.util.List;
-import java.util.Map;
-
-import org.eclipse.jdt.core.dom.ArrayAccess;
-import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.SimpleName;
+
+import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
@@ -21,7 +17,7 @@ public class MethodInvocationWorker extends AbstractFutureWorker<MethodInvocatio
 	}
 
 	@Override
-	protected Map<IRewriteCompilationUnit, List<MethodInvocation>> getNodesMap() {
+	protected Multimap<IRewriteCompilationUnit, MethodInvocation> getNodesMap() {
 		return collector.getMethodInvocationsMap("future");
 	}
 

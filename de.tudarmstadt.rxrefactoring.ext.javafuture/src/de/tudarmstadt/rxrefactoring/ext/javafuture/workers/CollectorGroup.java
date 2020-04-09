@@ -1,5 +1,6 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.workers;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -18,34 +19,37 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 
 public class CollectorGroup {
-	private final Map<IRewriteCompilationUnit, List<TypeDeclaration>> typeDeclMap;
-	private final Map<IRewriteCompilationUnit, List<FieldDeclaration>> fieldDeclMap;
-	private final Map<IRewriteCompilationUnit, List<Assignment>> assigmentsMap;
-	private final Map<IRewriteCompilationUnit, List<VariableDeclarationStatement>> varDeclMap;
-	private final Map<IRewriteCompilationUnit, List<SimpleName>> simpleNamesMap;
-	private final Map<IRewriteCompilationUnit, List<ClassInstanceCreation>> classInstanceMap;
-	private final Map<IRewriteCompilationUnit, List<SingleVariableDeclaration>> singleVarDeclMap;
-	private final Map<IRewriteCompilationUnit, List<MethodInvocation>> methodInvocationsMap;
-	private final Map<IRewriteCompilationUnit, List<MethodDeclaration>> methodDeclarationsMap;
-	private final Map<IRewriteCompilationUnit, List<ArrayCreation>> arrayCreationsMap;
-	private final Map<IRewriteCompilationUnit, List<ReturnStatement>> returnStatementsMap;
+	private final Multimap<IRewriteCompilationUnit, TypeDeclaration> typeDeclMap;
+	private final Multimap<IRewriteCompilationUnit, FieldDeclaration> fieldDeclMap;
+	private final Multimap<IRewriteCompilationUnit, Assignment> assigmentsMap;
+	private final Multimap<IRewriteCompilationUnit, VariableDeclarationStatement> varDeclMap;
+	private final Multimap<IRewriteCompilationUnit, SimpleName> simpleNamesMap;
+	private final Multimap<IRewriteCompilationUnit, ClassInstanceCreation> classInstanceMap;
+	private final Multimap<IRewriteCompilationUnit, SingleVariableDeclaration> singleVarDeclMap;
+	private final Multimap<IRewriteCompilationUnit, MethodInvocation> methodInvocationsMap;
+	private final Multimap<IRewriteCompilationUnit, MethodDeclaration> methodDeclarationsMap;
+	private final Multimap<IRewriteCompilationUnit, ArrayCreation> arrayCreationsMap;
+	private final Multimap<IRewriteCompilationUnit, ReturnStatement> returnStatementsMap;
 
 	public CollectorGroup() {
 
-		typeDeclMap = new HashMap<>();
-		fieldDeclMap = new HashMap<>();
-		assigmentsMap = new HashMap<>();
-		varDeclMap = new HashMap<>();
-		simpleNamesMap = new HashMap<>();
-		classInstanceMap = new HashMap<>();
-		singleVarDeclMap = new HashMap<>();
-		methodInvocationsMap = new HashMap<>();
-		methodDeclarationsMap = new HashMap<>();
-		arrayCreationsMap = new HashMap<>();
-		returnStatementsMap = new HashMap<>();
+		typeDeclMap = HashMultimap.create();
+		fieldDeclMap = HashMultimap.create();
+		assigmentsMap = HashMultimap.create();
+		varDeclMap = HashMultimap.create();
+		simpleNamesMap = HashMultimap.create();
+		classInstanceMap = HashMultimap.create();
+		singleVarDeclMap = HashMultimap.create();
+		methodInvocationsMap = HashMultimap.create();
+		methodDeclarationsMap = HashMultimap.create();
+		arrayCreationsMap = HashMultimap.create();
+		returnStatementsMap = HashMultimap.create();
 	}
 
 	public void add(IRewriteCompilationUnit cu, VisitorNodes subclasses) {
@@ -62,60 +66,60 @@ public class CollectorGroup {
 		addToMap(cu, subclasses.getReturnStatements(), returnStatementsMap);
 	}
 
-	private <T> void addToMap(IRewriteCompilationUnit cu, List<T> newList, Map<IRewriteCompilationUnit, List<T>> map) {
+	private <T> void addToMap(IRewriteCompilationUnit cu, List<T> newList, Multimap<IRewriteCompilationUnit, T> map) {
 		if (newList.isEmpty() || map == null) {
 			return;
 		}
 
-		List<T> currentList = map.get(cu);
+		Collection<T> currentList = map.get(cu);
 		if (currentList == null) {
-			map.put(cu, newList);
+			map.put(cu, (T) newList);
 		} else {
 			currentList.addAll(newList);
 		}
 	}
 
-	public Map<IRewriteCompilationUnit, List<TypeDeclaration>> getTypeDeclMap() {
+	public Multimap<IRewriteCompilationUnit, TypeDeclaration> getTypeDeclMap() {
 		return typeDeclMap;
 	}
 
-	public Map<IRewriteCompilationUnit, List<FieldDeclaration>> getFieldDeclMap() {
+	public Multimap<IRewriteCompilationUnit, FieldDeclaration> getFieldDeclMap() {
 		return fieldDeclMap;
 	}
 
-	public Map<IRewriteCompilationUnit, List<Assignment>> getAssigmentsMap() {
+	public Multimap<IRewriteCompilationUnit, Assignment> getAssigmentsMap() {
 		return assigmentsMap;
 	}
 
-	public Map<IRewriteCompilationUnit, List<VariableDeclarationStatement>> getVarDeclMap() {
+	public Multimap<IRewriteCompilationUnit, VariableDeclarationStatement> getVarDeclMap() {
 		return varDeclMap;
 	}
 
-	public Map<IRewriteCompilationUnit, List<SimpleName>> getSimpleNamesMap() {
+	public Multimap<IRewriteCompilationUnit, SimpleName> getSimpleNamesMap() {
 		return simpleNamesMap;
 	}
 
-	public Map<IRewriteCompilationUnit, List<ClassInstanceCreation>> getClassInstanceMap() {
+	public Multimap<IRewriteCompilationUnit, ClassInstanceCreation> getClassInstanceMap() {
 		return classInstanceMap;
 	}
 
-	public Map<IRewriteCompilationUnit, List<SingleVariableDeclaration>> getSingleVarDeclMap() {
+	public Multimap<IRewriteCompilationUnit, SingleVariableDeclaration> getSingleVarDeclMap() {
 		return singleVarDeclMap;
 	}
 
-	public Map<IRewriteCompilationUnit, List<MethodInvocation>> getMethodInvocationsMap() {
+	public Multimap<IRewriteCompilationUnit, MethodInvocation> getMethodInvocationsMap() {
 		return methodInvocationsMap;
 	}
 
-	public Map<IRewriteCompilationUnit, List<MethodDeclaration>> getMethodDeclarationsMap() {
+	public Multimap<IRewriteCompilationUnit, MethodDeclaration> getMethodDeclarationsMap() {
 		return methodDeclarationsMap;
 	}
 
-	public Map<IRewriteCompilationUnit, List<ArrayCreation>> getArrayCreationsMap() {
+	public Multimap<IRewriteCompilationUnit, ArrayCreation> getArrayCreationsMap() {
 		return arrayCreationsMap;
 	}
 
-	public Map<IRewriteCompilationUnit, List<ReturnStatement>> getReturnStatementsMap() {
+	public Multimap<IRewriteCompilationUnit, ReturnStatement> getReturnStatementsMap() {
 		return returnStatementsMap;
 	}
 
