@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ArrayCreation;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
@@ -91,11 +92,20 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 					unit.accept(discoveringVisitor);
 					add("future", unit, discoveringVisitor);
 					
+					unit.accept(collectionDiscoveringVisitor);
+					add("collection", unit, collectionDiscoveringVisitor);
+					
 					WorkerUtils.fillAllWorkerIdentifierForFuture();
-					Set<IRewriteCompilationUnit> allWorkerUnits = loopOverEveryWorker(unit, discoveringVisitor);
-					newUnits.addAll(allWorkerUnits);
+					Set<IRewriteCompilationUnit> allWorkerUnits_future = loopOverEveryWorker(unit, discoveringVisitor);
+					newUnits.addAll(allWorkerUnits_future);
+					
+					Set<IRewriteCompilationUnit> allWorkerUnits_collector = loopOverEveryWorker(unit, collectionDiscoveringVisitor);
+					newUnits.addAll(allWorkerUnits_collector);
+					
 					units.remove(unit);
 					WorkerUtils.clearKeys();
+					
+					
 
 				} else {
 					unit.accept(discoveringVisitor);
@@ -107,7 +117,6 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 
 				// discoveringVisitor.cleanAllLists(); TODO könnte nötig sein
 
-			}
 		}
 		
 		units.addAll(newUnits);
@@ -117,7 +126,7 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 		return this;
 	}
 
-	public Set<IRewriteCompilationUnit> loopOverEveryWorker(IRewriteCompilationUnit unit, FutureVisitor3 visitor) {
+	public <T> Set<IRewriteCompilationUnit> loopOverEveryWorker(IRewriteCompilationUnit unit, VisitorNodes visitor) {
 		Set<IRewriteCompilationUnit> allWorkerUnits = Sets.newConcurrentHashSet();
 
 		for (WorkerIdentifier identifier : WorkerUtils.getAllIdentifier()) {
@@ -126,7 +135,7 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 				ASTNode newNode = unit.copyNode(unit.getRoot());
 				RewriteCompilationUnit newUnit = new RewriteCompilationUnit(unit.getPrimary(), newNode);
 				newUnit.setWorkerIdentifier(identifier);
-				WorkerUtils.addElementToList(identifier, visitor, newUnit, m, groups.get("future"));
+				WorkerUtils.addElementToList(identifier, newUnit, m, groups.get("future"));
 				allWorkerUnits.add(newUnit);
 			}
 		}
