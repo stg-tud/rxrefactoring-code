@@ -94,7 +94,9 @@ public class WorkerUtils {
 	
 		
 		public static void addElementToList(WorkerIdentifier identifier, 
-				IRewriteCompilationUnit unit, Object astNode, CollectorGroup group) {
+				IRewriteCompilationUnit unit, Object astNode, Map<String, CollectorGroup> groups, String key) {
+			
+			CollectorGroup group = groups.get(key);
 
 			if (identifier.equals(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER))
 				group.getVarDeclMap().put(unit, (VariableDeclarationStatement) astNode);

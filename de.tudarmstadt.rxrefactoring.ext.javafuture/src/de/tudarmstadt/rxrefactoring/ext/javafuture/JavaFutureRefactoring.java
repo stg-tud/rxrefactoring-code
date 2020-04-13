@@ -35,7 +35,7 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 	private EnumSet<RefactoringOptions> options;
 
 	public JavaFutureRefactoring() {
-		options = EnumSet.of(RefactoringOptions.FUTURE);// , RefactoringOptions.FUTURETASK);
+		options = EnumSet.of(RefactoringOptions.FUTURETASK);// , RefactoringOptions.FUTURETASK);
 	}
 
 	@Override
@@ -84,7 +84,7 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 		IWorkerRef<Void, Map<ASTNode, UseDef>> analysisRef = workerTree.addWorker(new UseDefWorker());
 
 		IWorkerRef<Map<ASTNode, UseDef>, InstantiationCollector> instRef = workerTree.addWorker(analysisRef,
-				new InstantiationCollector(ClassInfos.Future));
+				new InstantiationCollector(ClassInfos.FutureTask));
 		IWorkerRef<InstantiationCollector, SubclassInstantiationCollector> subclassInstRef = workerTree
 				.addWorker(instRef, new SubclassInstantiationCollector());
 		IWorkerRef<SubclassInstantiationCollector, PreconditionWorker> instUseRef = workerTree
@@ -128,8 +128,8 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 		}
 
 		if (options.contains(RefactoringOptions.FUTURETASK)) {
-			workerTree.addWorker(collector,
-					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.futuretask.SimpleNameWorker());
+			//workerTree.addWorker(collector,
+			//		new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.futuretask.SimpleNameWorker());
 			workerTree.addWorker(collector,
 					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.futuretask.VariableDeclStatementWorker());
 			workerTree.addWorker(collector,

@@ -78,6 +78,7 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 
 		groups.putIfAbsent("future", new CollectorGroup());
 		groups.putIfAbsent("collection", new CollectorGroup());
+		groups.putIfAbsent("futuretask", new CollectorGroup());
 
 		Set<IRewriteCompilationUnit> newUnits = Sets.newConcurrentHashSet();
 
@@ -91,34 +92,32 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 				if (options.contains(RefactoringOptions.SEPARATE_OCCURENCIES)) {
 					unit.accept(discoveringVisitor);
 					add("future", unit, discoveringVisitor);
-					
+
 					unit.accept(collectionDiscoveringVisitor);
 					add("collection", unit, collectionDiscoveringVisitor);
-					
+
 					WorkerUtils.fillAllWorkerIdentifierForFuture();
-					Set<IRewriteCompilationUnit> allWorkerUnits_future = loopOverEveryWorker(unit, discoveringVisitor);
+					Set<IRewriteCompilationUnit> allWorkerUnits_future = loopOverEveryWorker(unit, discoveringVisitor,
+							"future");
 					newUnits.addAll(allWorkerUnits_future);
-					
-					Set<IRewriteCompilationUnit> allWorkerUnits_collector = loopOverEveryWorker(unit, collectionDiscoveringVisitor);
+
+					Set<IRewriteCompilationUnit> allWorkerUnits_collector = loopOverEveryWorker(unit,
+							collectionDiscoveringVisitor, "collection");
 					newUnits.addAll(allWorkerUnits_collector);
-					
+
 					units.remove(unit);
 					WorkerUtils.clearKeys();
-					
-					
 
 				} else {
 					unit.accept(discoveringVisitor);
-					add("future", unit, discoveringVisitor);
-
-					unit.accept(collectionDiscoveringVisitor);
-					add("collection", unit, collectionDiscoveringVisitor);
+					add("futuretask", unit, discoveringVisitor);
 				}
 
 				// discoveringVisitor.cleanAllLists(); TODO könnte nötig sein
 
+			}
 		}
-		
+
 		units.addAll(newUnits);
 
 		summary.setCorrect("numberOfCompilationUnits", units.size());
@@ -126,7 +125,8 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 		return this;
 	}
 
-	public <T> Set<IRewriteCompilationUnit> loopOverEveryWorker(IRewriteCompilationUnit unit, VisitorNodes visitor) {
+	public <T> Set<IRewriteCompilationUnit> loopOverEveryWorker(IRewriteCompilationUnit unit, VisitorNodes visitor,
+			String whichGroup) {
 		Set<IRewriteCompilationUnit> allWorkerUnits = Sets.newConcurrentHashSet();
 
 		for (WorkerIdentifier identifier : WorkerUtils.getAllIdentifier()) {
@@ -135,7 +135,7 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 				ASTNode newNode = unit.copyNode(unit.getRoot());
 				RewriteCompilationUnit newUnit = new RewriteCompilationUnit(unit.getPrimary(), newNode);
 				newUnit.setWorkerIdentifier(identifier);
-				WorkerUtils.addElementToList(identifier, newUnit, m, groups.get("future"));
+				WorkerUtils.addElementToList(identifier, newUnit, m, groups, whichGroup);
 				allWorkerUnits.add(newUnit);
 			}
 		}
@@ -233,11 +233,11 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 	}
 
 	public Multimap<IRewriteCompilationUnit, FieldDeclaration> getFieldDeclMap(String group) {
-		 return groups.get(group).getFieldDeclMap();
+		return groups.get(group).getFieldDeclMap();
 	}
 
 	public Multimap<IRewriteCompilationUnit, Assignment> getAssigmentsMap(String group) {
-		 return groups.get(group).getAssigmentsMap();
+		return groups.get(group).getAssigmentsMap();
 	}
 
 	public Multimap<IRewriteCompilationUnit, VariableDeclarationStatement> getVarDeclMap(String group) {
@@ -253,15 +253,15 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 	}
 
 	public Multimap<IRewriteCompilationUnit, SingleVariableDeclaration> getSingleVarDeclMap(String group) {
-		 return groups.get(group).getSingleVarDeclMap();
+		return groups.get(group).getSingleVarDeclMap();
 	}
 
 	public Multimap<IRewriteCompilationUnit, MethodInvocation> getMethodInvocationsMap(String group) {
-		 return groups.get(group).getMethodInvocationsMap();
+		return groups.get(group).getMethodInvocationsMap();
 	}
 
 	public Multimap<IRewriteCompilationUnit, MethodDeclaration> getMethodDeclarationsMap(String group) {
-		 return groups.get(group).getMethodDeclarationsMap();
+		return groups.get(group).getMethodDeclarationsMap();
 	}
 
 	public Multimap<IRewriteCompilationUnit, ArrayCreation> getArrayCreationsMap(String group) {
@@ -290,13 +290,14 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 			return maps[0];
 
 		Multimap<IRewriteCompilationUnit, T> result = maps[0];
-		Map<IRewriteCompilationUnit, Collection<T>> asMap = result.asMap(); 
+		Map<IRewriteCompilationUnit, Collection<T>> asMap = result.asMap();
 
 		for (int i = 1; i < maps.length; i++) {
 			for (Entry<IRewriteCompilationUnit, Collection<T>> entry : maps[i].asMap().entrySet()) {
 
 				if (entry.getValue() instanceof Collection) {
-					asMap.merge(entry.getKey(), (Collection<T>) entry.getValue(), (a, b) -> { //TODO schauen, ob so noch geht
+					asMap.merge(entry.getKey(), (Collection<T>) entry.getValue(), (a, b) -> { // TODO schauen, ob so
+																								// noch geht
 						List<T> combined = new ArrayList<T>(a);
 						combined.addAll(b);
 						return combined;
