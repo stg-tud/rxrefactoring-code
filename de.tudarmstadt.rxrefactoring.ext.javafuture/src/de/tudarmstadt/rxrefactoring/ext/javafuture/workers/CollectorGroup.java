@@ -162,4 +162,19 @@ public class CollectorGroup {
 
 		return map;
 	}
+	
+	public void clearAllMaps() {
+		typeDeclMap.clear();
+		fieldDeclMap.clear();
+		assigmentsMap.clear();
+		varDeclMap.clear();
+		simpleNamesMap.clear();
+		classInstanceMap.clear();
+		singleVarDeclMap.clear();
+		methodInvocationsMap.clear();
+		methodDeclarationsMap.clear();
+		arrayCreationsMap.clear();
+		returnStatementsMap.clear();
+		
+	}
 }

@@ -399,13 +399,6 @@ public class RefactorExecution implements Runnable {
 		@NonNull
 		Set<RewriteCompilationUnit> result = Sets.newConcurrentHashSet();
 
-		getOpenFile();
-
-		// IEditorPart editor = page.getActiveEditor();
-		IEditorInput editor = page.getActiveEditor().getEditorInput();
-		IJavaElement elem = JavaUI.getEditorInputJavaElement(editor);
-		ICompilationUnit openUnit = (ICompilationUnit) elem;
-
 		// Initializes a new thread pool.
 		ExecutorService executor = extension.createExecutorService();
 		Objects.requireNonNull(executor, "The environments executor service can not be null.");
@@ -433,8 +426,11 @@ public class RefactorExecution implements Runnable {
 								for (ICompilationUnit unit : units) {
 									try {
 										if (extension.onlyScanOpenFile()) {
+											getOpenFile();
+											ICompilationUnit openUnit = getCompUnitToOpenPage();
 											if (unit.getCorrespondingResource()
 													.equals(openUnit.getCorrespondingResource())) {
+												
 												result.add(factory.from(unit));
 											}
 										}
@@ -475,10 +471,9 @@ public class RefactorExecution implements Runnable {
 		WorkerTree workerTree = new WorkerTree(units, projectSummary);
 		extension.addWorkersTo(workerTree);
 
-		// The workers add their changes to the bundled compilation units	
+		// The workers add their changes to the bundled compilation units
 
 		workerTree.run(extension.createExecutorService());
-		
 
 		Map<String, List<IRewriteCompilationUnit>> grouped = getUnitToChangeMapping(units);
 
@@ -527,10 +522,10 @@ public class RefactorExecution implements Runnable {
 			return Collections.singletonMap("Cursor Selection", grouped);
 
 		}
-		
-		if(units.getUnits().stream().anyMatch(u -> u.getWorkerIdentifier() == null))
-			units.getUnits().stream().forEach(e-> e.setWorkerIdentifier(new WorkerIdentifier("Per File")));
-		
+
+		if (units.getUnits().stream().anyMatch(u -> u.getWorkerIdentifier() == null))
+			units.getUnits().stream().forEach(e -> e.setWorkerIdentifier(new WorkerIdentifier("Per File")));
+
 		Map<String, List<IRewriteCompilationUnit>> groupedByWorker = units.getUnits().stream()
 				.filter(unit -> unit.getWorkerIdentifier().getName() != null && unit.hasChanges())
 				.collect(Collectors.groupingBy(IRewriteCompilationUnit::getWorkerString));
@@ -561,6 +556,14 @@ public class RefactorExecution implements Runnable {
 
 			}
 		});
+	}
+	
+	private ICompilationUnit getCompUnitToOpenPage() {
+		IEditorInput editor = page.getActiveEditor().getEditorInput();
+		IJavaElement elem = JavaUI.getEditorInputJavaElement(editor);
+		ICompilationUnit openUnit = (ICompilationUnit) elem;
+		return openUnit;
+		
 	}
 
 	protected static boolean considerProject(IProject project) {

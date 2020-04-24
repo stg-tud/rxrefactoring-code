@@ -2,6 +2,7 @@ package de.tudarmstadt.rxrefactoring.ext.javafuture;
 
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -9,6 +10,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Expression;
 
@@ -18,13 +20,19 @@ import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.ReachingDefinition;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
+import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.PreconditionWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.UseDefWorker;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.dependencies.CursorRefactorOccurenceSearcher;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.dependencies.DependencyCheckerJavaFuture;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfos;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.InstantiationCollector;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.SubclassInstantiationCollector;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.WorkerUtils;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.CollectorGroup;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.FutureCollector;
 
 /**
@@ -33,9 +41,11 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.FutureCollector;
 public class JavaFutureRefactoring implements IRefactorExtension {
 
 	private EnumSet<RefactoringOptions> options;
+	private FutureCollector futureCollector;
 
 	public JavaFutureRefactoring() {
-		options = EnumSet.of(RefactoringOptions.FUTURETASK);// , RefactoringOptions.FUTURETASK);
+		options = EnumSet.of(RefactoringOptions.FUTURE);// , RefactoringOptions.FUTURETASK);
+		futureCollector = new FutureCollector(options);
 	}
 
 	@Override
@@ -52,6 +62,26 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 		
 		return RefactorScope.NO_SCOPE;
 	}
+	
+	@Override
+	public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner) throws JavaModelException{
+		DependencyCheckerJavaFuture dependencyCheck = new DependencyCheckerJavaFuture(units, scanner, futureCollector);
+		return dependencyCheck.runDependendencyCheck();
+	}
+	
+	@Override
+	public ProjectUnits analyseCursorPosition(ProjectUnits units, int offset, int startLine) {
+		CursorRefactorOccurenceSearcher searcher = new CursorRefactorOccurenceSearcher(units, offset, startLine, futureCollector);
+		return searcher.searchOccurence();
+		
+	}
+
+	@Override
+	public void clearAllMaps() {
+		for (Entry<String, CollectorGroup> groupEntry : futureCollector.groups.entrySet()) {
+		groupEntry.getValue().clearAllMaps();
+		}
+	};
 	
 	@Override
 	public @NonNull String getName() {
@@ -84,14 +114,14 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 		IWorkerRef<Void, Map<ASTNode, UseDef>> analysisRef = workerTree.addWorker(new UseDefWorker());
 
 		IWorkerRef<Map<ASTNode, UseDef>, InstantiationCollector> instRef = workerTree.addWorker(analysisRef,
-				new InstantiationCollector(ClassInfos.FutureTask));
+				new InstantiationCollector(ClassInfos.Future));
 		IWorkerRef<InstantiationCollector, SubclassInstantiationCollector> subclassInstRef = workerTree
 				.addWorker(instRef, new SubclassInstantiationCollector());
 		IWorkerRef<SubclassInstantiationCollector, PreconditionWorker> instUseRef = workerTree
 				.addWorker(subclassInstRef, new PreconditionWorker());
 
 		IWorkerRef<PreconditionWorker, FutureCollector> collector = workerTree.addWorker(instUseRef,
-				new FutureCollector(options));
+				futureCollector);
 
 		if (options.contains(RefactoringOptions.FUTURE)) {
 //			workerTree.addWorker(collector,

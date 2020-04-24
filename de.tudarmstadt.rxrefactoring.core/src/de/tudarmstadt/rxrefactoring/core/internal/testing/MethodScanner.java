@@ -40,7 +40,7 @@ public class MethodScanner {
 	
 	
 	public Map<MethodDeclaration, IRewriteCompilationUnit> refactoredMethods = Maps.newHashMap();
-	private Map<MethodDeclaration, IRewriteCompilationUnit> callingMethods = Maps.newHashMap();
+	public Map<MethodDeclaration, IRewriteCompilationUnit> callingMethods = Maps.newHashMap();
 	
 	
 

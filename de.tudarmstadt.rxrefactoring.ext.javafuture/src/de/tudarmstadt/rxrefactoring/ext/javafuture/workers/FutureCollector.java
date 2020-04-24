@@ -49,7 +49,7 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.WorkerUtils;
  */
 public class FutureCollector implements IWorker<PreconditionWorker, FutureCollector> {
 
-	private final Map<String, CollectorGroup> groups;
+	public final Map<String, CollectorGroup> groups;
 
 	private final Map<IRewriteCompilationUnit, Map<ASTNode, MethodDeclaration>> parentMethod;
 	// private final Map<IRewriteCompilationUnit, Map<MethodDeclaration, Boolean>>
@@ -78,7 +78,6 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 
 		groups.putIfAbsent("future", new CollectorGroup());
 		groups.putIfAbsent("collection", new CollectorGroup());
-		groups.putIfAbsent("futuretask", new CollectorGroup());
 
 		Set<IRewriteCompilationUnit> newUnits = Sets.newConcurrentHashSet();
 

@@ -46,7 +46,7 @@ public class WorkerUtils {
 		allWorkerIdentifier.add(NamingUtils.METHOD_DECLARATION_IDENTIFIER);
 		allWorkerIdentifier.add(NamingUtils.CLASS_INSTANCE_CREATION_IDENTIFIER);
 		allWorkerIdentifier.add(NamingUtils.ARRAY_CREATION_IDENTIFIER);
-		allWorkerIdentifier.add(NamingUtils.SIMPLE_NAME_IDENTIFIER);
+		//allWorkerIdentifier.add(NamingUtils.SIMPLE_NAME_IDENTIFIER);
 		allWorkerIdentifier.add(NamingUtils.TYPE_DECL_IDENTIFIER);
 		allWorkerIdentifier.add(NamingUtils.RETURN_STATEMENT_IDENTIFIER);
 	}
