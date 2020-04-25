@@ -1,7 +1,6 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.workers;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -14,7 +13,6 @@ import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 
 public abstract class AbstractGeneralWorker<NodeType extends ASTNode> implements IWorker<FutureCollector, Void> {
 

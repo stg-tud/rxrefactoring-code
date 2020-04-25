@@ -51,6 +51,39 @@ public final class ASTNodes {
 	}
 	
 	/**
+	 * Find the parent of a node given the target class. If the given node is
+	 * already of the target class, then not this node is returned.
+	 * It is starts with the first parent
+	 *
+	 * @param node
+	 *            The source node for which the parent should be found.
+	 * @param target
+	 *            The class of the parent node that should be found (e.g.
+	 *            VariableDeclaration.class).
+	 * @param <T>
+	 *            The type of the node that is returned.
+	 * 
+	 * @return The parent node based on the target, or the given node if it is
+	 *         already an instance of the given class, or an empty Optional if no matching parent
+	 *         could be found.
+	 */
+	@SuppressWarnings({ "unchecked", "null" })
+	public static @NonNull <T extends ASTNode> Optional<T> findParentWithoutConsideringNode(@NonNull ASTNode node, @NonNull Class<T> target) {
+		Objects.requireNonNull(node, "argument 'node' was null.");
+		Objects.requireNonNull(target, "argument 'target' was null.");
+
+		ASTNode parent = node.getParent();
+		while (parent != null) {
+			if (target.isInstance(parent)) {
+				return (Optional<T>) Optional.of(parent);
+			}		
+			parent = parent.getParent();
+		}
+
+		return Optional.empty();
+	}
+	
+	/**
 	 * Find the parent of a node given the target class.
 	 * The search for a parent to be within the bounds of one statement.
 	 * If the given node is already of the target class, then this node is returned.

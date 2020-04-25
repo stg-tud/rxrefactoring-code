@@ -11,7 +11,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ArrayCreation;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
@@ -38,9 +37,9 @@ import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.RefactoringOptions;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.PreconditionWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfos;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.WorkerUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureCollectionVisitor2;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureVisitor3;
-import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.WorkerUtils;
 
 /**
  * Description: Collects relevant information for refactoring<br>
@@ -130,11 +129,11 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 
 		for (WorkerIdentifier identifier : WorkerUtils.getAllIdentifier()) {
 
-			for (Object m : WorkerUtils.getNeededList(identifier, visitor)) {
+			for (ASTNode node : WorkerUtils.getNeededList(identifier, visitor)) {
 				ASTNode newNode = unit.copyNode(unit.getRoot());
 				RewriteCompilationUnit newUnit = new RewriteCompilationUnit(unit.getPrimary(), newNode);
 				newUnit.setWorkerIdentifier(identifier);
-				WorkerUtils.addElementToList(identifier, newUnit, m, groups, whichGroup);
+				WorkerUtils.addElementToList(identifier, newUnit, node, groups, whichGroup);
 				allWorkerUnits.add(newUnit);
 			}
 		}
@@ -207,8 +206,6 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 
 		if (methodBinding == null)
 			return false;
-		Collection<MethodDeclaration> t = getMethodDeclarationsMap(group).get(null);
-
 		for (IRewriteCompilationUnit key : getMethodDeclarationsMap(group).keySet()) {
 			for (MethodDeclaration methodDeclaration : getMethodDeclarationsMap(group).get(key)) {
 

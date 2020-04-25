@@ -2,12 +2,10 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.utils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ArrayCreation;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
@@ -20,15 +18,9 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.NamingUtils;
-import de.tudarmstadt.rxrefactoring.core.utils.RelevantInvocation;
 import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
-import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureCollectionVisitor2;
-import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.visitors.FutureVisitor3;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.CollectorGroup;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.VisitorNodes;
 
@@ -63,7 +55,7 @@ public class WorkerUtils {
 	}
 	
 	
-	public static List getNeededList(WorkerIdentifier identifier, VisitorNodes visitor) {
+	public static List<? extends ASTNode> getNeededList(WorkerIdentifier identifier, VisitorNodes visitor) {
 
 		if (identifier.equals(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER))
 			return visitor.getVarDeclStatements();
@@ -94,7 +86,7 @@ public class WorkerUtils {
 	
 		
 		public static void addElementToList(WorkerIdentifier identifier, 
-				IRewriteCompilationUnit unit, Object astNode, Map<String, CollectorGroup> groups, String key) {
+				IRewriteCompilationUnit unit, ASTNode astNode, Map<String, CollectorGroup> groups, String key) {
 			
 			CollectorGroup group = groups.get(key);
 

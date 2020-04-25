@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ArrayCreation;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
@@ -23,6 +24,8 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.utils.NamingUtils;
+import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 
 public class CollectorGroup {
 	private final Multimap<IRewriteCompilationUnit, TypeDeclaration> typeDeclMap;
@@ -66,6 +69,7 @@ public class CollectorGroup {
 		addToMap(cu, subclasses.getReturnStatements(), returnStatementsMap);
 	}
 
+	@SuppressWarnings("unchecked")
 	private <T> void addToMap(IRewriteCompilationUnit cu, List<T> newList, Multimap<IRewriteCompilationUnit, T> map) {
 		if (newList.isEmpty() || map == null) {
 			return;
@@ -77,6 +81,35 @@ public class CollectorGroup {
 		} else {
 			currentList.addAll(newList);
 		}
+	}
+	
+	public Multimap<IRewriteCompilationUnit, ? extends ASTNode> findMapToIdentifier(WorkerIdentifier identifier) {
+		
+		if(identifier.equals(NamingUtils.ARRAY_CREATION_IDENTIFIER))
+			return arrayCreationsMap;
+		if(identifier.equals(NamingUtils.ASSIGNMENTS_IDENTIFIER))
+			return assigmentsMap;
+		if(identifier.equals(NamingUtils.CLASS_INSTANCE_CREATION_IDENTIFIER))
+			return classInstanceMap;
+		if(identifier.equals(NamingUtils.FIELD_DECLARATION_IDENTIFIER))
+			return fieldDeclMap;
+		if(identifier.equals(NamingUtils.METHOD_DECLARATION_IDENTIFIER))
+			return methodDeclarationsMap;
+		if(identifier.equals(NamingUtils.METHOD_INVOCATION_IDENTIFIER))
+			return methodInvocationsMap;
+		if(identifier.equals(NamingUtils.RETURN_STATEMENT_IDENTIFIER))
+			return returnStatementsMap;
+		if(identifier.equals(NamingUtils.SIMPLE_NAME_IDENTIFIER))
+			return simpleNamesMap;
+		if(identifier.equals(NamingUtils.SINGLE_VAR_DECL_IDENTIFIER))
+			return singleVarDeclMap;
+		if(identifier.equals(NamingUtils.TYPE_DECL_IDENTIFIER))
+			return typeDeclMap;
+		if(identifier.equals(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER))
+			return varDeclMap;
+		
+		return null;
+		
 	}
 
 	public Multimap<IRewriteCompilationUnit, TypeDeclaration> getTypeDeclMap() {
