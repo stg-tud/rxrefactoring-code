@@ -17,6 +17,7 @@ import java.util.Map;
  */
 public class SwingWorkerInfo {
 	private static final String binaryName = "javax.swing.SwingWorker";
+	@SuppressWarnings("serial")
 	private static final Map<String, String> publicMethodsMap = new HashMap<String, String>() {
 		{
 			put("addPropertyChangeListener", "addPropertyChangeListener");

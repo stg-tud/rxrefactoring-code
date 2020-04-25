@@ -7,7 +7,6 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
 
@@ -15,7 +14,6 @@ import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.SwingWorkerInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
@@ -29,9 +27,8 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
  * Adapted to new core by Camila Gonzalez on 24/01/2018
  */
 public class MethodInvocationWorker implements IWorker<TypeOutput, Boolean> {
-
-	private MethodDeclaration isSameMethod;
 	
+	@SuppressWarnings("static-access")
 	@Override
 	public Boolean refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,
 			@NonNull WorkerSummary summary) throws Exception {
@@ -49,8 +46,6 @@ public class MethodInvocationWorker implements IWorker<TypeOutput, Boolean> {
 					|| info.shouldBeRefactored(expression.resolveTypeBinding())
 					|| Types.isExactTypeOf(expression.resolveTypeBinding().getErasure(), "javax.swing.SwingWorker");
 
-			boolean methodDeclaredBySwingWorker = Types
-					.isTypeOf(methodInvocation.resolveMethodBinding().getDeclaringClass(), "javax.swing.SwingWorker");
 
 			if (!receiverIsRefactored) {
 				summary.addSkipped("methodInvocations");

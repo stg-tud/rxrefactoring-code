@@ -2,11 +2,8 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.utils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
@@ -155,6 +152,8 @@ public class WorkerUtils {
 		allWorkerIdentifier.clear();
 	}
 	
+
+	@SuppressWarnings("rawtypes")
 	public static List getNeededList(WorkerIdentifier identifier, DiscoveringVisitor visitor) {
 
 		if (identifier.equals(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER))

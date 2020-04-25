@@ -215,6 +215,7 @@ public class AssignmentWorker extends GeneralWorker<TypeOutput, Void> {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private String refactorDoInBackgroundBlock(Block doInBgBlock) {
 		String doInBgBlockString = "";
 		List<Statement> list = doInBgBlock.statements();

@@ -62,8 +62,6 @@ public class SwingWorkerWrapper extends ASTVisitor {
 	private List<TypeDeclaration> typeDeclarations;
 	private List<String> suscriberMethodNames;
 
-	private final Map<String, Method> methodsOfSubscriber = new HashMap<String, Method>();
-
 	public SwingWorkerWrapper() {
 		fieldDeclarations = new ArrayList<>();
 		additionalMethodDeclarations = new ArrayList<>();
@@ -79,6 +77,7 @@ public class SwingWorkerWrapper extends ASTVisitor {
 		// }
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public boolean visit(ClassInstanceCreation node) {
 		Type type = node.getType();

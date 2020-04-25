@@ -35,6 +35,7 @@ public class RefactorInfo {
 			this.isRefactorable = isRefactorable;
 		}
 
+		@SuppressWarnings("unused")
 		public TypeInfo(TypeDeclaration decl) {
 			this(decl, true);
 		}

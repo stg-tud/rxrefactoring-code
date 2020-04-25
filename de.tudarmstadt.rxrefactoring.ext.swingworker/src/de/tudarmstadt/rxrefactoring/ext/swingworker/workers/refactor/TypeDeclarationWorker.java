@@ -1,6 +1,5 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +31,6 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.Methods;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObservableModel;
@@ -90,17 +88,18 @@ public class TypeDeclarationWorker extends GeneralWorker<RxCollector, TypeOutput
 	}
 
 	// TODO Add sensible preconditions here!
+	@SuppressWarnings("static-access")
 	private boolean checkType(RxCollector collector, ITypeBinding type) {
 		if (Modifier.isAbstract(type.getModifiers())) {
 			return false;
 		}
 		
-		Collection<MethodInvocation> invocations = collector.getMethodInvocationsMap().values();
+		/*Collection<MethodInvocation> invocations = collector.getMethodInvocationsMap().values();
 
 		for (MethodInvocation m : invocations) {
 
 			IMethodBinding binding = m.resolveMethodBinding();
-			String typeName = type.getErasure().getQualifiedName(); // TODO THA noch sinnvoll?
+			String typeName = type.getErasure().getQualifiedName(); */
 
 			// if (Methods.hasSignature(binding, null, "addPropertyChangeListener",
 			// "java.beans.PropertyChangeListener")) {
@@ -109,11 +108,12 @@ public class TypeDeclarationWorker extends GeneralWorker<RxCollector, TypeOutput
 			// return false;
 			// }
 			// }
-		}
+		//}
 
 		return true;
 	}
 
+	@SuppressWarnings("rawtypes")
 	private void refactorTypeDeclaration(IRewriteCompilationUnit icu, SwingWorkerWrapper refactoringVisitor,
 			TypeDeclaration typeDeclaration) {
 		removeSuperInvocations(refactoringVisitor);
@@ -221,6 +221,7 @@ public class TypeDeclarationWorker extends GeneralWorker<RxCollector, TypeOutput
 		// }
 	}
 
+	@SuppressWarnings("unchecked")
 	private void refactorBlock(Block block, AST ast, IRewriteCompilationUnit icu, String className,
 			SwingWorkerWrapper refactoringVisitor, TypeDeclaration typeDeclaration) {
 		List<Statement> list = block.statements();
@@ -294,6 +295,7 @@ public class TypeDeclarationWorker extends GeneralWorker<RxCollector, TypeOutput
 	// }
 	// }
 
+	@SuppressWarnings({ "unused", "unchecked" })
 	private void refactorEhncdForStatement(Statement stmnt, SwingWorkerWrapper refactoringVisitor, AST ast,
 			IRewriteCompilationUnit icu) {
 
@@ -314,6 +316,7 @@ public class TypeDeclarationWorker extends GeneralWorker<RxCollector, TypeOutput
 		}
 	}
 
+	@SuppressWarnings({ "unused", "unchecked", "rawtypes" })
 	private void addOrUpdateConstructor(AST ast, IRewriteCompilationUnit icu, SwingWorkerWrapper refactoringVisitor,
 			TypeDeclaration typeDeclaration, String resultType) {
 

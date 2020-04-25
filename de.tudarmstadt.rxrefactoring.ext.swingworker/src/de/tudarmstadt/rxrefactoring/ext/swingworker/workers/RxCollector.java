@@ -1,8 +1,5 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
 
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -48,6 +45,7 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 		this.scope = scope;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public @Nullable RxCollector refactor(@NonNull IProjectUnits units, @Nullable Void input,
 			@NonNull WorkerSummary summary) throws Exception {

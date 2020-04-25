@@ -7,9 +7,6 @@ import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.RxCollector;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.TypeDeclarationWorker;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.VariableDeclStatementWorker;
-import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
-
 
 public class SwingWorkerOnlyTypeDeclExtension extends SwingWorkerExtension {
 		

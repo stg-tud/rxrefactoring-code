@@ -50,7 +50,7 @@ public class TemplateVisitor extends ASTVisitor {
 	 * @return a {@link TemplateVisitor}
 	 */
 	private static synchronized TemplateVisitor initVisitor(String sc) {
-		ASTParser javaParser = ASTParser.newParser(AST.JLS10);
+		ASTParser javaParser = ASTParser.newParser(AST.JLS13);
 		javaParser.setSource(sc.toCharArray());
 		TemplateVisitor visitor = new TemplateVisitor();
 		javaParser.createAST(null).accept(visitor);
