@@ -210,4 +210,21 @@ public class CollectorGroup {
 		returnStatementsMap.clear();
 		
 	}
+	
+	public void addElementsCollectorGroup(CollectorGroup groupToMerge) {
+		
+		typeDeclMap.putAll(groupToMerge.getTypeDeclMap());
+		fieldDeclMap.putAll(groupToMerge.getFieldDeclMap());
+		assigmentsMap.putAll(groupToMerge.getAssigmentsMap());
+		varDeclMap.putAll(groupToMerge.getVarDeclMap());
+		simpleNamesMap.putAll(groupToMerge.getSimpleNamesMap());
+		classInstanceMap.putAll(groupToMerge.getClassInstanceMap());
+		singleVarDeclMap.putAll(groupToMerge.getSingleVarDeclMap());
+		methodInvocationsMap.putAll(groupToMerge.getMethodInvocationsMap());
+		methodDeclarationsMap.putAll(groupToMerge.getMethodDeclarationsMap());
+		arrayCreationsMap.putAll(groupToMerge.getArrayCreationsMap());
+		returnStatementsMap.putAll(groupToMerge.getReturnStatementsMap());
+		
+		
+	}
 }

@@ -20,6 +20,7 @@ import org.eclipse.jdt.core.dom.ArrayCreation;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.ForStatement;
@@ -62,7 +63,7 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 	public ProjectUnits units;
 	MethodScanner scanner;
 	private FutureCollector collector;
-	private CollectorGroup group;
+	private CollectorGroup group = new CollectorGroup();
 	private String classBinary = "java.util.concurrent.Future";
 	Map<MethodDeclaration, IRewriteCompilationUnit> entriesRefactored;
 	Map<MethodDeclaration, IRewriteCompilationUnit> entriesCalling;
@@ -77,9 +78,13 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 	public ProjectUnits runDependendencyCheck() throws JavaModelException {
 		scanner.scan(units);
 
+		for (Entry<String, CollectorGroup> entry : collector.groups.entrySet()) {
+			group.addElementsCollectorGroup(entry.getValue());
+
+		}
+
 		regroupBecauseOfMethodDependencies();
 		searchForFieldDependencies();
-		
 
 		return units;
 	}
@@ -87,19 +92,14 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 	private ProjectUnits regroupBecauseOfMethodDependencies() throws JavaModelException {
 
 		for (Entry<MethodDeclaration, IRewriteCompilationUnit> entry : scanner.refactoredMethods.entrySet()) {
-			for (Entry<String, CollectorGroup> groupEntry : collector.groups.entrySet()) {
 
-				group = groupEntry.getValue();
-
-				// for method declaration change
-				if (checkIfReturnTypeIsFutureOrExtendsFromIt(entry.getKey())) {
-					changeDependentUnitsOfChangedMethodDeclaration(entry);
-				}
-
-				searchForVarDeclAndMethodInvocationsOfThat();
-				checkVariableDeclarationsWithInMethod();
-
+			// for method declaration change
+			if (checkIfReturnTypeIsFutureOrExtendsFromIt(entry.getKey())) {
+				changeDependentUnitsOfChangedMethodDeclaration(entry);
 			}
+
+			searchForVarDeclAndMethodInvocationsOfThat();
+			checkVariableDeclarationsWithInMethod();
 
 		}
 
@@ -171,31 +171,18 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 				VariableDeclarationFragment fragment = (VariableDeclarationFragment) varDecl.fragments().get(0);
 				SimpleName varName = fragment.getName();
 
-				for(IRewriteCompilationUnit unitToCheck: units) {
-					if(!checkUnitForSameResourceAndBlock(unit, varDecl, unitToCheck))
+				for (IRewriteCompilationUnit unitToCheck : units) {
+					if (!checkUnitForSameResourceAndBlock(unit, varDecl, unitToCheck))
 						continue;
-					if(!checkForSameVariable(varName.getIdentifier(), unitToCheck))
+					if (!checkForSameVariable(varName.getIdentifier(), unitToCheck))
 						continue;
-					
-					unitToCheck.setWorkerIdentifier( new WorkerIdentifier("Change according to Variable: " + varName.getIdentifier()));
-					unit.setWorkerIdentifier(new WorkerIdentifier("Change according to Variable: " + varName.getIdentifier()));
-					
-				}
 
-				/*
-				 * if (varInvoking.getIdentifier().equals(varName.getIdentifier()) &&
-				 * checkForSameMethodDeclaration(varDecl, methodInv)) {
-				 * units.getUnits().stream().filter(x -> x.equals(unit)).forEach(x ->
-				 * x.setWorkerIdentifier( new WorkerIdentifier("Change according to Variable: "
-				 * + varName.getIdentifier())));
-				 * 
-				 * units.getUnits().stream().filter(x -> x.equals(entryRefactor.getValue()))
-				 * .forEach(x -> x.setWorkerIdentifier( new
-				 * WorkerIdentifier("Change according to Variable: " +
-				 * varName.getIdentifier())));
-				 * 
-				 * }
-				 */
+					unitToCheck.setWorkerIdentifier(
+							new WorkerIdentifier("Change according to Variable: " + varName.getIdentifier()));
+					unit.setWorkerIdentifier(
+							new WorkerIdentifier("Change according to Variable: " + varName.getIdentifier()));
+
+				}
 			}
 
 		}
@@ -226,67 +213,81 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 			e.printStackTrace();
 		}
 
-		if(!checkForSameStatement(statement, toCheckUnit))
-				return false;
-		
-		
+		if (!checkForSameStatement(statement, toCheckUnit))
+			return false;
 
 		return true;
 	}
-	
+
 	private boolean checkForSameVariable(String varName, IRewriteCompilationUnit unit) {
-		if(unit.getWorkerIdentifier().equals(NamingUtils.METHOD_INVOCATION_IDENTIFIER)) {
+		if (unit.getWorkerIdentifier().equals(NamingUtils.METHOD_INVOCATION_IDENTIFIER)) {
 			Collection<MethodInvocation> methodInvocs = group.getMethodInvocationsMap().get(unit);
-			return methodInvocs.stream().map(methodInvoc ->{
+			return methodInvocs.stream().map(methodInvoc -> {
 				Expression expr = methodInvoc.getExpression();
 				SimpleName varInvoking = null;
 				if (expr instanceof SimpleName) {
 					varInvoking = (SimpleName) expr;
 				}
 				return varInvoking.getIdentifier().equals(varName);
-			}).findFirst().isPresent();
+			}).anyMatch(bool -> bool == true);
 		}
-		
-		if(unit.getWorkerIdentifier().equals(NamingUtils.SINGLE_VAR_DECL_IDENTIFIER)) {
+
+		if (unit.getWorkerIdentifier().equals(NamingUtils.SINGLE_VAR_DECL_IDENTIFIER)) {
 			Collection<SingleVariableDeclaration> singleVarDecls = group.getSingleVarDeclMap().get(unit);
-			return singleVarDecls.stream().map(singleVarDecl ->{
-				SimpleName name = singleVarDecl.getName();
-				return name.getIdentifier().equals(varName);
-			}).findFirst().isPresent();
+			return singleVarDecls.stream().map(singleVarDecl -> {
+				return handleSingleVarDeclInLoop(singleVarDecl, varName);
+			}).anyMatch(bool -> bool == true);
 		}
-		
-		if(unit.getWorkerIdentifier().equals(NamingUtils.ASSIGNMENTS_IDENTIFIER)) {
+
+		if (unit.getWorkerIdentifier().equals(NamingUtils.ASSIGNMENTS_IDENTIFIER)) {
 			Collection<Assignment> assignments = group.getAssigmentsMap().get(unit);
-			return assignments.stream().map(assignment ->{
+			return assignments.stream().map(assignment -> {
 				Expression expr = assignment.getRightHandSide();
 				SimpleName name = null;
-				if(expr instanceof SimpleName) {
+				if (expr instanceof SimpleName) {
 					name = (SimpleName) expr;
 					return name.getIdentifier().equals(varName);
 				}
 				return null;
-			}).findFirst().isPresent();
+			}).anyMatch(bool -> bool == true);
 		}
-		
-		if(unit.getWorkerIdentifier().equals(NamingUtils.SIMPLE_NAME_IDENTIFIER)) {
+
+		if (unit.getWorkerIdentifier().equals(NamingUtils.SIMPLE_NAME_IDENTIFIER)) {
 			Collection<SimpleName> simpleNames = group.getSimpleNamesMap().get(unit);
-			return simpleNames.stream().map(simpleName ->{
+			return simpleNames.stream().map(simpleName -> {
 				return simpleName.getIdentifier().equals(varName);
-			}).findFirst().isPresent();
+			}).anyMatch(bool -> bool == true);
 		}
-		
-		if(unit.getWorkerIdentifier().equals(NamingUtils.CLASS_INSTANCE_CREATION_IDENTIFIER)) {
+
+		if (unit.getWorkerIdentifier().equals(NamingUtils.CLASS_INSTANCE_CREATION_IDENTIFIER)) {
 			Collection<ClassInstanceCreation> classInstances = group.getClassInstanceMap().get(unit);
-			return classInstances.stream().map(classInstance ->{
-				VariableDeclarationStatement varDecl = ASTNodes.findParent(classInstance, VariableDeclarationStatement.class).get();
+			return classInstances.stream().map(classInstance -> {
+				VariableDeclarationStatement varDecl = ASTNodes
+						.findParent(classInstance, VariableDeclarationStatement.class).get();
 				VariableDeclarationFragment fragment = (VariableDeclarationFragment) varDecl.fragments().get(0);
 				SimpleName name = fragment.getName();
 				return name.getIdentifier().equals(varName);
-			}).findFirst().isPresent();
+			}).anyMatch(bool -> bool == true);
+		}
+
+		return false;
+	}
+
+	private boolean handleSingleVarDeclInLoop(SingleVariableDeclaration singleVar, String toCheck) {
+		Optional<EnhancedForStatement> statement = ASTNodes.findParent(singleVar, EnhancedForStatement.class);
+		
+		if(statement.isPresent()) {
+			Expression exp = statement.get().getExpression();
+			if(exp instanceof SimpleName) {
+				SimpleName name = (SimpleName) exp;
+				
+				return name.getIdentifier().equals(toCheck);
+			}
+
 		}
 		
-		
 		return false;
+		
 	}
 
 	private boolean checkForMethodInvocOrVarDecl(IRewriteCompilationUnit unit) {
@@ -307,10 +308,10 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 		Multimap<IRewriteCompilationUnit, ? extends ASTNode> map = group
 				.findMapToIdentifier(toCheckUnit.getWorkerIdentifier());
 
-		Collection<ASTNode> astNodes = map.get(toCheckUnit).stream().map(elem -> (ASTNode) elem).collect(Collectors.toList());
-		for(ASTNode node: astNodes) {
+		Collection<? extends ASTNode> astNodes = map.get(toCheckUnit);
+		for (ASTNode node : astNodes) {
 			Statement statementToCheck = ASTNodes.findParentWithoutConsideringNode(node, Statement.class).get();
-			if(ASTNodes.containsNode(statement, x -> x == statementToCheck))
+			if (ASTNodes.containsNode(statement, x -> x == statementToCheck))
 				return true;
 		}
 
