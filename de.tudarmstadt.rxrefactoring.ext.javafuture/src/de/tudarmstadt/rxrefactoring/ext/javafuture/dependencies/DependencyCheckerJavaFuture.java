@@ -67,6 +67,8 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 	private String classBinary = "java.util.concurrent.Future";
 	Map<MethodDeclaration, IRewriteCompilationUnit> entriesRefactored;
 	Map<MethodDeclaration, IRewriteCompilationUnit> entriesCalling;
+	Map<String, SingleVariableDeclaration> singleVarDeclsToCheck = new HashMap<>();
+	int counterVar = 0;
 
 	public DependencyCheckerJavaFuture(ProjectUnits units, MethodScanner scanner, FutureCollector collector) {
 		this.scanner = scanner;
@@ -85,6 +87,7 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 
 		regroupBecauseOfMethodDependencies();
 		searchForFieldDependencies();
+		checkVariableDeclarationsWithInMethod();
 
 		return units;
 	}
@@ -98,8 +101,7 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 				changeDependentUnitsOfChangedMethodDeclaration(entry);
 			}
 
-			searchForVarDeclAndMethodInvocationsOfThat();
-			checkVariableDeclarationsWithInMethod();
+			// searchForVarDeclAndMethodInvocationsOfThat();
 
 		}
 
@@ -118,46 +120,41 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 		return false;
 	}
 
-	private void searchForVarDeclAndMethodInvocationsOfThat() throws JavaModelException {
-
-		sortAndFilterMaps();
-
-		for (Entry<MethodDeclaration, IRewriteCompilationUnit> entryRefactor : entriesRefactored.entrySet()) {
-			// if
-			// (entryRefactor.getValue().getWorkerIdentifier().equals(NamingUtils.METHOD_INVOCATION_IDENTIFIER))
-			// {
-			Collection<MethodInvocation> methodInvocations = group.getMethodInvocationsMap()
-					.get(entryRefactor.getValue());
-			for (MethodInvocation methodInv : methodInvocations) {
-				Expression expr = methodInv.getExpression();
-				SimpleName varInvoking = null;
-				if (expr instanceof SimpleName) {
-					varInvoking = (SimpleName) expr;
-				}
-
-				for (Entry<MethodDeclaration, IRewriteCompilationUnit> entryCalling : entriesCalling.entrySet()) {
-					Collection<VariableDeclarationStatement> varDecls = group.getVarDeclMap()
-							.get(entryCalling.getValue());
-					for (VariableDeclarationStatement varDecl : varDecls) {
-						VariableDeclarationFragment fragment = (VariableDeclarationFragment) varDecl.fragments().get(0);
-						SimpleName varName = fragment.getName();
-
-						if (varInvoking.getIdentifier().equals(varName.getIdentifier())
-								&& checkForSameMethodDeclaration(varDecl, methodInv)) {
-							units.getUnits().stream().filter(x -> x.equals(entryCalling.getValue()))
-									.forEach(x -> x.setWorkerIdentifier(new WorkerIdentifier(
-											"Change according to Variable: " + varName.getIdentifier())));
-
-							units.getUnits().stream().filter(x -> x.equals(entryRefactor.getValue()))
-									.forEach(x -> x.setWorkerIdentifier(new WorkerIdentifier(
-											"Change according to Variable: " + varName.getIdentifier())));
-
-						}
-					}
-				}
-			}
-		}
-	}
+	/*
+	 * private void searchForVarDeclAndMethodInvocationsOfThat() throws
+	 * JavaModelException {
+	 * 
+	 * sortAndFilterMaps();
+	 * 
+	 * for (Entry<MethodDeclaration, IRewriteCompilationUnit> entryRefactor :
+	 * entriesRefactored.entrySet()) { // if //
+	 * (entryRefactor.getValue().getWorkerIdentifier().equals(NamingUtils.
+	 * METHOD_INVOCATION_IDENTIFIER)) // { Collection<MethodInvocation>
+	 * methodInvocations = group.getMethodInvocationsMap()
+	 * .get(entryRefactor.getValue()); for (MethodInvocation methodInv :
+	 * methodInvocations) { Expression expr = methodInv.getExpression(); SimpleName
+	 * varInvoking = null; if (expr instanceof SimpleName) { varInvoking =
+	 * (SimpleName) expr; }
+	 * 
+	 * for (Entry<MethodDeclaration, IRewriteCompilationUnit> entryCalling :
+	 * entriesCalling.entrySet()) { Collection<VariableDeclarationStatement>
+	 * varDecls = group.getVarDeclMap() .get(entryCalling.getValue()); for
+	 * (VariableDeclarationStatement varDecl : varDecls) {
+	 * VariableDeclarationFragment fragment = (VariableDeclarationFragment)
+	 * varDecl.fragments().get(0); SimpleName varName = fragment.getName();
+	 * 
+	 * if (varInvoking.getIdentifier().equals(varName.getIdentifier()) &&
+	 * checkForSameMethodDeclaration(varDecl, methodInv)) {
+	 * units.getUnits().stream().filter(x -> x.equals(entryCalling.getValue()))
+	 * .forEach(x -> x.setWorkerIdentifier(new WorkerIdentifier(
+	 * "Change according to Variable: " + varName.getIdentifier())));
+	 * 
+	 * units.getUnits().stream().filter(x -> x.equals(entryRefactor.getValue()))
+	 * .forEach(x -> x.setWorkerIdentifier(new WorkerIdentifier(
+	 * "Change according to Variable: " + varName.getIdentifier())));
+	 * 
+	 * } } } } } }
+	 */
 
 	private void checkVariableDeclarationsWithInMethod() {
 
@@ -166,21 +163,42 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 				.collect(Collectors.toList());
 		for (IRewriteCompilationUnit unit : filteredUnits) {
 			Collection<VariableDeclarationStatement> statements = group.getVarDeclMap().get(unit);
+			
+			counterVar++;
 
 			for (VariableDeclarationStatement varDecl : statements) {
 				VariableDeclarationFragment fragment = (VariableDeclarationFragment) varDecl.fragments().get(0);
 				SimpleName varName = fragment.getName();
 
 				for (IRewriteCompilationUnit unitToCheck : units) {
-					if (!checkUnitForSameResourceAndBlock(unit, varDecl, unitToCheck))
+					if (!unit.equals(unitToCheck)) {
+						if (!checkUnitForSameResourceAndBlock(unit, varDecl, unitToCheck))
+							continue;
+						else if (!checkForSameVariable(varName.getIdentifier(), unitToCheck))
+							continue;
+
+						unitToCheck.setWorkerIdentifier(new WorkerIdentifier("Change #" + String.valueOf(counterVar)
+								+ " according to Variable: " + varName.getIdentifier()));
+						unit.setWorkerIdentifier(new WorkerIdentifier("Change #" + String.valueOf(counterVar)
+								+ " according to Variable: " + varName.getIdentifier()));
+
+					}
+				}
+			}
+
+			for (Entry<String, SingleVariableDeclaration> singleVar : singleVarDeclsToCheck.entrySet()) {
+				SimpleName varName = singleVar.getValue().getName();
+
+				for (IRewriteCompilationUnit unitToCheck : units) {
+					if (!checkUnitForSameResourceAndBlock(unit, singleVar.getValue(), unitToCheck))
 						continue;
 					if (!checkForSameVariable(varName.getIdentifier(), unitToCheck))
 						continue;
 
 					unitToCheck.setWorkerIdentifier(
-							new WorkerIdentifier("Change according to Variable: " + varName.getIdentifier()));
+							new WorkerIdentifier(singleVar.getKey()));
 					unit.setWorkerIdentifier(
-							new WorkerIdentifier("Change according to Variable: " + varName.getIdentifier()));
+							new WorkerIdentifier(singleVar.getKey()));
 
 				}
 			}
@@ -188,8 +206,8 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 		}
 	}
 
-	private boolean checkUnitForSameResourceAndBlock(IRewriteCompilationUnit varDecl,
-			VariableDeclarationStatement statement, IRewriteCompilationUnit toCheckUnit) {
+	private boolean checkUnitForSameResourceAndBlock(IRewriteCompilationUnit varDecl, ASTNode statement,
+			IRewriteCompilationUnit toCheckUnit) {
 
 		boolean hasRighWorkerIdentifier = toCheckUnit.getWorkerIdentifier()
 				.equals(NamingUtils.METHOD_INVOCATION_IDENTIFIER)
@@ -235,7 +253,12 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 		if (unit.getWorkerIdentifier().equals(NamingUtils.SINGLE_VAR_DECL_IDENTIFIER)) {
 			Collection<SingleVariableDeclaration> singleVarDecls = group.getSingleVarDeclMap().get(unit);
 			return singleVarDecls.stream().map(singleVarDecl -> {
-				return handleSingleVarDeclInLoop(singleVarDecl, varName);
+				boolean res = handleSingleVarDeclInLoop(singleVarDecl, varName);
+				if (res)
+					singleVarDeclsToCheck.put(
+							"Change #" + String.valueOf(counterVar) + " according to Variable: " + varName,
+							singleVarDecl);
+				return res;
 			}).anyMatch(bool -> bool == true);
 		}
 
@@ -275,19 +298,19 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 
 	private boolean handleSingleVarDeclInLoop(SingleVariableDeclaration singleVar, String toCheck) {
 		Optional<EnhancedForStatement> statement = ASTNodes.findParent(singleVar, EnhancedForStatement.class);
-		
-		if(statement.isPresent()) {
+
+		if (statement.isPresent()) {
 			Expression exp = statement.get().getExpression();
-			if(exp instanceof SimpleName) {
+			if (exp instanceof SimpleName) {
 				SimpleName name = (SimpleName) exp;
-				
+
 				return name.getIdentifier().equals(toCheck);
 			}
 
 		}
-		
+
 		return false;
-		
+
 	}
 
 	private boolean checkForMethodInvocOrVarDecl(IRewriteCompilationUnit unit) {
@@ -303,7 +326,7 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 
 	}
 
-	private boolean checkForSameStatement(VariableDeclarationStatement varDecl, IRewriteCompilationUnit toCheckUnit) {
+	private boolean checkForSameStatement(ASTNode varDecl, IRewriteCompilationUnit toCheckUnit) {
 		Statement statement = ASTNodes.findParentWithoutConsideringNode(varDecl, Statement.class).get();
 		Multimap<IRewriteCompilationUnit, ? extends ASTNode> map = group
 				.findMapToIdentifier(toCheckUnit.getWorkerIdentifier());
