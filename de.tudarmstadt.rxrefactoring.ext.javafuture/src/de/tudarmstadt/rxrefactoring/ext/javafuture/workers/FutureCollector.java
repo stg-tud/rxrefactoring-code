@@ -108,10 +108,12 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 
 				} else {
 					unit.accept(discoveringVisitor);
-					add("futuretask", unit, discoveringVisitor);
-				}
+					add("future", unit, discoveringVisitor);
 
-				// discoveringVisitor.cleanAllLists(); TODO könnte nötig sein
+					unit.accept(collectionDiscoveringVisitor);
+					add("collection", unit, collectionDiscoveringVisitor);
+
+				}
 
 			}
 		}
