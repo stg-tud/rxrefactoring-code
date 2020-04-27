@@ -1,6 +1,8 @@
 package de.tudarmstadt.rxrefactoring.core.internal.execution;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -38,6 +40,7 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.ltk.core.refactoring.DocumentChange;
+import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
@@ -80,7 +83,8 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 	private @Nullable AST ast;
 
 	/**
-	 * Gets the worker which worked with this RewriteCompilation unit or all if more are involved
+	 * Gets the worker which worked with this RewriteCompilation unit or all if more
+	 * are involved
 	 */
 	private WorkerIdentifier worker;
 
@@ -174,10 +178,10 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 	}
 
 	@Override
-	public void setWorkerIdentifier(WorkerIdentifier worker) { 
+	public void setWorkerIdentifier(WorkerIdentifier worker) {
 		this.worker = worker;
 	}
-	
+
 	@Override
 	public String getWorkerString() {
 		return this.worker.getName();
@@ -246,7 +250,8 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 
 		MultiTextEdit root = new MultiTextEdit();
 		Document document = new Document(this.getSource());
-		
+		Map<IResource, String> checkForDuplicatedImports = new HashMap<>();
+
 		for (RewriteCompilationUnit unit : unitsToAdd) {
 			if (unit.hasChanges() && unit.getCorrespondingResource().equals(this.getCorrespondingResource())) {
 
@@ -259,12 +264,23 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 				// Apply changes to the classes imports if there are any
 				if (unit.hasImportChanges()) {
 					TextEdit edit = unit.imports().rewriteImports(null); // We can add a progress monitor here.
-					root.addChild(edit);
+					InsertEdit insertEdit = (InsertEdit) edit.getChildren()[0];
+					if (checkForDuplicatedImports.containsKey(unit.getCorrespondingResource())) {
+						
+						if (!checkForDuplicatedImports.get(unit.getCorrespondingResource()).equals(insertEdit.getText())) {
+							root.addChild(edit);
+							checkForDuplicatedImports.put(unit.getCorrespondingResource(), insertEdit.getText());
+						}
+	
+					}else {
+							root.addChild(edit);
+							checkForDuplicatedImports.put(unit.getCorrespondingResource(), insertEdit.getText());
+						}
 				}
-		
+
 			}
 		}
-		
+
 		DocumentChange change = new RewriteChange(unit.getElementName(), document);
 		change.setEdit(root);
 		return Optional.of(change);
