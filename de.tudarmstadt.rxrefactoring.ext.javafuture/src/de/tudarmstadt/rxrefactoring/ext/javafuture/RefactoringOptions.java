@@ -15,7 +15,7 @@ import java.util.EnumSet;
  *
  */
 public enum RefactoringOptions {
-	FUTURE, FUTURETASK, SEPARATE_OCCURENCIES;
+	FUTURE, FUTURETASK, SEPARATE_OCCURENCIES, ONLY_ONE_OCCURENCY;
 
 	public static final EnumSet<RefactoringOptions> ALL_OPTIONS = EnumSet.allOf(RefactoringOptions.class);
 }

@@ -96,6 +96,7 @@ public class RefactorExecution implements Runnable {
 	 */
 	private final IRefactorExtension extension;
 	private IWorkbenchPage page;
+	private ICompilationUnit openUnit;
 	private int offset;
 	private int startLine;
 
@@ -398,7 +399,12 @@ public class RefactorExecution implements Runnable {
 		@SuppressWarnings("null")
 		@NonNull
 		Set<RewriteCompilationUnit> result = Sets.newConcurrentHashSet();
-
+		
+		if (extension.onlyScanOpenFile()) {
+			getOpenFile();
+			openUnit = getCompUnitToOpenPage();
+		}
+		
 		// Initializes a new thread pool.
 		ExecutorService executor = extension.createExecutorService();
 		Objects.requireNonNull(executor, "The environments executor service can not be null.");
@@ -425,15 +431,12 @@ public class RefactorExecution implements Runnable {
 								// Find the compilation units, i.e. .java source files.
 								for (ICompilationUnit unit : units) {
 									try {
-										if (extension.onlyScanOpenFile()) {
-											getOpenFile();
-											ICompilationUnit openUnit = getCompUnitToOpenPage();
 											if (unit.getCorrespondingResource()
 													.equals(openUnit.getCorrespondingResource())) {
 												
 												result.add(factory.from(unit));
 											}
-										}
+										
 
 								else {
 											result.add(factory.from(unit));
@@ -508,7 +511,8 @@ public class RefactorExecution implements Runnable {
 		}
 
 		if (extension.getRefactorScope().equals(RefactorScope.ONLY_ONE_OCCURENCE)
-				&& extension.getName().equals("SwingWorker to Observable only Variable Declarations")) {
+				&& (extension.getName().equals("SwingWorker to Observable only Variable Declarations")
+				|| extension.getName().equals("Java Future to Observable only Variable Declarations"))) {
 
 			ProjectUnits newUnits = extension.analyseCursorPosition(units, offset, startLine);
 
@@ -550,6 +554,7 @@ public class RefactorExecution implements Runnable {
 							final TextSelection textSelection = (TextSelection) viewSiteSelection;
 							offset = textSelection.getOffset();
 							startLine = textSelection.getStartLine();
+							
 						}
 					}
 				}

@@ -35,7 +35,6 @@ import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use.Kind;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfo;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.SubclassInstantiationCollector;
@@ -338,6 +337,7 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 	 * one of its arguments cannot be refactored.
 	 * @return were there changes in unsupported?
 	 */
+	@SuppressWarnings("unused")
 	private boolean handleUnsupportedParameters(Set<ASTNode> unsupported,
 			Multimap<MethodDeclaration, ASTNode> methodDeclParams, Multimap<ASTNode, Use> map) {
 		boolean changesInUnsupported = false;
@@ -568,6 +568,7 @@ public class PreconditionWorker implements IWorker<SubclassInstantiationCollecto
 	 * @param expr
 	 * @return The MethodDeclaration it is parameter to, or None if it is to none.
 	 */
+	@SuppressWarnings({ "unused", "rawtypes" })
 	private Optional<MethodDeclaration> methodParameter(Expression expr) {
 		if (expr instanceof SimpleName &&
 				expr.resolveTypeBinding().getBinaryName().equals(classInfo.getBinaryName())){

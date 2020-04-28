@@ -9,11 +9,8 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ArrayAccess;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.TryStatement;
@@ -111,6 +108,7 @@ public class JavaFutureASTUtils {
 		unit.replace(oldNode, blockingSingle);
 	}
 
+	@SuppressWarnings("rawtypes")
 	public static void removeTryStatement(IRewriteCompilationUnit unit, MethodInvocation mi) {
 		Optional<TryStatement> tryStatement = ASTNodes.findParent(mi, TryStatement.class);
 		if (tryStatement.isPresent()) {
@@ -140,6 +138,7 @@ public class JavaFutureASTUtils {
 	}
 	
 	
+	@SuppressWarnings("rawtypes")
 	public static void removeException(IRewriteCompilationUnit unit, ASTNode node) {
 		Optional<TryStatement> tryStatement = ASTNodes.findParent(node, TryStatement.class);
 		

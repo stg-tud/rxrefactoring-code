@@ -9,21 +9,16 @@ import java.util.concurrent.Executors;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.annotation.NonNull;
-import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.Expression;
 
-import com.google.common.collect.Multimap;
-
+import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
-import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.ReachingDefinition;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
-import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.PreconditionWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.UseDefWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.dependencies.CursorRefactorOccurenceSearcher;
@@ -31,7 +26,6 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.dependencies.DependencyChecke
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfos;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.InstantiationCollector;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.SubclassInstantiationCollector;
-import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.WorkerUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.CollectorGroup;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.FutureCollector;
 
@@ -68,13 +62,7 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 		DependencyCheckerJavaFuture dependencyCheck = new DependencyCheckerJavaFuture(units, scanner, futureCollector);
 		return dependencyCheck.runDependendencyCheck();
 	}
-	
-	@Override
-	public ProjectUnits analyseCursorPosition(ProjectUnits units, int offset, int startLine) {
-		CursorRefactorOccurenceSearcher searcher = new CursorRefactorOccurenceSearcher(units, offset, startLine, futureCollector);
-		return searcher.searchOccurence();
-		
-	}
+
 
 	@Override
 	public void clearAllMaps() {

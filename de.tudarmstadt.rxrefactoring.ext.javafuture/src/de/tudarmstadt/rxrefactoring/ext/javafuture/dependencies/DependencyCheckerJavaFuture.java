@@ -1,10 +1,5 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.dependencies;
 
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,22 +8,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ArrayCreation;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.ForStatement;
 import org.eclipse.jdt.core.dom.IBinding;
-import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
-import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ReturnStatement;
@@ -36,10 +29,8 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.Type;
-import org.eclipse.jdt.core.dom.VariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
-import org.eclipse.jdt.core.dom.WhileStatement;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -47,14 +38,12 @@ import com.google.common.collect.Multimap;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.dependencies.DependencyBetweenWorkerCheck;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
-import de.tudarmstadt.rxrefactoring.core.internal.execution.RefactorExecution;
 import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.NamingUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
-import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.WorkerUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.CollectorGroup;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.FutureCollector;
 
@@ -313,7 +302,7 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 
 	}
 
-	private boolean checkForMethodInvocOrVarDecl(IRewriteCompilationUnit unit) {
+	/*private boolean checkForMethodInvocOrVarDecl(IRewriteCompilationUnit unit) {
 
 		return unit.getWorkerIdentifier().equals(NamingUtils.METHOD_INVOCATION_IDENTIFIER)
 				|| unit.getWorkerIdentifier().equals(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER);
@@ -324,7 +313,7 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 		return ASTNodes.findParent(varDecl, MethodDeclaration.class).get()
 				.equals(ASTNodes.findParent(calledMethod, MethodDeclaration.class).get());
 
-	}
+	}*/
 
 	private boolean checkForSameStatement(ASTNode varDecl, IRewriteCompilationUnit toCheckUnit) {
 		Statement statement = ASTNodes.findParentWithoutConsideringNode(varDecl, Statement.class).get();
@@ -342,7 +331,7 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 
 	}
 
-	private void sortAndFilterMaps() {
+	/*private void sortAndFilterMaps() {
 		entriesRefactored = scanner.refactoredMethods.entrySet().stream()
 				.filter(entry -> checkForMethodInvocOrVarDecl(entry.getValue()))
 				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
@@ -373,7 +362,7 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 
 		entriesCalling.putAll(toAddToCalling);
 
-	}
+	}*/
 
 	private void changeDependentUnitsOfChangedMethodDeclaration(
 			Entry<MethodDeclaration, IRewriteCompilationUnit> entry) {
@@ -512,6 +501,7 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	private Set<IRewriteCompilationUnit> getSingleVariableDeclationsForMethodParams(MethodDeclaration methodDecl) {
 		Set<IRewriteCompilationUnit> unitsToChange = new HashSet<IRewriteCompilationUnit>();
 		List<SingleVariableDeclaration> listParams = (List<SingleVariableDeclaration>) methodDecl.parameters();

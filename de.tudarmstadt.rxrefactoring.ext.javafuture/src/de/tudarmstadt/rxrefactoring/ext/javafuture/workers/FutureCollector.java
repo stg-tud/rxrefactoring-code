@@ -33,6 +33,7 @@ import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.RefactoringOptions;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.PreconditionWorker;
@@ -87,7 +88,7 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 				FutureCollectionVisitor2 collectionDiscoveringVisitor = new FutureCollectionVisitor2(
 						ClassInfos.Future.getBinaryName(), input);
 
-				if (options.contains(RefactoringOptions.SEPARATE_OCCURENCIES)) {
+				if (options.contains(RefactoringOptions.SEPARATE_OCCURENCIES) || options.contains(RefactoringOptions.ONLY_ONE_OCCURENCY)) {
 					unit.accept(discoveringVisitor);
 					add("future", unit, discoveringVisitor);
 

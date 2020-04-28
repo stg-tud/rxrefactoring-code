@@ -1,15 +1,27 @@
 <?xml version="1.0" encoding="ASCII"?>
 <fragment:ModelFragments xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:commands="http://www.eclipse.org/ui/2010/UIModel/application/commands" xmlns:fragment="http://www.eclipse.org/ui/2010/UIModel/fragment" xmlns:menu="http://www.eclipse.org/ui/2010/UIModel/application/ui/menu" xmi:id="_RgxgIKKhEeeB0b7SGvWCTg">
   <imports xsi:type="menu:Menu" xmi:id="_c5N_EKKhEeeB0b7SGvWCTg" elementId="de.tudarmstadt.rxrefactoring.core.menu"/>
+  <imports xsi:type="commands:BindingContext" xmi:id="_UWHjIIixEeqKhNhj6zlKlg" elementId="org.eclipse.ui.contexts.dialogAndWindow"/>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_ggxUkKKhEeeB0b7SGvWCTg" featurename="menuContributions" parentElementId="org.eclipse.e4.legacy.ide.application">
     <elements xsi:type="menu:MenuContribution" xmi:id="_jGgnwKKhEeeB0b7SGvWCTg" elementId="de.tudarmstadt.rxrefactoring.ext.javafuture.menucontribution.execute" positionInParent="before=de.tudarmstadt.rxrefactoring.core.menuseparator.0" parentId="de.tudarmstadt.rxrefactoring.core.menu">
-      <children xsi:type="menu:HandledMenuItem" xmi:id="_ppa7IKKhEeeB0b7SGvWCTg" elementId="de.tudarmstadt.rxrefactoring.ext.javafuture.handledmenuitem.execute" label="Java Future to Flowable" command="_wTat8KKhEeeB0b7SGvWCTg"/>
+      <children xsi:type="menu:Menu" xmi:id="_ASnjIIiyEeqKhNhj6zlKlg" elementId="de.tudarmstadt.rxrefactoring.ext.javafuture.menu.javafuture" label="JavaFuture ...">
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_ppa7IKKhEeeB0b7SGvWCTg" elementId="de.tudarmstadt.rxrefactoring.ext.javafuture.handledmenuitem.execute" label="Scan all projects in workspace" command="_wTat8KKhEeeB0b7SGvWCTg"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_vhZBoIixEeqKhNhj6zlKlg" elementId="de.tudarmstadt.rxrefactoring.ext.javafuture.handledmenuitem.onlyVar" label="Scan cursor line for Variable Declaration Refactoring" command="_UXAegIiyEeqKhNhj6zlKlg"/>
+      </children>
     </elements>
   </fragments>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_tnrgcKKhEeeB0b7SGvWCTg" featurename="commands" parentElementId="org.eclipse.e4.legacy.ide.application">
     <elements xsi:type="commands:Command" xmi:id="_wTat8KKhEeeB0b7SGvWCTg" elementId="de.tudarmstadt.rxrefactoring.ext.javafuture.command.execute" commandName="Execute"/>
+    <elements xsi:type="commands:Command" xmi:id="_UXAegIiyEeqKhNhj6zlKlg" elementId="de.tudarmstadt.rxrefactoring.ext.javafuture.command.onlyVar" commandName="OnlyVar"/>
   </fragments>
   <fragments xsi:type="fragment:StringModelFragment" xmi:id="_UwkAcKKiEeeB0b7SGvWCTg" featurename="handlers" parentElementId="org.eclipse.e4.legacy.ide.application">
     <elements xsi:type="commands:Handler" xmi:id="_Zu0DIKKiEeeB0b7SGvWCTg" elementId="de.tudarmstadt.rxrefactoring.ext.javafuture.handler.execute" contributionURI="bundleclass://de.tudarmstadt.rxrefactoring.ext.javafuture/de.tudarmstadt.rxrefactoring.ext.javafuture.JavaFutureRefactoringE4Handler" command="_wTat8KKhEeeB0b7SGvWCTg"/>
+    <elements xsi:type="commands:Handler" xmi:id="_bEylIIiyEeqKhNhj6zlKlg" elementId="de.tudarmstadt.rxrefactoring.ext.javafuture.handler.onlyVar" contributionURI="bundleclass://de.tudarmstadt.rxrefactoring.ext.javafuture/de.tudarmstadt.rxrefactoring.ext.javafuture.JavaFutureOnlyVarDeclHandler" command="_UXAegIiyEeqKhNhj6zlKlg"/>
+  </fragments>
+  <fragments xsi:type="fragment:StringModelFragment" xmi:id="_oBaMkIiyEeqKhNhj6zlKlg" featurename="bindingTables" parentElementId="org.eclipse.e4.legacy.ide.application">
+    <elements xsi:type="commands:BindingTable" xmi:id="_2gHR0IiyEeqKhNhj6zlKlg" elementId="de.tudarmstadt.rxrefactoring.ext.javafuture.bindingtable.0" bindingContext="_UWHjIIixEeqKhNhj6zlKlg">
+      <bindings xmi:id="_6Gb4QIiyEeqKhNhj6zlKlg" elementId="de.tudarmstadt.rxrefactoring.ext.javafuture.keybinding.0" keySequence="M2+J" command="_wTat8KKhEeeB0b7SGvWCTg"/>
+      <bindings xmi:id="_Noe7kIizEeqKhNhj6zlKlg" elementId="de.tudarmstadt.rxrefactoring.ext.javafuture.keybinding.1" keySequence="M2+V" command="_UXAegIiyEeqKhNhj6zlKlg"/>
+    </elements>
   </fragments>
 </fragment:ModelFragments>

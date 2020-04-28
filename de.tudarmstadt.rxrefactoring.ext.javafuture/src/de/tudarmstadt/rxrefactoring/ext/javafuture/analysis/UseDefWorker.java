@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
@@ -30,7 +29,6 @@ import de.tudarmstadt.rxrefactoring.core.analysis.dataflow.NotConvergingExceptio
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDefAnalysis;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
-import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 
 
 /**
@@ -92,6 +90,7 @@ public class UseDefWorker implements IWorker<Void, Map<ASTNode, UseDef>> {
 		}
 		
 		
+		@SuppressWarnings("unchecked")
 		private void analyzeTypeDeclaration(TypeDeclaration type) {
 			analyzeBodyDeclarations(type.bodyDeclarations());
 		}
@@ -122,13 +121,14 @@ public class UseDefWorker implements IWorker<Void, Map<ASTNode, UseDef>> {
 				analyzeBlock((Block) body);
 		}
 		
+		@SuppressWarnings("unused")
 		private void analyzeVariableFragments(List<VariableDeclarationFragment> fragments) {
 			//Do something with variable declarations
 		}		
 		
 				
+		@SuppressWarnings("unchecked")
 		private void analyzeBlock(Block block) {
-			AST ast = unit.getAST();
 			
 			Map<ASTNode, UseDef> tempResult;
 			

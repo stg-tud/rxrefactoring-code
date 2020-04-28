@@ -5,14 +5,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-
-import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 
 public class RefactorInfo {
 	

@@ -25,7 +25,6 @@ import com.google.common.collect.Multimap;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef.Use;
 import de.tudarmstadt.rxrefactoring.core.legacy.ASTUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.Expressions;
-import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.PreconditionWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfo;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.VisitorNodes;
