@@ -5,9 +5,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
@@ -21,12 +20,10 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerUtils;
 public class CursorRefactorOccurenceSearcher extends CursorAnalysis {
 
 	ProjectUnits units;
-	Integer offset;
 	Integer startLine;
 
-	public CursorRefactorOccurenceSearcher(ProjectUnits units, int offset, int startLine) {
+	public CursorRefactorOccurenceSearcher(ProjectUnits units, int startLine) {
 		this.units = units;
-		this.offset = offset;
 		this.startLine = startLine;
 	}
 
@@ -44,27 +41,22 @@ public class CursorRefactorOccurenceSearcher extends CursorAnalysis {
 		for (IRewriteCompilationUnit unit : units_VarDecls) {
 			Collection<VariableDeclarationStatement> varDecls = WorkerUtils.getVarDeclMap().get(unit);
 			for (VariableDeclarationStatement statement : varDecls) {
+				Optional<CompilationUnit> compUnit = ASTNodes.findParent(statement, CompilationUnit.class);
+				int lineNumber = compUnit.get().getLineNumber(statement.getStartPosition()) - 1;
 				VariableDeclarationFragment fragment = (VariableDeclarationFragment) statement.fragments().get(0);
 				String name = fragment.getName().getIdentifier();
-				Optional<MethodDeclaration> methodDeclaration = ASTNodes.findParent(statement, MethodDeclaration.class);
-				String methodNameUnit = "";
-				if (methodDeclaration.isPresent()) {
-					methodNameUnit = methodDeclaration.get().getName().getIdentifier();
-				}
-				String varName = resolveCursorPosition(unit)[1];
-				String methodName = resolveCursorPosition(unit)[0];
-				if (varName.contains(name) && methodNameUnit.equals(methodName))
+			
+				String varName = resolveCursorPosition(unit);
+				if (varName.contains(name) && lineNumber == startLine)
 					unit.setWorkerIdentifier(new WorkerIdentifier("Cursor Selection"));
 			}
 
 		}
 	}
 
-	private String[] resolveCursorPosition(IRewriteCompilationUnit unit) {
-		IJavaElement elemMethod = null;
+	private String resolveCursorPosition(IRewriteCompilationUnit unit) {
 		String nameElemText = null;
 		try {
-			elemMethod = unit.getElementAt(offset);
 			String text = unit.getSource();
 			String[] lines = text.split("\n");
 			nameElemText = lines[startLine];
@@ -72,9 +64,8 @@ public class CursorRefactorOccurenceSearcher extends CursorAnalysis {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		String nameElemMethod = elemMethod.getElementName();
 
-		return new String[] { nameElemMethod, nameElemText };
+		return nameElemText;
 
 	}
 }

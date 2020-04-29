@@ -4,6 +4,7 @@ package de.tudarmstadt.rxrefactoring.ext.swingworker.utils;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
@@ -41,7 +42,7 @@ public class WorkerUtils {
 			.create();
 	private static final Multimap<IRewriteCompilationUnit, MethodDeclaration> methodDeclarationsMap = HashMultimap
 			.create();
-	private static final Multimap<IRewriteCompilationUnit, RelevantInvocation> relevantInvocationsMap = HashMultimap
+	private static final Multimap<IRewriteCompilationUnit, MethodInvocation> relevantInvocationsMap = HashMultimap
 			.create();
 
 	public static void fillAllWorkerIdentifier() {
@@ -128,7 +129,7 @@ public class WorkerUtils {
 		return methodDeclarationsMap;
 	}
 
-	public static Multimap<IRewriteCompilationUnit, RelevantInvocation> getRelevantInvocations() {
+	public static Multimap<IRewriteCompilationUnit, MethodInvocation> getRelevantInvocations() {
 		return relevantInvocationsMap;
 	}
 	
@@ -203,9 +204,38 @@ public class WorkerUtils {
 			else if (identifier.equals(NamingUtils.METHOD_DECLARATION_IDENTIFIER))
 				methodDeclarationsMap.put(unit, (MethodDeclaration) astNode);
 			else if (identifier.equals(NamingUtils.RELEVANT_INVOCATION_IDENTIFIER))
-				relevantInvocationsMap.put(unit, (RelevantInvocation) astNode);
+				relevantInvocationsMap.put(unit, (MethodInvocation) astNode);
 			else {
 				throw new IllegalStateException("Identifier not found!");
 			}
 	}
+		
+		public static Multimap<IRewriteCompilationUnit, ? extends ASTNode> findMapToIdentifier(WorkerIdentifier identifier) {
+			
+			if(identifier.equals(NamingUtils.TYPE_DECL_IDENTIFIER))
+				return typeDeclMap;
+			if(identifier.equals(NamingUtils.ASSIGNMENTS_IDENTIFIER))
+				return assigmentsMap;
+			if(identifier.equals(NamingUtils.CLASS_INSTANCE_CREATION_IDENTIFIER))
+				return classInstanceMap;
+			if(identifier.equals(NamingUtils.FIELD_DECLARATION_IDENTIFIER))
+				return fieldDeclMap;
+			if(identifier.equals(NamingUtils.METHOD_DECLARATION_IDENTIFIER))
+				return methodDeclarationsMap;
+			if(identifier.equals(NamingUtils.METHOD_INVOCATION_IDENTIFIER))
+				return methodInvocationsMap;
+			if(identifier.equals(NamingUtils.RELEVANT_INVOCATION_IDENTIFIER))
+				return relevantInvocationsMap;
+			if(identifier.equals(NamingUtils.SIMPLE_NAME_IDENTIFIER))
+				return simpleNamesMap;
+			if(identifier.equals(NamingUtils.SINGLE_VAR_DECL_IDENTIFIER))
+				return singleVarDeclMap;
+			if(identifier.equals(NamingUtils.TYPE_DECL_IDENTIFIER))
+				return typeDeclMap;
+			if(identifier.equals(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER))
+				return varDeclMap;
+			
+			return null;
+			
+		}
 }

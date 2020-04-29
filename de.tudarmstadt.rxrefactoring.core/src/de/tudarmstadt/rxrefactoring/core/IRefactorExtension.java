@@ -89,11 +89,10 @@ public interface IRefactorExtension {
 	/**
 	 * Runs the check where the cursor is and what expression should be refactored
 	 * @param units Project units
-	 * @param offset cursor offset
 	 * @param startLine start of line of cursor
 	 * @return
 	 */
-	default public ProjectUnits analyseCursorPosition(ProjectUnits units, int offset, int startLine) {
+	default public ProjectUnits analyseCursorPosition(ProjectUnits units, int startLine) {
 		return null;
 	}
 	

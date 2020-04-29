@@ -80,8 +80,8 @@ public class SwingWorkerExtension implements IRefactorExtension {
 	}
 	
 	@Override
-	public ProjectUnits analyseCursorPosition(ProjectUnits units, int offset, int startLine) {
-		CursorRefactorOccurenceSearcher searcher = new CursorRefactorOccurenceSearcher(units, offset, startLine);
+	public ProjectUnits analyseCursorPosition(ProjectUnits units, int startLine) {
+		CursorRefactorOccurenceSearcher searcher = new CursorRefactorOccurenceSearcher(units, startLine);
 		return searcher.searchOccurence();
 		
 	}

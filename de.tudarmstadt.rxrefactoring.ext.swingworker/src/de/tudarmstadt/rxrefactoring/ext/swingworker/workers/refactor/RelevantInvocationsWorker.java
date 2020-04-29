@@ -14,7 +14,6 @@ import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorker;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.Methods;
-import de.tudarmstadt.rxrefactoring.core.utils.RelevantInvocation;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
@@ -27,9 +26,9 @@ public class RelevantInvocationsWorker implements IWorker<TypeOutput, Void> {
 
 		RefactorInfo info = input.info;
 
-		for (Entry<IRewriteCompilationUnit, RelevantInvocation> entry : input.collector.getRelevantInvocations()
+		for (Entry<IRewriteCompilationUnit, MethodInvocation> entry : input.collector.getRelevantInvocations()
 				.entries()) {
-			MethodInvocation m = entry.getValue().getMethodInvocation();
+			MethodInvocation m = entry.getValue();
 			IRewriteCompilationUnit unit = entry.getKey();
 
 			if (Methods.hasSignature(m.resolveMethodBinding(), "java.util.concurrent.Executor", "execute",

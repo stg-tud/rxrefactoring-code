@@ -97,7 +97,6 @@ public class RefactorExecution implements Runnable {
 	private final IRefactorExtension extension;
 	private IWorkbenchPage page;
 	private ICompilationUnit openUnit;
-	private int offset;
 	private int startLine;
 
 	public RefactorExecution(IRefactorExtension env) {
@@ -515,7 +514,7 @@ public class RefactorExecution implements Runnable {
 				&& (extension.getName().equals("SwingWorker to Observable only Variable Declarations")
 						|| extension.getName().equals("Java Future to Observable only Variable Declarations"))) {
 
-			ProjectUnits newUnits = extension.analyseCursorPosition(units, offset, startLine);
+			ProjectUnits newUnits = extension.analyseCursorPosition(units, startLine);
 
 			if (newUnits != null)
 				units = newUnits;
@@ -553,7 +552,6 @@ public class RefactorExecution implements Runnable {
 
 						if (viewSiteSelection instanceof TextSelection) {
 							final TextSelection textSelection = (TextSelection) viewSiteSelection;
-							offset = textSelection.getOffset();
 							startLine = textSelection.getStartLine();
 
 						}

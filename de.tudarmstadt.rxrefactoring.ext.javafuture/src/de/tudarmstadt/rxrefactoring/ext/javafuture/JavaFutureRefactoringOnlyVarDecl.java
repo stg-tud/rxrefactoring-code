@@ -46,7 +46,7 @@ public class JavaFutureRefactoringOnlyVarDecl extends JavaFutureRefactoring {
 	}
 	
 	@Override
-	public ProjectUnits analyseCursorPosition(ProjectUnits units, int offset, int startLine) {
+	public ProjectUnits analyseCursorPosition(ProjectUnits units, int startLine) {
 		CursorRefactorOccurenceSearcher searcher = new CursorRefactorOccurenceSearcher(units, startLine, futureCollector);
 		return searcher.searchOccurence();
 		

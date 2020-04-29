@@ -137,7 +137,7 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 		return WorkerUtils.getMethodDeclarationsMap();
 	}
 
-	public Multimap<IRewriteCompilationUnit, RelevantInvocation> getRelevantInvocations() {
+	public Multimap<IRewriteCompilationUnit, MethodInvocation> getRelevantInvocations() {
 		return WorkerUtils.getRelevantInvocations();
 	}
 

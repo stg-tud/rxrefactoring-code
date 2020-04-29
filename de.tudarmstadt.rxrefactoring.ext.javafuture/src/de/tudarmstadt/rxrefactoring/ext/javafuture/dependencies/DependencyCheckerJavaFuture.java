@@ -89,9 +89,6 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 			if (checkIfReturnTypeIsFutureOrExtendsFromIt(entry.getKey())) {
 				changeDependentUnitsOfChangedMethodDeclaration(entry);
 			}
-
-			// searchForVarDeclAndMethodInvocationsOfThat();
-
 		}
 
 		scanner.clearMaps();
@@ -109,41 +106,6 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 		return false;
 	}
 
-	/*
-	 * private void searchForVarDeclAndMethodInvocationsOfThat() throws
-	 * JavaModelException {
-	 * 
-	 * sortAndFilterMaps();
-	 * 
-	 * for (Entry<MethodDeclaration, IRewriteCompilationUnit> entryRefactor :
-	 * entriesRefactored.entrySet()) { // if //
-	 * (entryRefactor.getValue().getWorkerIdentifier().equals(NamingUtils.
-	 * METHOD_INVOCATION_IDENTIFIER)) // { Collection<MethodInvocation>
-	 * methodInvocations = group.getMethodInvocationsMap()
-	 * .get(entryRefactor.getValue()); for (MethodInvocation methodInv :
-	 * methodInvocations) { Expression expr = methodInv.getExpression(); SimpleName
-	 * varInvoking = null; if (expr instanceof SimpleName) { varInvoking =
-	 * (SimpleName) expr; }
-	 * 
-	 * for (Entry<MethodDeclaration, IRewriteCompilationUnit> entryCalling :
-	 * entriesCalling.entrySet()) { Collection<VariableDeclarationStatement>
-	 * varDecls = group.getVarDeclMap() .get(entryCalling.getValue()); for
-	 * (VariableDeclarationStatement varDecl : varDecls) {
-	 * VariableDeclarationFragment fragment = (VariableDeclarationFragment)
-	 * varDecl.fragments().get(0); SimpleName varName = fragment.getName();
-	 * 
-	 * if (varInvoking.getIdentifier().equals(varName.getIdentifier()) &&
-	 * checkForSameMethodDeclaration(varDecl, methodInv)) {
-	 * units.getUnits().stream().filter(x -> x.equals(entryCalling.getValue()))
-	 * .forEach(x -> x.setWorkerIdentifier(new WorkerIdentifier(
-	 * "Change according to Variable: " + varName.getIdentifier())));
-	 * 
-	 * units.getUnits().stream().filter(x -> x.equals(entryRefactor.getValue()))
-	 * .forEach(x -> x.setWorkerIdentifier(new WorkerIdentifier(
-	 * "Change according to Variable: " + varName.getIdentifier())));
-	 * 
-	 * } } } } } }
-	 */
 
 	private void checkVariableDeclarationsWithInMethod() {
 
@@ -302,18 +264,6 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 
 	}
 
-	/*private boolean checkForMethodInvocOrVarDecl(IRewriteCompilationUnit unit) {
-
-		return unit.getWorkerIdentifier().equals(NamingUtils.METHOD_INVOCATION_IDENTIFIER)
-				|| unit.getWorkerIdentifier().equals(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER);
-	}
-
-	private boolean checkForSameMethodDeclaration(VariableDeclarationStatement varDecl, MethodInvocation calledMethod) {
-
-		return ASTNodes.findParent(varDecl, MethodDeclaration.class).get()
-				.equals(ASTNodes.findParent(calledMethod, MethodDeclaration.class).get());
-
-	}*/
 
 	private boolean checkForSameStatement(ASTNode varDecl, IRewriteCompilationUnit toCheckUnit) {
 		Statement statement = ASTNodes.findParentWithoutConsideringNode(varDecl, Statement.class).get();
@@ -330,39 +280,6 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 		return false;
 
 	}
-
-	/*private void sortAndFilterMaps() {
-		entriesRefactored = scanner.refactoredMethods.entrySet().stream()
-				.filter(entry -> checkForMethodInvocOrVarDecl(entry.getValue()))
-				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-		entriesCalling = scanner.callingMethods.entrySet().stream()
-				.filter(entryCalling -> checkForMethodInvocOrVarDecl(entryCalling.getValue()))
-				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-		Map<MethodDeclaration, IRewriteCompilationUnit> toAddToCalling = new HashMap<>();
-
-		for (Entry<MethodDeclaration, IRewriteCompilationUnit> entryRefactored : entriesRefactored.entrySet()) {
-
-			if (entryRefactored.getValue().getWorkerIdentifier().equals(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER)) {
-				toAddToCalling.put(entryRefactored.getKey(), entryRefactored.getValue());
-				entriesRefactored.remove(entryRefactored.getKey());
-			}
-
-		}
-
-		for (Entry<MethodDeclaration, IRewriteCompilationUnit> entryCalling : entriesCalling.entrySet()) {
-
-			if (entryCalling.getValue().getWorkerIdentifier().equals(NamingUtils.METHOD_INVOCATION_IDENTIFIER)) {
-				entriesRefactored.put(entryCalling.getKey(), entryCalling.getValue());
-				entriesCalling.remove(entryCalling.getKey());
-			}
-
-		}
-
-		entriesCalling.putAll(toAddToCalling);
-
-	}*/
 
 	private void changeDependentUnitsOfChangedMethodDeclaration(
 			Entry<MethodDeclaration, IRewriteCompilationUnit> entry) {
