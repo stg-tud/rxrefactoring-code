@@ -399,12 +399,12 @@ public class RefactorExecution implements Runnable {
 		@SuppressWarnings("null")
 		@NonNull
 		Set<RewriteCompilationUnit> result = Sets.newConcurrentHashSet();
-		
+
 		if (extension.onlyScanOpenFile()) {
 			getOpenFile();
 			openUnit = getCompUnitToOpenPage();
 		}
-		
+
 		// Initializes a new thread pool.
 		ExecutorService executor = extension.createExecutorService();
 		Objects.requireNonNull(executor, "The environments executor service can not be null.");
@@ -430,21 +430,22 @@ public class RefactorExecution implements Runnable {
 
 								// Find the compilation units, i.e. .java source files.
 								for (ICompilationUnit unit : units) {
+
 									try {
+										if (extension.onlyScanOpenFile()) {
 											if (unit.getCorrespondingResource()
 													.equals(openUnit.getCorrespondingResource())) {
-												
+
 												result.add(factory.from(unit));
 											}
-										
-
-								else {
+										} else {
 											result.add(factory.from(unit));
 										}
 									} catch (JavaModelException e) {
 										// TODO Auto-generated catch block
 										e.printStackTrace();
 									}
+
 								}
 							});
 						}
@@ -512,7 +513,7 @@ public class RefactorExecution implements Runnable {
 
 		if (extension.getRefactorScope().equals(RefactorScope.ONLY_ONE_OCCURENCE)
 				&& (extension.getName().equals("SwingWorker to Observable only Variable Declarations")
-				|| extension.getName().equals("Java Future to Observable only Variable Declarations"))) {
+						|| extension.getName().equals("Java Future to Observable only Variable Declarations"))) {
 
 			ProjectUnits newUnits = extension.analyseCursorPosition(units, offset, startLine);
 
@@ -554,7 +555,7 @@ public class RefactorExecution implements Runnable {
 							final TextSelection textSelection = (TextSelection) viewSiteSelection;
 							offset = textSelection.getOffset();
 							startLine = textSelection.getStartLine();
-							
+
 						}
 					}
 				}
@@ -562,13 +563,13 @@ public class RefactorExecution implements Runnable {
 			}
 		});
 	}
-	
+
 	private ICompilationUnit getCompUnitToOpenPage() {
 		IEditorInput editor = page.getActiveEditor().getEditorInput();
 		IJavaElement elem = JavaUI.getEditorInputJavaElement(editor);
 		ICompilationUnit openUnit = (ICompilationUnit) elem;
 		return openUnit;
-		
+
 	}
 
 	protected static boolean considerProject(IProject project) {

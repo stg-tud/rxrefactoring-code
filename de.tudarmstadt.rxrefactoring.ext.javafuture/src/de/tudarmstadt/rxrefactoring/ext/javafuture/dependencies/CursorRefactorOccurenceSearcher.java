@@ -1,18 +1,13 @@
 package de.tudarmstadt.rxrefactoring.ext.javafuture.dependencies;
 
 import java.util.Collection;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-import org.eclipse.jdt.annotation.NonNull;
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
@@ -27,14 +22,12 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.FutureCollector;
 public class CursorRefactorOccurenceSearcher extends CursorAnalysis {
 
 	ProjectUnits units;
-	Integer offset;
 	Integer startLine;
 	FutureCollector collector;
 	private CollectorGroup group = new CollectorGroup();
 
-	public CursorRefactorOccurenceSearcher(ProjectUnits units, int offset, int startLine, FutureCollector collector) {
+	public CursorRefactorOccurenceSearcher(ProjectUnits units, int startLine, FutureCollector collector) {
 		this.units = units;
-		this.offset = offset;
 		this.startLine = startLine;
 		this.collector = collector;
 	}
