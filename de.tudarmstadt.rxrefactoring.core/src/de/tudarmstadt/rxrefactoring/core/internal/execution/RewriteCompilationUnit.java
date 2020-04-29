@@ -264,18 +264,21 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 				// Apply changes to the classes imports if there are any
 				if (unit.hasImportChanges()) {
 					TextEdit edit = unit.imports().rewriteImports(null); // We can add a progress monitor here.
-					InsertEdit insertEdit = (InsertEdit) edit.getChildren()[0];
-					if (checkForDuplicatedImports.containsKey(unit.getCorrespondingResource())) {
-						
-						if (!checkForDuplicatedImports.get(unit.getCorrespondingResource()).equals(insertEdit.getText())) {
+					if (edit.getChildren().length != 0) {
+						InsertEdit insertEdit = (InsertEdit) edit.getChildren()[0];
+						if (checkForDuplicatedImports.containsKey(unit.getCorrespondingResource())) {
+
+							if (!checkForDuplicatedImports.get(unit.getCorrespondingResource())
+									.equals(insertEdit.getText())) {
+								root.addChild(edit);
+								checkForDuplicatedImports.put(unit.getCorrespondingResource(), insertEdit.getText());
+							}
+
+						} else {
 							root.addChild(edit);
 							checkForDuplicatedImports.put(unit.getCorrespondingResource(), insertEdit.getText());
 						}
-	
-					}else {
-							root.addChild(edit);
-							checkForDuplicatedImports.put(unit.getCorrespondingResource(), insertEdit.getText());
-						}
+					}
 				}
 
 			}
