@@ -15,6 +15,7 @@ import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.dependencies.CursorAnalysis;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.NamingUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.CollectorGroup;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.FutureCollector;
@@ -46,7 +47,7 @@ public class CursorRefactorOccurenceSearcher extends CursorAnalysis {
 
 	private void searchForCursorVarDecl() {
 		Set<IRewriteCompilationUnit> units_VarDecls = units.stream()
-				.filter(unit -> unit.getWorkerIdentifier().getName().equals("Variable Declarations"))
+				.filter(unit -> unit.getWorkerIdentifier().equals(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER))
 				.collect(Collectors.toSet());
 
 		for (IRewriteCompilationUnit unit : units_VarDecls) {

@@ -2,18 +2,23 @@ package de.tudarmstadt.rxrefactoring.ext.javafuture;
 
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.ASTNode;
 
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
+import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.PreconditionWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.UseDefWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.dependencies.CursorRefactorOccurenceSearcher;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.dependencies.DependencyCheckerJavaFuture;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfos;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.InstantiationCollector;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.SubclassInstantiationCollector;
@@ -46,6 +51,12 @@ public class JavaFutureRefactoringOnlyVarDecl extends JavaFutureRefactoring {
 	}
 	
 	@Override
+	public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner) throws JavaModelException{
+		DependencyCheckerJavaFuture dependencyCheck = new DependencyCheckerJavaFuture(units, scanner, futureCollector);
+		return dependencyCheck.runDependendencyCheck(true);
+	}
+	
+	@Override
 	public ProjectUnits analyseCursorPosition(ProjectUnits units, int startLine) {
 		CursorRefactorOccurenceSearcher searcher = new CursorRefactorOccurenceSearcher(units, startLine, futureCollector);
 		return searcher.searchOccurence();
@@ -55,6 +66,11 @@ public class JavaFutureRefactoringOnlyVarDecl extends JavaFutureRefactoring {
 	@Override
 	public @NonNull String getName() {
 		return "Java Future to Observable only Variable Declarations";
+	}
+	
+	@Override
+	public String getDescription() {
+		return "Only Variable Declaration";
 	}
 	
 	@Override
@@ -85,7 +101,21 @@ public class JavaFutureRefactoringOnlyVarDecl extends JavaFutureRefactoring {
 			workerTree.addWorker(collector,
 					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.VariableDeclStatementWorker());
 			workerTree.addWorker(collector,
+					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.AssignmentWorker());
+			workerTree.addWorker(collector,
+					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.MethodInvocationWorker());
+			workerTree.addWorker(collector,
+					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.SingleVariableDeclWorker());
+			
+			
+			workerTree.addWorker(collector,
 					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.VariableDeclStatementWorker());
+			workerTree.addWorker(collector,
+					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.AssignmentWorker());
+			workerTree.addWorker(collector,
+					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.MethodInvocationWorker());
+			workerTree.addWorker(collector,
+					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.ClassInstanceCreationWorker());
 		}
 		if (options.contains(RefactoringOptions.FUTURETASK)) {
 			workerTree.addWorker(collector,

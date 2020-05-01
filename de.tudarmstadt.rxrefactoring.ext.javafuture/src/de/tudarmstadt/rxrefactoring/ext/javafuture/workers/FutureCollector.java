@@ -90,10 +90,10 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 
 				if (options.contains(RefactoringOptions.SEPARATE_OCCURENCIES) || options.contains(RefactoringOptions.ONLY_ONE_OCCURENCY)) {
 					unit.accept(discoveringVisitor);
-					add("future", unit, discoveringVisitor);
+					//add("future", unit, discoveringVisitor);
 
 					unit.accept(collectionDiscoveringVisitor);
-					add("collection", unit, collectionDiscoveringVisitor);
+					//add("collection", unit, collectionDiscoveringVisitor);
 
 					WorkerUtils.fillAllWorkerIdentifierForFuture();
 					Set<IRewriteCompilationUnit> allWorkerUnits_future = loopOverEveryWorker(unit, discoveringVisitor,

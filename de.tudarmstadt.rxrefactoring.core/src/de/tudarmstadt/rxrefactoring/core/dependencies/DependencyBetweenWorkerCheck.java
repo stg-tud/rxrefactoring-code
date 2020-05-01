@@ -10,6 +10,6 @@ public abstract class DependencyBetweenWorkerCheck {
 	protected MethodScanner scanner;
 	public ProjectUnits units;
 	
-	public abstract ProjectUnits runDependendencyCheck() throws JavaModelException;
+	public abstract ProjectUnits runDependendencyCheck(boolean onlyVarDecl) throws JavaModelException;
 
 }

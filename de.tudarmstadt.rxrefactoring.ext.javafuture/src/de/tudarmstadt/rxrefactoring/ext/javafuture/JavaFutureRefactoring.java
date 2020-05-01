@@ -60,7 +60,7 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 	@Override
 	public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner) throws JavaModelException{
 		DependencyCheckerJavaFuture dependencyCheck = new DependencyCheckerJavaFuture(units, scanner, futureCollector);
-		return dependencyCheck.runDependendencyCheck();
+		return dependencyCheck.runDependendencyCheck(false);
 	}
 
 

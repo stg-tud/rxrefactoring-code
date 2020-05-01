@@ -1,16 +1,18 @@
 package de.tudarmstadt.rxrefactoring.core.dependencies;
 
+import java.util.Set;
+
 import org.eclipse.jdt.core.JavaModelException;
 
-import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
+import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 
 public abstract class CursorAnalysis {
 	
-	public ProjectUnits units;
+	public Set<IRewriteCompilationUnit> units;
 	public Integer offset;
 	public Integer startLine;
 	
-	public abstract ProjectUnits searchOccurence() throws JavaModelException;
+	public abstract Set<IRewriteCompilationUnit> searchOccurence() throws JavaModelException;
 	
 
 }

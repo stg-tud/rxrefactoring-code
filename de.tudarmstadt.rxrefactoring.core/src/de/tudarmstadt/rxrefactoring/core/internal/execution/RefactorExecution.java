@@ -501,8 +501,17 @@ public class RefactorExecution implements Runnable {
 
 	private Map<String, List<IRewriteCompilationUnit>> getUnitToChangeMapping(ProjectUnits units)
 			throws JavaModelException {
+		
+		Set<RewriteCompilationUnit> filterIfASTChange = units.getUnits().stream().filter(unit -> unit.hasASTChanges())
+				.map(unit -> (RewriteCompilationUnit) unit)
+				.collect(Collectors.toSet());
+		
+		units = new ProjectUnits(units.getJavaProject(), filterIfASTChange);
+		
+		MethodScanner scanner = new MethodScanner();
+		
 		if (extension.getRefactorScope().equals(RefactorScope.SEPARATE_OCCURENCES)) {
-			MethodScanner scanner = new MethodScanner();
+			
 			ProjectUnits unitsChecked = extension.runDependencyBetweenWorkerCheck(units, scanner);
 
 			if (unitsChecked != null)
@@ -511,19 +520,23 @@ public class RefactorExecution implements Runnable {
 		}
 
 		if (extension.getRefactorScope().equals(RefactorScope.ONLY_ONE_OCCURENCE)
-				&& (extension.getName().equals("SwingWorker to Observable only Variable Declarations")
-						|| extension.getName().equals("Java Future to Observable only Variable Declarations"))) {
+				&& (extension.getDescription().equals("Only Variable Declaration"))) {
 
 			ProjectUnits newUnits = extension.analyseCursorPosition(units, startLine);
 
 			if (newUnits != null)
 				units = newUnits;
+			
+			ProjectUnits unitsChecked = extension.runDependencyBetweenWorkerCheck(units, scanner);
 
-			List<IRewriteCompilationUnit> grouped = units.getUnits().stream()
-					.filter(unit -> unit.getWorkerIdentifier().name.equals("Cursor Selection"))
-					.collect(Collectors.toList());
+			if (unitsChecked != null)
+				units = unitsChecked;
 
-			return Collections.singletonMap("Cursor Selection", grouped);
+			Map<String, List<IRewriteCompilationUnit>> grouped = units.getUnits().stream()
+					.filter(unit -> unit.getWorkerIdentifier().name.contains("Cursor Selection"))
+					.filter(unit -> unit.getWorkerIdentifier().getName() != null)
+					.collect(Collectors.groupingBy(IRewriteCompilationUnit::getWorkerString));
+			return grouped;
 
 		}
 
@@ -531,7 +544,7 @@ public class RefactorExecution implements Runnable {
 			units.getUnits().stream().forEach(e -> e.setWorkerIdentifier(new WorkerIdentifier("Per File")));
 
 		Map<String, List<IRewriteCompilationUnit>> groupedByWorker = units.getUnits().stream()
-				.filter(unit -> unit.getWorkerIdentifier().getName() != null && unit.hasChanges())
+				.filter(unit -> unit.getWorkerIdentifier().getName() != null)
 				.collect(Collectors.groupingBy(IRewriteCompilationUnit::getWorkerString));
 
 		return groupedByWorker;

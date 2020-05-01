@@ -19,9 +19,15 @@ public class SwingWorkerOnlyTypeDeclExtension extends SwingWorkerExtension {
 	public boolean hasInteractiveRefactorScope() {
 		return false;
 	}
+	
 	@Override
 	public boolean onlyScanOpenFile() {
 		return true;
+	}
+	
+	@Override
+	public String getDescription() {
+		return "Only Type Declaration";
 	}
 	
 	@Override

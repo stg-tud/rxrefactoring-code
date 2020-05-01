@@ -27,6 +27,11 @@ public class SwingWorkerOnlyVarDeclExtension extends SwingWorkerExtension{
 	}
 	
 	@Override
+	public String getDescription() {
+		return "Only Variable Declaration";
+	}
+	
+	@Override
 	public RefactorScope getRefactorScope() {
 		return RefactorScope.ONLY_ONE_OCCURENCE;
 	}
