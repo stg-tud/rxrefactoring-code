@@ -1,10 +1,14 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.extensions;
 
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.core.JavaModelException;
 
 import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
+import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.dependencies.DependencyCheckerSwingWorker;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.RxCollector;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.TypeDeclarationWorker;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.VariableDeclStatementWorker;
@@ -36,6 +40,11 @@ public class SwingWorkerOnlyVarDeclExtension extends SwingWorkerExtension{
 		return RefactorScope.ONLY_ONE_OCCURENCE;
 	}
 	
+	@Override
+	public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner) throws JavaModelException{
+		DependencyCheckerSwingWorker dependencyCheck = new DependencyCheckerSwingWorker(units, scanner);
+		return dependencyCheck.runDependendencyCheck(true);
+	}
 	
 	@Override
 	public void addWorkersTo(@NonNull IWorkerTree workerTree) {

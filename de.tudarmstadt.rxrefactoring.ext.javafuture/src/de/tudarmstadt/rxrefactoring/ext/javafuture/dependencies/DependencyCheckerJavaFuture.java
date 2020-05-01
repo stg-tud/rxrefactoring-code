@@ -32,7 +32,6 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 	}
 
 	public ProjectUnits runDependendencyCheck(boolean onlyVarDecl) throws JavaModelException {
-		scanner.scan(units);
 
 		for (Entry<String, CollectorGroup> entry : collector.groups.entrySet()) {
 			group.addElementsCollectorGroup(entry.getValue());
