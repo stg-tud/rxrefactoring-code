@@ -43,7 +43,8 @@ public class DependencyCheckMethodDecl {
 	}
 	
 	protected ProjectUnits regroupBecauseOfMethodDependencies() throws JavaModelException {
-
+		scanner.scan(units);
+		
 		for (Entry<MethodDeclaration, IRewriteCompilationUnit> entry : scanner.refactoredMethods.entrySet()) {
 
 			// for method declaration change
