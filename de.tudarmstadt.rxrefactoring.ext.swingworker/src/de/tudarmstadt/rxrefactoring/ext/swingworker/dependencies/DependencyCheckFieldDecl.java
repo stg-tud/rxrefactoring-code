@@ -29,7 +29,7 @@ public class DependencyCheckFieldDecl {
 	protected ProjectUnits searchForFieldDependencies() throws JavaModelException {
 
 		// Change simpleNames which are fields
-		Map<SimpleName, IRewriteCompilationUnit> simpleNames = changeSimpleNamesFields();
+		Map<String, IRewriteCompilationUnit> simpleNames = changeSimpleNamesFields();
 
 		// Change also corresponding FieldDeclaration
 		for (IRewriteCompilationUnit unit : units.getUnits()) {
@@ -40,9 +40,9 @@ public class DependencyCheckFieldDecl {
 							.get(0);
 					String identifier = varDeclFrag.getName().getIdentifier();
 
-					if (simpleNames.keySet().stream().anyMatch(x -> x.getIdentifier().equals(identifier))
+					if (simpleNames.keySet().stream().anyMatch(x -> x.equals(identifier))
 							&& unit.getCorrespondingResource()
-									.equals(simpleNames.get(varDeclFrag.getName()).getCorrespondingResource())) {
+									.equals(simpleNames.get(varDeclFrag.getName().getIdentifier()).getCorrespondingResource())) {
 						unit.setWorkerIdentifier(
 								new WorkerIdentifier(unit.getWorkerIdentifier().getName() + " " + identifier));
 					}
@@ -53,9 +53,9 @@ public class DependencyCheckFieldDecl {
 
 	}
 
-	private Map<SimpleName, IRewriteCompilationUnit> changeSimpleNamesFields() {
+	private Map<String, IRewriteCompilationUnit> changeSimpleNamesFields() {
 
-		Map<SimpleName, IRewriteCompilationUnit> simpleNames = Maps.newHashMap();
+		Map<String, IRewriteCompilationUnit> simpleNames = Maps.newHashMap();
 		for (IRewriteCompilationUnit unit : units.getUnits()) {
 
 			if (unit.getWorkerIdentifier().getName().equals("Simple Names")) {
@@ -71,7 +71,7 @@ public class DependencyCheckFieldDecl {
 					}
 
 					if (isField) {
-						simpleNames.put(name, unit);
+						simpleNames.put(name.getIdentifier(), unit);
 						unit.setWorkerIdentifier(new WorkerIdentifier("Field Declarations " + name.getIdentifier()));
 					}
 				}

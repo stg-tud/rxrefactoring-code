@@ -92,7 +92,7 @@ public class DependencyCheckerSwingWorkerTest extends RxRefactoringTest {
 	public void runDependendencyCheck() throws Exception {
 
 	
-	ProjectUnits units = sut.runDependendencyCheck();
+	//ProjectUnits units = sut.runDependendencyCheck();
 			
 	}
 	
