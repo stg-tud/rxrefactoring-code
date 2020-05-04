@@ -11,11 +11,13 @@ public class DependencyCheckerSwingWorker extends DependencyBetweenWorkerCheck {
 
 	public ProjectUnits units;
 	private MethodScanner scanner;
+	private int startLine;
 
 
-	public DependencyCheckerSwingWorker(ProjectUnits units, MethodScanner scanner) {
+	public DependencyCheckerSwingWorker(ProjectUnits units, MethodScanner scanner, int startLine) {
 		this.scanner = scanner;
 		this.units = units;
+		this.startLine = startLine;
 
 	}
 	
@@ -24,12 +26,14 @@ public class DependencyCheckerSwingWorker extends DependencyBetweenWorkerCheck {
 		if (onlyVarDecl) {
 			DependencyCheckVarDecl dependencyCheckVarDecl = new DependencyCheckVarDecl(units);
 			units = dependencyCheckVarDecl.checkVariableDeclarationsWithInMethod("Cursor Selection");
+			DependencyCheckMethodDecl dependencyCheckMethodDecl = new DependencyCheckMethodDecl(units, scanner, startLine);
+			units = dependencyCheckMethodDecl.regroupBecauseOfMethodDependencies("Cursor Selection");
 			return units;
 		} else {
-			DependencyCheckVarDecl dependencyCheckVarDecl = new DependencyCheckVarDecl(units);
-			units = dependencyCheckVarDecl.checkVariableDeclarationsWithInMethod(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER.name);
-			DependencyCheckMethodDecl dependencyCheckMethodDecl = new DependencyCheckMethodDecl(units, scanner);
-			units = dependencyCheckMethodDecl.regroupBecauseOfMethodDependencies();
+			//DependencyCheckVarDecl dependencyCheckVarDecl = new DependencyCheckVarDecl(units);
+			//units = dependencyCheckVarDecl.checkVariableDeclarationsWithInMethod(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER.name);
+			DependencyCheckMethodDecl dependencyCheckMethodDecl = new DependencyCheckMethodDecl(units, scanner, 0);
+			units = dependencyCheckMethodDecl.regroupBecauseOfMethodDependencies(NamingUtils.METHOD_DECLARATION_IDENTIFIER.name);
 			DependencyCheckFieldDecl dependencyCheckFieldDecl = new DependencyCheckFieldDecl(units);
 			units = dependencyCheckFieldDecl.searchForFieldDependencies();
 		}

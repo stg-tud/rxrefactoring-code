@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
@@ -88,6 +89,8 @@ public class DependencyCheckVarDecl {
 			}
 
 		}
+		
+		changeBackIfOnlyOneVarDecl();
 		
 		return units;
 	}
@@ -228,5 +231,16 @@ public class DependencyCheckVarDecl {
 		}
 				
 	}
+	
+	private void changeBackIfOnlyOneVarDecl() {
+		if(units.getUnits().stream().filter(unit -> unit.getWorkerIdentifier().name.contains("Cursor Selection of Variable"))
+				.count() == Long.valueOf(1)) {
+			units.getUnits().stream()
+					.filter(unit-> !unit.getWorkerIdentifier().name.contains("Cursor Selection of Variable"))
+					.forEach(unit -> unit
+							.setWorkerIdentifier(new WorkerIdentifier(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER.name)));
+				
+			}
+		}
 
 }

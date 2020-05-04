@@ -80,10 +80,11 @@ public interface IRefactorExtension {
 	 * 
 	 * @param units actual Project units
 	 * @param scanner MethodScanner
+	 * @param startLine Line of cursor
 	 * @return return new grouped units because of dependencies between changes
 	 * @throws JavaModelException
 	 */
-	default public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner) throws JavaModelException{
+	default public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner, int startLine) throws JavaModelException{
 		return null;
 	};
 	

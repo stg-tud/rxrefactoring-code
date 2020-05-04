@@ -74,8 +74,8 @@ public class SwingWorkerExtension implements IRefactorExtension {
 	}
 	
 	@Override
-	public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner) throws JavaModelException{
-		DependencyCheckerSwingWorker dependencyCheck = new DependencyCheckerSwingWorker(units, scanner);
+	public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner, int startLine) throws JavaModelException{
+		DependencyCheckerSwingWorker dependencyCheck = new DependencyCheckerSwingWorker(units, scanner, startLine);
 		return dependencyCheck.runDependendencyCheck(false);
 	}
 	

@@ -10,8 +10,11 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
@@ -19,6 +22,7 @@ import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.RefactorSummary.WorkerSummary;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.core.utils.Statements;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.domain.RxObservableModel;
@@ -30,6 +34,7 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.TemplateUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.TemplateVisitor;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.GeneralWorker;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.RxCollector;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.SwingWorkerWrapper;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
 
@@ -39,12 +44,14 @@ import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
  * Adapted to new core by Camila Gonzalez on 24/01/2018
  */
 public class ClassInstanceCreationWorker extends GeneralWorker<TypeOutput, Void> {
+	RxCollector collector;
 
 	@Override
 	public @Nullable Void refactor(@NonNull IProjectUnits units, @Nullable TypeOutput input,
 			@NonNull WorkerSummary summary) throws Exception {
 
 		RefactorInfo info = input.info;
+		collector = input.collector;
 
 		for (Map.Entry<IRewriteCompilationUnit, ClassInstanceCreation> entry : input.collector.getClassInstanceMap()
 				.entries()) {
@@ -57,7 +64,6 @@ public class ClassInstanceCreationWorker extends GeneralWorker<TypeOutput, Void>
 				// Is handled by other workers
 				continue;
 			}
-
 
 			if (shouldBeSkipped(classInstanceCreation, info)) {
 				summary.addSkipped("classInstanceCreation");
@@ -228,18 +234,34 @@ public class ClassInstanceCreationWorker extends GeneralWorker<TypeOutput, Void>
 		}
 		return newMethodName;
 	}
-	
+
 	private boolean shouldBeSkipped(ClassInstanceCreation classInstance, RefactorInfo info) {
-		if(Types.isTypeOf(classInstance.resolveTypeBinding(), "javax.swing.SwingWorker")) {
-			if(info.shouldBeRefactored(classInstance.resolveTypeBinding())) {
-				if(classInstance.getAnonymousClassDeclaration() == null)
+
+		if (Types.isTypeOf(classInstance.resolveTypeBinding(), "javax.swing.SwingWorker")) {
+			if (info.shouldBeRefactored(classInstance.resolveTypeBinding())) {
+				if (classInstance.getAnonymousClassDeclaration() == null)
 					return true;
-			}else {
-				return false;
+			} else {
+				String qualifiedName = classInstance.resolveTypeBinding().getQualifiedName();
+
+				if (collector.scope.equals(RefactorScope.ONLY_ONE_OCCURENCE)
+						&& !Types.isExactTypeOf(classInstance.resolveTypeBinding(), "javax.swing.SwingWorker")) {
+					// in own example problem with localType -> type and qualified name not set correctly although it is swingworker
+					if (qualifiedName.isBlank())
+						return false;
+					else {
+						return true;
+					}
+
+				} else {
+					return false;
+
+				}
 			}
 		}
-		
+
 		return true;
+
 	}
 
 }

@@ -512,7 +512,7 @@ public class RefactorExecution implements Runnable {
 		
 		if (extension.getRefactorScope().equals(RefactorScope.SEPARATE_OCCURENCES)) {
 			
-			ProjectUnits unitsChecked = extension.runDependencyBetweenWorkerCheck(units, scanner);
+			ProjectUnits unitsChecked = extension.runDependencyBetweenWorkerCheck(units, scanner, startLine);
 
 			if (unitsChecked != null)
 				units = unitsChecked;
@@ -527,7 +527,7 @@ public class RefactorExecution implements Runnable {
 			if (newUnits != null)
 				units = newUnits;
 			
-			ProjectUnits unitsChecked = extension.runDependencyBetweenWorkerCheck(units, scanner);
+			ProjectUnits unitsChecked = extension.runDependencyBetweenWorkerCheck(units, scanner, startLine);
 
 			if (unitsChecked != null)
 				units = unitsChecked;
