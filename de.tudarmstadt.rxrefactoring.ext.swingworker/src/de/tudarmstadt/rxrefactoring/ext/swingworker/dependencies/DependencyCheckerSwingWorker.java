@@ -30,10 +30,10 @@ public class DependencyCheckerSwingWorker extends DependencyBetweenWorkerCheck {
 			units = dependencyCheckMethodDecl.regroupBecauseOfMethodDependencies("Cursor Selection");
 			return units;
 		} else {
-			//DependencyCheckVarDecl dependencyCheckVarDecl = new DependencyCheckVarDecl(units);
-			//units = dependencyCheckVarDecl.checkVariableDeclarationsWithInMethod(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER.name);
+			DependencyCheckVarDecl dependencyCheckVarDecl = new DependencyCheckVarDecl(units);
+			units = dependencyCheckVarDecl.checkVariableDeclarationsWithInMethod(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER.getName());
 			DependencyCheckMethodDecl dependencyCheckMethodDecl = new DependencyCheckMethodDecl(units, scanner, 0);
-			units = dependencyCheckMethodDecl.regroupBecauseOfMethodDependencies(NamingUtils.METHOD_DECLARATION_IDENTIFIER.name);
+			units = dependencyCheckMethodDecl.regroupBecauseOfMethodDependencies(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER.getName());
 			DependencyCheckFieldDecl dependencyCheckFieldDecl = new DependencyCheckFieldDecl(units);
 			units = dependencyCheckFieldDecl.searchForFieldDependencies();
 		}

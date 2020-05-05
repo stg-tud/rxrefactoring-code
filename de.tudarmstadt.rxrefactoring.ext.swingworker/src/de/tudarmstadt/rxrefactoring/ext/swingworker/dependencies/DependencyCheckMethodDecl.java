@@ -28,6 +28,7 @@ import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
 import de.tudarmstadt.rxrefactoring.core.utils.ASTNodes;
+import de.tudarmstadt.rxrefactoring.core.utils.NamingUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerUtils;
@@ -84,7 +85,9 @@ public class DependencyCheckMethodDecl {
 			Entry<MethodDeclaration, IRewriteCompilationUnit> entry) {
 
 		if (nameWorker.equals("Cursor Selection")) {
-			setVariableName();
+			boolean shouldBeChecked = setVariableNameAndCheckCursorSelection(entry.getKey());
+			if(!shouldBeChecked)
+				return;
 		} else {
 			varName = entry.getKey().getName().getIdentifier();
 		}
@@ -145,8 +148,8 @@ public class DependencyCheckMethodDecl {
 		Map<IRewriteCompilationUnit, String> unitsToChange = new HashMap<IRewriteCompilationUnit, String>();
 
 		Set<IRewriteCompilationUnit> units_MethodInvoc = units.stream()
-				.filter(unit -> unit.getWorkerIdentifier().getName().equals("Variable Declarations")
-						|| unit.getWorkerIdentifier().getName().equals("Cursor Selection"))
+				.filter(unit -> unit.getWorkerIdentifier().getName().equals(nameWorker) 
+						|| unit.getWorkerIdentifier().equals(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER))
 				.filter(unit -> unit.getResource().equals(unit_MethodDecl.getResource())).collect(Collectors.toSet());
 
 		for (IRewriteCompilationUnit unit_Var : units_MethodInvoc) {
@@ -244,18 +247,25 @@ public class DependencyCheckMethodDecl {
 		}
 	}
 
-	private void setVariableName() {
-		Set<IRewriteCompilationUnit> unitCursors = units.getUnits().stream().filter(unit -> unit.getWorkerIdentifier().name.equals("Cursor Selection") 
-				|| unit.getWorkerIdentifier().name.contains("Cursor Selection Variable: "))
-		.collect(Collectors.toSet());
-		for(IRewriteCompilationUnit unitCursor: unitCursors) {
+	private boolean setVariableNameAndCheckCursorSelection(MethodDeclaration methodDecl) {
+		Set<IRewriteCompilationUnit> unitCursors = units.getUnits().stream()
+				.filter(unit -> unit.getWorkerIdentifier().name.equals("Cursor Selection")
+						|| unit.getWorkerIdentifier().name.contains("Cursor Selection Variable: "))
+				.collect(Collectors.toSet());
+		for (IRewriteCompilationUnit unitCursor : unitCursors) {
 			Collection<VariableDeclarationStatement> statements = WorkerUtils.getVarDeclMap().get(unitCursor);
-			for(VariableDeclarationStatement st : statements) {
+			for (VariableDeclarationStatement st : statements) {
 				VariableDeclarationFragment fragment = (VariableDeclarationFragment) st.fragments().get(0);
-				varName = fragment.getName().getIdentifier();
+				Expression expr = fragment.getInitializer();
+				if (expr instanceof MethodInvocation) {
+					if (((MethodInvocation) expr).resolveMethodBinding().equals(methodDecl.resolveBinding())) {
+						varName = fragment.getName().getIdentifier();
+						return true;
+					}
+				}
 			}
 		}
-
+		return false;
 	}
 
 }

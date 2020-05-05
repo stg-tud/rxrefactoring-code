@@ -103,8 +103,8 @@ public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
 
 				if (nameInMethod.isPresent() && !assignment.isPresent()
 						&& input.collector.scope.equals(RefactorScope.SEPARATE_OCCURENCES)) {
-						String identifier = icu.getWorkerIdentifier().getName() + NamingUtils.getRightWorkerName(nameInMethod.get(), simpleName);
-						icu.setWorkerIdentifier(new WorkerIdentifier(identifier));
+						//String identifier = icu.getWorkerIdentifier().getName() + NamingUtils.getRightWorkerName(nameInMethod.get(), simpleName);
+						//icu.setWorkerIdentifier(new WorkerIdentifier(identifier));
 				}
 			}
 
