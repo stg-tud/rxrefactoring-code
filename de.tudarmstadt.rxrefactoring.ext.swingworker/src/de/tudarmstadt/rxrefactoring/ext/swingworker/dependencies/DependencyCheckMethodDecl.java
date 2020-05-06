@@ -68,6 +68,9 @@ public class DependencyCheckMethodDecl {
 	private boolean checkCursorSelection(VariableDeclarationStatement varDecl) {
 		Optional<CompilationUnit> compUnit = ASTNodes.findParent(varDecl, CompilationUnit.class);
 		int lineNumber = compUnit.get().getLineNumber(varDecl.getStartPosition()) - 1;
+		
+		if(startLine == -1)
+			return false;
 
 		return lineNumber == startLine;
 	}
@@ -123,6 +126,7 @@ public class DependencyCheckMethodDecl {
 						.forEach(unit -> unit.setWorkerIdentifier(new WorkerIdentifier(namingHelper(false) + varName)));
 			}
 		}
+		
 
 		// fourth change of parameters in MethodDeclaration
 		List<ITypeBinding> listParameters = Arrays.asList(entry.getKey().resolveBinding().getParameterTypes());
@@ -148,8 +152,7 @@ public class DependencyCheckMethodDecl {
 		Map<IRewriteCompilationUnit, String> unitsToChange = new HashMap<IRewriteCompilationUnit, String>();
 
 		Set<IRewriteCompilationUnit> units_MethodInvoc = units.stream()
-				.filter(unit -> unit.getWorkerIdentifier().getName().equals(nameWorker) 
-						|| unit.getWorkerIdentifier().equals(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER))
+				.filter(unit -> checkWorkerIdentifier(unit.getWorkerIdentifier()))
 				.filter(unit -> unit.getResource().equals(unit_MethodDecl.getResource())).collect(Collectors.toSet());
 
 		for (IRewriteCompilationUnit unit_Var : units_MethodInvoc) {
@@ -166,6 +169,8 @@ public class DependencyCheckMethodDecl {
 							unitsToChange.put(unit_Var, namingHelper(true));
 						} else {
 							unitsToChange.put(unit_Var, namingHelper(false));
+							unitsToChange.putAll(checkForSimpleNameChanges(unit_Var));
+							
 						}
 					}
 				}
@@ -174,6 +179,14 @@ public class DependencyCheckMethodDecl {
 
 		return unitsToChange;
 
+	}
+	
+	private Map<IRewriteCompilationUnit, String> checkForSimpleNameChanges(IRewriteCompilationUnit unitVarDecl){
+		return units.getUnits().stream()
+				.filter(unit-> unitVarDecl.getWorkerIdentifier().name.equals(unit.getWorkerIdentifier().name) 
+						&& !unit.equals(unitVarDecl))
+				.collect(Collectors.toMap(key -> key, value -> namingHelper(false)));
+	
 	}
 
 	@SuppressWarnings("unchecked")
@@ -268,4 +281,15 @@ public class DependencyCheckMethodDecl {
 		return false;
 	}
 
-}
+	private boolean checkWorkerIdentifier(WorkerIdentifier identifier) {
+		
+		if(nameWorker.equals("Cursor Selection")) {
+			return identifier.getName().equals(nameWorker) ||
+					identifier.equals(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER);
+		}else if(nameWorker.equals(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER.getName())){	
+			return identifier.equals(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER)
+					|| (identifier.getName().contains("Variable") && !identifier.getName().contains("Single"));	
+		}
+		return identifier.equals(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER);
+		}
+	}

@@ -32,7 +32,7 @@ public class DependencyCheckerSwingWorker extends DependencyBetweenWorkerCheck {
 		} else {
 			DependencyCheckVarDecl dependencyCheckVarDecl = new DependencyCheckVarDecl(units);
 			units = dependencyCheckVarDecl.checkVariableDeclarationsWithInMethod(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER.getName());
-			DependencyCheckMethodDecl dependencyCheckMethodDecl = new DependencyCheckMethodDecl(units, scanner, 0);
+			DependencyCheckMethodDecl dependencyCheckMethodDecl = new DependencyCheckMethodDecl(units, scanner, -1);
 			units = dependencyCheckMethodDecl.regroupBecauseOfMethodDependencies(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER.getName());
 			DependencyCheckFieldDecl dependencyCheckFieldDecl = new DependencyCheckFieldDecl(units);
 			units = dependencyCheckFieldDecl.searchForFieldDependencies();
