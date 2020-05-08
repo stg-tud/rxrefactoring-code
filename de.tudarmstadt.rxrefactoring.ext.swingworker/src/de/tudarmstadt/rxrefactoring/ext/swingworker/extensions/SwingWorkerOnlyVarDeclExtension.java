@@ -7,8 +7,10 @@ import de.tudarmstadt.rxrefactoring.core.IWorkerRef;
 import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
+import de.tudarmstadt.rxrefactoring.core.utils.NamingUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.dependencies.DependencyCheckerSwingWorker;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.RxCollector;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.AssignmentWorker;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.refactor.ClassInstanceCreationWorker;
@@ -60,15 +62,20 @@ public class SwingWorkerOnlyVarDeclExtension extends SwingWorkerExtension{
 		IWorkerRef<Void, RxCollector> collector = workerTree.addWorker(new RxCollector(getRefactorScope()));
 		IWorkerRef<RxCollector, TypeOutput> typeWorker = workerTree.addWorker(collector, new TypeDeclarationWorker());
 
-		workerTree.addWorker(typeWorker, new AssignmentWorker());
-		workerTree.addWorker(typeWorker, new FieldDeclarationWorker());
 		workerTree.addWorker(typeWorker, new MethodInvocationWorker());
 		workerTree.addWorker(typeWorker, new VariableDeclStatementWorker());
 		workerTree.addWorker(typeWorker, new SimpleNameWorker());
 		workerTree.addWorker(typeWorker, new SingleVariableDeclWorker());
 		workerTree.addWorker(typeWorker, new ClassInstanceCreationWorker());
 		workerTree.addWorker(typeWorker, new MethodDeclarationWorker());
-		workerTree.addWorker(typeWorker, new RelevantInvocationsWorker());
+		
+		WorkerUtils.addIdentifierToAll(NamingUtils.TYPE_DECL_IDENTIFIER);
+		WorkerUtils.addIdentifierToAll(NamingUtils.METHOD_INVOCATION_IDENTIFIER);
+		WorkerUtils.addIdentifierToAll(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER);
+		WorkerUtils.addIdentifierToAll(NamingUtils.SIMPLE_NAME_IDENTIFIER);
+		WorkerUtils.addIdentifierToAll(NamingUtils.SINGLE_VAR_DECL_IDENTIFIER);
+		WorkerUtils.addIdentifierToAll(NamingUtils.CLASS_INSTANCE_CREATION_IDENTIFIER);
+		WorkerUtils.addIdentifierToAll(NamingUtils.METHOD_DECLARATION_IDENTIFIER);
 	}
 
 }

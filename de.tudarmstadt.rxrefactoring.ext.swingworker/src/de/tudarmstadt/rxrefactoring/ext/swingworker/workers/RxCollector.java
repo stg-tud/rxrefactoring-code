@@ -1,5 +1,6 @@
 package de.tudarmstadt.rxrefactoring.ext.swingworker.workers;
 
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -65,11 +66,11 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 					m.getValue().putAll(unit, WorkerUtils.getNeededList(m.getKey(), discoveringVisitor));
 				}
 			} else if (scope.equals(RefactorScope.SEPARATE_OCCURENCES) || scope.equals(RefactorScope.ONLY_ONE_OCCURENCE)) {
-				WorkerUtils.fillAllWorkerIdentifier();
+				//WorkerUtils.fillAllWorkerIdentifier();
 				Set<IRewriteCompilationUnit> allWorkerUnits = loopOverEveryWorker(unit, discoveringVisitor);
 				newUnits.addAll(allWorkerUnits);
 				units.remove(unit);
-				WorkerUtils.clearKeys();
+				//WorkerUtils.clearKeys();
 			}
 			
 			discoveringVisitor.cleanAllLists();
@@ -85,6 +86,7 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 	public Set<IRewriteCompilationUnit> loopOverEveryWorker( IRewriteCompilationUnit unit, DiscoveringVisitor visitor) {
 		Set<IRewriteCompilationUnit> allWorkerUnits = Sets.newConcurrentHashSet();
 		
+		List<WorkerIdentifier> list = WorkerUtils.getAllIdentifier();
 		for(WorkerIdentifier identifier: WorkerUtils.getAllIdentifier()) {
 			
 			for (Object m : WorkerUtils.getNeededList(identifier, visitor)) {

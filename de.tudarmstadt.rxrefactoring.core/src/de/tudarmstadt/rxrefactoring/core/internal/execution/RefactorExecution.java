@@ -177,9 +177,11 @@ public class RefactorExecution implements Runnable {
 							// Performs the refactoring by applying the workers of the extension.
 							Log.info(RefactorExecution.class, "Refactor units...");
 							changes = doRefactorProject(units, projectSummary, project);
-							CompositeChange changePerProject = new CompositeChange(project.getName(), changes);
-							allChanges[projectCount] = changePerProject;
-							projectCount++;
+							if(changes.length != 0) {
+								CompositeChange changePerProject = new CompositeChange(project.getName(), changes);
+								allChanges[projectCount] = changePerProject;
+								projectCount++;
+								}
 
 							// Call template method
 							onProjectFinished(project, javaProject, units);

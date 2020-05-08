@@ -57,6 +57,10 @@ public class WorkerUtils {
 		allWorkerIdentifier.add(NamingUtils.METHOD_DECLARATION_IDENTIFIER);
 		allWorkerIdentifier.add(NamingUtils.RELEVANT_INVOCATION_IDENTIFIER);
 	}
+	
+	public static void addIdentifierToAll(WorkerIdentifier identifier) {
+		allWorkerIdentifier.add(identifier);
+	}
 
 	public static void fillAllMap() {
 		allMap.put(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER, varDeclMap);

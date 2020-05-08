@@ -250,7 +250,8 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 
 		MultiTextEdit root = new MultiTextEdit();
 		Document document = new Document(this.getSource());
-		Map<IResource, String> checkForDuplicatedImports = new HashMap<>();
+		Map<String, IResource> checkForDuplicatedImports = new HashMap<>();
+		InsertEdit newLine = null;
 
 		for (RewriteCompilationUnit unit : unitsToAdd) {
 			if (unit.hasChanges() && unit.getCorrespondingResource().equals(this.getCorrespondingResource())) {
@@ -265,28 +266,61 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 				if (unit.hasImportChanges()) {
 					TextEdit edit = unit.imports().rewriteImports(null); // We can add a progress monitor here.
 					if (edit.getChildren().length != 0) {
-						InsertEdit insertEdit = (InsertEdit) edit.getChildren()[0];
-						if (checkForDuplicatedImports.containsKey(unit.getCorrespondingResource())) {
+						for (TextEdit textEdit : edit.getChildren()) {
+							InsertEdit insertEdit = (InsertEdit) textEdit;
+							if (textEdit.getParent() != null)
+								textEdit.getParent().removeChild(textEdit);
 
-							if (!checkForDuplicatedImports.get(unit.getCorrespondingResource())
-									.equals(insertEdit.getText())) {
-								root.addChild(edit);
-								checkForDuplicatedImports.put(unit.getCorrespondingResource(), insertEdit.getText());
+							if (checkForDuplicatedImports.containsKey(insertEdit.getText())) {
+								if (!checkForDuplicatedImports.get(insertEdit.getText())
+										.equals(unit.getCorrespondingResource())) {
+									root.addChild(textEdit);
+									root.addChild(newLine);
+									checkForDuplicatedImports.put(insertEdit.getText(),
+											unit.getCorrespondingResource());
+								}
+
+							} else {
+								root.addChild(textEdit);
+								if (!isEmptyLine(insertEdit.getText()))
+									checkForDuplicatedImports.put(insertEdit.getText(),
+											unit.getCorrespondingResource());
 							}
-
-						} else {
-							root.addChild(edit);
-							checkForDuplicatedImports.put(unit.getCorrespondingResource(), insertEdit.getText());
 						}
+
 					}
 				}
 
 			}
 		}
 
+		root = removeEmptyLines(root);
+
 		DocumentChange change = new RewriteChange(unit.getElementName(), document);
 		change.setEdit(root);
 		return Optional.of(change);
+
+	}
+
+	private boolean isEmptyLine(String text) {
+		return text.equals("\r\n") || text.equals("\r") || text.equals("\n");
+	}
+
+	private MultiTextEdit removeEmptyLines(MultiTextEdit edit) {
+		String textPrevious = "";
+		for (TextEdit textEdit : edit.getChildren()) {
+			if (textEdit instanceof InsertEdit) {
+				InsertEdit insertE = (InsertEdit) textEdit;
+				if (textPrevious.equals("\r\n") && insertE.getText().equals("\r\n"))
+					edit.removeChild(textEdit);
+				else {
+					textPrevious = insertE.getText();
+				}
+			}
+
+		}
+
+		return edit;
 
 	}
 
