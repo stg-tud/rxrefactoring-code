@@ -43,13 +43,13 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 		if (onlyVarDecl) {
 			DependencyCheckVariableDecl dependencyCheckVarDecl = new DependencyCheckVariableDecl(units, group);
 			units = dependencyCheckVarDecl.checkVariableDeclarationsWithInMethod("Cursor Selection");
-			DependencyCheckMethodDecl dependencyCheckMethodDecl = new DependencyCheckMethodDecl(units, scanner, startLine);
+			DependencyCheckMethodDecl dependencyCheckMethodDecl = new DependencyCheckMethodDecl(units, scanner, startLine, group);
 			units = dependencyCheckMethodDecl.regroupBecauseOfMethodDependencies("Cursor Selection");
 			return units;
 		} else {
 			DependencyCheckVariableDecl dependencyCheckVarDecl = new DependencyCheckVariableDecl(units, group);
 			units = dependencyCheckVarDecl.checkVariableDeclarationsWithInMethod(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER.getName());
-			DependencyCheckMethodDecl dependencyCheckMethodDecl = new DependencyCheckMethodDecl(units, scanner, -1);
+			DependencyCheckMethodDecl dependencyCheckMethodDecl = new DependencyCheckMethodDecl(units, scanner, -1, group);
 			units = dependencyCheckMethodDecl.regroupBecauseOfMethodDependencies(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER.getName());
 			DependencyCheckFieldDecl dependencyCheckFieldDecl = new DependencyCheckFieldDecl(units, group);
 			units = dependencyCheckFieldDecl.searchForFieldDependencies();

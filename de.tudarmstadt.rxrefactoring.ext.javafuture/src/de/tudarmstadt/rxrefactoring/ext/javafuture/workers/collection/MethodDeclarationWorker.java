@@ -51,7 +51,7 @@ public class MethodDeclarationWorker extends AbstractFutureWorker<MethodDeclarat
 		if (returnType instanceof ParameterizedType) {
 			ParameterizedType pType = (ParameterizedType) returnType;
 			Type typeArg = (Type) pType.typeArguments().get(0);
-			typeArg = ((ParameterizedType) typeArg).getType();
+			//typeArg = ((ParameterizedType) typeArg).getType();
 
 			JavaFutureASTUtils.replaceType(unit, typeArg, "Observable");
 		}

@@ -108,6 +108,8 @@ public class JavaFutureRefactoringOnlyVarDecl extends JavaFutureRefactoring {
 					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.MethodInvocationWorker());
 			workerTree.addWorker(collector,
 					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.SingleVariableDeclWorker());
+			workerTree.addWorker(collector,
+					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.future.MethodDeclarationWorker());
 			
 			
 			workerTree.addWorker(collector,
@@ -118,12 +120,15 @@ public class JavaFutureRefactoringOnlyVarDecl extends JavaFutureRefactoring {
 					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.MethodInvocationWorker());
 			workerTree.addWorker(collector,
 					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.ClassInstanceCreationWorker());
+			workerTree.addWorker(collector,
+					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.MethodDeclarationWorker());
 			
 			WorkerUtils.addIdentifierToAll(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER);
 			WorkerUtils.addIdentifierToAll(NamingUtils.ASSIGNMENTS_IDENTIFIER);
 			WorkerUtils.addIdentifierToAll(NamingUtils.METHOD_INVOCATION_IDENTIFIER);
 			WorkerUtils.addIdentifierToAll(NamingUtils.SINGLE_VAR_DECL_IDENTIFIER);
 			WorkerUtils.addIdentifierToAll(NamingUtils.CLASS_INSTANCE_CREATION_IDENTIFIER);
+			WorkerUtils.addIdentifierToAll(NamingUtils.METHOD_DECLARATION_IDENTIFIER);
 		}
 		if (options.contains(RefactoringOptions.FUTURETASK)) {
 			workerTree.addWorker(collector,

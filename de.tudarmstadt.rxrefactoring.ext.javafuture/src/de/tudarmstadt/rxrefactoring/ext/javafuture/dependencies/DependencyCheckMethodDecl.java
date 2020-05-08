@@ -19,6 +19,7 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
@@ -44,10 +45,11 @@ public class DependencyCheckMethodDecl {
 	String varName = "";
 	int startLine;
 
-	public DependencyCheckMethodDecl(ProjectUnits units, MethodScanner scanner, int startLine) {
+	public DependencyCheckMethodDecl(ProjectUnits units, MethodScanner scanner, int startLine, CollectorGroup group) {
 		this.scanner = scanner;
 		this.units = units;
 		this.startLine = startLine;
+		this.group = group;
 
 	}
 
@@ -81,6 +83,10 @@ public class DependencyCheckMethodDecl {
 
 	private boolean checkIfReturnTypeIsFutureOrExtendsFromIt(MethodDeclaration method) {
 		Type returnType = method.getReturnType2();
+		if(returnType instanceof ParameterizedType) {
+			ParameterizedType pType = (ParameterizedType) returnType;
+			returnType = (Type) pType.typeArguments().get(0);
+		}
 		ITypeBinding binding = returnType.resolveBinding();
 		if (Types.isTypeOf(binding, classBinary))
 			return true;
@@ -211,7 +217,15 @@ public class DependencyCheckMethodDecl {
 
 	private Set<IRewriteCompilationUnit> getClassInstanceCreationUnit(MethodDeclaration methodDecl) {
 		Set<IRewriteCompilationUnit> unitsToChange = new HashSet<IRewriteCompilationUnit>();
-		ITypeBinding binding = methodDecl.getReturnType2().resolveBinding();
+		
+		Type type = methodDecl.getReturnType2();
+		
+		if(type instanceof ParameterizedType) {
+			ParameterizedType pType = (ParameterizedType) type;
+			type = (Type) pType.typeArguments().get(0);
+		}
+		
+		ITypeBinding binding = type.resolveBinding();
 		Block block = methodDecl.getBody();
 
 		for (Object st : block.statements()) {
