@@ -90,8 +90,6 @@ public class DependencyCheckVarDecl {
 
 		}
 		
-		changeBackIfOnlyOneVarDecl();
-		
 		return units;
 	}
 	
@@ -232,7 +230,8 @@ public class DependencyCheckVarDecl {
 				
 	}
 	
-	private void changeBackIfOnlyOneVarDecl() {
+	//TODO THA schauen, ob wirklich sinnvoll
+	/*private void changeBackIfOnlyOneVarDecl() {
 		if(units.getUnits().stream().filter(unit -> unit.getWorkerIdentifier().name.contains("Cursor Selection of Variable"))
 				.count() == Long.valueOf(1)) {
 			units.getUnits().stream()
@@ -241,6 +240,6 @@ public class DependencyCheckVarDecl {
 							.setWorkerIdentifier(new WorkerIdentifier(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER.name)));
 				
 			}
-		}
+		}*/
 
 }

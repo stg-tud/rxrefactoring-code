@@ -43,7 +43,9 @@ public class WorkerUtils {
 		allWorkerIdentifier.add(NamingUtils.RETURN_STATEMENT_IDENTIFIER);
 	}
 
-
+	public static void addIdentifierToAll(WorkerIdentifier identifier) {
+		allWorkerIdentifier.add(identifier);
+	}
 	
 	public static List<WorkerIdentifier> getAllIdentifier() {
 		return allWorkerIdentifier;

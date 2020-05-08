@@ -538,6 +538,8 @@ public class RefactorExecution implements Runnable {
 					.filter(unit -> unit.getWorkerIdentifier().name.contains("Cursor Selection"))
 					.filter(unit -> unit.getWorkerIdentifier().getName() != null)
 					.collect(Collectors.groupingBy(IRewriteCompilationUnit::getWorkerString));
+			
+			
 			return grouped;
 
 		}

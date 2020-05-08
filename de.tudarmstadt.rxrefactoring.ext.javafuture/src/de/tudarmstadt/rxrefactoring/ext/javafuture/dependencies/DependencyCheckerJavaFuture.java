@@ -23,11 +23,13 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 	private CollectorGroup group = new CollectorGroup();
 	Map<MethodDeclaration, IRewriteCompilationUnit> entriesRefactored;
 	Map<MethodDeclaration, IRewriteCompilationUnit> entriesCalling;
+	int startLine;
 
-	public DependencyCheckerJavaFuture(ProjectUnits units, MethodScanner scanner, FutureCollector collector) {
+	public DependencyCheckerJavaFuture(ProjectUnits units, MethodScanner scanner, FutureCollector collector, int startLine) {
 		this.scanner = scanner;
 		this.units = units;
 		this.collector = collector;
+		this.startLine = startLine;
 
 	}
 
@@ -41,12 +43,14 @@ public class DependencyCheckerJavaFuture extends DependencyBetweenWorkerCheck {
 		if (onlyVarDecl) {
 			DependencyCheckVariableDecl dependencyCheckVarDecl = new DependencyCheckVariableDecl(units, group);
 			units = dependencyCheckVarDecl.checkVariableDeclarationsWithInMethod("Cursor Selection");
+			DependencyCheckMethodDecl dependencyCheckMethodDecl = new DependencyCheckMethodDecl(units, scanner, startLine);
+			units = dependencyCheckMethodDecl.regroupBecauseOfMethodDependencies("Cursor Selection");
 			return units;
 		} else {
 			DependencyCheckVariableDecl dependencyCheckVarDecl = new DependencyCheckVariableDecl(units, group);
-			units = dependencyCheckVarDecl.checkVariableDeclarationsWithInMethod(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER.name);
-			DependencyCheckMethodDecl dependencyCheckMethodDecl = new DependencyCheckMethodDecl(units, scanner);
-			units = dependencyCheckMethodDecl.regroupBecauseOfMethodDependencies();
+			units = dependencyCheckVarDecl.checkVariableDeclarationsWithInMethod(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER.getName());
+			DependencyCheckMethodDecl dependencyCheckMethodDecl = new DependencyCheckMethodDecl(units, scanner, -1);
+			units = dependencyCheckMethodDecl.regroupBecauseOfMethodDependencies(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER.getName());
 			DependencyCheckFieldDecl dependencyCheckFieldDecl = new DependencyCheckFieldDecl(units, group);
 			units = dependencyCheckFieldDecl.searchForFieldDependencies();
 		}

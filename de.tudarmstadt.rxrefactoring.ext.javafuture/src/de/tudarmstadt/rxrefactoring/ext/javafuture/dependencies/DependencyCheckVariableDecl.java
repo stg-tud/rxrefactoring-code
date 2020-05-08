@@ -67,10 +67,12 @@ public class DependencyCheckVariableDecl {
 						else if (!checkForSameVariable(varName.getIdentifier(), unitToCheck))
 							continue;
 
-						unitToCheck.setWorkerIdentifier(new WorkerIdentifier(namingHelper(false) + varName.getIdentifier()));
+						unitToCheck.setWorkerIdentifier(
+								new WorkerIdentifier(namingHelper(false) + varName.getIdentifier()));
 
 					} else {
-						unitToCheck.setWorkerIdentifier(new WorkerIdentifier(namingHelper(true) + varName.getIdentifier()));
+						unitToCheck.setWorkerIdentifier(
+								new WorkerIdentifier(namingHelper(true) + varName.getIdentifier()));
 					}
 				}
 			}
@@ -87,11 +89,13 @@ public class DependencyCheckVariableDecl {
 
 						unitToCheck.setWorkerIdentifier(new WorkerIdentifier(singleVar.getKey()));
 					}
-					
+
 				}
 			}
 
 		}
+		
+		
 
 		return units;
 	}
@@ -145,9 +149,7 @@ public class DependencyCheckVariableDecl {
 			return singleVarDecls.stream().map(singleVarDecl -> {
 				boolean res = handleSingleVarDeclInLoop(singleVarDecl, varName);
 				if (res)
-					singleVarDeclsToCheck.put(
-							namingHelper(false) + varName,
-							singleVarDecl);
+					singleVarDeclsToCheck.put(namingHelper(false) + varName, singleVarDecl);
 				return res;
 			}).anyMatch(bool -> bool == true);
 		}
@@ -218,18 +220,30 @@ public class DependencyCheckVariableDecl {
 		return false;
 
 	}
-	
+
 	private String namingHelper(boolean isMainVarChange) {
-		if(nameWorker.equals("Cursor Selection")){
-			if(isMainVarChange)
+		if (nameWorker.equals("Cursor Selection")) {
+			if (isMainVarChange)
 				return "Cursor Selection Variable: ";
 			else {
 				return "Changes also needed for Cursor Selection of Variable: ";
 			}
-		}else {
+		} else {
 			return "Change #" + String.valueOf(counterVar) + " according to Variable: ";
 		}
-				
+
 	}
+	
+	//TODO THA schauen, ob wirklich sinnvoll
+	/*private void changeBackIfOnlyOneVarDecl() {
+		if(units.getUnits().stream().filter(unit -> unit.getWorkerIdentifier().name.contains("Cursor Selection of Variable"))
+				.count() == Long.valueOf(1)) {
+			units.getUnits().stream()
+					.filter(unit-> !unit.getWorkerIdentifier().name.contains("Cursor Selection of Variable"))
+					.forEach(unit -> unit
+							.setWorkerIdentifier(new WorkerIdentifier(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER.name)));
+				
+			}
+		}*/
 
 }

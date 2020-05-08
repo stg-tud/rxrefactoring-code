@@ -26,6 +26,7 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.dependencies.DependencyChecke
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfos;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.InstantiationCollector;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.SubclassInstantiationCollector;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.WorkerUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.CollectorGroup;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.FutureCollector;
 
@@ -58,8 +59,8 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 	}
 	
 	@Override
-	public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner) throws JavaModelException{
-		DependencyCheckerJavaFuture dependencyCheck = new DependencyCheckerJavaFuture(units, scanner, futureCollector);
+	public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner, int startLine) throws JavaModelException{
+		DependencyCheckerJavaFuture dependencyCheck = new DependencyCheckerJavaFuture(units, scanner, futureCollector, startLine);
 		return dependencyCheck.runDependendencyCheck(false);
 	}
 
@@ -143,6 +144,8 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.ArrayCreationWorker());
 			workerTree.addWorker(collector,
 					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.AssignmentWorker());
+			
+			WorkerUtils.fillAllWorkerIdentifierForFuture();
 		}
 
 		if (options.contains(RefactoringOptions.FUTURETASK)) {
@@ -162,6 +165,7 @@ public class JavaFutureRefactoring implements IRefactorExtension {
 					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.futuretask.FieldDeclarationWorker());
 			workerTree.addWorker(collector,
 					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.futuretask.ClassInstanceCreationWorker());
+			WorkerUtils.fillAllWorkerIdentifierForFuture();
 		}
 
 	}

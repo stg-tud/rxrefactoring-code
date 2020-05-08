@@ -90,12 +90,9 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 
 				if (options.contains(RefactoringOptions.SEPARATE_OCCURENCIES) || options.contains(RefactoringOptions.ONLY_ONE_OCCURENCY)) {
 					unit.accept(discoveringVisitor);
-					//add("future", unit, discoveringVisitor);
 
 					unit.accept(collectionDiscoveringVisitor);
-					//add("collection", unit, collectionDiscoveringVisitor);
 
-					WorkerUtils.fillAllWorkerIdentifierForFuture();
 					Set<IRewriteCompilationUnit> allWorkerUnits_future = loopOverEveryWorker(unit, discoveringVisitor,
 							"future");
 					newUnits.addAll(allWorkerUnits_future);
@@ -105,7 +102,6 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 					newUnits.addAll(allWorkerUnits_collector);
 
 					units.remove(unit);
-					WorkerUtils.clearKeys();
 
 				} else {
 					unit.accept(discoveringVisitor);
@@ -118,6 +114,8 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 
 			}
 		}
+		
+		WorkerUtils.clearKeys();
 
 		units.addAll(newUnits);
 
@@ -130,6 +128,7 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 			String whichGroup) {
 		Set<IRewriteCompilationUnit> allWorkerUnits = Sets.newConcurrentHashSet();
 
+		List<WorkerIdentifier> test = WorkerUtils.getAllIdentifier();
 		for (WorkerIdentifier identifier : WorkerUtils.getAllIdentifier()) {
 
 			for (ASTNode node : WorkerUtils.getNeededList(identifier, visitor)) {

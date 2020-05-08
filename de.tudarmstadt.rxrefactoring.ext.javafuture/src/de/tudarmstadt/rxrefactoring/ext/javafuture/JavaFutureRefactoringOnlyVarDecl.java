@@ -14,6 +14,7 @@ import de.tudarmstadt.rxrefactoring.core.IWorkerTree;
 import de.tudarmstadt.rxrefactoring.core.analysis.impl.reachingdefinitions.UseDef;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.testing.MethodScanner;
+import de.tudarmstadt.rxrefactoring.core.utils.NamingUtils;
 import de.tudarmstadt.rxrefactoring.core.utils.RefactorScope;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.PreconditionWorker;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.analysis.UseDefWorker;
@@ -22,6 +23,7 @@ import de.tudarmstadt.rxrefactoring.ext.javafuture.dependencies.DependencyChecke
 import de.tudarmstadt.rxrefactoring.ext.javafuture.domain.ClassInfos;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.InstantiationCollector;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.instantiation.SubclassInstantiationCollector;
+import de.tudarmstadt.rxrefactoring.ext.javafuture.utils.WorkerUtils;
 import de.tudarmstadt.rxrefactoring.ext.javafuture.workers.FutureCollector;
 
 
@@ -51,8 +53,8 @@ public class JavaFutureRefactoringOnlyVarDecl extends JavaFutureRefactoring {
 	}
 	
 	@Override
-	public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner) throws JavaModelException{
-		DependencyCheckerJavaFuture dependencyCheck = new DependencyCheckerJavaFuture(units, scanner, futureCollector);
+	public ProjectUnits runDependencyBetweenWorkerCheck(ProjectUnits units, MethodScanner scanner, int startLine) throws JavaModelException{
+		DependencyCheckerJavaFuture dependencyCheck = new DependencyCheckerJavaFuture(units, scanner, futureCollector, startLine);
 		return dependencyCheck.runDependendencyCheck(true);
 	}
 	
@@ -116,10 +118,17 @@ public class JavaFutureRefactoringOnlyVarDecl extends JavaFutureRefactoring {
 					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.MethodInvocationWorker());
 			workerTree.addWorker(collector,
 					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.collection.ClassInstanceCreationWorker());
+			
+			WorkerUtils.addIdentifierToAll(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER);
+			WorkerUtils.addIdentifierToAll(NamingUtils.ASSIGNMENTS_IDENTIFIER);
+			WorkerUtils.addIdentifierToAll(NamingUtils.METHOD_INVOCATION_IDENTIFIER);
+			WorkerUtils.addIdentifierToAll(NamingUtils.SINGLE_VAR_DECL_IDENTIFIER);
+			WorkerUtils.addIdentifierToAll(NamingUtils.CLASS_INSTANCE_CREATION_IDENTIFIER);
 		}
 		if (options.contains(RefactoringOptions.FUTURETASK)) {
 			workerTree.addWorker(collector,
 					new de.tudarmstadt.rxrefactoring.ext.javafuture.workers.futuretask.VariableDeclStatementWorker());
+			WorkerUtils.addIdentifierToAll(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER);
 		}
 		
 	}

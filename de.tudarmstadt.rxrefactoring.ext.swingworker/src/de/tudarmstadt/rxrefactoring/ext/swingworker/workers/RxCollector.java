@@ -66,16 +66,16 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 					m.getValue().putAll(unit, WorkerUtils.getNeededList(m.getKey(), discoveringVisitor));
 				}
 			} else if (scope.equals(RefactorScope.SEPARATE_OCCURENCES) || scope.equals(RefactorScope.ONLY_ONE_OCCURENCE)) {
-				//WorkerUtils.fillAllWorkerIdentifier();
 				Set<IRewriteCompilationUnit> allWorkerUnits = loopOverEveryWorker(unit, discoveringVisitor);
 				newUnits.addAll(allWorkerUnits);
 				units.remove(unit);
-				//WorkerUtils.clearKeys();
 			}
 			
 			discoveringVisitor.cleanAllLists();
 
 		}
+		
+		WorkerUtils.clearKeys();
 
 		units.addAll(newUnits);
 
@@ -85,8 +85,7 @@ public class RxCollector implements IWorker<Void, RxCollector> {
 	
 	public Set<IRewriteCompilationUnit> loopOverEveryWorker( IRewriteCompilationUnit unit, DiscoveringVisitor visitor) {
 		Set<IRewriteCompilationUnit> allWorkerUnits = Sets.newConcurrentHashSet();
-		
-		List<WorkerIdentifier> list = WorkerUtils.getAllIdentifier();
+
 		for(WorkerIdentifier identifier: WorkerUtils.getAllIdentifier()) {
 			
 			for (Object m : WorkerUtils.getNeededList(identifier, visitor)) {
