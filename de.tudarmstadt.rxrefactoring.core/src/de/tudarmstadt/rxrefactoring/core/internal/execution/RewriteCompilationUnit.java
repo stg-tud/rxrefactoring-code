@@ -1,5 +1,7 @@
 package de.tudarmstadt.rxrefactoring.core.internal.execution;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +11,7 @@ import java.util.Set;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -38,15 +41,31 @@ import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
+import org.eclipse.jface.text.DocumentRewriteSession;
+import org.eclipse.jface.text.DocumentRewriteSessionType;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.IDocumentExtension4;
+import org.eclipse.jface.text.link.LinkedModeModel;
+import org.eclipse.ltk.core.refactoring.Change;
+import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.eclipse.ltk.core.refactoring.DocumentChange;
+import org.eclipse.ltk.core.refactoring.TextChange;
+import org.eclipse.ltk.core.refactoring.TextEditBasedChangeGroup;
+import org.eclipse.ltk.core.refactoring.TextEditChangeGroup;
+import org.eclipse.text.edits.DeleteEdit;
 import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
+import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
+import org.eclipse.text.edits.TextEditCopier;
+import org.eclipse.text.edits.TextEditGroup;
+import org.eclipse.text.edits.TextEditProcessor;
+import org.eclipse.text.edits.TextEditVisitor;
 import org.eclipse.text.edits.UndoEdit;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
+import de.tudarmstadt.rxrefactoring.core.utils.OffsetCounter;
 import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 
 /**
@@ -87,6 +106,7 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 	 * are involved
 	 */
 	private WorkerIdentifier worker;
+
 
 	/**
 	 * <p>
@@ -235,9 +255,10 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 			if (hasImportChanges()) {
 				TextEdit edit = imports().rewriteImports(null); // We can add a progress monitor here.
 				root.addChild(edit);
+			
 			}
 
-			DocumentChange change = new RewriteChange(unit.getElementName(), document);
+			RewriteChange change = new RewriteChange(unit.getElementName(), document);
 			change.setEdit(root);
 			return Optional.of(change);
 		}
@@ -245,13 +266,15 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 		return Optional.empty();
 	}
 
-	protected Optional<DocumentChange> getChangedDocumentForListOfUnits(Set<RewriteCompilationUnit> unitsToAdd)
+	boolean first = true;
+
+	protected Optional<DocumentChange> getChangedDocumentForListOfUnits(Set<RewriteCompilationUnit> unitsToAdd,
+			Document document)
 			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
 
-		MultiTextEdit root = new MultiTextEdit();
-		Document document = new Document(this.getSource());
 		Map<String, IResource> checkForDuplicatedImports = new HashMap<>();
-		InsertEdit newLine = null;
+		MultiTextEdit rootUnit = new MultiTextEdit();
+		boolean isSkippedImport = false;
 
 		for (RewriteCompilationUnit unit : unitsToAdd) {
 			if (unit.hasChanges() && unit.getCorrespondingResource().equals(this.getCorrespondingResource())) {
@@ -259,8 +282,9 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 				// Apply changes to the classes AST if there are any
 				if (unit.hasASTChanges()) {
 					TextEdit edit = unit.writer().rewriteAST(document, null);
-					root.addChild(edit);
+					rootUnit.addChild(edit);
 				}
+	
 
 				// Apply changes to the classes imports if there are any
 				if (unit.hasImportChanges()) {
@@ -274,17 +298,22 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 							if (checkForDuplicatedImports.containsKey(insertEdit.getText())) {
 								if (!checkForDuplicatedImports.get(insertEdit.getText())
 										.equals(unit.getCorrespondingResource())) {
-									root.addChild(textEdit);
-									root.addChild(newLine);
+									rootUnit.addChild(textEdit);
 									checkForDuplicatedImports.put(insertEdit.getText(),
 											unit.getCorrespondingResource());
 								}
+								isSkippedImport = true;
 
 							} else {
-								root.addChild(textEdit);
-								if (!isEmptyLine(insertEdit.getText()))
+								if (!isEmptyLine(insertEdit.getText())) {
+									rootUnit.addChild(textEdit);
 									checkForDuplicatedImports.put(insertEdit.getText(),
 											unit.getCorrespondingResource());
+								} else {
+									if (!isSkippedImport)
+										rootUnit.addChild(textEdit);
+
+								}
 							}
 						}
 
@@ -294,10 +323,9 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 			}
 		}
 
-		root = removeEmptyLines(root);
-
+		rootUnit = removeEmptyLines(rootUnit);
 		DocumentChange change = new RewriteChange(unit.getElementName(), document);
-		change.setEdit(root);
+		change.setEdit(rootUnit);
 		return Optional.of(change);
 
 	}
@@ -324,19 +352,160 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 
 	}
 
+	private int[] findDifference(TextEdit edit, IDocument document) {
+		int[] diff = { 0, 0 };
+		int insertCount = 0;
+		int deletionCount = 0;
+
+		int lineNumber = -1;
+		try {
+			lineNumber = document.getLineOfOffset(edit.getOffset());
+		} catch (BadLocationException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+		if (edit instanceof InsertEdit) {
+			InsertEdit insertE = (InsertEdit) edit;
+			insertCount = insertE.getLength() + insertE.getText().length();
+			//OffsetCounter.addOffsetForLine(lineNumber, edit.getOffset());
+
+		} else if (edit instanceof DeleteEdit) {
+			DeleteEdit deleteE = (DeleteEdit) edit;
+			deletionCount = deleteE.getLength();
+			//OffsetCounter.addOffsetForLine(lineNumber, -edit.getOffset());
+
+		}
+		/*
+		 * if (insertSet && deleteSet) { int actualDiff = deletionCount - insertCount;
+		 * diff += actualDiff; insertSet = false; deleteSet = false; }
+		 */
+
+		diff[0] = insertCount;
+		diff[1] = deletionCount;
+
+		TextEdit[] children = edit.getChildren();
+		for (TextEdit actEdit : children) {
+			int[] diffAct = findDifference(actEdit, document);
+			diff[0] += diffAct[0];
+			diff[1] += diffAct[1];
+		}
+		
+		return diff;
+	}
+
+	private TextEdit shifEdit(TextEdit oldEdit, int diff) {
+		TextEdit newEdit;
+		if (oldEdit instanceof ReplaceEdit) {
+			ReplaceEdit edit = (ReplaceEdit) oldEdit;
+			newEdit = new ReplaceEdit(edit.getOffset() - diff, edit.getLength(), edit.getText());
+		} else if (oldEdit instanceof InsertEdit) {
+			InsertEdit edit = (InsertEdit) oldEdit;
+			newEdit = new InsertEdit(edit.getOffset() - diff, edit.getText());
+		} else if (oldEdit instanceof DeleteEdit) {
+			DeleteEdit edit = (DeleteEdit) oldEdit;
+			newEdit = new DeleteEdit(edit.getOffset() - diff, edit.getLength());
+		} else if (oldEdit instanceof MultiTextEdit) {
+			newEdit = new MultiTextEdit();
+		} else {
+			return null; // not supported
+		}
+		TextEdit[] children = oldEdit.getChildren();
+		for (int i = 0; i < children.length; i++) {
+			TextEdit shifted = shifEdit(children[i], diff);
+			if (shifted != null) {
+				newEdit.addChild(shifted);
+			}
+		}
+		return newEdit;
+	}
+
 	private class RewriteChange extends DocumentChange {
+
 
 		public RewriteChange(String name, IDocument document) {
 			super(name, document);
 		}
 
+		/*private void removeNotNeeded() {
+			TextEdit rootEdit = getEdit();
+
+			for (TextEdit act : rootEdit.getChildren()) {
+
+				if (!editForUnit.contains(act)) {
+					elemToRemove.add(act);
+				}
+			}
+
+			for (TextEdit editRemove : elemToRemove) {
+				rootEdit.removeChild(editRemove);
+			}
+		}
+
+		private void addEditsToRoot(TextEdit test) {
+
+			MultiTextEdit rootEdit = (MultiTextEdit) getEdit();
+			for (TextEdit toAdd : elemToRemove) {
+				rootEdit.addChild(toAdd);
+
+			}
+
+		}*/
+
 		@Override
 		protected UndoEdit performEdits(final IDocument document) throws BadLocationException, MalformedTreeException {
 			// TODO: Why is the original function not working? The refactoring does not
-			// change the files.
+			// change the files
+
+			/*TextEdit edit = getEdit();
+			TextEdit copyForDiff = edit.copy();
+			edit.moveTree(OffsetCounter.getOffsetToSkip());
+			shifEdit(edit, OffsetCounter.getOffsetToSkip());
+			int[] offsetArray = OffsetCounter.getOffsetArray();
+			System.out.println(offsetArray);*/
+
+			// removeNotNeeded();
+			/*
+			 * boolean bool = TextEdit.class.getDeclaredField("fDefined");
+			 * bool.setAccessible(true); Object value = bool.get(this).;
+			 * bool.setAccessible(false);
+			 */
+
+			// this.setEdit(test);
+			/*
+			 * if(roots.containsKey(document)) { TextEdit rootDoc = roots.get(document);
+			 * rootDoc.addChild(this.getEdit()); }else { TextEdit root = this.getEdit();
+			 * roots.put(document, root); }
+			 */
 
 			// Document has changed
 			UndoEdit undo = super.performEdits(document);
+
+			/*int[] difference = findDifference(copyForDiff, document);
+			int diff = difference[0] - difference[1];
+			
+			OffsetCounter.setOffsetToSkip(diff);*/
+
+			/*
+			 * Field bool = null; try { bool = TextChange.class.getDeclaredField("fEdit"); }
+			 * catch (NoSuchFieldException | SecurityException e1) { // TODO Auto-generated
+			 * catch block e1.printStackTrace(); } bool.setAccessible(true); Object value;
+			 * try { value = bool.get(this); } catch (IllegalArgumentException |
+			 * IllegalAccessException e1) { // TODO Auto-generated catch block
+			 * e1.printStackTrace(); } value = copy; System.out.println(value);
+			 */
+
+			/*
+			 * Field bool = null; try { bool = TextChange.class.getDeclaredField("fEdit"); }
+			 * catch (NoSuchFieldException | SecurityException e1) { // TODO Auto-generated
+			 * catch block e1.printStackTrace(); } bool.setAccessible(true); Object value;
+			 * try { value = bool.get(this); } catch (IllegalArgumentException |
+			 * IllegalAccessException e1) { // TODO Auto-generated catch block
+			 * e1.printStackTrace(); } value = copy; System.out.println(copy);
+			 * bool.setAccessible(false);
+			 */
+
+			// addEditsToRoot(test1);
 
 //			ITextFileBufferManager fileBufferManager= FileBuffers.getTextFileBufferManager();
 //			

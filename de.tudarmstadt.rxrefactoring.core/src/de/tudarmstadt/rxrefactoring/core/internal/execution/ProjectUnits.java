@@ -2,11 +2,14 @@ package de.tudarmstadt.rxrefactoring.core.internal.execution;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.core.IJavaElement;
@@ -14,8 +17,11 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.Document;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
+import org.eclipse.ltk.core.refactoring.DocumentChange;
 import org.eclipse.text.edits.MalformedTreeException;
+import org.eclipse.text.edits.MultiTextEdit;
 
 import com.google.common.collect.Sets;
 
@@ -34,6 +40,7 @@ public class ProjectUnits implements IProjectUnits {
 	private final @NonNull IJavaProject project;
 
 	private final @NonNull Set<RewriteCompilationUnit> units;
+	public static Map<RewriteCompilationUnit, MultiTextEdit> mappingofEdit;
 
 	public ProjectUnits(@NonNull IJavaProject project, @NonNull Set<RewriteCompilationUnit> units) {
 		Objects.requireNonNull(units, "The initial units can not be null");
@@ -70,11 +77,11 @@ public class ProjectUnits implements IProjectUnits {
 	 * 
 	 * @param changes the object that should be modified
 	 */
-	protected void addChangesTo(@NonNull CompositeChange changes)
+	protected void addChangesTo(@NonNull CompositeChange changes, Document document)
 			throws IllegalArgumentException, MalformedTreeException, BadLocationException, CoreException {
 
 		if (units.size() > 0) {
-			units.iterator().next().getChangedDocumentForListOfUnits(units).ifPresent(doc -> {
+			units.iterator().next().getChangedDocumentForListOfUnits(units, document).ifPresent(doc -> {
 				changes.add(doc);
 			});
 		}

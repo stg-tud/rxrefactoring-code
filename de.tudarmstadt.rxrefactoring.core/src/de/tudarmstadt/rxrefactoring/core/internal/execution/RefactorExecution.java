@@ -7,6 +7,7 @@ import java.net.URL;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -61,6 +63,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.text.edits.MalformedTreeException;
+import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPage;
@@ -98,6 +101,8 @@ public class RefactorExecution implements Runnable {
 	private IWorkbenchPage page;
 	private ICompilationUnit openUnit;
 	private int startLine;
+	private Map<String, Document> docs = new HashMap<>();
+	private Map<String, MultiTextEdit> edits = new HashMap<>();
 
 	public RefactorExecution(IRefactorExtension env) {
 		Objects.requireNonNull(env);
@@ -144,9 +149,9 @@ public class RefactorExecution implements Runnable {
 				// Reports that the refactoring is starting
 				summary.reportStarted();
 
+				CompositeChange[] changes = null;
 				// Iterate over all projects
 				for (IProject project : projects) {
-					CompositeChange[] changes = null;
 
 					ProjectSummary projectSummary = summary.reportProject(project);
 					// Try to refactor the project
@@ -177,11 +182,11 @@ public class RefactorExecution implements Runnable {
 							// Performs the refactoring by applying the workers of the extension.
 							Log.info(RefactorExecution.class, "Refactor units...");
 							changes = doRefactorProject(units, projectSummary, project);
-							if(changes.length != 0) {
-								CompositeChange changePerProject = new CompositeChange(project.getName(), changes);
-								allChanges[projectCount] = changePerProject;
-								projectCount++;
-								}
+							/*
+							 * if(changes.length != 0) { CompositeChange changePerProject = new
+							 * CompositeChange(project.getName(), changes); allChanges[projectCount] =
+							 * changePerProject; projectCount++; }
+							 */
 
 							// Call template method
 							onProjectFinished(project, javaProject, units);
@@ -211,7 +216,7 @@ public class RefactorExecution implements Runnable {
 				summary.reportFinished();
 				monitor.done();
 
-				CompositeChange resultChange = new CompositeChange(extension.getName(), allChanges);
+				CompositeChange resultChange = new CompositeChange(extension.getName(), changes);
 
 				Log.info(RefactorExecution.class, "Print summary...\n" + summary.toString());
 
@@ -490,8 +495,9 @@ public class RefactorExecution implements Runnable {
 			CompositeChange change = new CompositeChange(entry.getKey());
 			Set<RewriteCompilationUnit> set = entry.getValue().stream().map(e -> (RewriteCompilationUnit) e)
 					.collect(Collectors.toSet());
+			Document doc = getDocument(entry.getValue());
 			ProjectUnits pu = new ProjectUnits(units.getJavaProject(), set);
-			pu.addChangesTo(change);
+			pu.addChangesTo(change, doc);
 			changeList.add(change);
 
 		}
@@ -501,19 +507,52 @@ public class RefactorExecution implements Runnable {
 		return array;
 	}
 
+	private Document getDocument(List<IRewriteCompilationUnit> unitsGrouped) throws JavaModelException {
+		
+		Document document = null;
+		for (IRewriteCompilationUnit unit : unitsGrouped) {
+			String source = unit.getSource();
+		
+			if (docs.containsKey(source))
+				document = docs.get(source);
+			else {
+				document = new Document(source);
+				docs.put(source, document);
+			}
+		}
+
+		return document;
+	}
+	
+	private MultiTextEdit getTextEdit(List<IRewriteCompilationUnit> unitsGrouped) throws JavaModelException {
+		
+		MultiTextEdit edit = null;
+		for (IRewriteCompilationUnit unit : unitsGrouped) {
+			String source = unit.getSource();
+		
+			if (edits.containsKey(source))
+				edit = edits.get(source);
+			else {
+				edit = new MultiTextEdit();
+				edits.put(source, edit);
+			}
+		}
+
+		return edit;
+	}	
+
 	private Map<String, List<IRewriteCompilationUnit>> getUnitToChangeMapping(ProjectUnits units)
 			throws JavaModelException {
-		
+
 		Set<RewriteCompilationUnit> filterIfASTChange = units.getUnits().stream().filter(unit -> unit.hasASTChanges())
-				.map(unit -> (RewriteCompilationUnit) unit)
-				.collect(Collectors.toSet());
-		
+				.map(unit -> (RewriteCompilationUnit) unit).collect(Collectors.toSet());
+
 		units = new ProjectUnits(units.getJavaProject(), filterIfASTChange);
-		
+
 		MethodScanner scanner = new MethodScanner();
-		
+
 		if (extension.getRefactorScope().equals(RefactorScope.SEPARATE_OCCURENCES)) {
-			
+
 			ProjectUnits unitsChecked = extension.runDependencyBetweenWorkerCheck(units, scanner, startLine);
 
 			if (unitsChecked != null)
@@ -528,7 +567,7 @@ public class RefactorExecution implements Runnable {
 
 			if (newUnits != null)
 				units = newUnits;
-			
+
 			ProjectUnits unitsChecked = extension.runDependencyBetweenWorkerCheck(units, scanner, startLine);
 
 			if (unitsChecked != null)
@@ -538,8 +577,7 @@ public class RefactorExecution implements Runnable {
 					.filter(unit -> unit.getWorkerIdentifier().name.contains("Cursor Selection"))
 					.filter(unit -> unit.getWorkerIdentifier().getName() != null)
 					.collect(Collectors.groupingBy(IRewriteCompilationUnit::getWorkerString));
-			
-			
+
 			return grouped;
 
 		}

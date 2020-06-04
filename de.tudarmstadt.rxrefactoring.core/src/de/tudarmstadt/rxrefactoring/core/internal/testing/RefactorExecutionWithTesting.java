@@ -7,6 +7,7 @@ import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RefactorExecution;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
+import de.tudarmstadt.rxrefactoring.core.utils.OffsetCounter;
 
 public class RefactorExecutionWithTesting extends RefactorExecution {
 
@@ -42,6 +43,7 @@ public class RefactorExecutionWithTesting extends RefactorExecution {
 	@Override
 	protected void postRefactor() {
 		super.postRefactor();
+		OffsetCounter.clearOffset();
 
 		rgen.copyRandoopLibraries();
 
