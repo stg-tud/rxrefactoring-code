@@ -11,6 +11,7 @@ import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 
 import de.tudarmstadt.rxrefactoring.core.IProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
@@ -24,6 +25,7 @@ import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactorInfo;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.RefactoringUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.SwingWorkerASTUtils;
+import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerUtils;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.workers.types.TypeOutput;
 
 /**
@@ -47,7 +49,9 @@ public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
 			ITypeBinding type = simpleName.resolveTypeBinding();
 
 			if ((!info.shouldBeRefactored(type) && !Types.isExactTypeOf(type.getErasure(), "javax.swing.SwingWorker"))
-					|| ASTNodes.findParentInStatement(simpleName, FieldDeclaration.class).isPresent()) {
+					|| ASTNodes.findParentInStatement(simpleName, FieldDeclaration.class).isPresent() 
+					|| ASTNodes.findParentInStatement(simpleName, Assignment.class).isPresent()
+					|| ASTNodes.findParentInStatement(simpleName, VariableDeclarationStatement.class).isPresent()) {
 				summary.addSkipped("simpleNames");
 				continue;
 			}
@@ -96,15 +100,6 @@ public class SimpleNameWorker implements IWorker<TypeOutput, Void> {
 			if (!simpleName.getIdentifier().equals(newName.getIdentifier())) {
 				synchronized (icu) {
 					icu.replace(simpleName, newName);
-				}
-				
-				Optional<MethodDeclaration> nameInMethod = ASTNodes.findParent(simpleName, MethodDeclaration.class);
-				Optional<Assignment> assignment = ASTNodes.findParent(simpleName, Assignment.class);
-
-				if (nameInMethod.isPresent() && !assignment.isPresent()
-						&& input.collector.scope.equals(RefactorScope.SEPARATE_OCCURENCES)) {
-						//String identifier = icu.getWorkerIdentifier().getName() + NamingUtils.getRightWorkerName(nameInMethod.get(), simpleName);
-						//icu.setWorkerIdentifier(new WorkerIdentifier(identifier));
 				}
 			}
 

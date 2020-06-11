@@ -10,6 +10,7 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
@@ -68,12 +69,15 @@ public class FieldDeclarationWorker extends GeneralWorker<TypeOutput, Void> {
 
 			VariableDeclarationFragment varDeclFrag = (VariableDeclarationFragment) fieldDeclaration.fragments().get(0);
 			String oldIdentifier = varDeclFrag.getName().getIdentifier();
-			synchronized (icu) {
-				icu.replace(varDeclFrag.getName(),
-						SwingWorkerASTUtils.newSimpleName(ast, RefactoringUtils.cleanSwingWorkerName(oldIdentifier)));
-				icu.addImport("de.tudarmstadt.stg.rx.swingworker.SWSubscriber");
+			SimpleName newIdentifier = SwingWorkerASTUtils.newSimpleName(ast,
+					RefactoringUtils.cleanSwingWorkerName(oldIdentifier));
+			if (!newIdentifier.getIdentifier().equals(oldIdentifier)) {
+				synchronized (icu) {
+					icu.replace(varDeclFrag.getName(), SwingWorkerASTUtils.newSimpleName(ast,
+							RefactoringUtils.cleanSwingWorkerName(oldIdentifier)));
+					icu.addImport("de.tudarmstadt.stg.rx.swingworker.SWSubscriber");
+				}
 			}
-			
 
 			Expression initializer = varDeclFrag.getInitializer();
 			if (initializer != null && initializer instanceof ClassInstanceCreation) {
@@ -88,7 +92,7 @@ public class FieldDeclarationWorker extends GeneralWorker<TypeOutput, Void> {
 
 			summary.addCorrect("fieldDeclarations");
 		}
-		
+
 		return null;
 	}
 
@@ -119,7 +123,7 @@ public class FieldDeclarationWorker extends GeneralWorker<TypeOutput, Void> {
 		synchronized (icu) {
 			icu.replace(oldClassInstanceCreation, newClassInstanceCreation);
 		}
-		
+
 	}
 
 }

@@ -68,11 +68,11 @@ public class DependencyCheckVariableDecl {
 							continue;
 
 						unitToCheck.setWorkerIdentifier(
-								new WorkerIdentifier(namingHelper(false) + varName.getIdentifier()));
+								new WorkerIdentifier(namingHelper() + varName.getIdentifier()));
 
 					} else {
 						unitToCheck.setWorkerIdentifier(
-								new WorkerIdentifier(namingHelper(true) + varName.getIdentifier()));
+								new WorkerIdentifier(namingHelper() + varName.getIdentifier()));
 					}
 				}
 			}
@@ -94,8 +94,6 @@ public class DependencyCheckVariableDecl {
 			}
 
 		}
-		
-		
 
 		return units;
 	}
@@ -149,7 +147,7 @@ public class DependencyCheckVariableDecl {
 			return singleVarDecls.stream().map(singleVarDecl -> {
 				boolean res = handleSingleVarDeclInLoop(singleVarDecl, varName);
 				if (res)
-					singleVarDeclsToCheck.put(namingHelper(false) + varName, singleVarDecl);
+					singleVarDeclsToCheck.put(namingHelper() + varName, singleVarDecl);
 				return res;
 			}).anyMatch(bool -> bool == true);
 		}
@@ -221,29 +219,27 @@ public class DependencyCheckVariableDecl {
 
 	}
 
-	private String namingHelper(boolean isMainVarChange) {
+	private String namingHelper() {
 		if (nameWorker.equals("Cursor Selection")) {
-			if (isMainVarChange)
-				return "Cursor Selection Variable: ";
-			else {
-				return "Changes also needed for Cursor Selection of Variable: ";
-			}
+			return "Cursor Selection Variable: ";
+
 		} else {
 			return "Change #" + String.valueOf(counterVar) + " according to Variable: ";
 		}
 
 	}
-	
-	//TODO THA schauen, ob wirklich sinnvoll
-	/*private void changeBackIfOnlyOneVarDecl() {
-		if(units.getUnits().stream().filter(unit -> unit.getWorkerIdentifier().name.contains("Cursor Selection of Variable"))
-				.count() == Long.valueOf(1)) {
-			units.getUnits().stream()
-					.filter(unit-> !unit.getWorkerIdentifier().name.contains("Cursor Selection of Variable"))
-					.forEach(unit -> unit
-							.setWorkerIdentifier(new WorkerIdentifier(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER.name)));
-				
-			}
-		}*/
+
+	// TODO THA schauen, ob wirklich sinnvoll
+	/*
+	 * private void changeBackIfOnlyOneVarDecl() {
+	 * if(units.getUnits().stream().filter(unit ->
+	 * unit.getWorkerIdentifier().name.contains("Cursor Selection of Variable"))
+	 * .count() == Long.valueOf(1)) { units.getUnits().stream() .filter(unit->
+	 * !unit.getWorkerIdentifier().name.contains("Cursor Selection of Variable"))
+	 * .forEach(unit -> unit .setWorkerIdentifier(new
+	 * WorkerIdentifier(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER.name)));
+	 * 
+	 * } }
+	 */
 
 }

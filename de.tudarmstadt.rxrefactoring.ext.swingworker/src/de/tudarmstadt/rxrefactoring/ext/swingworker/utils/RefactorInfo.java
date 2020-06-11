@@ -72,6 +72,7 @@ public class RefactorInfo {
 	public boolean shouldBeRefactored(ITypeBinding binding) {
 		if (binding == null)
 			return false;
+		String name = binding.getQualifiedName();
 
 		boolean res = types.stream()
 				// TODO How to sensibly compare type bindings?

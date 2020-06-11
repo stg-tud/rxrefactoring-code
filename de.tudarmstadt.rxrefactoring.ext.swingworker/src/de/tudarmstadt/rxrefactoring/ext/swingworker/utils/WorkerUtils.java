@@ -20,7 +20,6 @@ import com.google.common.collect.Multimap;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.NamingUtils;
-import de.tudarmstadt.rxrefactoring.core.utils.RelevantInvocation;
 import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.visitors.DiscoveringVisitor;
 

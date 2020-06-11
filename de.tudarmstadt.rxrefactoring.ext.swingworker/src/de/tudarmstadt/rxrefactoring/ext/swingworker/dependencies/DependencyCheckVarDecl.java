@@ -33,7 +33,7 @@ import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 import de.tudarmstadt.rxrefactoring.ext.swingworker.utils.WorkerUtils;
 
 public class DependencyCheckVarDecl {
-	
+
 	ProjectUnits units;
 	int counterVar = 0;
 	Map<String, SingleVariableDeclaration> singleVarDeclsToCheck = new HashMap<>();
@@ -43,16 +43,15 @@ public class DependencyCheckVarDecl {
 		this.units = units;
 
 	}
-	
+
 	protected ProjectUnits checkVariableDeclarationsWithInMethod(String name) {
 		nameWorker = name;
-		
+
 		List<IRewriteCompilationUnit> filteredUnits = units.getUnits().stream()
-				.filter(elem -> elem.getWorkerIdentifier().name.equals(name))
-				.collect(Collectors.toList());
+				.filter(elem -> elem.getWorkerIdentifier().name.equals(name)).collect(Collectors.toList());
 		for (IRewriteCompilationUnit unit : filteredUnits) {
 			Collection<VariableDeclarationStatement> statements = WorkerUtils.getVarDeclMap().get(unit);
-			
+
 			counterVar++;
 
 			for (VariableDeclarationStatement varDecl : statements) {
@@ -65,11 +64,13 @@ public class DependencyCheckVarDecl {
 							continue;
 						else if (!checkForSameVariable(varName.getIdentifier(), unitToCheck))
 							continue;
-						
-						unitToCheck.setWorkerIdentifier(new WorkerIdentifier(namingHelper(false) + varName.getIdentifier()));
+
+						unitToCheck.setWorkerIdentifier(
+								new WorkerIdentifier(namingHelper() + varName.getIdentifier()));
 
 					} else {
-						unitToCheck.setWorkerIdentifier(new WorkerIdentifier(namingHelper(true) + varName.getIdentifier()));
+						unitToCheck.setWorkerIdentifier(
+								new WorkerIdentifier(namingHelper() + varName.getIdentifier()));
 					}
 				}
 			}
@@ -83,16 +84,15 @@ public class DependencyCheckVarDecl {
 					if (!checkForSameVariable(varName.getIdentifier(), unitToCheck))
 						continue;
 
-					unitToCheck.setWorkerIdentifier(
-							new WorkerIdentifier(singleVar.getKey()));
+					unitToCheck.setWorkerIdentifier(new WorkerIdentifier(singleVar.getKey()));
 				}
 			}
 
 		}
-		
+
 		return units;
 	}
-	
+
 	private boolean checkUnitForSameResourceAndBlock(IRewriteCompilationUnit varDecl, ASTNode statement,
 			IRewriteCompilationUnit toCheckUnit) {
 
@@ -142,9 +142,7 @@ public class DependencyCheckVarDecl {
 			return singleVarDecls.stream().map(singleVarDecl -> {
 				boolean res = handleSingleVarDeclInLoop(singleVarDecl, varName);
 				if (res)
-					singleVarDeclsToCheck.put(
-							namingHelper(false) + varName,
-							singleVarDecl);
+					singleVarDeclsToCheck.put(namingHelper() + varName, singleVarDecl);
 				return res;
 			}).anyMatch(bool -> bool == true);
 		}
@@ -199,7 +197,7 @@ public class DependencyCheckVarDecl {
 		return false;
 
 	}
-	
+
 	private boolean checkForSameStatement(ASTNode varDecl, IRewriteCompilationUnit toCheckUnit) {
 		Statement statement = ASTNodes.findParentWithoutConsideringNode(varDecl, Statement.class).get();
 		Multimap<IRewriteCompilationUnit, ? extends ASTNode> map = WorkerUtils
@@ -208,7 +206,7 @@ public class DependencyCheckVarDecl {
 		Collection<? extends ASTNode> astNodes = map.get(toCheckUnit);
 		for (ASTNode node : astNodes) {
 			Optional<Statement> statementToCheck = ASTNodes.findParentWithoutConsideringNode(node, Statement.class);
-			if(statementToCheck.isPresent())
+			if (statementToCheck.isPresent())
 				if (ASTNodes.containsNode(statement, x -> x == statementToCheck.get()))
 					return true;
 		}
@@ -216,30 +214,28 @@ public class DependencyCheckVarDecl {
 		return false;
 
 	}
-	
-	private String namingHelper(boolean isMainVarChange) {
-		if(nameWorker.equals("Cursor Selection")){
-			if(isMainVarChange)
-				return "Cursor Selection Variable: ";
-			else {
-				return "Changes also needed for Cursor Selection of Variable: ";
-			}
-		}else {
+
+	private String namingHelper() {
+		if (nameWorker.equals("Cursor Selection")) {
+			return "Cursor Selection Variable: ";
+
+		} else {
 			return "Change #" + String.valueOf(counterVar) + " according to Variable: ";
 		}
-				
+
 	}
-	
-	//TODO THA schauen, ob wirklich sinnvoll
-	/*private void changeBackIfOnlyOneVarDecl() {
-		if(units.getUnits().stream().filter(unit -> unit.getWorkerIdentifier().name.contains("Cursor Selection of Variable"))
-				.count() == Long.valueOf(1)) {
-			units.getUnits().stream()
-					.filter(unit-> !unit.getWorkerIdentifier().name.contains("Cursor Selection of Variable"))
-					.forEach(unit -> unit
-							.setWorkerIdentifier(new WorkerIdentifier(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER.name)));
-				
-			}
-		}*/
+
+	// TODO THA schauen, ob wirklich sinnvoll
+	/*
+	 * private void changeBackIfOnlyOneVarDecl() {
+	 * if(units.getUnits().stream().filter(unit ->
+	 * unit.getWorkerIdentifier().name.contains("Cursor Selection of Variable"))
+	 * .count() == Long.valueOf(1)) { units.getUnits().stream() .filter(unit->
+	 * !unit.getWorkerIdentifier().name.contains("Cursor Selection of Variable"))
+	 * .forEach(unit -> unit .setWorkerIdentifier(new
+	 * WorkerIdentifier(NamingUtils.VAR_DECL_STATEMENT_IDENTIFIER.name)));
+	 * 
+	 * } }
+	 */
 
 }

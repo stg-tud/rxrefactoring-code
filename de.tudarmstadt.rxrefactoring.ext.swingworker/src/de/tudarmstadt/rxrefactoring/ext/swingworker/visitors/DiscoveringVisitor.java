@@ -22,7 +22,6 @@ import com.google.common.collect.Lists;
 
 import de.tudarmstadt.rxrefactoring.core.UnitASTVisitor;
 import de.tudarmstadt.rxrefactoring.core.utils.Methods;
-import de.tudarmstadt.rxrefactoring.core.utils.RelevantInvocation;
 import de.tudarmstadt.rxrefactoring.core.utils.Types;
 
 /**
@@ -42,7 +41,7 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 	private final List<SingleVariableDeclaration> singleVarDeclarations;
 	private final List<MethodDeclaration> methodDeclarations;
 	private final List<MethodInvocation> methodInvocations;
-	private final List<RelevantInvocation> relevantInvocations;
+	private final List<MethodInvocation> relevantInvocations;
 
 	public DiscoveringVisitor(String classBinaryName) {
 		this.classBinaryName = classBinaryName;
@@ -141,7 +140,7 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 			}
 
 			if (Methods.hasSignature(binding, "java.util.concurrent.Executor", "execute", "java.lang.Runnable")) {
-				relevantInvocations.add(new RelevantInvocation(node));
+				relevantInvocations.add(node);
 			}
 		}
 
@@ -229,7 +228,7 @@ public class DiscoveringVisitor extends UnitASTVisitor {
 		return methodDeclarations;
 	}
 
-	public List<RelevantInvocation> getRelevantInvocations() {
+	public List<MethodInvocation> getRelevantInvocations() {
 		return relevantInvocations;
 	}
 	

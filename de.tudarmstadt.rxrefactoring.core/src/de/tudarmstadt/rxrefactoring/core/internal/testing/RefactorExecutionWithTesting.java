@@ -1,11 +1,15 @@
 package de.tudarmstadt.rxrefactoring.core.internal.testing;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IJavaProject;
 
 import de.tudarmstadt.rxrefactoring.core.IRefactorExtension;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RefactorExecution;
+import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
 import de.tudarmstadt.rxrefactoring.core.utils.OffsetCounter;
 
@@ -31,8 +35,12 @@ public class RefactorExecutionWithTesting extends RefactorExecution {
 
 	@Override
 	protected void onProjectFinished(IProject project, IJavaProject jproject, ProjectUnits units) {
-		super.onProjectFinished(project, jproject, units);
+		
+		Set<RewriteCompilationUnit> filterIfASTChange = units.getUnits().stream().filter(unit -> unit.hasASTChanges())
+				.map(unit -> (RewriteCompilationUnit) unit).collect(Collectors.toSet());
 
+		units = new ProjectUnits(units.getJavaProject(), filterIfASTChange);
+		super.onProjectFinished(project, jproject, units);
 		// IPL: Find the changing and calling methods
 		Log.info(RefactorExecutionWithTesting.class, "Scan " + project.getName());
 		scanner.scan(units);
@@ -43,7 +51,6 @@ public class RefactorExecutionWithTesting extends RefactorExecution {
 	@Override
 	protected void postRefactor() {
 		super.postRefactor();
-		OffsetCounter.clearOffset();
 
 		rgen.copyRandoopLibraries();
 

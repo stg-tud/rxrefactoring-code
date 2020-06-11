@@ -102,8 +102,7 @@ public class RefactorExecution implements Runnable {
 	private ICompilationUnit openUnit;
 	private int startLine;
 	private Map<String, Document> docs = new HashMap<>();
-	private Map<String, MultiTextEdit> edits = new HashMap<>();
-
+	
 	public RefactorExecution(IRefactorExtension env) {
 		Objects.requireNonNull(env);
 		this.extension = env;
@@ -524,22 +523,6 @@ public class RefactorExecution implements Runnable {
 		return document;
 	}
 	
-	private MultiTextEdit getTextEdit(List<IRewriteCompilationUnit> unitsGrouped) throws JavaModelException {
-		
-		MultiTextEdit edit = null;
-		for (IRewriteCompilationUnit unit : unitsGrouped) {
-			String source = unit.getSource();
-		
-			if (edits.containsKey(source))
-				edit = edits.get(source);
-			else {
-				edit = new MultiTextEdit();
-				edits.put(source, edit);
-			}
-		}
-
-		return edit;
-	}	
 
 	private Map<String, List<IRewriteCompilationUnit>> getUnitToChangeMapping(ProjectUnits units)
 			throws JavaModelException {
@@ -584,12 +567,36 @@ public class RefactorExecution implements Runnable {
 
 		if (units.getUnits().stream().anyMatch(u -> u.getWorkerIdentifier() == null))
 			units.getUnits().stream().forEach(e -> e.setWorkerIdentifier(new WorkerIdentifier("Per File")));
+	
 
-		Map<String, List<IRewriteCompilationUnit>> groupedByWorker = units.getUnits().stream()
+		/*Map<String, List<IRewriteCompilationUnit>> groupedByWorker = units.getUnits().stream()
 				.filter(unit -> unit.getWorkerIdentifier().getName() != null)
-				.collect(Collectors.groupingBy(IRewriteCompilationUnit::getWorkerString));
+				.collect(Collectors.groupingBy(IRewriteCompilationUnit::getWorkerString));*/
 
-		return groupedByWorker;
+		return getGroupedByWorker(units);
+	}
+	
+	private Map<String, List<IRewriteCompilationUnit>> getGroupedByWorker(ProjectUnits units) throws JavaModelException {
+		
+		Map<String, List<IRewriteCompilationUnit>> grouped = new HashMap<>();
+		
+		for(IRewriteCompilationUnit unit: units.getUnits()) {
+			if(unit.getWorkerIdentifier().getName() != null) {
+				String workerString = unit.getWorkerString();
+				String fileName = unit.getCorrespondingResource().getName();
+				String groupingString = workerString + " in File " + fileName;
+				if(grouped.containsKey(groupingString)) {
+					grouped.get(groupingString).add(unit);
+					
+				}else {
+					List<IRewriteCompilationUnit> listUnits = new ArrayList<>();
+					listUnits.add(unit);
+					grouped.put(groupingString, listUnits);
+					}
+				}
+		}
+		return grouped;
+		
 	}
 
 	private void getOpenFile() {

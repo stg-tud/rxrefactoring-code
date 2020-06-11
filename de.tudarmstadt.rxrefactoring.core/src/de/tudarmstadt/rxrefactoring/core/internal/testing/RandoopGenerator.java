@@ -313,16 +313,16 @@ class RandoopGenerator {
 		}
 
 		// Flag randoop.sh as executable
-		try {
+		//try {
 			Path randoopShPath = Paths.get(randoopSh.getAbsolutePath());
-			Set<PosixFilePermission> perms = Files.getPosixFilePermissions(randoopShPath);
+			/*Set<PosixFilePermission> perms = Files.getPosixFilePermissions(randoopShPath);
 			perms.add(PosixFilePermission.OWNER_EXECUTE);
 			perms.add(PosixFilePermission.GROUP_EXECUTE);
 			perms.add(PosixFilePermission.OTHERS_EXECUTE);
-			Files.setPosixFilePermissions(randoopShPath, perms);
-		} catch (IOException e) {
+			Files.setPosixFilePermissions(randoopShPath, perms);*/
+		/*} catch (IOException e) {
 			Log.error(RandoopGenerator.class, "Failed to make randoop.sh executable", e);
-		}
+		}*/
 
 		// Create a file of classes to test
 		File classListFile = new File(tempDir, CLASSLIST_FILE);

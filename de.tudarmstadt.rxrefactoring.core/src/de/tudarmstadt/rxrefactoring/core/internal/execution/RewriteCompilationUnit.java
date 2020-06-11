@@ -107,7 +107,6 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 	 */
 	private WorkerIdentifier worker;
 
-
 	/**
 	 * <p>
 	 * Bundles a compilation unit together with its root AST node. Use
@@ -255,7 +254,7 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 			if (hasImportChanges()) {
 				TextEdit edit = imports().rewriteImports(null); // We can add a progress monitor here.
 				root.addChild(edit);
-			
+
 			}
 
 			RewriteChange change = new RewriteChange(unit.getElementName(), document);
@@ -284,37 +283,41 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 					TextEdit edit = unit.writer().rewriteAST(document, null);
 					rootUnit.addChild(edit);
 				}
-	
 
 				// Apply changes to the classes imports if there are any
 				if (unit.hasImportChanges()) {
 					TextEdit edit = unit.imports().rewriteImports(null); // We can add a progress monitor here.
 					if (edit.getChildren().length != 0) {
 						for (TextEdit textEdit : edit.getChildren()) {
-							InsertEdit insertEdit = (InsertEdit) textEdit;
-							if (textEdit.getParent() != null)
-								textEdit.getParent().removeChild(textEdit);
+							if (textEdit instanceof InsertEdit) {
+								if (textEdit.getParent() != null)
+									textEdit.getParent().removeChild(textEdit);
 
-							if (checkForDuplicatedImports.containsKey(insertEdit.getText())) {
-								if (!checkForDuplicatedImports.get(insertEdit.getText())
-										.equals(unit.getCorrespondingResource())) {
-									rootUnit.addChild(textEdit);
-									checkForDuplicatedImports.put(insertEdit.getText(),
-											unit.getCorrespondingResource());
-								}
-								isSkippedImport = true;
-
-							} else {
-								if (!isEmptyLine(insertEdit.getText())) {
-									rootUnit.addChild(textEdit);
-									checkForDuplicatedImports.put(insertEdit.getText(),
-											unit.getCorrespondingResource());
-								} else {
-									if (!isSkippedImport)
+								InsertEdit insertEdit = (InsertEdit) textEdit;
+								if (checkForDuplicatedImports.containsKey(insertEdit.getText())) {
+									if (!checkForDuplicatedImports.get(insertEdit.getText())
+											.equals(unit.getCorrespondingResource())) {
 										rootUnit.addChild(textEdit);
-
+										checkForDuplicatedImports.put(insertEdit.getText(),
+												unit.getCorrespondingResource());
+									}
+									isSkippedImport = true;
+								} else {
+									if (!isEmptyLine(insertEdit.getText())) {
+										rootUnit.addChild(textEdit);
+										checkForDuplicatedImports.put(insertEdit.getText(),
+												unit.getCorrespondingResource());
+									} else {
+										if (!isSkippedImport)
+											rootUnit.addChild(textEdit);
+									}
 								}
+							} else {
+								if (textEdit.getParent() != null)
+									textEdit.getParent().removeChild(textEdit);
+								rootUnit.addChild(textEdit);
 							}
+
 						}
 
 					}
@@ -368,12 +371,12 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 		if (edit instanceof InsertEdit) {
 			InsertEdit insertE = (InsertEdit) edit;
 			insertCount = insertE.getLength() + insertE.getText().length();
-			//OffsetCounter.addOffsetForLine(lineNumber, edit.getOffset());
+			// OffsetCounter.addOffsetForLine(lineNumber, edit.getOffset());
 
 		} else if (edit instanceof DeleteEdit) {
 			DeleteEdit deleteE = (DeleteEdit) edit;
 			deletionCount = deleteE.getLength();
-			//OffsetCounter.addOffsetForLine(lineNumber, -edit.getOffset());
+			// OffsetCounter.addOffsetForLine(lineNumber, -edit.getOffset());
 
 		}
 		/*
@@ -390,7 +393,7 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 			diff[0] += diffAct[0];
 			diff[1] += diffAct[1];
 		}
-		
+
 		return diff;
 	}
 
@@ -422,47 +425,41 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 
 	private class RewriteChange extends DocumentChange {
 
-
 		public RewriteChange(String name, IDocument document) {
 			super(name, document);
 		}
 
-		/*private void removeNotNeeded() {
-			TextEdit rootEdit = getEdit();
-
-			for (TextEdit act : rootEdit.getChildren()) {
-
-				if (!editForUnit.contains(act)) {
-					elemToRemove.add(act);
-				}
-			}
-
-			for (TextEdit editRemove : elemToRemove) {
-				rootEdit.removeChild(editRemove);
-			}
-		}
-
-		private void addEditsToRoot(TextEdit test) {
-
-			MultiTextEdit rootEdit = (MultiTextEdit) getEdit();
-			for (TextEdit toAdd : elemToRemove) {
-				rootEdit.addChild(toAdd);
-
-			}
-
-		}*/
+		/*
+		 * private void removeNotNeeded() { TextEdit rootEdit = getEdit();
+		 * 
+		 * for (TextEdit act : rootEdit.getChildren()) {
+		 * 
+		 * if (!editForUnit.contains(act)) { elemToRemove.add(act); } }
+		 * 
+		 * for (TextEdit editRemove : elemToRemove) { rootEdit.removeChild(editRemove);
+		 * } }
+		 * 
+		 * private void addEditsToRoot(TextEdit test) {
+		 * 
+		 * MultiTextEdit rootEdit = (MultiTextEdit) getEdit(); for (TextEdit toAdd :
+		 * elemToRemove) { rootEdit.addChild(toAdd);
+		 * 
+		 * }
+		 * 
+		 * }
+		 */
 
 		@Override
 		protected UndoEdit performEdits(final IDocument document) throws BadLocationException, MalformedTreeException {
 			// TODO: Why is the original function not working? The refactoring does not
 			// change the files
 
-			/*TextEdit edit = getEdit();
-			TextEdit copyForDiff = edit.copy();
-			edit.moveTree(OffsetCounter.getOffsetToSkip());
-			shifEdit(edit, OffsetCounter.getOffsetToSkip());
-			int[] offsetArray = OffsetCounter.getOffsetArray();
-			System.out.println(offsetArray);*/
+			/*
+			 * TextEdit edit = getEdit(); TextEdit copyForDiff = edit.copy();
+			 * edit.moveTree(OffsetCounter.getOffsetToSkip()); shifEdit(edit,
+			 * OffsetCounter.getOffsetToSkip()); int[] offsetArray =
+			 * OffsetCounter.getOffsetArray(); System.out.println(offsetArray);
+			 */
 
 			// removeNotNeeded();
 			/*
@@ -481,10 +478,12 @@ public class RewriteCompilationUnit implements IRewriteCompilationUnit {
 			// Document has changed
 			UndoEdit undo = super.performEdits(document);
 
-			/*int[] difference = findDifference(copyForDiff, document);
-			int diff = difference[0] - difference[1];
-			
-			OffsetCounter.setOffsetToSkip(diff);*/
+			/*
+			 * int[] difference = findDifference(copyForDiff, document); int diff =
+			 * difference[0] - difference[1];
+			 * 
+			 * OffsetCounter.setOffsetToSkip(diff);
+			 */
 
 			/*
 			 * Field bool = null; try { bool = TextChange.class.getDeclaredField("fEdit"); }

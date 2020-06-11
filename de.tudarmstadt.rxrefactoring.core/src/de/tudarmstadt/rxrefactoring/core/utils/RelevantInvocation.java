@@ -1,4 +1,4 @@
-package de.tudarmstadt.rxrefactoring.core.utils;
+/*package de.tudarmstadt.rxrefactoring.core.utils;
 
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
@@ -13,4 +13,4 @@ public class RelevantInvocation {
 	public MethodInvocation getMethodInvocation() {
 		return m;
 	}
-}
+}*/

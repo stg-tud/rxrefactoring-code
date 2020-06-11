@@ -83,7 +83,7 @@ public class DependencyCheckMethodDecl {
 
 	private boolean checkIfReturnTypeIsFutureOrExtendsFromIt(MethodDeclaration method) {
 		Type returnType = method.getReturnType2();
-		if(returnType instanceof ParameterizedType) {
+		if (returnType instanceof ParameterizedType) {
 			ParameterizedType pType = (ParameterizedType) returnType;
 			returnType = (Type) pType.typeArguments().get(0);
 		}
@@ -125,7 +125,7 @@ public class DependencyCheckMethodDecl {
 				.filter(unit -> unit.equals(entry.getValue())).findFirst();
 		if (unit_methodDecl.isPresent()) {
 			units.getUnits().stream().filter(unit -> unit.equals(unit_methodDecl.get()))
-					.forEach(unit -> unit.setWorkerIdentifier(new WorkerIdentifier(namingHelper(false) + varName)));
+					.forEach(unit -> unit.setWorkerIdentifier(new WorkerIdentifier(namingHelper() + varName)));
 		}
 
 		// third change class instance creation in returnType
@@ -133,7 +133,7 @@ public class DependencyCheckMethodDecl {
 		if (!unit_classInstances.isEmpty()) {
 			for (IRewriteCompilationUnit unit_act : unit_classInstances) {
 				units.getUnits().stream().filter(unit -> unit.equals(unit_act))
-						.forEach(unit -> unit.setWorkerIdentifier(new WorkerIdentifier(namingHelper(false) + varName)));
+						.forEach(unit -> unit.setWorkerIdentifier(new WorkerIdentifier(namingHelper() + varName)));
 			}
 		}
 
@@ -147,7 +147,7 @@ public class DependencyCheckMethodDecl {
 			if (!unit_singleVarDecl.isEmpty()) {
 				for (IRewriteCompilationUnit unit_act : unit_singleVarDecl) {
 					units.getUnits().stream().filter(unit -> unit.equals(unit_act)).forEach(
-							unit -> unit.setWorkerIdentifier(new WorkerIdentifier(namingHelper(false) + varName)));
+							unit -> unit.setWorkerIdentifier(new WorkerIdentifier(namingHelper() + varName)));
 				}
 			}
 
@@ -174,9 +174,9 @@ public class DependencyCheckMethodDecl {
 				if (initializer instanceof MethodInvocation) {
 					if (((MethodInvocation) initializer).resolveMethodBinding().equals(methodDecl.resolveBinding())) {
 						if (checkCursorSelection(st)) {
-							unitsToChange.put(unit_Var, namingHelper(true));
+							unitsToChange.put(unit_Var, namingHelper());
 						} else {
-							unitsToChange.put(unit_Var, namingHelper(false));
+							unitsToChange.put(unit_Var, namingHelper());
 							unitsToChange.putAll(checkForSimpleNameChanges(unit_Var));
 
 						}
@@ -193,7 +193,7 @@ public class DependencyCheckMethodDecl {
 		return units.getUnits().stream()
 				.filter(unit -> unitVarDecl.getWorkerIdentifier().name.equals(unit.getWorkerIdentifier().name)
 						&& !unit.equals(unitVarDecl))
-				.collect(Collectors.toMap(key -> key, value -> namingHelper(false)));
+				.collect(Collectors.toMap(key -> key, value -> namingHelper()));
 
 	}
 
@@ -217,14 +217,14 @@ public class DependencyCheckMethodDecl {
 
 	private Set<IRewriteCompilationUnit> getClassInstanceCreationUnit(MethodDeclaration methodDecl) {
 		Set<IRewriteCompilationUnit> unitsToChange = new HashSet<IRewriteCompilationUnit>();
-		
+
 		Type type = methodDecl.getReturnType2();
-		
-		if(type instanceof ParameterizedType) {
+
+		if (type instanceof ParameterizedType) {
 			ParameterizedType pType = (ParameterizedType) type;
 			type = (Type) pType.typeArguments().get(0);
 		}
-		
+
 		ITypeBinding binding = type.resolveBinding();
 		Block block = methodDecl.getBody();
 
@@ -266,13 +266,9 @@ public class DependencyCheckMethodDecl {
 		return null;
 	}
 
-	private String namingHelper(boolean isMainVarChange) {
+	private String namingHelper() {
 		if (nameWorker.equals("Cursor Selection")) {
-			if (isMainVarChange)
-				return "Cursor Selection Variable: ";
-			else {
-				return "Changes also needed for Cursor Selection of Variable: ";
-			}
+			return "Cursor Selection Variable: ";
 		} else {
 			return "Change of MethodDeclaration: ";
 		}
