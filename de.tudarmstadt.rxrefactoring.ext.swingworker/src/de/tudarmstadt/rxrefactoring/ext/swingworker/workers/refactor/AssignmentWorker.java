@@ -114,12 +114,12 @@ public class AssignmentWorker extends GeneralWorker<TypeOutput, Void> {
 				Log.info(getClass(), "METHOD=refactor - Refactoring left variable name: " + icu.getElementName());
 				SimpleName simpleName = (SimpleName) leftHandSide;
 
-				// if (!isFieldName(simpleName)) {
-				String newIdentifier = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
-				if (!newIdentifier.equals(simpleName.getIdentifier())) {
-					synchronized (icu) {
-						icu.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newIdentifier));
-						// }
+				if (!isFieldName(simpleName)) {
+					String newIdentifier = RefactoringUtils.cleanSwingWorkerName(simpleName.getIdentifier());
+					if (!newIdentifier.equals(simpleName.getIdentifier())) {
+						synchronized (icu) {
+							icu.replace(simpleName, SwingWorkerASTUtils.newSimpleName(ast, newIdentifier));
+						}
 					}
 				}
 			}

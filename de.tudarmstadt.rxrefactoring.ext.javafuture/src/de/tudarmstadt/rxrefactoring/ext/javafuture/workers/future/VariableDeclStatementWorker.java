@@ -55,7 +55,7 @@ public class VariableDeclStatementWorker extends AbstractFutureWorker<VariableDe
 		if (!Types.isExactTypeOf(type.resolveBinding(), "java.util.concurrent.Future")) {
 			return;
 		}
-		
+
 		if (type instanceof ParameterizedType) {
 			type = ((ParameterizedType) type).getType();
 		}

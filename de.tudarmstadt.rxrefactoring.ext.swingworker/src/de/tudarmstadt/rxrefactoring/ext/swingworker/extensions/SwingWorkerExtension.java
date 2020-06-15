@@ -112,7 +112,7 @@ public class SwingWorkerExtension implements IRefactorExtension {
 		workerTree.addWorker(typeWorker, new FieldDeclarationWorker());
 		workerTree.addWorker(typeWorker, new MethodInvocationWorker());
 		workerTree.addWorker(typeWorker, new VariableDeclStatementWorker());
-		workerTree.addWorker(typeWorker, new SimpleNameWorker());
+		//workerTree.addWorker(typeWorker, new SimpleNameWorker());
 		workerTree.addWorker(typeWorker, new SingleVariableDeclWorker());
 		workerTree.addWorker(typeWorker, new ClassInstanceCreationWorker());
 		workerTree.addWorker(typeWorker, new MethodDeclarationWorker());

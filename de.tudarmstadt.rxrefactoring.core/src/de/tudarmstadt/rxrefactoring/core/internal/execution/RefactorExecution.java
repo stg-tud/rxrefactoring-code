@@ -102,7 +102,7 @@ public class RefactorExecution implements Runnable {
 	private ICompilationUnit openUnit;
 	private int startLine;
 	private Map<String, Document> docs = new HashMap<>();
-	
+
 	public RefactorExecution(IRefactorExtension env) {
 		Objects.requireNonNull(env);
 		this.extension = env;
@@ -181,11 +181,12 @@ public class RefactorExecution implements Runnable {
 							// Performs the refactoring by applying the workers of the extension.
 							Log.info(RefactorExecution.class, "Refactor units...");
 							changes = doRefactorProject(units, projectSummary, project);
-							/*
-							 * if(changes.length != 0) { CompositeChange changePerProject = new
-							 * CompositeChange(project.getName(), changes); allChanges[projectCount] =
-							 * changePerProject; projectCount++; }
-							 */
+
+							if (changes.length != 0) {
+								CompositeChange changePerProject = new CompositeChange(project.getName(), changes);
+								allChanges[projectCount] = changePerProject;
+								projectCount++;
+							}
 
 							// Call template method
 							onProjectFinished(project, javaProject, units);
@@ -215,7 +216,7 @@ public class RefactorExecution implements Runnable {
 				summary.reportFinished();
 				monitor.done();
 
-				CompositeChange resultChange = new CompositeChange(extension.getName(), changes);
+				CompositeChange resultChange = new CompositeChange(extension.getName(), allChanges);
 
 				Log.info(RefactorExecution.class, "Print summary...\n" + summary.toString());
 
@@ -507,11 +508,11 @@ public class RefactorExecution implements Runnable {
 	}
 
 	private Document getDocument(List<IRewriteCompilationUnit> unitsGrouped) throws JavaModelException {
-		
+
 		Document document = null;
 		for (IRewriteCompilationUnit unit : unitsGrouped) {
 			String source = unit.getSource();
-		
+
 			if (docs.containsKey(source))
 				document = docs.get(source);
 			else {
@@ -522,7 +523,6 @@ public class RefactorExecution implements Runnable {
 
 		return document;
 	}
-	
 
 	private Map<String, List<IRewriteCompilationUnit>> getUnitToChangeMapping(ProjectUnits units)
 			throws JavaModelException {
@@ -567,36 +567,39 @@ public class RefactorExecution implements Runnable {
 
 		if (units.getUnits().stream().anyMatch(u -> u.getWorkerIdentifier() == null))
 			units.getUnits().stream().forEach(e -> e.setWorkerIdentifier(new WorkerIdentifier("Per File")));
-	
 
-		/*Map<String, List<IRewriteCompilationUnit>> groupedByWorker = units.getUnits().stream()
-				.filter(unit -> unit.getWorkerIdentifier().getName() != null)
-				.collect(Collectors.groupingBy(IRewriteCompilationUnit::getWorkerString));*/
+		/*
+		 * Map<String, List<IRewriteCompilationUnit>> groupedByWorker =
+		 * units.getUnits().stream() .filter(unit ->
+		 * unit.getWorkerIdentifier().getName() != null)
+		 * .collect(Collectors.groupingBy(IRewriteCompilationUnit::getWorkerString));
+		 */
 
 		return getGroupedByWorker(units);
 	}
-	
-	private Map<String, List<IRewriteCompilationUnit>> getGroupedByWorker(ProjectUnits units) throws JavaModelException {
-		
+
+	private Map<String, List<IRewriteCompilationUnit>> getGroupedByWorker(ProjectUnits units)
+			throws JavaModelException {
+
 		Map<String, List<IRewriteCompilationUnit>> grouped = new HashMap<>();
-		
-		for(IRewriteCompilationUnit unit: units.getUnits()) {
-			if(unit.getWorkerIdentifier().getName() != null) {
+
+		for (IRewriteCompilationUnit unit : units.getUnits()) {
+			if (unit.getWorkerIdentifier().getName() != null) {
 				String workerString = unit.getWorkerString();
 				String fileName = unit.getCorrespondingResource().getName();
 				String groupingString = workerString + " in File " + fileName;
-				if(grouped.containsKey(groupingString)) {
+				if (grouped.containsKey(groupingString)) {
 					grouped.get(groupingString).add(unit);
-					
-				}else {
+
+				} else {
 					List<IRewriteCompilationUnit> listUnits = new ArrayList<>();
 					listUnits.add(unit);
 					grouped.put(groupingString, listUnits);
-					}
 				}
+			}
 		}
 		return grouped;
-		
+
 	}
 
 	private void getOpenFile() {
