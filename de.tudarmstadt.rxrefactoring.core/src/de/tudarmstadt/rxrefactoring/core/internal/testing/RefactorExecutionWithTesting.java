@@ -11,7 +11,6 @@ import de.tudarmstadt.rxrefactoring.core.internal.execution.ProjectUnits;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RefactorExecution;
 import de.tudarmstadt.rxrefactoring.core.internal.execution.RewriteCompilationUnit;
 import de.tudarmstadt.rxrefactoring.core.utils.Log;
-import de.tudarmstadt.rxrefactoring.core.utils.OffsetCounter;
 
 public class RefactorExecutionWithTesting extends RefactorExecution {
 

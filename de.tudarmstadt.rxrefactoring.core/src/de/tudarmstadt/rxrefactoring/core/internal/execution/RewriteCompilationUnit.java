@@ -65,7 +65,6 @@ import org.eclipse.text.edits.TextEditVisitor;
 import org.eclipse.text.edits.UndoEdit;
 
 import de.tudarmstadt.rxrefactoring.core.IRewriteCompilationUnit;
-import de.tudarmstadt.rxrefactoring.core.utils.OffsetCounter;
 import de.tudarmstadt.rxrefactoring.core.utils.WorkerIdentifier;
 
 /**
