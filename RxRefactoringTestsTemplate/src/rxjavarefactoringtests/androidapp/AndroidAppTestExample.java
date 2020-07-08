@@ -42,7 +42,7 @@ public class AndroidAppTestExample extends AbstractAndroidTest
 
 	private void executeTest( String targetFile, String expectedSourceCode ) throws Exception
 	{
-		/*RxJavaRefactoringApp app = new RxJavaRefactoringApp(); // TODO TH auskommentiert, weil app fehler hat
+		/*RxJavaRefactoringApp app = new RxJavaRefactoringApp();
 		Extension refactoringExtension = new Extension();
 		app.setCommandId( refactoringExtension.getId() );
 		app.setExtension( refactoringExtension );

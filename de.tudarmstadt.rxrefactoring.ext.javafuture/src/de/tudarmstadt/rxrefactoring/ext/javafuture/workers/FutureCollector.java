@@ -294,8 +294,8 @@ public class FutureCollector implements IWorker<PreconditionWorker, FutureCollec
 			for (Entry<IRewriteCompilationUnit, Collection<T>> entry : maps[i].asMap().entrySet()) {
 
 				if (entry.getValue() instanceof Collection) {
-					asMap.merge(entry.getKey(), (Collection<T>) entry.getValue(), (a, b) -> { // TODO schauen, ob so
-																								// noch geht
+					asMap.merge(entry.getKey(), (Collection<T>) entry.getValue(), (a, b) -> { 
+																								
 						List<T> combined = new ArrayList<T>(a);
 						combined.addAll(b);
 						return combined;

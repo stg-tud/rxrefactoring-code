@@ -136,7 +136,7 @@ public class VariableDeclStatementWorker extends GeneralWorker<TypeOutput, Void>
 			}
 
 			String newVarName = RefactoringUtils.cleanSwingWorkerName(fragment.getName().getIdentifier());
-			if (fragment.getName().getIdentifier().equals(newVarName)) {
+			if (!fragment.getName().getIdentifier().equals(newVarName)) {
 				synchronized (icu) {
 					icu.replace(fragment.getName(), SwingWorkerASTUtils.newSimpleName(ast, newVarName));
 				}

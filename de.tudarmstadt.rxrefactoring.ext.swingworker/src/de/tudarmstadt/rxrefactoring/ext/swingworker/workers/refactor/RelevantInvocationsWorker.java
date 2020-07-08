@@ -46,7 +46,6 @@ public class RelevantInvocationsWorker implements IWorker<TypeOutput, Void> {
 			}
 		}
 		
-		//TODO THA only here because its last worker
 		summary.setCorrect("numberOfCompilationUnits", (int) units.stream()
 				.filter(a -> a.getWriter() != null)
 				.count());

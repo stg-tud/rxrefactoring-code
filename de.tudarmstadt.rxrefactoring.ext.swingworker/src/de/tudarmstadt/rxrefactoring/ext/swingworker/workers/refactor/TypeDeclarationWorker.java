@@ -100,7 +100,7 @@ public class TypeDeclarationWorker extends GeneralWorker<RxCollector, TypeOutput
 		for (MethodInvocation m : invocations) {
 
 			IMethodBinding binding = m.resolveMethodBinding();
-			String typeName = type.getErasure().getQualifiedName(); // TODO THA noch sinnvoll?
+			String typeName = type.getErasure().getQualifiedName();
 
 			// if (Methods.hasSignature(binding, null, "addPropertyChangeListener",
 			// "java.beans.PropertyChangeListener")) {
@@ -452,7 +452,7 @@ public class TypeDeclarationWorker extends GeneralWorker<RxCollector, TypeOutput
 					}
 				}
 			}
-		} else { //TODO alles auskommentiert
+		} else { 
 			/*
 			 * Abstract class : apply getObservable method in abstract class instead of
 			 * putting observable statement into constructor. Scenario: Scenario:

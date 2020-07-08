@@ -132,7 +132,6 @@ public class RefactorExecution implements Runnable {
 
 			@Override
 			public Change createChange(IProgressMonitor monitor) throws CoreException, OperationCanceledException {
-
 				// Retrieve projects in the workspace
 				IProject[] projects = getWorkspaceProjects();
 
@@ -278,13 +277,6 @@ public class RefactorExecution implements Runnable {
 		RefactoringWizardOpenOperation op = new RefactoringWizardOpenOperation(wizard);
 		Shell shell = Display.getCurrent().getActiveShell();
 
-		if (!extension.hasInteractiveRefactorScope()) {
-			ProcessDialog dialog = new ProcessDialog(shell);
-
-			dialog.create();
-			dialog.open();
-		}
-
 		int result = IDialogConstants.CANCEL_ID;
 
 		try {
@@ -294,12 +286,13 @@ public class RefactorExecution implements Runnable {
 			// operation was cancelled
 			Log.info(RefactorExecution.class, "Operation was cancelled.");
 		}
-
+		
 		if (result == IDialogConstants.OK_ID) {
 			postRefactor();
 		}
 
 		Log.info(RefactorExecution.class, "Done.");
+		
 	}
 
 	protected IProject[] getWorkspaceProjects() {
@@ -550,7 +543,7 @@ public class RefactorExecution implements Runnable {
 
 			if (newUnits != null)
 				units = newUnits;
-
+			
 			ProjectUnits unitsChecked = extension.runDependencyBetweenWorkerCheck(units, scanner, startLine);
 
 			if (unitsChecked != null)

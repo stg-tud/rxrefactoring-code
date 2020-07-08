@@ -141,7 +141,7 @@ public class MethodScanner {
 	 */
 	private ImmutableMap<MethodDeclaration, IRewriteCompilationUnit> findImpactedMethods(ProjectUnits units) {
 		ImmutableMap.Builder<MethodDeclaration, IRewriteCompilationUnit> builder = ImmutableMap.builder();
-		Set<MethodDeclaration> alreadyConsideredMethods = Sets.newConcurrentHashSet(); //TODO THA vielleicht anders lösen
+		Set<MethodDeclaration> alreadyConsideredMethods = Sets.newConcurrentHashSet();
 		
 		for (IRewriteCompilationUnit unit : units) {
 			if (unit.hasChanges()) {
